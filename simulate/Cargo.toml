@@ -1,0 +1,10 @@
+[package]
+name = "simulate"
+version = "0.1.0"
+authors = ["John Simon <john@whatisaph.one>"]
+
+[dependencies]
+nalgebra = "0.16.0"
+
+[build-dependencies]
+csv = "1.0.0"

@@ -1,0 +1,1 @@
+Start at rest, then instantly set the throttle to 1.0.

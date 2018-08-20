@@ -1,0 +1,8 @@
+[package]
+name = "play"
+version = "0.1.0"
+authors = ["John Simon <john@whatisaph.one>"]
+
+[dependencies]
+brain = { path = "../brain" }
+rlbot = { path = "../rlbot" }

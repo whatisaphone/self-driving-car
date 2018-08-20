@@ -1,0 +1,29 @@
+cargo-features = ["profile-overrides"]
+
+[package]
+name = "brain"
+version = "0.1.0"
+authors = ["John Simon <john@whatisaph.one>"]
+
+[dependencies]
+crossbeam-channel = "0.2.4"
+nalgebra = "0.16.0"
+piston_window = "0.80.0"
+piston2d-graphics = "0.26.0"
+bakkesmod = { path = "../bakkesmod" }
+rlbot = { path = "../rlbot" }
+simulate = { path = "../simulate" }
+
+[profile.dev]
+opt-level = 3
+debug-assertions = false
+overflow-checks = false
+debug = false
+incremental = false
+
+[profile.dev.overrides.nalgebra]
+opt-level = 3
+debug-assertions = false
+overflow-checks = false
+debug = false
+incremental = false
