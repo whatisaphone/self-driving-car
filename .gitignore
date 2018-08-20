@@ -1,2 +1,6 @@
-target
+/target
 **/*.rs.bk
+
+/RLBot_Core.dll
+/RLBot_Core_Interface.dll
+/RLBot_Injector.exe

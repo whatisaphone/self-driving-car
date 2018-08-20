@@ -13,17 +13,3 @@ piston2d-graphics = "0.26.0"
 bakkesmod = { path = "../bakkesmod" }
 rlbot = { path = "../rlbot" }
 simulate = { path = "../simulate" }
-
-[profile.dev]
-opt-level = 3
-debug-assertions = false
-overflow-checks = false
-debug = false
-incremental = false
-
-[profile.dev.overrides.nalgebra]
-opt-level = 3
-debug-assertions = false
-overflow-checks = false
-debug = false
-incremental = false

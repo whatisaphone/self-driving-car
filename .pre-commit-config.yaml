@@ -1,0 +1,33 @@
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v1.4.0
+  hooks:
+    - id: check-added-large-files
+    - id: check-byte-order-marker
+    - id: check-case-conflict
+    - id: check-json
+    - id: check-merge-conflict
+    - id: check-symlinks
+    - id: check-vcs-permalinks
+    - id: check-xml
+    - id: check-yaml
+    - id: detect-aws-credentials
+    - id: detect-private-key
+    - id: end-of-file-fixer
+    - id: mixed-line-ending
+    - id: trailing-whitespace
+
+- repo: local
+  hooks:
+    - id: fmt
+      name: fmt
+      language: system
+      files: '[.]rs$'
+      entry: rustfmt
+
+    - id: test
+      name: test
+      language: system
+      files: '[.]rs$'
+      # Skip the tests which require Rocket League to be running.
+      entry: cargo test -- --skip 'maneuvers::'
+      pass_filenames: false

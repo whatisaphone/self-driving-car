@@ -1,0 +1,23 @@
+[workspace]
+members = [
+    "bakkesmod",
+    "brain",
+    "collect",
+    "play",
+    "rlbot",
+    "simulate",
+]
+
+#[profile.dev]
+#opt-level = 3
+#debug-assertions = false
+#overflow-checks = false
+#debug = false
+#incremental = false
+
+#[profile.dev.overrides.nalgebra]
+#opt-level = 3
+#debug-assertions = false
+#overflow-checks = false
+#debug = false
+#incremental = false
