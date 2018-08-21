@@ -5,6 +5,5 @@ authors = ["John Simon <john@whatisaph.one>"]
 
 [dependencies]
 csv = "1.0.0"
-ratelimit = "0.4.3"
 bakkesmod = { path = "../bakkesmod" }
 rlbot = { path = "../rlbot" }

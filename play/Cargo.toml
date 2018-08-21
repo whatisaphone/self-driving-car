@@ -5,4 +5,5 @@ authors = ["John Simon <john@whatisaph.one>"]
 
 [dependencies]
 brain = { path = "../brain" }
+collect = { path = "../collect" }
 rlbot = { path = "../rlbot" }

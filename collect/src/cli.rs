@@ -31,7 +31,7 @@ pub fn main() -> Result<(), ()> {
     ];
     stabilize_scenario(&bakkesmod, &commands.join(";"));
 
-    let f = File::create("data.csv").map_err(|_| ())?;
+    let f = File::create("collect.csv").map_err(|_| ())?;
     let mut collector = Collector::new(f);
 
     let start = packets.next()?.GameInfo.TimeSeconds;
