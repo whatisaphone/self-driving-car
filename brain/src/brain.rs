@@ -27,6 +27,10 @@ impl Brain {
         self.fps_counter.tick(packet.GameInfo.TimeSeconds);
 
         self.eeg.draw(Drawable::print(
+            format!("game_time: {:.1}", packet.GameInfo.TimeSeconds),
+            color::GREEN,
+        ));
+        self.eeg.draw(Drawable::print(
             format!("fps: {}", format_fps(self.fps_counter.fps())),
             color::GREEN,
         ));
