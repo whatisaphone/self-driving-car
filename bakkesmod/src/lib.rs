@@ -1,6 +1,7 @@
 extern crate crossbeam_channel;
 extern crate websocket;
 
+use std::io::{Read, Write};
 use std::thread;
 use websocket::client::sync::Client;
 use websocket::client::ClientBuilder;
@@ -35,15 +36,12 @@ impl Drop for BakkesMod {
 }
 
 impl BakkesMod {
-    pub fn send<S: Into<String>>(&self, msg: S) {
+    pub fn send(&self, msg: impl Into<String>) {
         self.tx.as_ref().unwrap().send(msg.into());
     }
 }
 
-fn run<C>(mut client: Client<C>, rx: crossbeam_channel::Receiver<String>)
-where
-    C: std::io::Read + std::io::Write,
-{
+fn run(mut client: Client<impl Read + Write>, rx: crossbeam_channel::Receiver<String>) {
     client
         .send_message(&Message::text("rcon_password password"))
         .unwrap();

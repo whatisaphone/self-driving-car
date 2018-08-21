@@ -59,7 +59,7 @@ pub enum Drawable {
 }
 
 impl Drawable {
-    pub fn print<S: Into<String>>(text: S, color: Color) -> Drawable {
+    pub fn print(text: impl Into<String>, color: Color) -> Drawable {
         Drawable::Print(text.into(), color)
     }
 }

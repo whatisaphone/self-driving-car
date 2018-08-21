@@ -32,11 +32,7 @@ fn main() {
     }
 }
 
-fn compile_csv<R, W>(name: &str, mut csv: csv::Reader<R>, w: &mut W)
-where
-    R: Read,
-    W: Write,
-{
+fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) {
     let mut out_time = format!(
         "pub const {}_TIME: &'static [f32] = &[\n",
         name.to_ascii_uppercase()
