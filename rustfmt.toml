@@ -1,0 +1,16 @@
+error_on_line_overflow = true
+error_on_unformatted = true
+
+format_macro_matchers = true
+reorder_impl_items = true
+
+# These cause a rustfmt crash :(
+# report_todo = "Always"
+# report_fixme = "Always"
+
+use_field_init_shorthand = true
+use_try_shorthand = true
+
+wrap_comments = true
+
+required_version = "0.99.1"

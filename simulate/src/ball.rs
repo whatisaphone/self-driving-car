@@ -1,4 +1,5 @@
-/// This module contains a rough transliteration of Sam Mish's ball prediction code.
+/// This module contains a rough transliteration of Sam Mish's ball prediction
+/// code.
 ///
 /// Source:
 /// https://github.com/samuelpmish/Lobot/blob/0d5b058e575493cf0bf34da78270da62e71a80d1/inc/Ball.h

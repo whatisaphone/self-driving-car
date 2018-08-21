@@ -13,16 +13,16 @@ fn main() {
 }
 
 fn run() -> Result<(), ()> {
-    rlbot::init()?;
-    rlbot::start_match(rlbot::match_settings_1v1())?;
+    let rlbot = rlbot::init()?;
+    rlbot.start_match(rlbot::match_settings_1v1())?;
 
-    let mut packets = rlbot::LiveDataPackets::new();
+    let mut packets = rlbot.packeteer();
 
     // Wait for RoundActive
-    while !packets.wait()?.GameInfo.RoundActive {}
+    while !packets.next()?.GameInfo.RoundActive {}
 
     // Zero out our input, just to be safe
-    rlbot::update_player_input(Default::default(), 0)?;
+    rlbot.update_player_input(Default::default(), 0)?;
 
     let bakkesmod = BakkesMod::connect()?;
     let commands = [
@@ -41,10 +41,10 @@ fn run() -> Result<(), ()> {
     let f = File::create("data.csv").map_err(|_| ())?;
     let mut w = csv::Writer::from_writer(f);
 
-    let start = packets.wait()?.GameInfo.TimeSeconds;
+    let start = packets.next()?.GameInfo.TimeSeconds;
 
     loop {
-        let packet = packets.wait()?;
+        let packet = packets.next()?;
 
         w.write_record(&[
             packet.GameInfo.TimeSeconds.to_string(),
@@ -68,7 +68,7 @@ fn run() -> Result<(), ()> {
                 Throttle: 1.0,
                 ..Default::default()
             };
-            rlbot::update_player_input(input, 0)?;
+            rlbot.update_player_input(input, 0)?;
         }
 
         // Once we have enough data, exit.

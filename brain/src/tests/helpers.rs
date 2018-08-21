@@ -5,6 +5,7 @@ use maneuvers::Maneuver;
 use nalgebra::{Rotation3, Vector3};
 use rlbot;
 use std::f32::consts::PI;
+use std::sync::{Arc, Barrier};
 use std::thread;
 use std::thread::sleep;
 use std::time::Duration;
@@ -54,19 +55,21 @@ pub struct TestRunner {
 
 impl TestRunner {
     pub fn start(maneuver: Box<Maneuver + Send>, scenario: TestScenario) -> TestRunner {
-        rlbot::init().unwrap();
-        rlbot::start_match(rlbot::match_settings_1v1()).unwrap();
-
-        let mut packets = rlbot::LiveDataPackets::new();
-
-        // Wait for RoundActive
-        while !packets.wait().unwrap().GameInfo.RoundActive {}
-
-        setup_scenario(&scenario);
-
+        let scenario_ready_wait = Arc::new(Barrier::new(2));
+        let scenario_signal = scenario_ready_wait.clone();
         let (terminate_tx, terminate_rx) = crossbeam_channel::unbounded();
         let (has_scored_tx, has_scored_rx) = crossbeam_channel::bounded(1);
-        let thread = thread::spawn(|| test_thread(scenario, maneuver, terminate_rx, has_scored_rx));
+        let thread = thread::spawn(|| {
+            test_thread(
+                scenario,
+                maneuver,
+                scenario_signal,
+                terminate_rx,
+                has_scored_rx,
+            )
+        });
+
+        scenario_ready_wait.wait();
         TestRunner {
             terminate: Some(terminate_tx),
             has_scored: has_scored_tx,
@@ -97,22 +100,33 @@ impl TestRunner {
 fn test_thread(
     scenario: TestScenario,
     maneuver: Box<Maneuver>,
+    scenario_ready: Arc<Barrier>,
     terminate: crossbeam_channel::Receiver<()>,
     has_scored: crossbeam_channel::Receiver<crossbeam_channel::Sender<bool>>,
 ) {
+    let rlbot = rlbot::init().unwrap();
+    rlbot.start_match(rlbot::match_settings_1v1()).unwrap();
+
+    let mut packets = rlbot.packeteer();
+
+    // Wait for RoundActive
+    while !packets.next().unwrap().GameInfo.RoundActive {}
+
     let mut brain = Brain::with_maneuver(maneuver);
 
-    let mut packets = rlbot::LiveDataPackets::new();
-    let first_packet = packets.wait().unwrap();
+    setup_scenario(&scenario);
+    scenario_ready.wait();
+
+    let first_packet = packets.next().unwrap();
 
     loop {
         if terminate.try_recv().is_some() {
             break;
         }
 
-        let packet = packets.wait().unwrap();
+        let packet = packets.next().unwrap();
         let input = brain.tick(&packet);
-        rlbot::update_player_input(input, 0).unwrap();
+        rlbot.update_player_input(input, 0).unwrap();
 
         if let Some(chan) = has_scored.try_recv() {
             let first_score = first_packet.match_score();
@@ -122,7 +136,7 @@ fn test_thread(
     }
 
     // For tidiness, make the car stop moving when the test is finished.
-    rlbot::update_player_input(Default::default(), 0).unwrap();
+    rlbot.update_player_input(Default::default(), 0).unwrap();
 }
 
 fn setup_scenario(scenario: &TestScenario) {
