@@ -18,7 +18,7 @@ A bot that loses at Rocket League using [RLBot].
   This will run tests/lints/etc before every commit. The bot may lose every
   game, but at least the code will be pretty!
 
-* Obtain these files from [RLBot] and put them in `target/`:
+* Obtain these files from [RLBot] and copy them into `target/debug` and `target/release`:
   * `RLBot_Core.dll`
   * `RLBot_Core_Interface.dll`
   * `RLBot_Injector.exe`

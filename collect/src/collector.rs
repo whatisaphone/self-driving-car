@@ -16,6 +16,7 @@ impl Collector {
         self.w.write_record(
             vec![packet.GameInfo.TimeSeconds.to_string()]
                 .iter()
+                .chain(physics_items(&packet.GameBall.Physics).iter())
                 .chain(physics_items(&packet.GameCars[0].Physics).iter())
                 .collect::<Vec<_>>(),
         )

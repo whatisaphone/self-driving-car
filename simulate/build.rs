@@ -37,36 +37,48 @@ fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) 
         "pub const {}_TIME: &'static [f32] = &[\n",
         name.to_ascii_uppercase()
     );
-    let mut out_vel_y = format!(
-        "pub const {}_VEL_Y: &'static [f32] = &[\n",
+    let mut out_car_vel_y = format!(
+        "pub const {}_CAR_VEL_Y: &'static [f32] = &[\n",
         name.to_ascii_uppercase()
     );
 
     for row in csv.records() {
         let row = row.unwrap();
         let time = floatify(&row[0]);
-        let _loc_x = floatify(&row[1]);
-        let _loc_y = floatify(&row[2]);
-        let _loc_z = floatify(&row[3]);
-        let _rot_pitch = floatify(&row[4]);
-        let _rot_yaw = floatify(&row[5]);
-        let _rot_roll = floatify(&row[6]);
-        let _vel_x = floatify(&row[7]);
-        let vel_y = floatify(&row[8]);
-        let _vel_z = floatify(&row[9]);
-        let _ang_vel_x = floatify(&row[10]);
-        let _ang_vel_y = floatify(&row[11]);
-        let _ang_vel_z = floatify(&row[12]);
+        let _ball_loc_x = floatify(&row[1]);
+        let _ball_loc_y = floatify(&row[2]);
+        let _ball_loc_z = floatify(&row[3]);
+        let _ball_rot_pitch = floatify(&row[4]);
+        let _ball_rot_yaw = floatify(&row[5]);
+        let _ball_rot_roll = floatify(&row[6]);
+        let _ball_vel_x = floatify(&row[7]);
+        let _ball_vel_y = floatify(&row[8]);
+        let _ball_vel_z = floatify(&row[9]);
+        let _ball_ang_vel_x = floatify(&row[10]);
+        let _ball_ang_vel_y = floatify(&row[11]);
+        let _ball_ang_vel_z = floatify(&row[12]);
+        let _car_loc_x = floatify(&row[13]);
+        let _car_loc_y = floatify(&row[14]);
+        let _car_loc_z = floatify(&row[15]);
+        let _car_rot_pitch = floatify(&row[16]);
+        let _car_rot_yaw = floatify(&row[17]);
+        let _car_rot_roll = floatify(&row[18]);
+        let _car_vel_x = floatify(&row[19]);
+        let car_vel_y = floatify(&row[20]);
+        let _car_vel_z = floatify(&row[21]);
+        let _car_ang_vel_x = floatify(&row[22]);
+        let _car_ang_vel_y = floatify(&row[23]);
+        let _car_ang_vel_z = floatify(&row[24]);
 
         write!(&mut out_time, "{},", time);
-        write!(&mut out_vel_y, "{},", vel_y);
+        write!(&mut out_car_vel_y, "{},", car_vel_y);
     }
 
     write!(&mut out_time, "];\n");
-    write!(&mut out_vel_y, "];\n");
+    write!(&mut out_car_vel_y, "];\n");
 
     write!(w, "{}", out_time);
-    write!(w, "{}", out_vel_y);
+    write!(w, "{}", out_car_vel_y);
 }
 
 fn floatify(s: &str) -> Cow<str> {

@@ -1,4 +1,4 @@
-use tables::{THROTTLE_TIME, THROTTLE_VEL_Y};
+use tables::{THROTTLE_CAR_VEL_Y, THROTTLE_TIME};
 
 pub struct Car1D {
     loc: f32,
@@ -25,9 +25,9 @@ impl Car1D {
         assert_eq!(throttle, 1.0, "unimplemented");
         assert_eq!(boost, false, "unimplemented");
 
-        let old_time = linear_interpolate(THROTTLE_VEL_Y, THROTTLE_TIME, self.vel);
+        let old_time = linear_interpolate(THROTTLE_CAR_VEL_Y, THROTTLE_TIME, self.vel);
         let new_time = old_time + dt;
-        let new_vel = linear_interpolate(THROTTLE_TIME, THROTTLE_VEL_Y, new_time);
+        let new_vel = linear_interpolate(THROTTLE_TIME, THROTTLE_CAR_VEL_Y, new_time);
 
         self.loc += self.vel * dt;
         self.vel = new_vel;
