@@ -59,7 +59,6 @@ fn estimate_approach(origin: &rlbot::Physics, distance: f32, time: f32) -> bool 
         sim_car.step(DT, 1.0, false);
 
         if sim_car.distance_traveled() >= distance {
-            // println!("estimate_approach {} {} {}, {}", distance, time, t, sim_car.distance_traveled());
             return true;
         }
     }

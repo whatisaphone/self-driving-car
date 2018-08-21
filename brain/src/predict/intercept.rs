@@ -32,7 +32,6 @@ pub fn estimate_intercept_car_ball(
 
         let target_traveled = (sim_ball.loc() - car.Physics.loc()).norm() - RADII;
         if sim_car.distance_traveled() >= target_traveled {
-            // println!("estimate_intercept_car_ball {} {} {}", t, sim_car.distance_traveled(), target_traveled);
             break;
         }
     }

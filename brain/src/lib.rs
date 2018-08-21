@@ -5,6 +5,8 @@ extern crate nalgebra;
 extern crate piston_window;
 extern crate rlbot;
 extern crate simulate;
+#[macro_use]
+extern crate lazy_static;
 
 pub use brain::Brain;
 

@@ -5,7 +5,7 @@ use maneuvers::Maneuver;
 use nalgebra::{Rotation3, Vector3};
 use rlbot;
 use std::f32::consts::PI;
-use std::sync::{Arc, Barrier};
+use std::sync::{Arc, Barrier, Mutex};
 use std::thread;
 use std::thread::sleep;
 use std::time::Duration;
@@ -30,7 +30,7 @@ pub struct TestScenario {
 impl Default for TestScenario {
     fn default() -> Self {
         TestScenario {
-            ball_loc: Vector3::new(0.0, 0.0, 0.0),
+            ball_loc: Vector3::new(0.0, 0.0, 92.74),
             ball_rot: Rotation3::from_unreal_angles(0.0, 0.0, 0.0),
             ball_vel: Vector3::new(0.0, 0.0, 0.0),
             ball_ang_vel: Vector3::new(0.0, 0.0, 0.0),
@@ -48,31 +48,35 @@ impl Default for TestScenario {
 }
 
 pub struct TestRunner {
-    terminate: Option<crossbeam_channel::Sender<()>>,
+    sniff_packet: crossbeam_channel::Sender<crossbeam_channel::Sender<rlbot::LiveDataPacket>>,
     has_scored: crossbeam_channel::Sender<crossbeam_channel::Sender<bool>>,
+    terminate: Option<crossbeam_channel::Sender<()>>,
     join_handle: Option<thread::JoinHandle<()>>,
 }
 
 impl TestRunner {
     pub fn start(maneuver: Box<Maneuver + Send>, scenario: TestScenario) -> TestRunner {
-        let scenario_ready_wait = Arc::new(Barrier::new(2));
-        let scenario_signal = scenario_ready_wait.clone();
+        let ready_wait = Arc::new(Barrier::new(2));
+        let ready_wait_send = ready_wait.clone();
         let (terminate_tx, terminate_rx) = crossbeam_channel::unbounded();
-        let (has_scored_tx, has_scored_rx) = crossbeam_channel::bounded(1);
+        let (sniff_packet_tx, sniff_packet_rx) = crossbeam_channel::unbounded();
+        let (has_scored_tx, has_scored_rx) = crossbeam_channel::unbounded();
         let thread = thread::spawn(|| {
             test_thread(
                 scenario,
                 maneuver,
-                scenario_signal,
-                terminate_rx,
+                ready_wait_send,
+                sniff_packet_rx,
                 has_scored_rx,
+                terminate_rx,
             )
         });
 
-        scenario_ready_wait.wait();
+        ready_wait.wait();
         TestRunner {
-            terminate: Some(terminate_tx),
+            sniff_packet: sniff_packet_tx,
             has_scored: has_scored_tx,
+            terminate: Some(terminate_tx),
             join_handle: Some(thread),
         }
     }
@@ -86,8 +90,18 @@ impl Drop for TestRunner {
 }
 
 impl TestRunner {
+    // Right now this is just for convenience, but there's a possibility one day I
+    // might tie it to packet.GameInfo.TimeSeconds so the tests still run properly
+    // if sv_soccar_gamespeed is set to values other than 1 (if the stars align, of
+    // course).
     pub fn sleep_millis(&self, millis: u64) {
         sleep(Duration::from_millis(millis))
+    }
+
+    pub fn sniff_packet(&self) -> rlbot::LiveDataPacket {
+        let (tx, rx) = crossbeam_channel::bounded(1);
+        self.sniff_packet.send(tx);
+        rx.recv().unwrap()
     }
 
     pub fn has_scored(&self) -> bool {
@@ -97,14 +111,26 @@ impl TestRunner {
     }
 }
 
+lazy_static! {
+    /// RLBot_Core_Interface.dll sometimes crashes if it's unloaded and then
+    /// reloaded, so just keep a permanent instance around for the tests (and
+    /// leak it, don't worry, everything is fine).
+    static ref RLBOT_MUTEX: Mutex<Option<rlbot::RLBot>> = Mutex::new(None);
+}
+
 fn test_thread(
     scenario: TestScenario,
     maneuver: Box<Maneuver>,
-    scenario_ready: Arc<Barrier>,
-    terminate: crossbeam_channel::Receiver<()>,
+    ready_wait: Arc<Barrier>,
+    sniff_packet: crossbeam_channel::Receiver<crossbeam_channel::Sender<rlbot::LiveDataPacket>>,
     has_scored: crossbeam_channel::Receiver<crossbeam_channel::Sender<bool>>,
+    terminate: crossbeam_channel::Receiver<()>,
 ) {
-    let rlbot = rlbot::init().unwrap();
+    let mut rlbot_ref = RLBOT_MUTEX.lock().unwrap();
+    if rlbot_ref.is_none() {
+        *rlbot_ref = Some(rlbot::init().unwrap());
+    }
+    let rlbot = rlbot_ref.as_ref().unwrap();
     rlbot.start_match(rlbot::match_settings_1v1()).unwrap();
 
     let mut packets = rlbot.packeteer();
@@ -115,15 +141,11 @@ fn test_thread(
     let mut brain = Brain::with_maneuver(maneuver);
 
     setup_scenario(&scenario);
-    scenario_ready.wait();
+    ready_wait.wait();
 
     let first_packet = packets.next().unwrap();
 
     loop {
-        if terminate.try_recv().is_some() {
-            break;
-        }
-
         let packet = packets.next().unwrap();
         let input = brain.tick(&packet);
         rlbot.update_player_input(input, 0).unwrap();
@@ -131,7 +153,15 @@ fn test_thread(
         if let Some(chan) = has_scored.try_recv() {
             let first_score = first_packet.match_score();
             let current_score = packet.match_score();
-            chan.send(current_score[0] > first_score[0]);
+            chan.send(current_score[0] > first_score[0]); // Index 0 means blue team
+        }
+
+        if let Some(chan) = sniff_packet.try_recv() {
+            chan.send(packet);
+        }
+
+        if let Some(()) = terminate.try_recv() {
+            break;
         }
     }
 
