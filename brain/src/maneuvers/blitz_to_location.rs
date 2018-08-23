@@ -1,4 +1,5 @@
 use behavior::{Action, Behavior};
+use collect::ExtendRotation3;
 use eeg::{color, Drawable, EEG};
 use mechanics::misc::simple_steer_towards;
 use mechanics::QuickJumpAndDodge;
@@ -25,21 +26,21 @@ impl Behavior for BlitzToLocation {
         let distance = (me.Physics.loc() - self.target_loc).norm();
         let speed = me.Physics.vel().norm();
 
+        let steer = simple_steer_towards(&me.Physics, self.target_loc);
+
         eeg.draw(Drawable::print(
             format!("distance: {:.0}", distance),
             color::GREEN,
         ));
 
-        let steer = simple_steer_towards(&me.Physics, self.target_loc);
-
         // Should we boost?
         if distance > 1000.0
-            && steer.abs() < PI / 2.0
+            && steer.abs() < PI / 4.0
             && me.OnGround
             && me.Boost > 0
-            // After ~1500 (very unscientific number), we can hit max speed quicker by flipping. After
-            // ~2000 (same), it's probably not worth losing wheel contact (and thus
-            // momentarily losing agility).
+            // After ~1500 (very unscientific number), we can hit max speed
+            // quicker by flipping. After ~2000 (same), it's probably not worth
+            // losing wheel contact (and thus agility).
             && (speed < 1500.0 || (2000.0 <= speed && speed < 2290.0))
         {
             return Action::Yield(rlbot::PlayerInput {
@@ -54,6 +55,7 @@ impl Behavior for BlitzToLocation {
         if distance > 2000.0
             && steer.abs() < PI / 8.0
             && me.OnGround
+            && me.Physics.rot().pitch().to_degrees() < 1.0
             && (800.0 <= speed && speed < 2200.0)
         {
             return Action::Call(Box::new(QuickJumpAndDodge::begin(packet)));

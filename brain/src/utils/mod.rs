@@ -15,6 +15,10 @@ pub fn one_v_one(packet: &rlbot::LiveDataPacket) -> (rlbot::PlayerInfo, rlbot::P
     (packet.GameCars[0], packet.GameCars[1])
 }
 
+pub fn my_goal_center() -> Vector3<f32> {
+    Vector3::new(0.0, -5000.0, 0.0)
+}
+
 pub trait ExtendPhysics {
     fn loc(&self) -> Vector3<f32>;
     fn rot(&self) -> Rotation3<f32>;

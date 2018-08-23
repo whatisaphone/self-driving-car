@@ -18,17 +18,19 @@ impl Behavior for BounceShot {
         eeg.draw(Drawable::print("BounceShot", color::YELLOW));
 
         let (me, _enemy) = one_v_one(packet);
-        let (intercept_time, intercept_loc) = estimate_intercept_car_ball(&me, &packet.GameBall);
+        let intercept = estimate_intercept_car_ball(&me, &packet.GameBall);
 
         eeg.draw(Drawable::print(
-            format!("intercept_time: {:.2}", intercept_time),
+            format!("intercept_time: {:.2}", intercept.time),
             color::GREEN,
         ));
-        eeg.draw(Drawable::GhostCar(intercept_loc, me.Physics.rot()));
+        eeg.draw(Drawable::GhostCar(intercept.car_loc, me.Physics.rot()));
 
         // TODO: this is not how this works…
-        let mut child =
-            GroundAccelToLoc::new(intercept_loc, packet.GameInfo.TimeSeconds + intercept_time);
+        let mut child = GroundAccelToLoc::new(
+            intercept.car_loc,
+            packet.GameInfo.TimeSeconds + intercept.time,
+        );
         child.execute(packet, eeg)
     }
 }

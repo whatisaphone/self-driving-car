@@ -6,12 +6,12 @@ use utils::ExtendPhysics;
 pub fn estimate_intercept_car_ball(
     car: &rlbot::PlayerInfo,
     ball: &rlbot::BallInfo,
-) -> (f32, Vector3<f32>) {
+) -> InterceptResult {
     const DT: f32 = 1.0 / 60.0;
 
     // We don't want the center of the car to be at the center of the ball –
     // we want their meshes to barely be touching.
-    const RADII: f32 = 260.0;
+    const RADII: f32 = 240.0;
 
     let mut t = 0.0;
     let mut sim_car = Car1D::new(car.Physics.vel().norm());
@@ -26,7 +26,7 @@ pub fn estimate_intercept_car_ball(
         sim_ball.step(DT);
         sim_car.step(DT, 1.0, false);
 
-        if sim_ball.loc().z > 120.0 {
+        if sim_ball.loc().z > 100.0 {
             continue; // The ball is so high and I don't know how to jump :(
         }
 
@@ -37,5 +37,15 @@ pub fn estimate_intercept_car_ball(
     }
 
     let intercept_loc = sim_ball.loc() - (sim_ball.loc() - car.Physics.loc()).normalize() * RADII;
-    (t, intercept_loc)
+    InterceptResult {
+        time: t,
+        ball_loc: sim_ball.loc(),
+        car_loc: intercept_loc,
+    }
+}
+
+pub struct InterceptResult {
+    pub time: f32,
+    pub ball_loc: Vector3<f32>,
+    pub car_loc: Vector3<f32>,
 }

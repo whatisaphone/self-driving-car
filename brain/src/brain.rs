@@ -1,6 +1,6 @@
 use behavior::{Behavior, BehaviorRunner};
+use behaviors::RootBehavior;
 use eeg::{color, Drawable, EEG};
-use maneuvers::BounceShot;
 use nalgebra::clamp;
 use rlbot;
 use utils::fps_counter::FPSCounter;
@@ -13,7 +13,7 @@ pub struct Brain {
 
 impl Brain {
     pub fn new() -> Self {
-        Self::with_behavior(Box::new(BounceShot))
+        Self::with_behavior(Box::new(RootBehavior))
     }
 
     pub fn with_behavior(behavior: Box<Behavior>) -> Self {

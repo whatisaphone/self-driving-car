@@ -1,6 +1,6 @@
 use behavior::{Action, Behavior};
 use eeg::EEG;
-use maneuvers::BounceShot;
+use maneuvers::FiftyFifty;
 use rlbot;
 
 pub struct RootBehavior;
@@ -13,6 +13,6 @@ impl RootBehavior {
 
 impl Behavior for RootBehavior {
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-        Action::call(BounceShot::new())
+        Action::call(FiftyFifty::new())
     }
 }
