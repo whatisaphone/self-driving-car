@@ -19,6 +19,18 @@ pub fn my_goal_center() -> Vector3<f32> {
     Vector3::new(0.0, -5000.0, 0.0)
 }
 
+pub fn enemy_goal_center() -> Vector3<f32> {
+    Vector3::new(0.0, 5000.0, 0.0)
+}
+
+pub fn enemy_goal_left_post() -> Vector3<f32> {
+    Vector3::new(1000.0, 5000.0, 0.0)
+}
+
+pub fn enemy_goal_right_post() -> Vector3<f32> {
+    Vector3::new(-1000.0, 5000.0, 0.0)
+}
+
 pub trait ExtendPhysics {
     fn loc(&self) -> Vector3<f32>;
     fn rot(&self) -> Rotation3<f32>;

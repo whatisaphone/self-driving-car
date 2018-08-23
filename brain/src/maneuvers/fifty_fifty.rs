@@ -16,8 +16,6 @@ impl FiftyFifty {
 
 impl Behavior for FiftyFifty {
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-        eeg.draw(Drawable::print("FiftyFifty", color::YELLOW));
-
         let (me, _enemy) = one_v_one(packet);
         let intercept = estimate_intercept_car_ball(&me, &packet.GameBall);
 
@@ -26,6 +24,7 @@ impl Behavior for FiftyFifty {
             intercept.ball_loc + (my_goal_center() - intercept.ball_loc).normalize() * 200.0;
         let target_dist = (target_loc - me.Physics.loc()).norm();
 
+        eeg.draw(Drawable::print("FiftyFifty", color::YELLOW));
         eeg.draw(Drawable::print(
             format!("target_dist: {:.0}", target_dist),
             color::GREEN,

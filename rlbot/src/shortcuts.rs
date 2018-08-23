@@ -1,10 +1,14 @@
-use ffi::MatchSettings;
+use ffi;
 
-pub fn match_settings_1v1() -> MatchSettings {
-    let mut match_settings = MatchSettings {
+pub fn match_settings_1v1() -> ffi::MatchSettings {
+    let mut match_settings = ffi::MatchSettings {
         NumPlayers: 2,
         SkipReplays: true,
         InstantStart: true,
+        MutatorSettings: ffi::MutatorSettings {
+            MatchLength: ffi::MatchLength::Unlimited,
+            ..Default::default()
+        },
         ..Default::default()
     };
 

@@ -199,9 +199,9 @@ fn test_thread(
 
 fn setup_scenario(scenario: &TestScenario) {
     let bakkesmod = BakkesMod::connect().unwrap();
-    for _ in 0..10 {
+    for _ in 0..6 {
         bakkesmod.send(get_bakkesmod_command_for_scenario(scenario));
-        sleep(Duration::from_millis(100));
+        sleep(Duration::from_millis(250));
     }
 }
 

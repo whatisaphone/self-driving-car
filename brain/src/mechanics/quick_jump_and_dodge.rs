@@ -3,8 +3,9 @@ use eeg::{color, Drawable, EEG};
 use rlbot;
 
 pub struct QuickJumpAndDodge {
-    phase: Phase,
+    sideways: f32,
     start_time: f32,
+    phase: Phase,
 }
 
 #[derive(Eq, PartialEq)]
@@ -18,9 +19,15 @@ enum Phase {
 impl QuickJumpAndDodge {
     pub fn begin(packet: &rlbot::LiveDataPacket) -> QuickJumpAndDodge {
         QuickJumpAndDodge {
-            phase: Phase::Jump,
+            sideways: 0.0,
             start_time: packet.GameInfo.TimeSeconds,
+            phase: Phase::Jump,
         }
+    }
+
+    pub fn sideways(mut self, steer: f32) -> QuickJumpAndDodge {
+        self.sideways = steer;
+        self
     }
 }
 

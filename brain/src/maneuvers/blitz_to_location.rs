@@ -52,13 +52,16 @@ impl Behavior for BlitzToLocation {
         }
 
         // Should we flip?
-        if distance > 2000.0
-            && steer.abs() < PI / 8.0
-            && me.OnGround
+        if me.OnGround
             && me.Physics.rot().pitch().to_degrees() < 1.0
             && (800.0 <= speed && speed < 2200.0)
         {
-            return Action::Call(Box::new(QuickJumpAndDodge::begin(packet)));
+            let flip_dist = me.Physics.vel().norm() * 3.0;
+            if (distance > flip_dist && steer.abs() < PI / 24.0)
+                || (distance > flip_dist * 1.5 && steer.abs() < PI / 8.0)
+            {
+                return Action::Call(Box::new(QuickJumpAndDodge::begin(packet)));
+            }
         }
 
         Action::Yield(rlbot::PlayerInput {
