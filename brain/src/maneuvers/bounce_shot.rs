@@ -1,5 +1,5 @@
+use behavior::{Action, Behavior};
 use eeg::{color, Drawable, EEG};
-use maneuvers::Maneuver;
 use mechanics::GroundAccelToLoc;
 use predict::intercept::estimate_intercept_car_ball;
 use rlbot;
@@ -7,8 +7,14 @@ use utils::{one_v_one, ExtendPhysics};
 
 pub struct BounceShot;
 
-impl Maneuver for BounceShot {
-    fn execute(&self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> rlbot::PlayerInput {
+impl BounceShot {
+    pub fn new() -> BounceShot {
+        BounceShot
+    }
+}
+
+impl Behavior for BounceShot {
+    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
         eeg.draw(Drawable::print("BounceShot", color::YELLOW));
 
         let (me, _enemy) = one_v_one(packet);
@@ -20,7 +26,8 @@ impl Maneuver for BounceShot {
         ));
         eeg.draw(Drawable::GhostCar(intercept_loc, me.Physics.rot()));
 
-        let child =
+        // TODO: this is not how this works…
+        let mut child =
             GroundAccelToLoc::new(intercept_loc, packet.GameInfo.TimeSeconds + intercept_time);
         child.execute(packet, eeg)
     }
@@ -36,7 +43,7 @@ mod tests {
     #[test]
     fn normal() {
         let test = TestRunner::start(
-            Box::new(BounceShot),
+            BounceShot,
             TestScenario {
                 ball_loc: Vector3::new(-2000.0, 2000.0, 500.0),
                 ball_vel: Vector3::new(1000.0, 0.0, 0.0),
@@ -54,7 +61,7 @@ mod tests {
     #[test]
     fn slow_no_boost() {
         let test = TestRunner::start(
-            Box::new(BounceShot),
+            BounceShot,
             TestScenario {
                 ball_loc: Vector3::new(-2000.0, 2000.0, 1000.0),
                 ball_vel: Vector3::new(500.0, 0.0, 0.0),

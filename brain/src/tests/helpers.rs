@@ -1,7 +1,8 @@
 use bakkesmod::BakkesMod;
+use behavior::Behavior;
 use brain::Brain;
+use collect::{ExtendRotation3, Snapshot};
 use crossbeam_channel;
-use maneuvers::Maneuver;
 use nalgebra::{Rotation3, Vector3};
 use rlbot;
 use std::f32::consts::PI;
@@ -9,7 +10,6 @@ use std::sync::{Arc, Barrier, Mutex};
 use std::thread;
 use std::thread::sleep;
 use std::time::Duration;
-use utils::ExtendRotation3;
 
 pub struct TestScenario {
     pub ball_loc: Vector3<f32>,
@@ -47,6 +47,34 @@ impl Default for TestScenario {
     }
 }
 
+impl TestScenario {
+    /// This is a debug-only convenience function that lets you directly
+    /// copy-paste a row from a collect CSV to visualize it.
+    #[allow(dead_code)]
+    #[deprecated(note = "Use TestScenario::new() instead when writing actual tests.")]
+    pub fn from_collect_row(text: &str) -> Self {
+        let row = text.split("\t").map(|x| x.parse().unwrap());
+        let snapshot = Snapshot::from_row(row).unwrap();
+        let car = &snapshot.cars[0];
+        let enemy = &snapshot.cars[1];
+        Self {
+            ball_loc: snapshot.ball.loc,
+            ball_rot: snapshot.ball.rot,
+            ball_vel: snapshot.ball.vel,
+            ball_ang_vel: snapshot.ball.ang_vel,
+            car_loc: car.loc,
+            car_rot: car.rot,
+            car_vel: car.vel,
+            car_ang_vel: car.ang_vel,
+            enemy_loc: enemy.loc,
+            enemy_rot: enemy.rot,
+            enemy_vel: enemy.vel,
+            enemy_ang_vel: enemy.ang_vel,
+            boost: 100,
+        }
+    }
+}
+
 pub struct TestRunner {
     sniff_packet: crossbeam_channel::Sender<crossbeam_channel::Sender<rlbot::LiveDataPacket>>,
     has_scored: crossbeam_channel::Sender<crossbeam_channel::Sender<bool>>,
@@ -55,7 +83,7 @@ pub struct TestRunner {
 }
 
 impl TestRunner {
-    pub fn start(maneuver: Box<Maneuver + Send>, scenario: TestScenario) -> TestRunner {
+    pub fn start(behavior: impl Behavior + Send + 'static, scenario: TestScenario) -> TestRunner {
         let ready_wait = Arc::new(Barrier::new(2));
         let ready_wait_send = ready_wait.clone();
         let (terminate_tx, terminate_rx) = crossbeam_channel::unbounded();
@@ -64,7 +92,7 @@ impl TestRunner {
         let thread = thread::spawn(|| {
             test_thread(
                 scenario,
-                maneuver,
+                Box::new(behavior),
                 ready_wait_send,
                 sniff_packet_rx,
                 has_scored_rx,
@@ -120,7 +148,7 @@ lazy_static! {
 
 fn test_thread(
     scenario: TestScenario,
-    maneuver: Box<Maneuver>,
+    behavior: Box<Behavior>,
     ready_wait: Arc<Barrier>,
     sniff_packet: crossbeam_channel::Receiver<crossbeam_channel::Sender<rlbot::LiveDataPacket>>,
     has_scored: crossbeam_channel::Receiver<crossbeam_channel::Sender<bool>>,
@@ -138,7 +166,7 @@ fn test_thread(
     // Wait for RoundActive
     while !packets.next().unwrap().GameInfo.RoundActive {}
 
-    let mut brain = Brain::with_maneuver(maneuver);
+    let mut brain = Brain::with_behavior(behavior);
 
     setup_scenario(&scenario);
     ready_wait.wait();

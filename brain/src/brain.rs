@@ -1,23 +1,24 @@
+use behavior::{Behavior, BehaviorRunner};
 use eeg::{color, Drawable, EEG};
-use maneuvers::{BounceShot, Maneuver};
+use maneuvers::BounceShot;
 use nalgebra::clamp;
 use rlbot;
 use utils::fps_counter::FPSCounter;
 
 pub struct Brain {
-    maneuver: Box<Maneuver>,
+    runner: BehaviorRunner,
     fps_counter: FPSCounter,
     eeg: EEG,
 }
 
 impl Brain {
     pub fn new() -> Self {
-        Self::with_maneuver(Box::new(BounceShot))
+        Self::with_behavior(Box::new(BounceShot))
     }
 
-    pub fn with_maneuver(maneuver: Box<Maneuver>) -> Self {
+    pub fn with_behavior(behavior: Box<Behavior>) -> Self {
         Self {
-            maneuver,
+            runner: BehaviorRunner::new(behavior),
             fps_counter: FPSCounter::new(),
             eeg: EEG::new(),
         }
@@ -27,7 +28,7 @@ impl Brain {
         self.fps_counter.tick(packet.GameInfo.TimeSeconds);
 
         self.eeg.draw(Drawable::print(
-            format!("game_time: {:.1}", packet.GameInfo.TimeSeconds),
+            format!("game_time: {:.2}", packet.GameInfo.TimeSeconds),
             color::GREEN,
         ));
         self.eeg.draw(Drawable::print(
@@ -35,7 +36,7 @@ impl Brain {
             color::GREEN,
         ));
 
-        let mut result = self.maneuver.execute(&packet, &mut self.eeg);
+        let mut result = self.runner.execute(&packet, &mut self.eeg);
 
         self.eeg.show(packet);
 

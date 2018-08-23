@@ -1,9 +1,10 @@
+use behavior::{Action, Behavior};
 use eeg::{color, Drawable, EEG};
-use maneuvers::Maneuver;
+use mechanics::misc::simple_steer_towards;
 use nalgebra::Vector3;
 use rlbot;
 use simulate::Car1D;
-use utils::{my_car, ExtendPhysics, ExtendRotation3};
+use utils::{my_car, ExtendPhysics};
 
 pub struct GroundAccelToLoc {
     target_loc: Vector3<f32>,
@@ -19,8 +20,8 @@ impl GroundAccelToLoc {
     }
 }
 
-impl Maneuver for GroundAccelToLoc {
-    fn execute(&self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> rlbot::PlayerInput {
+impl Behavior for GroundAccelToLoc {
+    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
         eeg.draw(Drawable::print("GroundAccelToLoc", color::YELLOW));
 
         let me = my_car(packet);
@@ -42,7 +43,7 @@ impl Maneuver for GroundAccelToLoc {
             result.Throttle = 1.0;
         }
 
-        result
+        Action::Yield(result)
     }
 }
 
@@ -64,10 +65,4 @@ fn estimate_approach(origin: &rlbot::Physics, distance: f32, time: f32) -> bool 
     }
 
     false
-}
-
-fn simple_steer_towards(car: &rlbot::Physics, target_loc: Vector3<f32>) -> f32 {
-    let diff = target_loc - car.loc();
-    let target_yaw = f32::atan2(diff.y, diff.x);
-    target_yaw - car.rot().yaw()
 }

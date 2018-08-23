@@ -1,5 +1,6 @@
 // This file is a hot mess, don't look at it please :)
 
+use collect::ExtendRotation3;
 use crossbeam_channel;
 use graphics::types::Color;
 use graphics::Transformed;
@@ -12,7 +13,6 @@ use rlbot;
 use std::mem;
 use std::path::PathBuf;
 use std::thread;
-use utils::ExtendRotation3;
 
 pub struct EEG {
     tx: Option<crossbeam_channel::Sender<ThreadMessage>>,

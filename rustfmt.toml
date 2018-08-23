@@ -1,5 +1,4 @@
 error_on_line_overflow = true
-error_on_unformatted = true
 
 format_macro_matchers = true
 reorder_impl_items = true

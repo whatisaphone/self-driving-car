@@ -80,6 +80,7 @@ name = "brain"
 version = "0.1.0"
 dependencies = [
  "bakkesmod 0.1.0",
+ "collect 0.1.0",
  "crossbeam-channel 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "nalgebra 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -148,6 +149,7 @@ version = "0.1.0"
 dependencies = [
  "bakkesmod 0.1.0",
  "csv 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "nalgebra 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rlbot 0.1.0",
 ]
 
