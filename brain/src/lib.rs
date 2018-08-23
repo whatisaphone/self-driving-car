@@ -15,9 +15,9 @@ mod behavior;
 mod behaviors;
 mod brain;
 mod eeg;
+#[cfg(test)]
+mod integration_tests;
 mod maneuvers;
 mod mechanics;
 mod predict;
-#[cfg(test)]
-mod tests;
 mod utils;

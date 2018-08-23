@@ -34,11 +34,10 @@ impl Behavior for BounceShot {
 }
 
 #[cfg(test)]
-mod tests {
+mod integration_tests {
+    use integration_tests::helpers::{TestRunner, TestScenario};
     use maneuvers::bounce_shot::BounceShot;
     use nalgebra::Vector3;
-    use tests::helpers::TestRunner;
-    use tests::helpers::TestScenario;
 
     #[test]
     fn normal() {

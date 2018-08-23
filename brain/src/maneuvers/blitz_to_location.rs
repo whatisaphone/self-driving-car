@@ -68,11 +68,10 @@ impl Behavior for BlitzToLocation {
 }
 
 #[cfg(test)]
-mod tests {
+mod integration_tests {
+    use integration_tests::helpers::{TestRunner, TestScenario};
     use maneuvers::blitz_to_location::BlitzToLocation;
     use nalgebra::Vector3;
-    use tests::helpers::TestRunner;
-    use tests::helpers::TestScenario;
 
     #[test]
     fn kickoff_off_center() {

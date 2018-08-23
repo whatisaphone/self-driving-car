@@ -29,5 +29,5 @@
       language: system
       files: '[.]rs$'
       # Skip the tests which require Rocket League to be running.
-      entry: cargo test -- --skip 'maneuvers::'
+      entry: cargo test -- --skip integration_tests
       pass_filenames: false

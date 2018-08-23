@@ -45,8 +45,11 @@ endeavor.
 3.  Run the tests.
 
     ```sh
-    cargo test -p brain -- --test-threads=1
+    cargo test -p brain -- --test-threads=1 integration_tests
     ```
+
+    To run an individual test, you can replace `integration_tests` with a
+    pattern that will match the name of the test of interest.
 
 ## Handy Links
 

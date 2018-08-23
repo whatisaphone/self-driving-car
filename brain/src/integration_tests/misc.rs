@@ -1,7 +1,7 @@
 use behaviors::RootBehavior;
 use collect::ExtendRotation3;
+use integration_tests::helpers::{TestRunner, TestScenario};
 use nalgebra::{Rotation3, Vector3};
-use tests::helpers::{TestRunner, TestScenario};
 
 #[test]
 fn clear_ball_out_of_goal() {
