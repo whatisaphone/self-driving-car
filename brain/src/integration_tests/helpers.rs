@@ -84,6 +84,14 @@ pub struct TestRunner {
 
 impl TestRunner {
     pub fn start(behavior: impl Behavior + Send + 'static, scenario: TestScenario) -> TestRunner {
+        TestRunner::start2(scenario, |_| behavior)
+    }
+
+    pub fn start2<B, BF>(scenario: TestScenario, behavior: BF) -> TestRunner
+    where
+        B: Behavior + 'static,
+        BF: FnOnce(&rlbot::LiveDataPacket) -> B + Send + 'static,
+    {
         let ready_wait = Arc::new(Barrier::new(2));
         let ready_wait_send = ready_wait.clone();
         let (terminate_tx, terminate_rx) = crossbeam_channel::unbounded();
@@ -92,7 +100,7 @@ impl TestRunner {
         let thread = thread::spawn(|| {
             test_thread(
                 scenario,
-                Box::new(behavior),
+                |p| Box::new(behavior(p)),
                 ready_wait_send,
                 sniff_packet_rx,
                 has_scored_rx,
@@ -148,7 +156,7 @@ lazy_static! {
 
 fn test_thread(
     scenario: TestScenario,
-    behavior: Box<Behavior>,
+    behavior: impl FnOnce(&rlbot::LiveDataPacket) -> Box<Behavior>,
     ready_wait: Arc<Barrier>,
     sniff_packet: crossbeam_channel::Receiver<crossbeam_channel::Sender<rlbot::LiveDataPacket>>,
     has_scored: crossbeam_channel::Receiver<crossbeam_channel::Sender<bool>>,
@@ -166,12 +174,12 @@ fn test_thread(
     // Wait for RoundActive
     while !packets.next().unwrap().GameInfo.RoundActive {}
 
-    let mut brain = Brain::with_behavior(behavior);
-
     setup_scenario(&scenario);
     ready_wait.wait();
 
     let first_packet = packets.next().unwrap();
+
+    let mut brain = Brain::with_behavior(behavior(&first_packet));
 
     loop {
         let packet = packets.next().unwrap();
