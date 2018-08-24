@@ -39,8 +39,9 @@ impl Behavior for GroundAccelToLoc {
 
         let mut result = rlbot::PlayerInput::default();
         result.Steer = simple_steer_towards(&me.Physics, self.target_loc);
-        if !estimate_approach(&me.Physics, distance, time_remaining - 2.0 / 120.0) {
+        if !estimate_approach(&me, distance, time_remaining - 2.0 / 120.0) {
             result.Throttle = 1.0;
+            result.Boost = true;
         }
 
         Action::Yield(result)
@@ -49,15 +50,15 @@ impl Behavior for GroundAccelToLoc {
 
 /// Starting at `origin`, if we go pedal to the metal for `time` seconds, will
 /// we have traveled `distance`?
-fn estimate_approach(origin: &rlbot::Physics, distance: f32, time: f32) -> bool {
+fn estimate_approach(car: &rlbot::PlayerInfo, distance: f32, time: f32) -> bool {
     const DT: f32 = 1.0 / 60.0;
 
     let mut t = 1.5 / 120.0; // Start a few ticks later to compensate for input lag.
-    let mut sim_car = Car1D::new(origin.vel().norm());
+    let mut sim_car = Car1D::new(car.Physics.vel().norm()).with_boost(car.Boost);
 
     while t < time {
         t += DT;
-        sim_car.step(DT, 1.0, false);
+        sim_car.step(DT, 1.0, true);
 
         if sim_car.distance_traveled() >= distance {
             return true;
@@ -78,7 +79,7 @@ mod integration_tests {
 
     #[test]
     fn verify_arrival_time() {
-        let target_loc = Vector3::new(-300.0, 500.0, 0.0);
+        let target_loc = Vector3::new(-200.0, 500.0, 0.0);
         let target_loc_2 = target_loc;
         let test = TestRunner::start2(
             TestScenario {

@@ -1,8 +1,10 @@
-use tables::{THROTTLE_CAR_VEL_Y, THROTTLE_TIME};
+use rl;
+use tables;
 
 pub struct Car1D {
     loc: f32,
     vel: f32,
+    boost: f32,
 }
 
 impl Car1D {
@@ -10,7 +12,13 @@ impl Car1D {
         Car1D {
             loc: 0.0,
             vel: speed,
+            boost: 100.0,
         }
+    }
+
+    pub fn with_boost(mut self, boost: i32) -> Self {
+        self.boost = boost as f32;
+        self
     }
 
     pub fn distance_traveled(&self) -> f32 {
@@ -21,16 +29,28 @@ impl Car1D {
         self.vel
     }
 
-    pub fn step(&mut self, dt: f32, throttle: f32, boost: bool) {
-        assert_eq!(throttle, 1.0, "unimplemented");
-        assert_eq!(boost, false, "unimplemented");
+    pub fn step(&mut self, dt: f32, throttle: f32, mut boost: bool) {
+        assert_eq!(throttle, 1.0, "Throttle must be 1.0");
 
-        let old_time = linear_interpolate(THROTTLE_CAR_VEL_Y, THROTTLE_TIME, self.vel);
+        if boost {
+            boost = self.boost > 0.0;
+        }
+
+        let (reference_time, reference_vel_y) = if boost {
+            (tables::BOOST_TIME, tables::BOOST_CAR_VEL_Y)
+        } else {
+            (tables::THROTTLE_TIME, tables::THROTTLE_CAR_VEL_Y)
+        };
+
+        let old_time = linear_interpolate(reference_vel_y, reference_time, self.vel);
         let new_time = old_time + dt;
-        let new_vel = linear_interpolate(THROTTLE_TIME, THROTTLE_CAR_VEL_Y, new_time);
+        let new_vel = linear_interpolate(reference_time, reference_vel_y, new_time);
 
         self.loc += self.vel * dt;
         self.vel = new_vel;
+        if boost {
+            self.boost -= rl::BOOST_DEPLETION * dt;
+        }
     }
 }
 
@@ -59,5 +79,15 @@ mod tests {
     #[test]
     fn max_throttle() {
         Car1D::new(99999.0).step(DT, 1.0, false);
+    }
+
+    #[test]
+    fn zero_boost() {
+        Car1D::new(0.0).step(DT, 1.0, true);
+    }
+
+    #[test]
+    fn max_boost() {
+        Car1D::new(99999.0).step(DT, 1.0, true);
     }
 }

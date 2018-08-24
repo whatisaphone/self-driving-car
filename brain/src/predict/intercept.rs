@@ -14,7 +14,7 @@ pub fn estimate_intercept_car_ball(
     const RADII: f32 = 240.0;
 
     let mut t = 0.0;
-    let mut sim_car = Car1D::new(car.Physics.vel().norm());
+    let mut sim_car = Car1D::new(car.Physics.vel().norm()).with_boost(car.Boost);
     let mut sim_ball = Ball::new(
         ball.Physics.loc(),
         ball.Physics.vel(),
@@ -24,7 +24,7 @@ pub fn estimate_intercept_car_ball(
     for _ in 0..200 {
         t += DT;
         sim_ball.step(DT);
-        sim_car.step(DT, 1.0, false);
+        sim_car.step(DT, 1.0, true);
 
         if sim_ball.loc().z > 100.0 {
             continue; // The ball is so high and I don't know how to jump :(
