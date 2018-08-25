@@ -1,24 +1,12 @@
 /// Ensure coordinates are represented correctly in various cases.
 use bakkesmod::BakkesMod;
-use behavior::{Action, Behavior};
+use behavior::NullBehavior;
 use collect::ExtendRotation3;
-use eeg::EEG;
-use integration_tests::helpers::{unlock_rlbot_singleton, TestRunner, TestScenario};
+use integration_tests::helpers::{TestRunner, TestScenario};
 use nalgebra::{Rotation3, Vector3};
-use rlbot;
 use std::f32::consts::PI;
-use std::thread::sleep;
-use std::time::Duration;
 use utils::geometry::ExtendVector3;
 use utils::ExtendPhysics;
-
-struct NullBehavior;
-
-impl Behavior for NullBehavior {
-    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-        Action::Yield(rlbot::PlayerInput::default())
-    }
-}
 
 #[test]
 #[ignore] // Very unlikely to break

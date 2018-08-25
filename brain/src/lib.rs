@@ -14,7 +14,6 @@ extern crate simulate;
 pub use brain::Brain;
 
 mod behavior;
-mod behaviors;
 mod brain;
 mod eeg;
 #[cfg(test)]

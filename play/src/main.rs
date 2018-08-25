@@ -18,7 +18,7 @@ fn main() {
     let f = File::create("play.csv").unwrap();
     let mut collector = Collector::new(f);
 
-    let mut brain = Brain::new();
+    let mut brain = Brain::with_root_behavior();
 
     loop {
         let packet = packets.next().unwrap();

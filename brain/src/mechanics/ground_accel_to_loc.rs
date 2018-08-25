@@ -70,7 +70,6 @@ fn estimate_approach(car: &rlbot::PlayerInfo, distance: f32, time: f32) -> bool 
 
 #[cfg(test)]
 mod integration_tests {
-    use crossbeam_channel;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use mechanics::GroundAccelToLoc;
     use nalgebra::Vector3;

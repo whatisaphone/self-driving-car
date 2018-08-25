@@ -1,5 +1,4 @@
-use behavior::{Behavior, BehaviorRunner};
-use behaviors::RootBehavior;
+use behavior::{Behavior, BehaviorRunner, RootBehavior};
 use eeg::{color, Drawable, EEG};
 use nalgebra::clamp;
 use rlbot;
@@ -12,7 +11,7 @@ pub struct Brain {
 }
 
 impl Brain {
-    pub fn new() -> Self {
+    pub fn with_root_behavior() -> Self {
         Self::with_behavior(Box::new(RootBehavior))
     }
 
@@ -22,6 +21,10 @@ impl Brain {
             fps_counter: FPSCounter::new(),
             eeg: EEG::new(),
         }
+    }
+
+    pub fn set_behavior(&mut self, behavior: Box<Behavior>) {
+        self.runner = BehaviorRunner::new(behavior);
     }
 
     pub fn tick(&mut self, packet: &rlbot::LiveDataPacket) -> rlbot::PlayerInput {

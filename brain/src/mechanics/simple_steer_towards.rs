@@ -14,7 +14,7 @@ pub fn simple_steer_towards(car: &rlbot::Physics, target_loc: Vector3<f32>) -> f
 mod integration_tests {
     use behavior::{Action, Behavior};
     use collect::ExtendRotation3;
-    use eeg::EEG;
+    use eeg::{color, Drawable, EEG};
     use integration_tests::helpers::{TestRunner, TestScenario};
     use mechanics::simple_steer_towards;
     use nalgebra::{Rotation3, Vector3};
@@ -25,6 +25,8 @@ mod integration_tests {
 
     impl Behavior for SimpleSteerTowardsBall {
         fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
+            eeg.draw(Drawable::print("SimpleSteerTowardsBall", color::YELLOW));
+
             let me = packet.GameCars[0];
             let ball = packet.GameBall;
             Action::Yield(rlbot::PlayerInput {

@@ -59,7 +59,7 @@ fn good_approach_angle(packet: &rlbot::LiveDataPacket) -> bool {
 
 #[cfg(test)]
 mod integration_tests {
-    use behaviors::shoot::Shoot;
+    use behavior::shoot::Shoot;
     use collect::ExtendRotation3;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use nalgebra::{Rotation3, Vector3};

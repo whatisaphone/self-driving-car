@@ -1,4 +1,4 @@
-use behaviors::RootBehavior;
+use behavior::RootBehavior;
 use collect::ExtendRotation3;
 use integration_tests::helpers::{TestRunner, TestScenario};
 use nalgebra::{Rotation3, Vector3};

@@ -1,5 +1,6 @@
 use bakkesmod::BakkesMod;
 use behavior::Behavior;
+use behavior::NullBehavior;
 use brain::Brain;
 use collect::{ExtendRotation3, Snapshot};
 use crossbeam_channel;
@@ -99,7 +100,7 @@ lazy_static! {
 /// RLBot_Core_Interface.dll sometimes crashes if it's unloaded and then
 /// reloaded, so just keep a permanent instance around for the tests (and
 /// leak it, don't worry, everything will be fine!)
-pub fn unlock_rlbot_singleton() -> MutexGuard<'static, Option<rlbot::RLBot>> {
+fn unlock_rlbot_singleton() -> MutexGuard<'static, Option<rlbot::RLBot>> {
     let mut rlbot_guard = RLBOT_MUTEX.lock().unwrap();
     if rlbot_guard.is_none() {
         *rlbot_guard = Some(rlbot::init().unwrap());
@@ -119,17 +120,17 @@ fn test_thread(
     let rlbot = rlbot_guard.as_ref().unwrap();
     rlbot.start_match(rlbot::match_settings_1v1()).unwrap();
 
-    let mut packets = rlbot.packeteer();
+    let mut brain = Brain::with_behavior(Box::new(NullBehavior));
 
+    let mut packets = rlbot.packeteer();
     // Wait for RoundActive
     while !packets.next().unwrap().GameInfo.RoundActive {}
 
     setup_scenario(scenario);
-    ready_wait.wait();
 
     let first_packet = packets.next().unwrap();
-
-    let mut brain = Brain::with_behavior(behavior(&first_packet));
+    brain.set_behavior(behavior(&first_packet));
+    ready_wait.wait();
 
     loop {
         let packet = packets.next().unwrap();
@@ -157,11 +158,21 @@ fn test_thread(
 
 fn setup_scenario(scenario: impl BakkesModCommand) {
     let bakkesmod = BakkesMod::connect().unwrap();
-    let command = scenario.to_bakkesmod_command();
-    for _ in 0..6 {
-        bakkesmod.send(command.to_owned());
+
+    let neutral = TestScenario {
+        car_loc: Vector3::new(1000.0, 0.0, 20.0),
+        enemy_loc: Vector3::new(-1000.0, 0.0, 20.0),
+        boost: 0,
+        ..Default::default()
+    }.to_bakkesmod_command();
+
+    for i in 0..6 {
+        bakkesmod.send(neutral.clone());
         sleep(Duration::from_millis(250));
     }
+
+    let command = scenario.to_bakkesmod_command();
+    bakkesmod.send(command);
 }
 
 pub trait BakkesModCommand {
