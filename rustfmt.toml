@@ -1,7 +1,6 @@
 error_on_line_overflow = true
 
 format_macro_matchers = true
-reorder_impl_items = true
 
 # These cause a rustfmt crash :(
 # report_todo = "Always"
