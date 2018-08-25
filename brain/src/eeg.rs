@@ -70,6 +70,7 @@ pub mod color {
     pub const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
     pub const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
     pub const PITCH: [f32; 4] = [0.0, 0.2, 0.0, 1.0];
+    pub const RED: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
     pub const ORANGE: [f32; 4] = [1.0, 0.5, 0.0, 1.0];
     pub const GREEN: [f32; 4] = [0.0, 1.0, 0.0, 1.0];
     pub const YELLOW: [f32; 4] = [1.0, 1.0, 0.0, 1.0];
@@ -103,7 +104,7 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
                 window.draw_2d(&event, |c, g| {
                     const SCALE: f64 = 0.05;
                     const OUTLINE_RADIUS: f64 = 0.5 / SCALE;
-                    let car_rect = rectangle::rectangle_by_corners(-50.0, -100.0, 50.0, 100.0);
+                    let car_rect = rectangle::rectangle_by_corners(-100.0, -50.0, 100.0, 50.0);
                     let ball_rect = ellipse::circle(0.0, 0.0, 92.0);
 
                     clear(color::BLACK, g);
@@ -159,7 +160,7 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
                                     &Default::default(),
                                     transform
                                         .trans(loc.x.into(), loc.y.into())
-                                        .rot_rad(rot.pitch().into()),
+                                        .rot_rad(rot.yaw().into()),
                                     g,
                                 );
                             }

@@ -3,7 +3,7 @@ use eeg::{color, Drawable, EEG};
 use rlbot;
 
 pub struct QuickJumpAndDodge {
-    sideways: f32,
+    yaw: f32,
     start_time: f32,
     phase: Phase,
 }
@@ -19,14 +19,14 @@ enum Phase {
 impl QuickJumpAndDodge {
     pub fn begin(packet: &rlbot::LiveDataPacket) -> QuickJumpAndDodge {
         QuickJumpAndDodge {
-            sideways: 0.0,
+            yaw: 0.0,
             start_time: packet.GameInfo.TimeSeconds,
             phase: Phase::Jump,
         }
     }
 
-    pub fn sideways(mut self, steer: f32) -> QuickJumpAndDodge {
-        self.sideways = steer;
+    pub fn yaw(mut self, steer: f32) -> QuickJumpAndDodge {
+        self.yaw = steer;
         self
     }
 }
@@ -58,6 +58,7 @@ impl Behavior for QuickJumpAndDodge {
             self.phase = Phase::Finished;
             result.Jump = true;
             result.Pitch = -1.0;
+            result.Yaw = self.yaw;
             Action::Yield(result)
         } else {
             Action::Return

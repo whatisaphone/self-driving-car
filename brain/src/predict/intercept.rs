@@ -26,7 +26,7 @@ pub fn estimate_intercept_car_ball(
         sim_ball.step(DT);
         sim_car.step(DT, 1.0, true);
 
-        if sim_ball.loc().z > 100.0 {
+        if sim_ball.loc().z > 110.0 {
             continue; // The ball is so high and I don't know how to jump :(
         }
 
