@@ -16,7 +16,7 @@ mod integration_tests {
     use collect::ExtendRotation3;
     use eeg::EEG;
     use integration_tests::helpers::{TestRunner, TestScenario};
-    use mechanics::misc::simple_steer_towards;
+    use mechanics::simple_steer_towards;
     use nalgebra::{Rotation3, Vector3};
     use rlbot;
     use utils::ExtendPhysics;

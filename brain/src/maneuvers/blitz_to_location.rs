@@ -1,8 +1,7 @@
 use behavior::{Action, Behavior};
 use collect::ExtendRotation3;
 use eeg::{color, Drawable, EEG};
-use mechanics::misc::simple_steer_towards;
-use mechanics::QuickJumpAndDodge;
+use mechanics::{simple_steer_towards, QuickJumpAndDodge};
 use nalgebra::Vector3;
 use rlbot;
 use std::f32::consts::PI;

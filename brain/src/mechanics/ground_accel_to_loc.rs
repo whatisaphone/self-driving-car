@@ -1,6 +1,6 @@
 use behavior::{Action, Behavior};
 use eeg::{color, Drawable, EEG};
-use mechanics::misc::simple_steer_towards;
+use mechanics::simple_steer_towards;
 use nalgebra::Vector3;
 use rlbot;
 use simulate::Car1D;
