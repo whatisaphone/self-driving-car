@@ -6,8 +6,8 @@ use graphics::types::Color;
 use graphics::Transformed;
 use nalgebra::{Rotation3, Vector3};
 use piston_window::{
-    clear, ellipse, rectangle, text, Glyphs, OpenGL, PistonWindow, Rectangle, TextureSettings,
-    WindowSettings,
+    clear, ellipse, rectangle, text, AdvancedWindow, Glyphs, OpenGL, PistonWindow, Position,
+    Rectangle, TextureSettings, WindowSettings,
 };
 use rlbot;
 use std::mem;
@@ -84,6 +84,7 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
         .opengl(OpenGL::V3_2)
         .build()
         .unwrap();
+    window.set_position(Position { x: 1920, y: 10 });
 
     let path = PathBuf::from(r"C:\Windows\Fonts\calibri.ttf");
     let factory = window.factory.clone();
