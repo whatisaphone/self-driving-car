@@ -6,8 +6,8 @@ use graphics::types::Color;
 use graphics::Transformed;
 use nalgebra::{Rotation3, Vector3};
 use piston_window::{
-    clear, ellipse, rectangle, text, AdvancedWindow, Glyphs, OpenGL, PistonWindow, Position,
-    Rectangle, TextureSettings, WindowSettings,
+    clear, ellipse, rectangle, text, AdvancedWindow, Ellipse, Glyphs, OpenGL, PistonWindow,
+    Position, Rectangle, TextureSettings, WindowSettings,
 };
 use rlbot;
 use std::mem;
@@ -54,6 +54,7 @@ impl EEG {
 }
 
 pub enum Drawable {
+    GhostBall(Vector3<f32>),
     GhostCar(Vector3<f32>, Rotation3<f32>),
     Print(String, Color),
 }
@@ -100,11 +101,14 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
             None => break, // The channel was closed, so exit the thread.
             Some(ThreadMessage::Draw(packet, drawables)) => {
                 window.draw_2d(&event, |c, g| {
-                    let car_rectangle = rectangle::rectangle_by_corners(-50.0, -100.0, 50.0, 100.0);
+                    const SCALE: f64 = 0.05;
+                    const OUTLINE_RADIUS: f64 = 0.5 / SCALE;
+                    let car_rect = rectangle::rectangle_by_corners(-50.0, -100.0, 50.0, 100.0);
+                    let ball_rect = ellipse::circle(0.0, 0.0, 92.0);
 
                     clear(color::BLACK, g);
 
-                    let transform = c.transform.scale(0.05, 0.05).trans(4200.0, 6200.0);
+                    let transform = c.transform.scale(SCALE, SCALE).trans(4200.0, 6200.0);
                     rectangle(
                         color::PITCH,
                         rectangle::rectangle_by_corners(-4000.0, -5000.0, 4000.0, 5000.0),
@@ -119,7 +123,7 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
                             } else {
                                 color::ORANGE
                             },
-                            car_rectangle,
+                            car_rect,
                             transform
                                 .trans(car.Physics.Location.X.into(), car.Physics.Location.Y.into())
                                 .rot_rad(car.Physics.Rotation.Yaw.into()),
@@ -129,12 +133,11 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
 
                     ellipse(
                         color::WHITE,
-                        ellipse::circle(
+                        ball_rect,
+                        transform.trans(
                             packet.GameBall.Physics.Location.X.into(),
                             packet.GameBall.Physics.Location.Y.into(),
-                            92.0,
                         ),
-                        transform,
                         g,
                     );
 
@@ -142,19 +145,23 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
 
                     for drawable in drawables.into_iter() {
                         match drawable {
+                            Drawable::GhostBall(loc) => {
+                                Ellipse::new_border(color::WHITE, OUTLINE_RADIUS).draw(
+                                    ball_rect,
+                                    &Default::default(),
+                                    transform.trans(loc.x.into(), loc.y.into()),
+                                    g,
+                                );
+                            }
                             Drawable::GhostCar(loc, rot) => {
-                                Rectangle::new(color::TRANSPARENT)
-                                    .border(rectangle::Border {
-                                        color: color::WHITE,
-                                        radius: 10.0,
-                                    }).draw(
-                                        car_rectangle,
-                                        &Default::default(),
-                                        transform
-                                            .trans(loc.x.into(), loc.y.into())
-                                            .rot_rad(rot.pitch().into()),
-                                        g,
-                                    );
+                                Rectangle::new_border(color::WHITE, OUTLINE_RADIUS).draw(
+                                    car_rect,
+                                    &Default::default(),
+                                    transform
+                                        .trans(loc.x.into(), loc.y.into())
+                                        .rot_rad(rot.pitch().into()),
+                                    g,
+                                );
                             }
                             Drawable::Print(txt, color) => {
                                 prints.push((txt, *color));

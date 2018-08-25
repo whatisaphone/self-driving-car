@@ -30,6 +30,7 @@ impl Behavior for Shoot {
             format!("target_dist: {:.0}", target_dist),
             color::GREEN,
         ));
+        eeg.draw(Drawable::GhostBall(intercept.ball_loc));
         eeg.draw(Drawable::GhostCar(target_loc, me.Physics.rot()));
 
         if target_dist <= 400.0 {
