@@ -1,9 +1,11 @@
 extern crate bakkesmod;
+extern crate collect;
 extern crate crossbeam_channel;
+#[cfg(test)]
+extern crate csv;
 extern crate graphics;
 #[macro_use]
 extern crate lazy_static;
-extern crate collect;
 extern crate nalgebra;
 extern crate piston_window;
 extern crate rlbot;

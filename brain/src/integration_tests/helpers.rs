@@ -3,9 +3,12 @@ use behavior::Behavior;
 use brain::Brain;
 use collect::{ExtendRotation3, Snapshot};
 use crossbeam_channel;
+use csv;
 use nalgebra::{Rotation3, Vector3};
 use rlbot;
 use std::f32::consts::PI;
+use std::fs::File;
+use std::path::Path;
 use std::sync::{Arc, Barrier, Mutex, MutexGuard};
 use std::thread;
 use std::thread::sleep;
@@ -214,6 +217,39 @@ impl Default for TestScenario {
 }
 
 impl TestScenario {
+    /// This is a debug-only convenience function that lets you directly
+    /// copy-paste a row from a collect CSV to visualize it.
+    #[allow(dead_code)]
+    #[deprecated(note = "Use TestScenario::new() instead when writing actual tests.")]
+    pub fn from_collected_row(filename: impl AsRef<Path>, time: f32) -> Self {
+        let file = File::open(filename).unwrap();
+        let mut reader = csv::Reader::from_reader(file);
+        for row in reader.records() {
+            let row = row.unwrap();
+            let row_time: f32 = row[0].parse().unwrap();
+            if row_time >= time {
+                let snapshot = Snapshot::from_row(row.iter().map(|x| x.parse().unwrap())).unwrap();
+                println!("{:?}", row);
+                return Self {
+                    ball_loc: snapshot.ball.loc,
+                    ball_rot: snapshot.ball.rot,
+                    ball_vel: snapshot.ball.vel,
+                    ball_ang_vel: snapshot.ball.ang_vel,
+                    car_loc: snapshot.cars[0].loc,
+                    car_rot: snapshot.cars[0].rot,
+                    car_vel: snapshot.cars[0].vel,
+                    car_ang_vel: snapshot.cars[0].ang_vel,
+                    enemy_loc: snapshot.cars[1].loc,
+                    enemy_rot: snapshot.cars[1].rot,
+                    enemy_vel: snapshot.cars[1].vel,
+                    enemy_ang_vel: snapshot.cars[1].ang_vel,
+                    ..Default::default()
+                };
+            }
+        }
+        panic!("Time not found in recording.");
+    }
+
     /// This is a debug-only convenience function that lets you directly
     /// copy-paste a row from a collect CSV to visualize it.
     #[allow(dead_code)]

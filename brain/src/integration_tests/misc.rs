@@ -32,3 +32,21 @@ fn todo() {
 
     test.sleep_millis(3000);
 }
+
+#[test]
+#[ignore] // TODO
+fn shoot_falling_ball() {
+    let test = TestRunner::start(
+        RootBehavior::new(),
+        TestScenario {
+            ball_loc: Vector3::new(3862.044, 1163.3925, 1456.4243),
+            ball_vel: Vector3::new(2532.4116, 897.6915, 396.8566),
+            car_loc: Vector3::new(1530.9783, 45.435856, 16.924282),
+            car_rot: Rotation3::from_unreal_angles(-0.010162623, 0.28551218, -0.0006711166),
+            car_vel: Vector3::new(1301.4751, 366.96378, 9.762962),
+            ..Default::default()
+        },
+    );
+
+    test.sleep_millis(7000);
+}
