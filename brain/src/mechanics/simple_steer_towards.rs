@@ -1,8 +1,7 @@
 use collect::ExtendRotation3;
 use nalgebra::Vector3;
 use rlbot;
-use utils::geometry::{ExtendF32, ExtendVector3};
-use utils::ExtendPhysics;
+use utils::{ExtendF32, ExtendPhysics, ExtendVector3};
 
 pub fn simple_steer_towards(car: &rlbot::Physics, target_loc: Vector3<f32>) -> f32 {
     let target_yaw = car.loc().angle_to(&target_loc);

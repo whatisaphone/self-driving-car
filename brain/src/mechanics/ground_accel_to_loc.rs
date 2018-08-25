@@ -73,8 +73,7 @@ mod integration_tests {
     use integration_tests::helpers::{TestRunner, TestScenario};
     use mechanics::GroundAccelToLoc;
     use nalgebra::Vector3;
-    use utils::geometry::ExtendVector3;
-    use utils::ExtendPhysics;
+    use utils::{ExtendPhysics, ExtendVector3};
 
     // This test is ignored because it's finicky and not quite accurate. The
     // issue seems to be that there seems to be more input lag for throttle than

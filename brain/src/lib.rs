@@ -4,6 +4,7 @@ extern crate crossbeam_channel;
 #[cfg(test)]
 extern crate csv;
 extern crate graphics;
+#[cfg(test)]
 #[macro_use]
 extern crate lazy_static;
 extern crate nalgebra;

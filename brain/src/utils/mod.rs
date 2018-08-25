@@ -1,9 +1,11 @@
 use collect::ExtendRotation3;
 use nalgebra::{Rotation3, Vector3};
 use rlbot;
+pub use utils::fps_counter::FPSCounter;
+pub use utils::geometry::{ExtendF32, ExtendVector3};
 
-pub mod fps_counter;
-pub mod geometry;
+mod fps_counter;
+mod geometry;
 
 /// Assuming I am the first car, return the first car.
 pub fn my_car(packet: &rlbot::LiveDataPacket) -> rlbot::PlayerInfo {

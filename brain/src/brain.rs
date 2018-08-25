@@ -2,7 +2,7 @@ use behavior::{Behavior, BehaviorRunner, RootBehavior};
 use eeg::{color, Drawable, EEG};
 use nalgebra::clamp;
 use rlbot;
-use utils::fps_counter::FPSCounter;
+use utils::FPSCounter;
 
 pub struct Brain {
     runner: BehaviorRunner,

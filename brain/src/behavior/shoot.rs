@@ -1,13 +1,9 @@
 use behavior::{Action, Behavior};
 use eeg::{color, Drawable, EEG};
-use maneuvers::BlitzToLocation;
 use mechanics::{simple_steer_towards, GroundAccelToLoc, QuickJumpAndDodge};
 use predict::intercept::estimate_intercept_car_ball;
 use rlbot;
-use utils::geometry::ExtendVector3;
-use utils::{
-    enemy_goal_center, enemy_goal_left_post, enemy_goal_right_post, one_v_one, ExtendPhysics,
-};
+use utils::{enemy_goal_center, one_v_one, ExtendPhysics};
 
 pub struct Shoot;
 

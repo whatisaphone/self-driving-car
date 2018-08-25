@@ -1,12 +1,10 @@
 /// Ensure coordinates are represented correctly in various cases.
-use bakkesmod::BakkesMod;
 use behavior::NullBehavior;
 use collect::ExtendRotation3;
 use integration_tests::helpers::{TestRunner, TestScenario};
 use nalgebra::{Rotation3, Vector3};
 use std::f32::consts::PI;
-use utils::geometry::ExtendVector3;
-use utils::ExtendPhysics;
+use utils::{ExtendPhysics, ExtendVector3};
 
 #[test]
 #[ignore] // Very unlikely to break
