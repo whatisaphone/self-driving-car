@@ -6,10 +6,13 @@ A bot that loses at Rocket League using [RLBot].
 
 ### Prerequisites
 
-* This code only works on Windows (because RLBot itself only works on Windows).
+* Windows
+
+  RLBot only works on Windows, and we inherit this limitation.
+
 * Install [Rust](https://www.rust-lang.org/).
-* Install [pre-commit].
-* Run this command:
+
+* Install [pre-commit], and run this command:
 
   ```sh
   pre-commit install
@@ -49,7 +52,7 @@ endeavor.
     ```
 
     To run an individual test, you can replace `integration_tests` with a
-    pattern that will match the name of the test of interest.
+    pattern that matches the name of the test.
 
 ## Handy Links
 
