@@ -4,6 +4,7 @@ use eeg::{color, Drawable, EEG};
 use mechanics::{simple_steer_towards, QuickJumpAndDodge};
 use nalgebra::Vector3;
 use rlbot;
+use simulate::rl;
 use std::f32::consts::PI;
 use utils::{my_car, ExtendPhysics};
 
@@ -34,13 +35,13 @@ impl Behavior for BlitzToLocation {
 
         // Should we boost?
         if distance > 1000.0
-            && steer.abs() < PI / 4.0
             && me.OnGround
-            && me.Boost > 0
+            && steer.abs() < PI / 4.0
             // After ~1500 (very unscientific number), we can hit max speed
             // quicker by flipping. After ~2000 (same), it's probably not worth
             // losing wheel contact (and thus agility).
-            && (speed < 1500.0 || (2000.0 <= speed && speed < 2290.0))
+            && (speed < 1500.0 || (2000.0 <= speed && speed < rl::CAR_ALMOST_MAX_SPEED))
+            && me.Boost > 0
         {
             return Action::Yield(rlbot::PlayerInput {
                 Throttle: 1.0,

@@ -3,7 +3,8 @@ use eeg::{color, Drawable, EEG};
 use mechanics::simple_steer_towards;
 use nalgebra::Vector3;
 use rlbot;
-use simulate::Car1D;
+use simulate::{rl, Car1D};
+use std::f32::consts::PI;
 use utils::{my_car, ExtendPhysics};
 
 pub struct GroundAccelToLoc {
@@ -37,11 +38,26 @@ impl Behavior for GroundAccelToLoc {
             color::GREEN,
         ));
 
+        if !me.OnGround {
+            eeg.draw(Drawable::print("I'm scared", color::RED));
+            return Action::Yield(rlbot::PlayerInput {
+                Throttle: 1.0,
+                Steer: simple_steer_towards(&me.Physics, self.target_loc),
+                ..Default::default()
+            });
+        }
+
         let mut result = rlbot::PlayerInput::default();
         result.Steer = simple_steer_towards(&me.Physics, self.target_loc);
         if !estimate_approach(&me, distance, time_remaining - 2.0 / 120.0) {
             result.Throttle = 1.0;
-            result.Boost = true;
+            if me.OnGround
+                && result.Steer.abs() < PI / 4.0
+                && me.Physics.vel().norm() < rl::CAR_ALMOST_MAX_SPEED
+                && me.Boost > 0
+            {
+                result.Boost = true;
+            }
         }
 
         Action::Yield(result)

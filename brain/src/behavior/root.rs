@@ -1,9 +1,8 @@
-use behavior::{Action, Behavior};
+use behavior::{Action, Behavior, Shoot};
 use eeg::{color, Drawable, EEG};
 use maneuvers::FiftyFifty;
 use rlbot;
-use utils::one_v_one;
-use utils::ExtendPhysics;
+use utils::{one_v_one, ExtendPhysics};
 
 pub struct RootBehavior;
 
@@ -21,9 +20,9 @@ impl Behavior for RootBehavior {
         eeg.draw(Drawable::print(format!("{:?}", possession), color::GREEN));
 
         match possession {
-            Possession::Me => Action::call(FiftyFifty::new()),
-            Possession::Enemy => Action::call(FiftyFifty::new()),
-            Possession::Unsure => Action::call(FiftyFifty::new()),
+            Possession::Me => Action::call(Shoot::new()),
+            Possession::Enemy => Action::call(Shoot::new()),
+            Possession::Unsure => Action::call(Shoot::new()),
         }
     }
 }

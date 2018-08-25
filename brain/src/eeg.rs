@@ -10,6 +10,7 @@ use piston_window::{
     Position, Rectangle, TextureSettings, WindowSettings,
 };
 use rlbot;
+use simulate::rl;
 use std::mem;
 use std::path::PathBuf;
 use std::thread;
@@ -72,9 +73,11 @@ pub mod color {
     pub const PITCH: [f32; 4] = [0.0, 0.2, 0.0, 1.0];
     pub const RED: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
     pub const ORANGE: [f32; 4] = [1.0, 0.5, 0.0, 1.0];
+    pub const ORANGE_DARK: [f32; 4] = [0.5, 0.25, 0.0, 1.0];
     pub const GREEN: [f32; 4] = [0.0, 1.0, 0.0, 1.0];
     pub const YELLOW: [f32; 4] = [1.0, 1.0, 0.0, 1.0];
     pub const BLUE: [f32; 4] = [0.5, 0.5, 1.0, 1.0];
+    pub const BLUE_DARK: [f32; 4] = [0.25, 0.25, 0.5, 1.0];
 }
 
 enum ThreadMessage {
@@ -110,9 +113,37 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
                     clear(color::BLACK, g);
 
                     let transform = c.transform.scale(SCALE, SCALE).trans(4200.0, 6200.0);
+
                     rectangle(
                         color::PITCH,
-                        rectangle::rectangle_by_corners(-4000.0, -5000.0, 4000.0, 5000.0),
+                        rectangle::rectangle_by_corners(
+                            -rl::FIELD_MAX_X as f64,
+                            -rl::FIELD_MAX_Y as f64,
+                            rl::FIELD_MAX_X as f64,
+                            rl::FIELD_MAX_Y as f64,
+                        ),
+                        transform,
+                        g,
+                    );
+                    rectangle(
+                        color::BLUE_DARK,
+                        rectangle::rectangle_by_corners(
+                            -rl::GOALPOST_X as f64,
+                            -rl::FIELD_MAX_Y as f64,
+                            rl::GOALPOST_X as f64,
+                            -rl::FIELD_MAX_Y as f64 + 500.0,
+                        ),
+                        transform,
+                        g,
+                    );
+                    rectangle(
+                        color::ORANGE_DARK,
+                        rectangle::rectangle_by_corners(
+                            -rl::GOALPOST_X as f64,
+                            rl::FIELD_MAX_Y as f64,
+                            rl::GOALPOST_X as f64,
+                            rl::FIELD_MAX_Y as f64 + 500.0,
+                        ),
                         transform,
                         g,
                     );
@@ -126,8 +157,8 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
                             },
                             car_rect,
                             transform
-                                .trans(car.Physics.Location.X.into(), car.Physics.Location.Y.into())
-                                .rot_rad(car.Physics.Rotation.Yaw.into()),
+                                .trans(car.Physics.Location.X as f64, car.Physics.Location.Y as f64)
+                                .rot_rad(car.Physics.Rotation.Yaw as f64),
                             g,
                         );
                     }
@@ -136,8 +167,8 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
                         color::WHITE,
                         ball_rect,
                         transform.trans(
-                            packet.GameBall.Physics.Location.X.into(),
-                            packet.GameBall.Physics.Location.Y.into(),
+                            packet.GameBall.Physics.Location.X as f64,
+                            packet.GameBall.Physics.Location.Y as f64,
                         ),
                         g,
                     );
@@ -150,7 +181,7 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
                                 Ellipse::new_border(color::WHITE, OUTLINE_RADIUS).draw(
                                     ball_rect,
                                     &Default::default(),
-                                    transform.trans(loc.x.into(), loc.y.into()),
+                                    transform.trans(loc.x as f64, loc.y as f64),
                                     g,
                                 );
                             }
@@ -159,8 +190,8 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
                                     car_rect,
                                     &Default::default(),
                                     transform
-                                        .trans(loc.x.into(), loc.y.into())
-                                        .rot_rad(rot.yaw().into()),
+                                        .trans(loc.x as f64, loc.y as f64)
+                                        .rot_rad(rot.yaw() as f64),
                                     g,
                                 );
                             }
