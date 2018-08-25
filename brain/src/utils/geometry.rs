@@ -1,13 +1,21 @@
 use nalgebra::{Vector2, Vector3};
 use std::f32::consts::PI;
 
-/// Normalize an angle to between -pi and pi.
-pub fn normalize_angle(theta: f32) -> f32 {
-    let result = theta % (PI * 2.0);
-    if result >= PI {
-        result - (PI * 2.0)
-    } else {
-        result
+pub trait ExtendF32 {
+    /// Normalize an angle to between -PI and PI.
+    fn normalize_angle(self) -> Self;
+}
+
+impl ExtendF32 for f32 {
+    fn normalize_angle(self) -> Self {
+        let result = self % (PI * 2.0);
+        if result < -PI {
+            result + (PI * 2.0)
+        } else if result >= PI {
+            result - (PI * 2.0)
+        } else {
+            result
+        }
     }
 }
 

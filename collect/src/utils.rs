@@ -1,5 +1,9 @@
 // This stuff does not belong in this crate. I should bite the bullet and break
 // out a `utils` crate.
+//
+// Note that there are some integration tests for ExtendRotation3 in
+// brain::integration_tests::coordinates – as I said, this is all misplaced and
+// a shuffle is in order.
 
 use nalgebra::Rotation3;
 
