@@ -21,7 +21,7 @@ impl Behavior for JumpShot {
 
 #[cfg(test)]
 mod integration_tests {
-    use behavior::JumpShot;
+    use behavior::jump_shot::JumpShot;
     use collect::ExtendRotation3;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use nalgebra::{Rotation3, Vector3};

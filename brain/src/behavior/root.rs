@@ -1,4 +1,5 @@
-use behavior::{Action, Behavior, Shoot};
+use behavior::shoot::Shoot;
+use behavior::{Action, Behavior};
 use eeg::{color, Drawable, EEG};
 use maneuvers::FiftyFifty;
 use rlbot;

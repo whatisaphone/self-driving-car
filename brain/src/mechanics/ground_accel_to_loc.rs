@@ -92,8 +92,8 @@ mod integration_tests {
     use utils::{ExtendPhysics, ExtendVector3};
 
     // This test is ignored because it's finicky and not quite accurate. The
-    // issue seems to be that there seems to be more input lag for throttle than
-    // for boost? Weird stuff. Anyhow, this is a nice goal at least :)
+    // issue seems to be that there is more input lag for throttle than for
+    // boost? Weird stuff. Anyhow, this test is a nice ideal at least :)
     #[test]
     #[ignore]
     fn verify_arrival_time() {
