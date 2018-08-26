@@ -131,7 +131,7 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
                             -rl::GOALPOST_X as f64,
                             -rl::FIELD_MAX_Y as f64,
                             rl::GOALPOST_X as f64,
-                            -rl::FIELD_MAX_Y as f64 + 500.0,
+                            -rl::FIELD_MAX_Y as f64 - 500.0,
                         ),
                         transform,
                         g,
