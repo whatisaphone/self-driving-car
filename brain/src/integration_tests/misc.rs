@@ -32,3 +32,30 @@ fn todo() {
 
     test.sleep_millis(3000);
 }
+
+#[test]
+#[cfg(never)]
+fn template() {
+    let scenario = TestScenario {
+        enemy_loc: Vector3::new(6000.0, 6000.0, 0.0),
+        ..TestScenario::from_collected_row("../play.csv", 100.0)
+    };
+    let test = TestRunner::start(
+        RootBehavior::new(),
+        scenario,
+        /*
+        TestScenario {
+            ball_loc: Vector3::new(),
+            ball_vel: Vector3::new(),
+            car_loc: Vector3::new(),
+            car_rot: Rotation3::from_unreal_angles(),
+            car_vel: Vector3::new(),
+            ..Default::default()
+        },
+        */
+    );
+
+    test.sleep_millis(5000);
+
+    assert!(test.has_scored());
+}

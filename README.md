@@ -68,6 +68,8 @@ endeavor.
   * the bottmer peak
   * formula none
   * bender
+  * RoboCar
+  * rosie the rocket maid
 * Chat
   * misc quickchat
   * they told me they would delete me if i lost

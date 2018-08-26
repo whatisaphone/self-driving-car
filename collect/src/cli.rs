@@ -21,7 +21,7 @@ pub fn main() -> Result<(), ()> {
     let commands = [
         "ball location 2000 0 0",
         "ball velocity 0 0 0",
-        "player 0 location 0 0 0",
+        "player 0 location 0 -5000 0",
         "player 0 rotation 0 16384 0",
         "player 0 velocity 0 0 0",
         "player 1 location 6000 6000 0",
@@ -42,16 +42,20 @@ pub fn main() -> Result<(), ()> {
         collector.write(&packet).map_err(|_| ())?;
 
         // The action we want to record:
-        if packet.GameInfo.TimeSeconds > start + 1.0 {
+        if packet.GameInfo.TimeSeconds < start + 1.0 {
+            let input = Default::default();
+            rlbot.update_player_input(input, 0)?;
+        } else if packet.GameInfo.TimeSeconds < start + 3.0 {
             let input = rlbot::PlayerInput {
                 Throttle: 1.0,
+                Boost: true,
                 ..Default::default()
             };
             rlbot.update_player_input(input, 0)?;
-        }
-
-        // Once we have enough data, exit.
-        if packet.GameInfo.TimeSeconds > start + 5.0 {
+        } else if packet.GameInfo.TimeSeconds < start + 8.0 {
+            let input = Default::default();
+            rlbot.update_player_input(input, 0)?;
+        } else {
             break;
         }
     }

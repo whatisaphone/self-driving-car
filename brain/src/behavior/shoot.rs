@@ -59,7 +59,6 @@ mod integration_tests {
     use nalgebra::{Rotation3, Vector3};
 
     #[test]
-    #[ignore] // Doesn't work yet
     fn awkwardly_angled_breakaway() {
         let test = TestRunner::start(
             Shoot::new(),
@@ -80,7 +79,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore] // Doesn't work yet
+    #[ignore] // TODO
     fn awkward_breakaway_2() {
         let test = TestRunner::start(
             Shoot::new(),
@@ -113,6 +112,46 @@ mod integration_tests {
         );
 
         test.sleep_millis(4000);
+        assert!(test.has_scored());
+    }
+
+    #[test]
+    #[ignore] // TODO
+    fn speedy_angle_adjust() {
+        let test = TestRunner::start(
+            Shoot::new(),
+            TestScenario {
+                ball_loc: Vector3::new(856.57855, 2725.1563, 93.15),
+                ball_vel: Vector3::new(381.07864, -367.86865, 0.0),
+                car_loc: Vector3::new(2762.3386, 1111.3347, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, -2.765384, 0.0),
+                car_vel: Vector3::new(-1621.1874, -744.78345, 8.34),
+                ..Default::default()
+            },
+        );
+
+        test.sleep_millis(5000);
+
+        assert!(test.has_scored());
+    }
+
+    #[test]
+    #[ignore] // TODO
+    fn close_fast_rolling_redirect() {
+        let test = TestRunner::start(
+            Shoot::new(),
+            TestScenario {
+                ball_loc: Vector3::new(99.87652, 1684.7692, 93.14),
+                ball_vel: Vector3::new(941.7007, 1168.9557, 0.0),
+                car_loc: Vector3::new(1592.5865, 3.3359032, 17.0),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, 0.77255106, 0.0000958738),
+                car_vel: Vector3::new(1499.8735, 1302.2483, 8.44),
+                ..Default::default()
+            },
+        );
+
+        test.sleep_millis(3000);
+
         assert!(test.has_scored());
     }
 }

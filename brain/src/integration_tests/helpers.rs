@@ -286,16 +286,6 @@ impl TestScenario {
             boost: 100,
         }
     }
-
-    pub fn cripple_enemy(self) -> Self {
-        Self {
-            enemy_loc: Vector3::new(6000.0, 6000.0, 0.0),
-            enemy_rot: Rotation3::from_unreal_angles(0.0, 0.0, 0.0),
-            enemy_vel: Vector3::new(0.0, 0.0, 0.0),
-            enemy_ang_vel: Vector3::new(0.0, 0.0, 0.0),
-            ..self
-        }
-    }
 }
 
 impl BakkesModCommand for TestScenario {

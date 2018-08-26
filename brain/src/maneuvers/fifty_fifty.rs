@@ -35,7 +35,7 @@ impl Behavior for FiftyFifty {
         ));
         eeg.draw(Drawable::GhostCar(target_loc, me.Physics.rot()));
 
-        if target_dist > 400.0 {
+        if target_dist >= 300.0 {
             // TODO: this is not how this works…
             let mut child = BlitzToLocation::new(target_loc);
             child.execute(packet, eeg)
