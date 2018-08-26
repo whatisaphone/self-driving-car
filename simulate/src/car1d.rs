@@ -2,6 +2,7 @@ use rl;
 use tables;
 
 pub struct Car1D {
+    time: f32,
     loc: f32,
     vel: f32,
     boost: f32,
@@ -10,6 +11,7 @@ pub struct Car1D {
 impl Car1D {
     pub fn new(speed: f32) -> Car1D {
         Car1D {
+            time: 0.0,
             loc: 0.0,
             vel: speed,
             boost: 100.0,
@@ -19,6 +21,10 @@ impl Car1D {
     pub fn with_boost(mut self, boost: i32) -> Self {
         self.boost = boost as f32;
         self
+    }
+
+    pub fn time(&self) -> f32 {
+        self.time
     }
 
     pub fn distance_traveled(&self) -> f32 {
@@ -36,6 +42,7 @@ impl Car1D {
 
         let new_vel = self.compute_new_vel(dt, throttle, boost);
 
+        self.time += dt;
         self.loc += self.vel * dt;
         self.vel = new_vel;
         if boost {
@@ -59,6 +66,7 @@ impl Car1D {
 
         let new_vel = self.compute_new_vel(dt, throttle, boost);
 
+        self.time += dt;
         self.loc += self.vel * dt.abs();
         self.vel = new_vel;
         if boost {
