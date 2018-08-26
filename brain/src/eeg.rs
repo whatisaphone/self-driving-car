@@ -105,10 +105,12 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
             None => break, // The channel was closed, so exit the thread.
             Some(ThreadMessage::Draw(packet, drawables)) => {
                 window.draw_2d(&event, |c, g| {
-                    const SCALE: f64 = 0.05;
-                    const OUTLINE_RADIUS: f64 = 0.5 / SCALE;
+                    const GOAL_DEPTH: f64 = 900.0; // This was just estimated visually.
                     let car_rect = rectangle::rectangle_by_corners(-100.0, -50.0, 100.0, 50.0);
                     let ball_rect = ellipse::circle(0.0, 0.0, 92.0);
+
+                    const SCALE: f64 = 0.05;
+                    const OUTLINE_RADIUS: f64 = 0.5 / SCALE;
 
                     clear(color::BLACK, g);
 
@@ -131,7 +133,7 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
                             -rl::GOALPOST_X as f64,
                             -rl::FIELD_MAX_Y as f64,
                             rl::GOALPOST_X as f64,
-                            -rl::FIELD_MAX_Y as f64 - 500.0,
+                            -rl::FIELD_MAX_Y as f64 - GOAL_DEPTH,
                         ),
                         transform,
                         g,
@@ -142,7 +144,7 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
                             -rl::GOALPOST_X as f64,
                             rl::FIELD_MAX_Y as f64,
                             rl::GOALPOST_X as f64,
-                            rl::FIELD_MAX_Y as f64 + 500.0,
+                            rl::FIELD_MAX_Y as f64 + GOAL_DEPTH,
                         ),
                         transform,
                         g,

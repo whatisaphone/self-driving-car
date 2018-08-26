@@ -1,6 +1,10 @@
 extern crate brain;
 extern crate chrono;
 extern crate collect;
+extern crate log;
+#[macro_use]
+extern crate lazy_static;
+extern crate env_logger;
 extern crate rlbot;
 
 use brain::Brain;
@@ -9,7 +13,14 @@ use collect::Collector;
 use std::fs::{hard_link, remove_file, File};
 use std::path::Path;
 
+mod logging;
+
 fn main() {
+    env_logger::Builder::new()
+        .parse("brain") // Only log the brain crate
+        .format(logging::format)
+        .init();
+
     let rlbot = rlbot::init().unwrap();
     rlbot.start_match(rlbot::match_settings_1v1()).unwrap();
     let mut packets = rlbot.packeteer();
@@ -21,6 +32,8 @@ fn main() {
 
     loop {
         let packet = packets.next().unwrap();
+
+        logging::STATE.lock().unwrap().game_time = Some(packet.GameInfo.TimeSeconds);
 
         let input = brain.tick(&packet);
         rlbot.update_player_input(input, 0).unwrap();

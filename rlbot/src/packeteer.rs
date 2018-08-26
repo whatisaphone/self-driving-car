@@ -1,15 +1,17 @@
 use ffi::LiveDataPacket;
 use ratelimit;
+use std::error::Error;
 use std::mem;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use RLBot;
+use RLBotError;
 
 /// An iterator-like object that yields `LiveDataPacket`s from the game as they
 /// occur.
 pub struct Packeteer<'a> {
     rlbot: &'a RLBot,
     ratelimiter: ratelimit::Limiter,
-    prev_elapsed: f32,
+    prev_game_time: f32,
 }
 
 impl<'a> Packeteer<'a> {
@@ -24,24 +26,31 @@ impl<'a> Packeteer<'a> {
         Packeteer {
             rlbot,
             ratelimiter,
-            prev_elapsed: 0.0,
+            prev_game_time: 0.0,
         }
     }
 
     /// Block until we receive a unique `LiveDataPacket`, and then return it.
-    pub fn next(&mut self) -> Result<LiveDataPacket, ()> {
+    pub fn next(&mut self) -> Result<LiveDataPacket, Box<Error>> {
+        let started = Instant::now();
         let mut packet = unsafe { mem::uninitialized() };
 
         loop {
             self.ratelimiter.wait();
 
-            self.rlbot.update_live_data_packet(&mut packet)?;
+            self.rlbot
+                .update_live_data_packet(&mut packet)
+                .map_err(|_| RLBotError)?;
 
             // Wait until another "tick" has happened so we don't return duplicate data.
-            let elapsed = packet.GameInfo.TimeSeconds;
-            if elapsed != self.prev_elapsed {
-                self.prev_elapsed = elapsed;
+            let game_time = packet.GameInfo.TimeSeconds;
+            if game_time != self.prev_game_time {
+                self.prev_game_time = game_time;
                 break;
+            }
+
+            if Instant::now() - started > Duration::from_secs(5) {
+                return Err(From::from("rlbot seems to be frozen :("));
             }
         }
 

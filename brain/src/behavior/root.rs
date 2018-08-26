@@ -16,8 +16,7 @@ impl Behavior for RootBehavior {
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
         let possession = possession(packet);
 
-        eeg.draw(Drawable::print("RootBehavior", color::YELLOW));
-        eeg.draw(Drawable::print(format!("{:?}", possession), color::GREEN));
+        info!("possession: {:?}", possession);
 
         match possession {
             Possession::Me => Action::call(Shoot::new()),

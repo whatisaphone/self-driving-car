@@ -8,6 +8,8 @@ pub use ffi::{
 };
 use packeteer::Packeteer;
 pub use shortcuts::*;
+use std::error::Error;
+use std::fmt;
 use std::os::raw::c_int;
 use std::ptr::null_mut;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -90,5 +92,17 @@ fn core_result(result: ffi::RLBotCoreStatus) -> Result<(), ()> {
     match result {
         ffi::RLBotCoreStatus::Success => Ok(()),
         _ => Err(()),
+    }
+}
+
+// This is the future.
+#[derive(Debug)]
+pub struct RLBotError;
+
+impl Error for RLBotError {}
+
+impl fmt::Display for RLBotError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "RLBotError")
     }
 }

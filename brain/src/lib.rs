@@ -7,6 +7,8 @@ extern crate graphics;
 #[cfg(test)]
 #[macro_use]
 extern crate lazy_static;
+#[macro_use]
+extern crate log;
 extern crate nalgebra;
 extern crate piston_window;
 extern crate rlbot;

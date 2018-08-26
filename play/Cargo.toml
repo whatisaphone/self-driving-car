@@ -5,6 +5,10 @@ authors = ["John Simon <john@whatisaph.one>"]
 
 [dependencies]
 chrono = "0.4.6"
+lazy_static = "1.1.0"
+
+log = "0.4.4"
+env_logger = "0.5.12"
 
 brain = { path = "../brain" }
 collect = { path = "../collect" }

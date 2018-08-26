@@ -1,13 +1,17 @@
 use bakkesmod::BakkesMod;
 use collector::Collector;
 use rlbot;
+use rlbot::RLBotError;
+use std::error::Error;
 use std::fs::File;
 use std::thread::sleep;
 use std::time::Duration;
 
-pub fn main() -> Result<(), ()> {
-    let rlbot = rlbot::init()?;
-    rlbot.start_match(rlbot::match_settings_1v1())?;
+pub fn main() -> Result<(), Box<Error>> {
+    let rlbot = rlbot::init().map_err(|_| RLBotError)?;
+    rlbot
+        .start_match(rlbot::match_settings_1v1())
+        .map_err(|_| RLBotError)?;
 
     let mut packets = rlbot.packeteer();
 
@@ -15,9 +19,11 @@ pub fn main() -> Result<(), ()> {
     while !packets.next()?.GameInfo.RoundActive {}
 
     // Zero out our input, just to be safe
-    rlbot.update_player_input(Default::default(), 0)?;
+    rlbot
+        .update_player_input(Default::default(), 0)
+        .map_err(|_| RLBotError)?;
 
-    let bakkesmod = BakkesMod::connect()?;
+    let bakkesmod = BakkesMod::connect().map_err(|_| RLBotError)?;
     let commands = [
         "ball location 2000 0 0",
         "ball velocity 0 0 0",
@@ -31,7 +37,7 @@ pub fn main() -> Result<(), ()> {
     ];
     stabilize_scenario(&bakkesmod, &commands.join(";"));
 
-    let f = File::create("collect.csv").map_err(|_| ())?;
+    let f = File::create("collect.csv")?;
     let mut collector = Collector::new(f);
 
     let start = packets.next()?.GameInfo.TimeSeconds;
@@ -39,29 +45,37 @@ pub fn main() -> Result<(), ()> {
     loop {
         let packet = packets.next()?;
 
-        collector.write(&packet).map_err(|_| ())?;
+        collector.write(&packet)?;
 
         // The action we want to record:
         if packet.GameInfo.TimeSeconds < start + 1.0 {
             let input = Default::default();
-            rlbot.update_player_input(input, 0)?;
+            rlbot
+                .update_player_input(input, 0)
+                .map_err(|_| RLBotError)?;
         } else if packet.GameInfo.TimeSeconds < start + 3.0 {
             let input = rlbot::PlayerInput {
                 Throttle: 1.0,
                 Boost: true,
                 ..Default::default()
             };
-            rlbot.update_player_input(input, 0)?;
+            rlbot
+                .update_player_input(input, 0)
+                .map_err(|_| RLBotError)?;
         } else if packet.GameInfo.TimeSeconds < start + 8.0 {
             let input = Default::default();
-            rlbot.update_player_input(input, 0)?;
+            rlbot
+                .update_player_input(input, 0)
+                .map_err(|_| RLBotError)?;
         } else {
             break;
         }
     }
 
-    // Stop the car before exiting.
-    rlbot.update_player_input(Default::default(), 0)?;
+    // Stop the car before exiting (just like IRL!)
+    rlbot
+        .update_player_input(Default::default(), 0)
+        .map_err(|_| RLBotError)?;
 
     Ok(())
 }
