@@ -98,6 +98,25 @@ mod integration_tests {
     }
 
     #[test]
+    #[ignore] // TODO
+    fn awkward_bouncing_breakaway() {
+        let test = TestRunner::start(
+            Shoot::new(),
+            TestScenario {
+                ball_loc: Vector3::new(-3083.084, -3752.2727, 567.4716),
+                ball_vel: Vector3::new(738.0995, 1098.1213, 425.59665),
+                car_loc: Vector3::new(-2996.7085, -3469.6912, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.009683254, 2.7731497, 0.0000958738),
+                car_vel: Vector3::new(-917.587, 322.66766, 8.34),
+                ..Default::default()
+            },
+        );
+
+        test.sleep_millis(6000);
+        assert!(test.has_scored());
+    }
+
+    #[test]
     fn fast_falling_ball() {
         let test = TestRunner::start(
             Shoot::new(),
@@ -152,6 +171,25 @@ mod integration_tests {
 
         test.sleep_millis(3000);
 
+        assert!(test.has_scored());
+    }
+
+    #[test]
+    #[ignore] // TODO
+    fn far_rolling_along_side_wall() {
+        let test = TestRunner::start(
+            Shoot::new(),
+            TestScenario {
+                ball_loc: Vector3::new(3827.3035, -2371.3047, 103.192085),
+                ball_vel: Vector3::new(56.775806, 750.3081, -420.45816),
+                car_loc: Vector3::new(3082.6775, -4116.359, 16.99),
+                car_rot: Rotation3::from_unreal_angles(-0.009395632, 1.3753097, -0.0000958738),
+                car_vel: Vector3::new(216.59224, 1339.4177, 8.41),
+                ..Default::default()
+            },
+        );
+
+        test.sleep_millis(6000);
         assert!(test.has_scored());
     }
 }

@@ -44,4 +44,24 @@ mod integration_tests {
 
         assert!(test.has_scored());
     }
+
+    #[test]
+    #[ignore] // TODO
+    fn rolling_around_corner_into_box() {
+        let test = TestRunner::start(
+            RootBehavior::new(),
+            TestScenario {
+                ball_loc: Vector3::new(3042.6016, -4141.044, 180.57321),
+                ball_vel: Vector3::new(-1414.86847, -1357.0486, -0.0),
+                car_loc: Vector3::new(720.54016, 635.665, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.4134674, 0.0),
+                car_vel: Vector3::new(256.23804, -1591.1218, 8.3),
+                ..Default::default()
+            },
+        );
+
+        test.sleep_millis(5000);
+
+        assert!(test.has_scored());
+    }
 }

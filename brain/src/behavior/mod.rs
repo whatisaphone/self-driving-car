@@ -8,6 +8,7 @@ pub use behavior::shoot::Shoot;
 
 mod aerial_shot;
 mod behavior;
+mod carry_from_bounce;
 mod corner_offense;
 mod jump_shot;
 mod null;
