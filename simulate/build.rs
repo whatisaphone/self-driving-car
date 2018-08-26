@@ -34,13 +34,16 @@ fn main() {
 
 fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) {
     let mut out_time = format!(
-        "pub const {}_TIME: &'static [f32] = &[\n",
-        name.to_ascii_uppercase()
+        "#[allow(dead_code)]\npub const {}_TIME: &[f32] = &[\n",
+        name.to_ascii_uppercase(),
     );
     let mut out_car_vel_y = format!(
-        "pub const {}_CAR_VEL_Y: &'static [f32] = &[\n",
-        name.to_ascii_uppercase()
+        "#[allow(dead_code)]\npub const {}_CAR_VEL_Y: &[f32] = &[\n",
+        name.to_ascii_uppercase(),
     );
+    // Write some things backwards to avoid loading the entire CSV in memory.
+    // I have 32GB of RAM and I'm aware this is pretty ridiculous.
+    let mut out_car_vel_y_rev = "\n];\n\n".chars().rev().collect::<String>();
 
     for row in csv.records() {
         let row = row.unwrap();
@@ -70,15 +73,30 @@ fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) 
         let _car_ang_vel_y = floatify(&row[23]);
         let _car_ang_vel_z = floatify(&row[24]);
 
-        write!(&mut out_time, "{},", time);
-        write!(&mut out_car_vel_y, "{},", car_vel_y);
+        write!(&mut out_time, "{},", time).unwrap();
+        write!(&mut out_car_vel_y, "{},", car_vel_y).unwrap();
+        write!(
+            &mut out_car_vel_y_rev,
+            ",{}",
+            car_vel_y.chars().rev().collect::<String>()
+        ).unwrap();
     }
 
-    write!(&mut out_time, "];\n");
-    write!(&mut out_car_vel_y, "];\n");
+    write!(&mut out_time, "\n];\n\n").unwrap();
+    write!(&mut out_car_vel_y, "\n];\n\n").unwrap();
+    out_car_vel_y_rev
+        .write_str(
+            &format!(
+                "#[allow(dead_code)]\npub const {}_CAR_VEL_Y_REV: &[f32] = &[\n",
+                name.to_ascii_uppercase()
+            ).chars()
+            .rev()
+            .collect::<String>(),
+        ).unwrap();
 
-    write!(w, "{}", out_time);
-    write!(w, "{}", out_car_vel_y);
+    write!(w, "{}", out_time).unwrap();
+    write!(w, "{}", out_car_vel_y).unwrap();
+    write!(w, "{}", out_car_vel_y_rev.chars().rev().collect::<String>()).unwrap();
 }
 
 fn floatify(s: &str) -> Cow<str> {
