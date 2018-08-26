@@ -4,6 +4,8 @@ version = "0.1.0"
 authors = ["John Simon <john@whatisaph.one>"]
 
 [dependencies]
+chrono = "0.4.6"
+
 brain = { path = "../brain" }
 collect = { path = "../collect" }
 rlbot = { path = "../rlbot" }

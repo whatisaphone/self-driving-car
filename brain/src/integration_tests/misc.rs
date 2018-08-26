@@ -38,7 +38,7 @@ fn todo() {
 fn template() {
     let scenario = TestScenario {
         enemy_loc: Vector3::new(6000.0, 6000.0, 0.0),
-        ..TestScenario::from_collected_row("../play.csv", 100.0)
+        ..TestScenario::from_collected_row("../logs/play.csv", 100.0)
     };
     let test = TestRunner::start(
         RootBehavior::new(),
