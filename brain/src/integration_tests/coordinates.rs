@@ -17,7 +17,7 @@ fn location() {
     for &(bakkesmod_loc, x, y, z) in cases.iter() {
         let expected = Vector3::new(x, y, z);
         let test = TestRunner::start(
-            NullBehavior,
+            NullBehavior::new(),
             format!(
                 "player 0 location {}; player 0 velocity 0 0 0",
                 bakkesmod_loc
@@ -45,7 +45,7 @@ fn rotation() {
     for &(bakkesmod_rot, pitch, yaw, roll) in cases.iter() {
         let expected = Rotation3::from_unreal_angles(pitch, yaw, roll);
         let test = TestRunner::start(
-            NullBehavior,
+            NullBehavior::new(),
             format!(
                 "player 0 location 0 0 1000; player 0 rotation {}; player 0 velocity 0 0 0",
                 bakkesmod_rot
@@ -69,7 +69,7 @@ fn rotation_round_trip() {
     ];
     for &rot in rots.iter() {
         let test = TestRunner::start(
-            NullBehavior,
+            NullBehavior::new(),
             TestScenario {
                 car_loc: Vector3::new(0.0, 0.0, 1000.0),
                 car_rot: rot,

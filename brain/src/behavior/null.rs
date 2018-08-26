@@ -4,6 +4,12 @@ use rlbot;
 
 pub struct NullBehavior;
 
+impl NullBehavior {
+    pub fn new() -> NullBehavior {
+        NullBehavior
+    }
+}
+
 impl Behavior for NullBehavior {
     fn execute(&mut self, _packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
         eeg.draw(Drawable::print("NullBehavior", color::YELLOW));

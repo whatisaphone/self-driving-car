@@ -120,7 +120,7 @@ fn test_thread(
     let rlbot = rlbot_guard.as_ref().unwrap();
     rlbot.start_match(rlbot::match_settings_1v1()).unwrap();
 
-    let mut brain = Brain::with_behavior(Box::new(NullBehavior));
+    let mut brain = Brain::with_behavior(Box::new(NullBehavior::new()));
 
     let mut packets = rlbot.packeteer();
     // Wait for RoundActive
