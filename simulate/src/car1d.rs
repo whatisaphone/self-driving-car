@@ -64,13 +64,13 @@ impl Car1D {
             boost = self.boost > 0.0;
         }
 
-        let new_vel = self.compute_new_vel(dt, throttle, boost);
+        let new_vel = self.compute_new_vel(-dt, throttle, boost);
 
         self.time += dt;
-        self.loc += self.vel * dt.abs();
         self.vel = new_vel;
+        self.loc += self.vel * dt;
         if boost {
-            self.boost -= rl::BOOST_DEPLETION * dt.abs();
+            self.boost -= rl::BOOST_DEPLETION * dt;
         }
     }
 
@@ -79,16 +79,31 @@ impl Car1D {
             return self.vel;
         }
 
-        let (table_time, table_vel_y) = match boost {
-            false if throttle == 0.0 => (tables::COAST_TIME, tables::COAST_CAR_VEL_Y_REV),
-            false if throttle == 1.0 => (tables::THROTTLE_TIME, tables::THROTTLE_CAR_VEL_Y),
-            true if throttle == 1.0 => (tables::BOOST_TIME, tables::BOOST_CAR_VEL_Y),
+        let (src_vel_table, src_time_table, time_table, vel_table) = match boost {
+            false if throttle == 0.0 => (
+                tables::COAST_CAR_VEL_Y_REV,
+                tables::COAST_TIME_REV,
+                tables::COAST_TIME,
+                tables::COAST_CAR_VEL_Y,
+            ),
+            false if throttle == 1.0 => (
+                tables::THROTTLE_CAR_VEL_Y,
+                tables::THROTTLE_TIME,
+                tables::THROTTLE_TIME,
+                tables::THROTTLE_CAR_VEL_Y,
+            ),
+            true if throttle == 1.0 => (
+                tables::BOOST_CAR_VEL_Y,
+                tables::BOOST_TIME,
+                tables::BOOST_TIME,
+                tables::BOOST_CAR_VEL_Y,
+            ),
             _ => panic!("Unsupported inputs"),
         };
 
-        let old_time = linear_interpolate(table_vel_y, table_time, self.vel);
+        let old_time = linear_interpolate(src_vel_table, src_time_table, self.vel);
         let new_time = old_time + dt;
-        linear_interpolate(table_time, table_vel_y, new_time)
+        linear_interpolate(time_table, vel_table, new_time)
     }
 }
 
@@ -155,21 +170,29 @@ mod tests {
     fn slow_coast() {
         let mut car = Car1D::new(100.0);
         car.step(DT, 0.0, false);
-        assert!(100.0 <= car.vel && car.vel < 110.0);
+        assert!(85.0 <= car.vel && car.vel < 95.0);
     }
 
     #[test]
     fn supersonic_coast() {
         let mut car = Car1D::new(9999.0);
         car.step(DT, 0.0, false);
-        assert!(2200.0 <= car.vel && car.vel < 2300.0);
+        assert!(2200.0 <= car.vel && car.vel < 2290.0);
     }
 
     #[test]
     fn step_rev() {
         let mut car = Car1D::new(1000.0);
         car.step_rev(DT, 1.0, true);
-        assert!(1010.0 <= car.vel && car.vel < 1020.0);
+        assert!(960.0 <= car.vel && car.vel < 980.0);
         assert!(99.4 <= car.boost && car.boost < 99.5);
+    }
+
+    #[test]
+    fn coast_rev() {
+        let mut car = Car1D::new(1000.0);
+        car.step_rev(DT, 0.0, false);
+        assert!(1005.0 <= car.vel && car.vel < 1015.0);
+        assert_eq!(car.boost, 100.0);
     }
 }

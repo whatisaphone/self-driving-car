@@ -53,7 +53,7 @@ impl Behavior for DriveLocTimeDecelerate {
             &me,
             distance,
             self.target_speed,
-            time_remaining - 6.0 / 120.0,
+            time_remaining - 2.0 / 120.0,
         ) {
             result.Throttle = 1.0;
         }
@@ -79,15 +79,22 @@ fn estimate_approach(car: &rlbot::PlayerInfo, distance: f32, target_speed: f32, 
         let mut sim_coast = Car1D::new(sim_accel.speed());
         while t_coast < time {
             t_coast += DT;
-            sim_coast.step_rev(DT, 0.0, false);
+            sim_coast.step(DT, 0.0, false);
         }
 
-        accel.push((t_accel, sim_accel.distance_traveled() + sim_coast.distance_traveled()))
+        accel.push((
+            t_accel,
+            sim_accel.speed(),
+            sim_accel.distance_traveled() + sim_coast.distance_traveled(),
+        ))
     }
 
     let x = accel.iter();
-    for x in x { println!("{:?}", x)}unimplemented!();
-//        .any(|(at, d)| d >= distance)
+    for x in x {
+        println!("{:?}", x)
+    }
+    unimplemented!();
+    //        .any(|(at, d)| d >= distance)
 }
 
 #[cfg(test)]
