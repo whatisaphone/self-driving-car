@@ -64,4 +64,24 @@ mod integration_tests {
 
         assert!(test.has_scored());
     }
+
+    #[test]
+    #[ignore] // TODO
+    fn low_bouncing_directly_ahead() {
+        let test = TestRunner::start(
+            RootBehavior::new(),
+            TestScenario {
+                ball_loc: Vector3::new(-916.57043, -5028.2397, 449.42386),
+                ball_vel: Vector3::new(215.22325, 0.07279097, -403.102),
+                car_loc: Vector3::new(-320.59094, -2705.4436, 17.02),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.6579456, 0.0),
+                car_vel: Vector3::new(-85.847946, -990.35706, 8.0),
+                ..Default::default()
+            },
+        );
+
+        test.sleep_millis(5000);
+
+        assert!(test.has_scored());
+    }
 }
