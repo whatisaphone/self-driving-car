@@ -22,13 +22,16 @@ impl GroundAccelToLoc {
 }
 
 impl Behavior for GroundAccelToLoc {
-    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-        eeg.draw(Drawable::print("GroundAccelToLoc", color::YELLOW));
+    fn name(&self) -> &'static str {
+        "GroundAccelToLoc"
+    }
 
+    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
         let me = my_car(packet);
         let distance = (me.Physics.loc() - self.target_loc).norm();
         let time_remaining = self.target_time - packet.GameInfo.TimeSeconds;
 
+        eeg.draw(Drawable::print(self.name(), color::YELLOW));
         eeg.draw(Drawable::print(
             format!("distance: {:.0}", distance),
             color::GREEN,

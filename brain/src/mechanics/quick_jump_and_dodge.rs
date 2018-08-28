@@ -32,11 +32,14 @@ impl QuickJumpAndDodge {
 }
 
 impl Behavior for QuickJumpAndDodge {
-    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-        eeg.draw(Drawable::print("QuickJumpAndDodge", color::YELLOW));
+    fn name(&self) -> &'static str {
+        "QuickJumpAndDodge"
+    }
 
+    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
         let elapsed = packet.GameInfo.TimeSeconds - self.start_time;
 
+        eeg.draw(Drawable::print(self.name(), color::YELLOW));
         eeg.draw(Drawable::print(
             format!("elapsed: {:.2}", elapsed),
             color::GREEN,

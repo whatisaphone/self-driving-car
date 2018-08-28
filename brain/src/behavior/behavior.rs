@@ -2,6 +2,7 @@ use eeg::EEG;
 use rlbot;
 
 pub trait Behavior {
+    fn name(&self) -> &'static str;
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action;
 }
 

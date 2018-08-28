@@ -23,8 +23,12 @@ mod integration_tests {
     struct SimpleSteerTowardsBall;
 
     impl Behavior for SimpleSteerTowardsBall {
+        fn name(&self) -> &'static str {
+            "SimpleSteerTowardsBall"
+        }
+
         fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-            eeg.draw(Drawable::print("SimpleSteerTowardsBall", color::YELLOW));
+            eeg.draw(Drawable::print(self.name(), color::YELLOW));
 
             let me = packet.GameCars[0];
             let ball = packet.GameBall;

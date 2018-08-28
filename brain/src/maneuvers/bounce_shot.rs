@@ -14,11 +14,15 @@ impl BounceShot {
 }
 
 impl Behavior for BounceShot {
+    fn name(&self) -> &'static str {
+        "BounceShot"
+    }
+
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
         let (me, _enemy) = one_v_one(packet);
         let intercept = estimate_intercept_car_ball(&me, &packet.GameBall);
 
-        eeg.draw(Drawable::print("BounceShot", color::YELLOW));
+        eeg.draw(Drawable::print(self.name(), color::YELLOW));
         eeg.draw(Drawable::print(
             format!("intercept_time: {:.2}", intercept.time),
             color::GREEN,

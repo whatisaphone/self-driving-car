@@ -19,15 +19,18 @@ impl BlitzToLocation {
 }
 
 impl Behavior for BlitzToLocation {
-    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-        eeg.draw(Drawable::print("BlitzToLocation", color::YELLOW));
+    fn name(&self) -> &'static str {
+        "BlitzToLocation"
+    }
 
+    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
         let me = my_car(packet);
         let distance = (me.Physics.loc() - self.target_loc).norm();
         let speed = me.Physics.vel().norm();
 
         let steer = simple_steer_towards(&me.Physics, self.target_loc);
 
+        eeg.draw(Drawable::print(self.name(), color::YELLOW));
         eeg.draw(Drawable::print(
             format!("distance: {:.0}", distance),
             color::GREEN,

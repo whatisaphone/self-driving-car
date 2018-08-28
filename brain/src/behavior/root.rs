@@ -14,6 +14,10 @@ impl RootBehavior {
 }
 
 impl Behavior for RootBehavior {
+    fn name(&self) -> &'static str {
+        "RootBehavior"
+    }
+
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
         let possession = possession(packet);
 

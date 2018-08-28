@@ -27,6 +27,10 @@ impl DriveLocTimeDecelerate {
 }
 
 impl Behavior for DriveLocTimeDecelerate {
+    fn name(&self) -> &'static str {
+        "DriveLocTimeDecelerate"
+    }
+
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
         let me = my_car(packet);
         let distance = (me.Physics.loc() - self.target_loc).norm();
@@ -36,7 +40,7 @@ impl Behavior for DriveLocTimeDecelerate {
             return Action::Return;
         }
 
-        eeg.draw(Drawable::print("drive_loc_time_decelerate", color::YELLOW));
+        eeg.draw(Drawable::print(self.name(), color::YELLOW));
         eeg.draw(Drawable::GhostCar(self.target_loc, me.Physics.rot()));
         eeg.draw(Drawable::print(
             format!("target_speed: {:.0}", self.target_speed),

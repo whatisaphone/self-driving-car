@@ -15,6 +15,10 @@ impl CarryFromBounce {
 }
 
 impl Behavior for CarryFromBounce {
+    fn name(&self) -> &'static str {
+        "CarryFromBounce"
+    }
+
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
         let (me, _enemy) = one_v_one(packet);
         let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |loc, vel| {
@@ -27,7 +31,7 @@ impl Behavior for CarryFromBounce {
         let target_loc = intercept.ball_loc + Vector3::new(theta.cos(), theta.sin(), 0.0) * 200.0;
         let target_dist = (target_loc - me.Physics.loc()).norm();
 
-        eeg.draw(Drawable::print("CarryFromBounce", color::YELLOW));
+        eeg.draw(Drawable::print(self.name(), color::YELLOW));
         eeg.draw(Drawable::print(
             format!("target_dist: {:.0}", target_dist),
             color::GREEN,

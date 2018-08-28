@@ -14,6 +14,10 @@ impl Once {
 }
 
 impl Behavior for Once {
+    fn name(&self) -> &'static str {
+        "Once"
+    }
+
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
         // `take()` leaves a None behind, so this can only match `Some` once.
         match self.child.take() {

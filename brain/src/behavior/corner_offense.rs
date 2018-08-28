@@ -14,6 +14,10 @@ impl CornerOffense {
 }
 
 impl Behavior for CornerOffense {
+    fn name(&self) -> &'static str {
+        "CornerOffense"
+    }
+
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
         Action::Yield(Default::default())
     }

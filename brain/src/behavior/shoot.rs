@@ -5,15 +5,21 @@ use predict::intercept::estimate_intercept_car_ball;
 use rlbot;
 use utils::{enemy_goal_center, one_v_one, ExtendPhysics};
 
-pub struct Shoot;
+pub struct Shoot {
+    min_distance: Option<f32>,
+}
 
 impl Shoot {
     pub fn new() -> Shoot {
-        Shoot
+        Shoot { min_distance: None }
     }
 }
 
 impl Behavior for Shoot {
+    fn name(&self) -> &'static str {
+        "Shoot"
+    }
+
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
         let (me, _enemy) = one_v_one(packet);
         let intercept = estimate_intercept_car_ball(&me, &packet.GameBall);
@@ -22,7 +28,17 @@ impl Behavior for Shoot {
             intercept.ball_loc + (intercept.ball_loc - enemy_goal_center()).normalize() * 150.0;
         let target_dist = (target_loc - me.Physics.loc()).norm();
 
-        eeg.draw(Drawable::print("Shoot", color::YELLOW));
+        // If the ball has moved further away, assume we hit it and we're done.
+        match self.min_distance {
+            Some(md) if target_dist >= md * 2.0 => return Action::Return,
+            _ => self.min_distance = Some(target_dist),
+        }
+
+        eeg.draw(Drawable::print(self.name(), color::YELLOW));
+        eeg.draw(Drawable::print(
+            format!("intercept_time: {:.2}", intercept.time),
+            color::GREEN,
+        ));
         eeg.draw(Drawable::print(
             format!("target_dist: {:.0}", target_dist),
             color::GREEN,
