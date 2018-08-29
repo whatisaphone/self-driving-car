@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod integration_tests {
-    use behavior::RootBehavior;
+    use behavior::{NullBehavior, RootBehavior};
     use collect::ExtendRotation3;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use nalgebra::{Rotation3, Vector3};
@@ -76,6 +76,46 @@ mod integration_tests {
                 car_loc: Vector3::new(-320.59094, -2705.4436, 17.02),
                 car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.6579456, 0.0),
                 car_vel: Vector3::new(-85.847946, -990.35706, 8.0),
+                ..Default::default()
+            },
+        );
+
+        test.sleep_millis(5000);
+
+        assert!(test.has_scored());
+    }
+
+    #[test]
+    #[ignore] // TODO
+    fn high_loft_in_front_of_goal() {
+        let test = TestRunner::start(
+            RootBehavior::new(),
+            TestScenario {
+                ball_loc: Vector3::new(-2285.6035, -5024.131, 438.6606),
+                ball_vel: Vector3::new(751.0301, 16.736507, 811.52356),
+                car_loc: Vector3::new(-1805.5178, -2341.8872, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, -0.4485935, 0.0),
+                car_vel: Vector3::new(1141.101, -487.77042, 8.34),
+                ..Default::default()
+            },
+        );
+
+        test.sleep_millis(5000);
+
+        assert!(test.has_scored());
+    }
+
+    #[test]
+    #[ignore] // TODO
+    fn loft_in_front_of_goal_from_the_side() {
+        let test = TestRunner::start(
+            NullBehavior::new(),
+            TestScenario {
+                ball_loc: Vector3::new(-2288.2634, -4688.248, 93.15),
+                ball_vel: Vector3::new(1281.6293, -1659.181, 0.0),
+                car_loc: Vector3::new(-3077.711, -3389.5276, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, -0.95528656, -0.0000958738),
+                car_vel: Vector3::new(1027.5283, -1455.2512, 8.3),
                 ..Default::default()
             },
         );

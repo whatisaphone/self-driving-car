@@ -12,7 +12,25 @@ impl BehaviorRunner {
     }
 
     pub fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> rlbot::PlayerInput {
-        match self.top().execute(packet, eeg) {
+        let capture = 'capture: loop {
+            for (bi, behavior) in self.stack.iter_mut().enumerate() {
+                if let Some(action) = behavior.capture(packet, eeg) {
+                    break 'capture Some((bi, action));
+                }
+            }
+            break None;
+        };
+
+        let action = match capture {
+            Some((bi, action)) => {
+                self.stack.truncate(bi + 1);
+                warn!("<< {}", self.top().name());
+                action
+            }
+            None => self.top().execute(packet, eeg),
+        };
+
+        match action {
             Action::Yield(result) => return result,
             Action::Call(behavior) => {
                 self.stack.push(behavior);

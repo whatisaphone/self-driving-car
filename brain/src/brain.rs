@@ -12,7 +12,7 @@ pub struct Brain {
 
 impl Brain {
     pub fn with_root_behavior() -> Self {
-        Self::with_behavior(Box::new(RootBehavior))
+        Self::with_behavior(Box::new(RootBehavior::new()))
     }
 
     pub fn with_behavior(behavior: Box<Behavior>) -> Self {
