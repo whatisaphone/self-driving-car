@@ -38,6 +38,12 @@ bindgen \
 
 It should output errors in white text. Modify RLBot's source to fix the errors
 manually. For any problematic references to boost, it will be easier to just
-completely purge any mention of boost. Once that is done, it will run
-successfully and output more errors, but in red text this time. As long as the
-errors are in red, it worked!
+completely purge any mention of boost. Keep running the above command and fixing
+errors (good times!). Once you're done, it will run successfully and output more
+errors, but in red text this time. As long as the errors are in red, that means
+it worked!
+
+Now open the resulting file (`src/ffi.rs`) and remove all the `extern "C" pub
+fn` declarations from the end. Since the functions are called using this crate's
+`dll` module, there's no sense exposing the non-working ones—it would just lead
+to confusion.

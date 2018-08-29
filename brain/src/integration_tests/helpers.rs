@@ -118,7 +118,9 @@ fn test_thread(
 ) {
     let rlbot_guard = unlock_rlbot_singleton();
     let rlbot = rlbot_guard.as_ref().unwrap();
-    rlbot.start_match(rlbot::match_settings_1v1()).unwrap();
+    rlbot
+        .start_match(rlbot::MatchSettings::simple_1v1())
+        .unwrap();
 
     let mut brain = Brain::with_behavior(Box::new(NullBehavior::new()));
 

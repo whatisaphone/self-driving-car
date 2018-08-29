@@ -10,7 +10,7 @@ use std::time::Duration;
 pub fn main() -> Result<(), Box<Error>> {
     let rlbot = rlbot::init().map_err(|_| RLBotError)?;
     rlbot
-        .start_match(rlbot::match_settings_1v1())
+        .start_match(rlbot::MatchSettings::simple_1v1())
         .map_err(|_| RLBotError)?;
 
     let mut packets = rlbot.packeteer();

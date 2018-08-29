@@ -2,12 +2,8 @@ extern crate libloading;
 extern crate ratelimit;
 
 use dll::RLBotCoreInterface;
-pub use ffi::{
-    BallInfo, GameMap, GameMode, LiveDataPacket, MatchSettings, Physics, PlayerConfiguration,
-    PlayerInfo, PlayerInput,
-};
+pub use ffi::*;
 use packeteer::Packeteer;
-pub use shortcuts::*;
 use std::error::Error;
 use std::fmt;
 use std::os::raw::c_int;
@@ -21,9 +17,8 @@ mod ffi;
 mod ffi_impls;
 mod inject;
 mod packeteer;
-mod shortcuts;
 
-/// Tracks whether a RLBot instance exists at any given time.
+/// Tracks whether a RLBot instance has been created.
 static INITIALIZED: AtomicBool = AtomicBool::new(false);
 
 /// Injects the RLBot core DLL into Rocket League, and initializes the interface
@@ -31,8 +26,8 @@ static INITIALIZED: AtomicBool = AtomicBool::new(false);
 ///
 /// # Panics
 ///
-/// Only one RLBot instance may exist at any given time. If you call this
-/// function while another RLBot exists, it will panic.
+/// Only one RLBot instance may be created. If you call this
+/// function more than once, it will panic.
 pub fn init() -> Result<RLBot, ()> {
     if INITIALIZED.swap(true, Ordering::SeqCst) {
         panic!("Only one RLBot may exist at a time.");
@@ -51,12 +46,6 @@ pub fn init() -> Result<RLBot, ()> {
 
 pub struct RLBot {
     interface: RLBotCoreInterface,
-}
-
-impl Drop for RLBot {
-    fn drop(&mut self) {
-        INITIALIZED.swap(false, Ordering::SeqCst);
-    }
 }
 
 impl RLBot {
@@ -95,7 +84,7 @@ fn core_result(result: ffi::RLBotCoreStatus) -> Result<(), ()> {
     }
 }
 
-// This is the future.
+// This is the future, but sadly not the present.
 #[derive(Debug)]
 pub struct RLBotError;
 

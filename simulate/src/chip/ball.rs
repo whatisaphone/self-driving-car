@@ -1,8 +1,9 @@
-/// This module contains a rough transliteration of Sam Mish's ball prediction
-/// code.
-///
-/// Source:
-/// https://github.com/samuelpmish/Lobot/blob/0d5b058e575493cf0bf34da78270da62e71a80d1/inc/Ball.h
+//! This module contains a rough transliteration of Sam Mish's ball prediction
+//! code.
+//!
+//! Source:
+//! https://github.com/samuelpmish/Lobot/blob/0d5b058e575493cf0bf34da78270da62e71a80d1/inc/Ball.h
+
 use nalgebra::Vector3;
 
 const BALL_RADIUS: f32 = 91.25;
@@ -75,36 +76,12 @@ impl Ball {
     }
 }
 
+// Stub implementation
 fn pitch_is_in_contact_with(sphere_loc: Vector3<f32>, radius: f32) -> bool {
     return sphere_loc.z < radius;
 }
 
+// Stub implementation
 fn pitch_contact_normal() -> Vector3<f32> {
     return Vector3::new(0.0, 0.0, 1.0);
-}
-
-#[cfg(test)]
-mod test {
-    use ball::Ball;
-    use nalgebra::Vector3;
-    use std::time::Instant;
-
-    #[test]
-    fn what() {
-        const DT: f32 = 1.0 / 60.0;
-
-        let start = Instant::now();
-        for _ in 0..100 {
-            let mut ball = Ball::new(
-                Vector3::new(0.0, 0.0, 1000.0),
-                Vector3::new(-50.0, 0.0, 0.0),
-                Vector3::new(-200.0, 0.0, 200.0),
-            );
-            for x in 0..500 {
-                ball.step(DT);
-            }
-        }
-        let stop = Instant::now();
-        println!("{:?}", (stop - start).subsec_millis());
-    }
 }

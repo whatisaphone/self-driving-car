@@ -1,12 +1,9 @@
 use nalgebra::Vector3;
 use rlbot;
-use simulate::{Ball, Car1D};
+use simulate::{chip::Ball, Car1D};
 use utils::ExtendPhysics;
 
-pub fn estimate_intercept_car_ball(
-    car: &rlbot::PlayerInfo,
-    ball: &rlbot::BallInfo,
-) -> InterceptResult {
+pub fn estimate_intercept_car_ball(car: &rlbot::PlayerInfo, ball: &rlbot::BallInfo) -> Intercept {
     estimate_intercept_car_ball_2(car, ball, |loc, _vel| loc.z < 110.0)
 }
 
@@ -14,7 +11,7 @@ pub fn estimate_intercept_car_ball_2(
     car: &rlbot::PlayerInfo,
     ball: &rlbot::BallInfo,
     predicate: impl FnOnce(&Vector3<f32>, &Vector3<f32>) -> bool,
-) -> InterceptResult {
+) -> Intercept {
     const DT: f32 = 1.0 / 60.0;
 
     // We don't want the center of the car to be at the center of the ball –
@@ -45,14 +42,14 @@ pub fn estimate_intercept_car_ball_2(
     }
 
     let intercept_loc = sim_ball.loc() - (sim_ball.loc() - car.Physics.loc()).normalize() * RADII;
-    InterceptResult {
+    Intercept {
         time: t,
         ball_loc: sim_ball.loc(),
         car_loc: intercept_loc,
     }
 }
 
-pub struct InterceptResult {
+pub struct Intercept {
     pub time: f32,
     pub ball_loc: Vector3<f32>,
     pub car_loc: Vector3<f32>,

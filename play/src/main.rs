@@ -22,7 +22,15 @@ fn main() {
         .init();
 
     let rlbot = rlbot::init().unwrap();
-    rlbot.start_match(rlbot::match_settings_1v1()).unwrap();
+    let match_settings = rlbot::MatchSettings {
+        MutatorSettings: rlbot::MutatorSettings {
+            MatchLength: rlbot::MatchLength::Unlimited,
+            ..Default::default()
+        },
+        ..rlbot::MatchSettings::simple_1v1()
+    };
+    rlbot.start_match(match_settings).unwrap();
+
     let mut packets = rlbot.packeteer();
     // Wait for RoundActive
     while !packets.next().unwrap().GameInfo.RoundActive {}

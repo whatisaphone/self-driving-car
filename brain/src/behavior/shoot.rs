@@ -1,6 +1,7 @@
 use behavior::{Action, Behavior};
 use collect::ExtendRotation3;
 use eeg::{color, Drawable, EEG};
+use maneuvers::GetToFlatGround;
 use mechanics::{simple_steer_towards, GroundAccelToLoc, QuickJumpAndDodge};
 use predict::intercept::estimate_intercept_car_ball;
 use rlbot;
@@ -47,16 +48,9 @@ impl Behavior for Shoot {
         eeg.draw(Drawable::GhostBall(intercept.ball_loc));
         eeg.draw(Drawable::GhostCar(target_loc, me.Physics.rot()));
 
-        if !me.OnGround
-            || me.Physics.rot().pitch().abs() >= 5.0_f32.to_degrees()
-            || me.Physics.rot().roll().abs() >= 5.0_f32.to_degrees()
-        {
-            eeg.draw(Drawable::print("I'm scared", color::RED));
-            return Action::Yield(rlbot::PlayerInput {
-                Throttle: 1.0,
-                Steer: simple_steer_towards(&me.Physics, enemy_goal_center()),
-                ..Default::default()
-            });
+        // This behavior currently just operates in 2D
+        if !GetToFlatGround::on_flat_ground(packet) {
+            return Action::call(GetToFlatGround::new());
         }
 
         if target_dist <= 250.0 {

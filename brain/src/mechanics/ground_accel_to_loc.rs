@@ -1,5 +1,6 @@
 use behavior::{Action, Behavior};
 use eeg::{color, Drawable, EEG};
+use maneuvers::GetToFlatGround;
 use mechanics::simple_steer_towards;
 use nalgebra::Vector3;
 use rlbot;
@@ -41,13 +42,9 @@ impl Behavior for GroundAccelToLoc {
             color::GREEN,
         ));
 
-        if !me.OnGround {
-            eeg.draw(Drawable::print("I'm scared", color::RED));
-            return Action::Yield(rlbot::PlayerInput {
-                Throttle: 1.0,
-                Steer: simple_steer_towards(&me.Physics, self.target_loc),
-                ..Default::default()
-            });
+        // This behavior currently just operates in 2D
+        if !GetToFlatGround::on_flat_ground(packet) {
+            return Action::call(GetToFlatGround::new());
         }
 
         let mut result = rlbot::PlayerInput::default();
