@@ -177,7 +177,7 @@ mod tests {
     fn supersonic_coast() {
         let mut car = Car1D::new(9999.0);
         car.step(DT, 0.0, false);
-        assert!(2200.0 <= car.vel && car.vel < 2290.0);
+        assert!(2280.0 <= car.vel && car.vel < 2295.0);
     }
 
     #[test]
