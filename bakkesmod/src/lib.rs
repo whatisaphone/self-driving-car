@@ -5,7 +5,7 @@ use std::io::{Read, Write};
 use std::thread;
 use websocket::client::sync::Client;
 use websocket::client::ClientBuilder;
-use websocket::{Message, OwnedMessage};
+use websocket::{Message, OwnedMessage, WebSocketError};
 
 pub struct BakkesMod {
     tx: Option<crossbeam_channel::Sender<String>>,
@@ -13,11 +13,10 @@ pub struct BakkesMod {
 }
 
 impl BakkesMod {
-    pub fn connect() -> Result<BakkesMod, ()> {
+    pub fn connect() -> Result<BakkesMod, WebSocketError> {
         let client = ClientBuilder::new("ws://127.0.0.1:9002")
-            .map_err(|_| ())?
-            .connect_insecure()
-            .map_err(|_| ())?;
+            .unwrap()
+            .connect_insecure()?;
 
         let (tx, rx) = crossbeam_channel::unbounded();
 
