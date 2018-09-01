@@ -10,6 +10,7 @@ use std::thread::sleep;
 use std::time::Duration;
 
 mod collector;
+mod scenarios;
 
 pub fn main() -> Result<(), Box<Error>> {
     let rlbot = rlbot::init()?;
@@ -47,21 +48,7 @@ pub fn main() -> Result<(), Box<Error>> {
 
         collector.write(&packet)?;
 
-        // The action we want to record:
-        if packet.GameInfo.TimeSeconds < start + 1.0 {
-            let input = Default::default();
-            rlbot.update_player_input(input, 0)?;
-        } else if packet.GameInfo.TimeSeconds < start + 3.0 {
-            let input = rlbot::PlayerInput {
-                Throttle: 1.0,
-                Boost: true,
-                ..Default::default()
-            };
-            rlbot.update_player_input(input, 0)?;
-        } else if packet.GameInfo.TimeSeconds < start + 8.0 {
-            let input = Default::default();
-            rlbot.update_player_input(input, 0)?;
-        } else {
+        if !scenarios::coast(&rlbot, packet.GameInfo.TimeSeconds - start, &packet)? {
             break;
         }
     }
