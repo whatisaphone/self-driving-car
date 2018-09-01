@@ -4,7 +4,6 @@ members = [
     "brain",
     "collect",
     "play",
-    "rlbot",
     "simulate",
 ]
 

@@ -16,5 +16,5 @@ piston2d-graphics = "0.26.0"
 
 bakkesmod = { path = "../bakkesmod" }
 collect = { path = "../collect" }
-rlbot = { path = "../rlbot" }
+rlbot = { path = "../../rlbot-rust" }
 simulate = { path = "../simulate" }

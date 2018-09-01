@@ -22,7 +22,7 @@
       name: fmt
       language: system
       files: '[.]rs$'
-      entry: rustfmt
+      entry: rustup run nightly rustfmt
 
     - id: test
       name: test

@@ -106,7 +106,7 @@ dependencies = [
  "nalgebra 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "piston2d-graphics 0.26.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "piston_window 0.80.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "rlbot 0.1.0",
+ "rlbot 0.0.1",
  "simulate 0.1.0",
 ]
 
@@ -180,7 +180,7 @@ dependencies = [
  "bakkesmod 0.1.0",
  "csv 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "nalgebra 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "rlbot 0.1.0",
+ "rlbot 0.0.1",
 ]
 
 [[package]]
@@ -1131,7 +1131,7 @@ dependencies = [
  "env_logger 0.5.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "rlbot 0.1.0",
+ "rlbot 0.0.1",
 ]
 
 [[package]]
@@ -1287,7 +1287,7 @@ dependencies = [
 
 [[package]]
 name = "rlbot"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "libloading 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "ratelimit 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
