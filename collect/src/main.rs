@@ -48,7 +48,7 @@ pub fn main() -> Result<(), Box<Error>> {
 
         collector.write(&packet)?;
 
-        if !scenarios::coast(&rlbot, packet.GameInfo.TimeSeconds - start, &packet)? {
+        if !scenarios::aerial_60deg(&rlbot, packet.GameInfo.TimeSeconds - start, &packet)? {
             break;
         }
     }
