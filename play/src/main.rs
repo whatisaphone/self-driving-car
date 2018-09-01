@@ -27,7 +27,7 @@ fn main() {
             MatchLength: rlbot::MatchLength::Unlimited,
             ..Default::default()
         },
-        ..rlbot::MatchSettings::simple_1v1()
+        ..rlbot::MatchSettings::simple_1v1("Formula None", "All-Star")
     };
     rlbot.start_match(match_settings).unwrap();
 

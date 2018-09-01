@@ -10,6 +10,7 @@ lazy_static = "1.1.0"
 log = "0.4.4"
 env_logger = "0.5.12"
 
+rlbot = "0.0.3"
+
 brain = { path = "../brain" }
 collect = { path = "../collect" }
-rlbot = { path = "../../rlbot-rust" }
