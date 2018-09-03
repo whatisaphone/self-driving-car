@@ -8,20 +8,20 @@ use utils::{my_car, ExtendPhysics};
 
 pub struct DriveLocTimeDecelerate {
     target_loc: Vector3<f32>,
-    target_speed: f32,
     target_time: f32,
+    target_speed: f32,
 }
 
 impl DriveLocTimeDecelerate {
     pub fn new(
         target_loc: Vector3<f32>,
-        target_speed: f32,
         target_time: f32,
+        target_speed: f32,
     ) -> DriveLocTimeDecelerate {
         DriveLocTimeDecelerate {
             target_loc,
-            target_speed,
             target_time,
+            target_speed,
         }
     }
 }
