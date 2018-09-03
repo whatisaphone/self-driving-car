@@ -1,9 +1,6 @@
 use behavior::{Action, Behavior};
-use eeg::{color, Drawable, EEG};
-use mechanics::{simple_steer_towards, GroundAccelToLoc, QuickJumpAndDodge};
-use predict::intercept::estimate_intercept_car_ball;
+use eeg::EEG;
 use rlbot;
-use utils::{enemy_goal_center, one_v_one, ExtendPhysics};
 
 pub struct JumpShot;
 

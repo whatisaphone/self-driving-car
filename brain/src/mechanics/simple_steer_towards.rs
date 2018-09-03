@@ -16,7 +16,7 @@ pub fn simple_yaw_diff(car: &rlbot::Physics, target_loc: Vector2<f32>) -> f32 {
 mod integration_tests {
     use behavior::{Action, Behavior};
     use collect::ExtendRotation3;
-    use eeg::{color, Drawable, EEG};
+    use eeg::EEG;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use mechanics::simple_steer_towards;
     use nalgebra::{Rotation3, Vector3};

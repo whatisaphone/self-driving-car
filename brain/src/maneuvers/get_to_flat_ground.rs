@@ -1,11 +1,9 @@
 use behavior::{Action, Behavior};
 use collect::ExtendRotation3;
-use eeg::{color, Drawable, EEG};
-use mechanics::{simple_steer_towards, QuickJumpAndDodge};
+use eeg::EEG;
+use mechanics::simple_steer_towards;
 use nalgebra::Vector2;
 use rlbot;
-use simulate::rl;
-use std::f32::consts::PI;
 use utils::{my_car, ExtendPhysics};
 
 pub struct GetToFlatGround;

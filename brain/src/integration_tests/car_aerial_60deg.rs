@@ -1,8 +1,7 @@
-use behavior::{Action, Behavior, NullBehavior, RootBehavior};
-use collect::ExtendRotation3;
+use behavior::{Action, Behavior};
 use eeg::EEG;
 use integration_tests::helpers::{TestRunner, TestScenario};
-use nalgebra::{Rotation3, Vector3};
+use nalgebra::Vector3;
 use rlbot;
 use simulate::CarAerial60Deg;
 use utils::ExtendPhysics;

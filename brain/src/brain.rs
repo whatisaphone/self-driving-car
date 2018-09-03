@@ -44,6 +44,41 @@ impl Brain {
         result.Pitch = clamp(result.Pitch, -1.0, 1.0);
         result.Yaw = clamp(result.Yaw, -1.0, 1.0);
         result.Roll = clamp(result.Roll, -1.0, 1.0);
+
+        eeg.draw(Drawable::print("-----------------------", color::GREEN));
+        eeg.draw(Drawable::print(
+            format!("throttle: {:.2}", result.Throttle),
+            color::GREEN,
+        ));
+        eeg.draw(Drawable::print(
+            format!("steer: {:.2}", result.Steer),
+            color::GREEN,
+        ));
+        eeg.draw(Drawable::print(
+            format!("pitch: {:.2}", result.Pitch),
+            color::GREEN,
+        ));
+        eeg.draw(Drawable::print(
+            format!("yaw: {:.2}", result.Yaw),
+            color::GREEN,
+        ));
+        eeg.draw(Drawable::print(
+            format!("roll: {:.2}", result.Roll),
+            color::GREEN,
+        ));
+        eeg.draw(Drawable::print(
+            format!("jump: {}", result.Jump),
+            color::GREEN,
+        ));
+        eeg.draw(Drawable::print(
+            format!("boost: {}", result.Boost),
+            color::GREEN,
+        ));
+        eeg.draw(Drawable::print(
+            format!("handbrake: {}", result.Handbrake),
+            color::GREEN,
+        ));
+
         result
     }
 }

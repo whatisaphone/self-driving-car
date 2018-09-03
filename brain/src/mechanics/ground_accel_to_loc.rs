@@ -6,7 +6,7 @@ use nalgebra::Vector2;
 use rlbot;
 use simulate::{rl, Car1D};
 use std::f32::consts::PI;
-use utils::{my_car, ExtendPhysics, ExtendVector2, ExtendVector3};
+use utils::{my_car, ExtendPhysics, ExtendVector3};
 
 pub struct GroundAccelToLoc {
     target_loc: Vector2<f32>,

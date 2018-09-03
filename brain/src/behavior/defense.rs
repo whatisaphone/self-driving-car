@@ -1,10 +1,8 @@
 use behavior::{Action, Behavior};
-use eeg::{color, Drawable, EEG};
+use eeg::{Drawable, EEG};
 use maneuvers::BounceShot;
-use nalgebra::{Vector2, Vector3};
 use predict::estimate_intercept_car_ball;
 use rlbot;
-use simulate::rl;
 use utils::{
     enemy_goal_center, my_car, my_goal_center_2d, own_goal_left_post, own_goal_right_post,
     ExtendPhysics, ExtendVector2, ExtendVector3,
@@ -58,7 +56,6 @@ mod integration_tests {
     use collect::ExtendRotation3;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use nalgebra::{Rotation3, Vector3};
-    use utils::ExtendPhysics;
 
     #[test]
     fn bouncing_save() {

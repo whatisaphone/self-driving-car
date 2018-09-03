@@ -1,14 +1,13 @@
 // This file is a hot mess, don't look at it please :)
 
-use behavior::Behavior;
 use collect::ExtendRotation3;
 use crossbeam_channel;
 use graphics::types::Color;
 use graphics::Transformed;
 use nalgebra::{Rotation3, Vector2, Vector3};
 use piston_window::{
-    clear, ellipse, line, rectangle, text, AdvancedWindow, Ellipse, Glyphs, Line, OpenGL,
-    PistonWindow, Position, Rectangle, TextureSettings, WindowSettings,
+    clear, ellipse, line, rectangle, text, AdvancedWindow, Ellipse, Glyphs, OpenGL, PistonWindow,
+    Position, Rectangle, TextureSettings, WindowSettings,
 };
 use rlbot;
 use simulate::rl;

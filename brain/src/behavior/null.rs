@@ -1,5 +1,5 @@
 use behavior::behavior::{Action, Behavior};
-use eeg::{color, Drawable, EEG};
+use eeg::EEG;
 use rlbot;
 
 pub struct NullBehavior;

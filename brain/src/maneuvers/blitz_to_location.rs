@@ -2,11 +2,11 @@ use behavior::{Action, Behavior};
 use collect::ExtendRotation3;
 use eeg::{color, Drawable, EEG};
 use mechanics::{simple_steer_towards, QuickJumpAndDodge};
-use nalgebra::{Vector2, Vector3};
+use nalgebra::Vector2;
 use rlbot;
 use simulate::rl;
 use std::f32::consts::PI;
-use utils::{my_car, ExtendPhysics, ExtendVector2, ExtendVector3};
+use utils::{my_car, ExtendPhysics, ExtendVector3};
 
 pub struct BlitzToLocation {
     target_loc: Vector2<f32>,

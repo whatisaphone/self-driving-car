@@ -1,7 +1,7 @@
 use behavior::defense::Defense;
 use behavior::offense::Offense;
 use behavior::{Action, Behavior};
-use eeg::{color, Drawable, EEG};
+use eeg::EEG;
 use nalgebra::Vector3;
 use rlbot;
 use simulate::{chip::Ball, Car1D};

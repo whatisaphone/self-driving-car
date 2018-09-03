@@ -1,17 +1,14 @@
 use behavior::{Action, Behavior};
-use collect::ExtendRotation3;
 use eeg::{color, Drawable, EEG};
 use maneuvers::GetToFlatGround;
-use mechanics::{simple_steer_towards, simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
+use mechanics::{simple_steer_towards, simple_yaw_diff};
 use nalgebra::Vector3;
-use predict::estimate_intercept_car_ball_2;
-use predict::intercept::estimate_intercept_car_ball;
 use rlbot;
 use simulate::rl;
 use simulate::Car1D;
 use simulate::CarAerial60Deg;
 use std::f32::consts::PI;
-use utils::{enemy_goal_center, my_car, one_v_one, ExtendPhysics, ExtendVector3};
+use utils::{my_car, one_v_one, ExtendPhysics, ExtendVector3};
 
 pub struct AerialLocTime {
     target_loc: Vector3<f32>,
@@ -23,7 +20,7 @@ pub struct AerialLocTime {
 #[derive(Debug)]
 enum Phase {
     Ground,
-    Air { start_time: f32 },
+    Air { start_time: f32, duration: f32 },
     Shoot,
 }
 
@@ -53,12 +50,16 @@ impl Behavior for AerialLocTime {
             _ => self.min_distance = Some(distance),
         }
 
+        eeg.draw(Drawable::GhostCar(self.target_loc, me.Physics.rot()));
         eeg.draw(Drawable::print(format!("{:?}", self.phase), color::GREEN));
 
         match self.phase {
             Phase::Ground => self.ground(packet, eeg),
-            Phase::Air { start_time } => Self::air(packet, eeg, start_time),
-            Phase::Shoot => unimplemented!(),
+            Phase::Air {
+                start_time,
+                duration,
+            } => self.air(packet, eeg, start_time, duration),
+            Phase::Shoot => Action::Return,
         }
     }
 }
@@ -93,7 +94,7 @@ impl AerialLocTime {
             return Action::Return;
         }
 
-        let fly = if yaw_diff.abs() >= 10.0_f32.to_radians() {
+        let fly = if yaw_diff.abs() >= 3.0_f32.to_radians() {
             false
         } else {
             cost.time >= time_remaining - 2.0 / 120.0
@@ -109,6 +110,7 @@ impl AerialLocTime {
         } else {
             self.phase = Phase::Air {
                 start_time: packet.GameInfo.TimeSeconds,
+                duration: cost.time,
             };
             self.execute(packet, eeg)
         }
@@ -170,15 +172,26 @@ impl AerialLocTime {
 
     // This is really sloppy and cannot correct correct once you leave the ground.
     // Needs improvement.
-    fn air(packet: &rlbot::LiveDataPacket, eeg: &mut EEG, start_time: f32) -> Action {
+    fn air(
+        &mut self,
+        packet: &rlbot::LiveDataPacket,
+        eeg: &mut EEG,
+        start_time: f32,
+        duration: f32,
+    ) -> Action {
+        let elapsed = packet.GameInfo.TimeSeconds - start_time;
+        if elapsed >= duration {
+            self.phase = Phase::Shoot;
+            return self.execute(packet, eeg);
+        }
+
         let me = my_car(packet);
-        let phase_time = packet.GameInfo.TimeSeconds - start_time;
         let target_pitch = 60.0_f32.to_radians();
         let pitch = (target_pitch - me.Physics.Rotation.Pitch) / 2.0;
         let input = rlbot::PlayerInput {
             Pitch: pitch.max(-1.0).min(1.0),
             Jump: true,
-            Boost: phase_time >= 0.25,
+            Boost: elapsed >= 0.25,
             ..Default::default()
         };
         Action::Yield(input)
@@ -187,16 +200,15 @@ impl AerialLocTime {
 
 #[cfg(test)]
 mod integration_tests {
-    use collect::ExtendRotation3;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use maneuvers::AerialLocTime;
-    use nalgebra::{Rotation3, Vector3};
+    use nalgebra::Vector3;
     use utils::ExtendPhysics;
 
     #[test]
     #[ignore] // This basically works but is inaccurate. See the comment above `air()`.
     fn simple() {
-        let expected_loc = Vector3::new(0.0, 1200.0, 500.0);
+        let expected_loc = Vector3::new(400.0, 1100.0, 600.0);
         let test = TestRunner::start2(
             TestScenario {
                 ball_loc: Vector3::new(1000.0, 0.0, 0.0),

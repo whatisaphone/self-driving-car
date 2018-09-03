@@ -1,10 +1,10 @@
 use behavior::{Action, Behavior};
 use eeg::{color, Drawable, EEG};
 use mechanics::{GroundAccelToLoc, QuickJumpAndDodge};
-use nalgebra::{Vector2, Vector3};
+use nalgebra::Vector2;
 use predict::estimate_intercept_car_ball_2;
 use rlbot;
-use utils::{enemy_goal_center, one_v_one, ExtendPhysics, ExtendVector2, ExtendVector3};
+use utils::{enemy_goal_center, one_v_one, ExtendPhysics, ExtendVector3};
 
 pub struct BounceShot {
     target_loc: Vector2<f32>,
