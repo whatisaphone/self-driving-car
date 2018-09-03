@@ -68,7 +68,7 @@ impl AerialLocTime {
         let me = my_car(packet);
         let target_dist_2d = (me.Physics.loc() - self.target_loc).to_2d().norm();
         let time_remaining = self.target_time - packet.GameInfo.TimeSeconds;
-        let yaw_diff = simple_yaw_diff(&me.Physics, &self.target_loc);
+        let yaw_diff = simple_yaw_diff(&me.Physics, self.target_loc.to_2d());
         let cost = CarAerial60Deg::cost(self.target_loc.z);
 
         eeg.draw(Drawable::print(
@@ -122,7 +122,7 @@ impl AerialLocTime {
         total_time: f32,
     ) -> rlbot::PlayerInput {
         let mut result = rlbot::PlayerInput::default();
-        result.Steer = simple_steer_towards(&me.Physics, self.target_loc);
+        result.Steer = simple_steer_towards(&me.Physics, self.target_loc.to_2d());
         if !Self::estimate_approach(
             me.Physics.vel().norm(),
             target_dist_2d,

@@ -1,10 +1,10 @@
 use behavior::{Action, Behavior};
 use eeg::{color, Drawable, EEG};
 use mechanics::{simple_steer_towards, DriveLocTimeDecelerate};
-use nalgebra::Vector3;
+use nalgebra::Vector2;
 use predict::estimate_intercept_car_ball_2;
 use rlbot;
-use utils::{enemy_goal_center, one_v_one, ExtendPhysics, ExtendVector3};
+use utils::{enemy_goal_center, one_v_one, ExtendPhysics, ExtendVector2, ExtendVector3};
 
 pub struct CarryFromBounce;
 
@@ -25,11 +25,12 @@ impl Behavior for CarryFromBounce {
             120.0 <= loc.z && loc.z < 140.0 && vel.z < 0.0
         });
 
-        let theta1 = enemy_goal_center().angle_to(&intercept.ball_loc);
-        let theta2 = Vector3::zeros().angle_to(&packet.GameBall.Physics.vel());
+        let theta1 = enemy_goal_center().angle_to(intercept.ball_loc.to_2d());
+        let theta2 = Vector2::zeros().angle_to(packet.GameBall.Physics.vel().to_2d());
         let theta = (theta1 + theta2 * 0.2) / 1.2;
-        let target_loc = intercept.ball_loc + Vector3::new(theta.cos(), theta.sin(), 0.0) * 200.0;
-        let target_dist = (target_loc - me.Physics.loc()).norm();
+        let target_loc =
+            intercept.ball_loc.to_2d() + Vector2::new(theta.cos(), theta.sin()) * 200.0;
+        let target_dist = (target_loc - me.Physics.loc().to_2d()).norm();
 
         eeg.draw(Drawable::print(
             format!("target_dist: {:.0}", target_dist),

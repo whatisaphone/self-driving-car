@@ -39,3 +39,8 @@ pub const CROSSBAR_Z: f32 = 642.775;
 ///
 /// This value was copied from https://github.com/RLBot/RLBot/wiki/Useful-Game-Values.
 pub const GOALPOST_X: f32 = 892.755;
+
+/// The z location of the Octane when sitting on the ground.
+///
+/// This value was observed in data from `collect`.
+pub const OCTANE_NEUTRAL_Z: f32 = 17.01;

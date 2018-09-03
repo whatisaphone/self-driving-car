@@ -1,20 +1,20 @@
 use behavior::{Action, Behavior};
 use eeg::{color, Drawable, EEG};
 use mechanics::simple_steer_towards;
-use nalgebra::Vector3;
+use nalgebra::Vector2;
 use rlbot;
 use simulate::{rl, Car1D};
-use utils::{my_car, ExtendPhysics};
+use utils::{my_car, ExtendPhysics, ExtendVector3};
 
 pub struct DriveLocTimeDecelerate {
-    target_loc: Vector3<f32>,
+    target_loc: Vector2<f32>,
     target_time: f32,
     target_speed: f32,
 }
 
 impl DriveLocTimeDecelerate {
     pub fn new(
-        target_loc: Vector3<f32>,
+        target_loc: Vector2<f32>,
         target_time: f32,
         target_speed: f32,
     ) -> DriveLocTimeDecelerate {
@@ -33,14 +33,17 @@ impl Behavior for DriveLocTimeDecelerate {
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
         let me = my_car(packet);
-        let distance = (me.Physics.loc() - self.target_loc).norm();
+        let distance = (me.Physics.loc().to_2d() - self.target_loc).norm();
         let time_remaining = self.target_time - packet.GameInfo.TimeSeconds;
 
         if time_remaining < 2.0 / 120.0 {
             return Action::Return;
         }
 
-        eeg.draw(Drawable::GhostCar(self.target_loc, me.Physics.rot()));
+        eeg.draw(Drawable::ghost_car_ground(
+            self.target_loc,
+            me.Physics.rot(),
+        ));
         eeg.draw(Drawable::print(
             format!("target_speed: {:.0}", self.target_speed),
             color::GREEN,
@@ -154,7 +157,7 @@ mod integration_tests {
     use behavior::Once;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use mechanics::DriveLocTimeDecelerate;
-    use nalgebra::Vector3;
+    use nalgebra::{Vector2, Vector3};
     use utils::{ExtendPhysics, ExtendVector3};
 
     #[test]
@@ -169,7 +172,7 @@ mod integration_tests {
             (1000.0, 0.0, 1000.0, 400.0),
         ];
         for &(initial_speed, target_x, target_y, target_speed) in cases.iter() {
-            let target_loc = Vector3::new(target_x, target_y, 0.0);
+            let target_loc = Vector2::new(target_x, target_y);
             let test = TestRunner::start2(
                 TestScenario {
                     ball_loc: Vector3::new(2000.0, 0.0, 0.0),
@@ -188,9 +191,7 @@ mod integration_tests {
             test.sleep_millis(2000);
 
             let packet = test.sniff_packet();
-            let discrepancy = (packet.GameCars[0].Physics.loc() - target_loc)
-                .to_2d()
-                .norm();
+            let discrepancy = (packet.GameCars[0].Physics.loc().to_2d() - target_loc).norm();
             println!("target loc: {:.?}", target_loc);
             println!("car loc: {:.?}", packet.GameCars[0].Physics.loc());
             println!("discrepancy: {:.0}", discrepancy);

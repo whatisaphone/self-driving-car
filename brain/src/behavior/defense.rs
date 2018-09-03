@@ -7,7 +7,7 @@ use rlbot;
 use simulate::rl;
 use utils::{
     enemy_goal_center, my_car, my_goal_center_2d, own_goal_left_post, own_goal_right_post,
-    ExtendPhysics, ExtendVector3,
+    ExtendPhysics, ExtendVector2, ExtendVector3,
 };
 
 pub struct Defense {
@@ -34,8 +34,9 @@ impl Behavior for Defense {
         let intercept = estimate_intercept_car_ball(&me, &packet.GameBall);
 
         eeg.log("redirect to own corner");
-        let angle_to_own_goal = me.Physics.loc().angle_to(&enemy_goal_center());
-        let angle_to_ball_intercept = me.Physics.loc().angle_to(&intercept.ball_loc);
+        let me_loc = me.Physics.loc().to_2d();
+        let angle_to_own_goal = me_loc.angle_to(enemy_goal_center());
+        let angle_to_ball_intercept = me_loc.angle_to(intercept.ball_loc.to_2d());
         let target_loc = if angle_to_own_goal > angle_to_ball_intercept {
             eeg.log("push from left to right");
             my_goal_center_2d() + (own_goal_right_post() - my_goal_center_2d()) * 4.0

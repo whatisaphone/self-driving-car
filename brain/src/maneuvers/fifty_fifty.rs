@@ -4,7 +4,7 @@ use maneuvers::BlitzToLocation;
 use mechanics::QuickJumpAndDodge;
 use predict::intercept::estimate_intercept_car_ball;
 use rlbot;
-use utils::{my_goal_center, one_v_one, ExtendPhysics};
+use utils::{my_goal_center, one_v_one, ExtendPhysics, ExtendVector3};
 
 pub struct FiftyFifty;
 
@@ -24,9 +24,9 @@ impl Behavior for FiftyFifty {
         let intercept = estimate_intercept_car_ball(&me, &packet.GameBall);
 
         // Get between the ball and our goal
-        let target_loc =
-            intercept.ball_loc + (my_goal_center() - intercept.ball_loc).normalize() * 200.0;
-        let target_dist = (target_loc - me.Physics.loc()).norm();
+        let target_loc = intercept.ball_loc.to_2d()
+            + (my_goal_center() - intercept.ball_loc.to_2d()).normalize() * 200.0;
+        let target_dist = (target_loc - me.Physics.loc().to_2d()).norm();
 
         eeg.draw(Drawable::print(
             format!("target_dist: {:.0}", target_dist),

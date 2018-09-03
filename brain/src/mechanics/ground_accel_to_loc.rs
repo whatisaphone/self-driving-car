@@ -2,19 +2,19 @@ use behavior::{Action, Behavior};
 use eeg::{color, Drawable, EEG};
 use maneuvers::GetToFlatGround;
 use mechanics::simple_steer_towards;
-use nalgebra::Vector3;
+use nalgebra::Vector2;
 use rlbot;
 use simulate::{rl, Car1D};
 use std::f32::consts::PI;
-use utils::{my_car, ExtendPhysics};
+use utils::{my_car, ExtendPhysics, ExtendVector2, ExtendVector3};
 
 pub struct GroundAccelToLoc {
-    target_loc: Vector3<f32>,
+    target_loc: Vector2<f32>,
     target_time: f32,
 }
 
 impl GroundAccelToLoc {
-    pub fn new(target_loc: Vector3<f32>, target_time: f32) -> GroundAccelToLoc {
+    pub fn new(target_loc: Vector2<f32>, target_time: f32) -> GroundAccelToLoc {
         GroundAccelToLoc {
             target_loc,
             target_time,
@@ -29,10 +29,13 @@ impl Behavior for GroundAccelToLoc {
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
         let me = my_car(packet);
-        let distance = (me.Physics.loc() - self.target_loc).norm();
+        let distance = (me.Physics.loc().to_2d() - self.target_loc).norm();
         let time_remaining = self.target_time - packet.GameInfo.TimeSeconds;
 
-        eeg.draw(Drawable::GhostCar(self.target_loc, me.Physics.rot()));
+        eeg.draw(Drawable::ghost_car_ground(
+            self.target_loc,
+            me.Physics.rot(),
+        ));
         eeg.draw(Drawable::print(
             format!("distance: {:.0}", distance),
             color::GREEN,
@@ -88,7 +91,7 @@ fn estimate_approach(car: &rlbot::PlayerInfo, distance: f32, time: f32) -> bool 
 mod integration_tests {
     use integration_tests::helpers::{TestRunner, TestScenario};
     use mechanics::GroundAccelToLoc;
-    use nalgebra::Vector3;
+    use nalgebra::{Vector2, Vector3};
     use utils::{ExtendPhysics, ExtendVector3};
 
     // This test is ignored because it's finicky and not quite accurate. The
@@ -99,7 +102,7 @@ mod integration_tests {
     fn verify_arrival_time() {
         let cases = [(-200.0, 500.0, 0), (100.0, 600.0, 50)];
         for &(x, y, boost) in cases.iter() {
-            let target_loc = Vector3::new(x, y, 0.0);
+            let target_loc = Vector2::new(x, y);
             let test = TestRunner::start2(
                 TestScenario {
                     ball_loc: Vector3::new(2000.0, 0.0, 0.0),
@@ -112,9 +115,7 @@ mod integration_tests {
             test.sleep_millis(2000);
 
             let packet = test.sniff_packet();
-            let diff = (packet.GameCars[0].Physics.loc() - target_loc)
-                .to_2d()
-                .norm();
+            let diff = (packet.GameCars[0].Physics.loc().to_2d() - target_loc).norm();
             println!("target loc: {:.?}", target_loc);
             println!("car loc: {:.?}", packet.GameCars[0].Physics.loc());
             println!("diff: {:.0}", diff);

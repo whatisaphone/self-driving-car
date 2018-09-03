@@ -16,7 +16,7 @@ pub struct BounceShot {
 impl BounceShot {
     pub fn new() -> Self {
         Self {
-            target_loc: enemy_goal_center().to_2d(),
+            target_loc: enemy_goal_center(),
             intercept_time: 0.0,
             intercept_car_loc: Vector2::zeros(),
             finished: false,
@@ -74,7 +74,7 @@ impl Behavior for BounceShot {
 
         // TODO: this is not how this works…
         let mut child = GroundAccelToLoc::new(
-            self.intercept_car_loc.to_3d(0.0),
+            self.intercept_car_loc,
             packet.GameInfo.TimeSeconds + self.intercept_time,
         );
         child.execute(packet, eeg)

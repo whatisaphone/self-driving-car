@@ -2,7 +2,7 @@ use behavior::{Action, Behavior};
 use collect::ExtendRotation3;
 use eeg::{color, Drawable, EEG};
 use mechanics::{simple_steer_towards, QuickJumpAndDodge};
-use nalgebra::Vector3;
+use nalgebra::Vector2;
 use rlbot;
 use simulate::rl;
 use std::f32::consts::PI;
@@ -37,7 +37,7 @@ impl Behavior for GetToFlatGround {
 
         return Action::Yield(rlbot::PlayerInput {
             Throttle: 1.0,
-            Steer: simple_steer_towards(&me.Physics, Vector3::zeros()),
+            Steer: simple_steer_towards(&me.Physics, Vector2::zeros()),
             ..Default::default()
         });
     }

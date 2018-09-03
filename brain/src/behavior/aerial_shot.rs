@@ -1,14 +1,12 @@
 use behavior::{Action, Behavior};
-use collect::ExtendRotation3;
 use eeg::{color, Drawable, EEG};
 use maneuvers::GetToFlatGround;
 use mechanics::{simple_steer_towards, simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
 use predict::estimate_intercept_car_ball_2;
-use predict::intercept::estimate_intercept_car_ball;
 use rlbot;
 use simulate::rl;
 use simulate::CarAerial60Deg;
-use utils::{enemy_goal_center, my_car, one_v_one, ExtendPhysics};
+use utils::{enemy_goal_center, my_car, one_v_one, ExtendPhysics, ExtendVector3};
 
 pub struct AerialShot {
     phase: Phase,
@@ -89,7 +87,7 @@ fn ground(packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Option<Action> {
     //        format!("aerial_time: {:.2}", cost.time),
     //        color::GREEN,
     //    ));
-    let yd = simple_yaw_diff(&me.Physics, &intercept.ball_loc).abs();
+    let yd = simple_yaw_diff(&me.Physics, intercept.ball_loc.to_2d()).abs();
     println!(
         "{:.2} {:.0} {:.2}",
         intercept.time, intercept.ball_loc.z, yd,
@@ -101,7 +99,7 @@ fn ground(packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Option<Action> {
 
     // TODO: this is not how this works
     let mut child = GroundAccelToLoc::new(
-        intercept.ball_loc,
+        intercept.ball_loc.to_2d(),
         packet.GameInfo.TimeSeconds + intercept.time,
     );
     Some(child.execute(packet, eeg))

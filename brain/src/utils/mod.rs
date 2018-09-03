@@ -9,21 +9,21 @@ mod fps_counter;
 mod geometry;
 
 /// Assuming I am the first car, return the first car.
-pub fn my_car(packet: &rlbot::LiveDataPacket) -> rlbot::PlayerInfo {
-    packet.GameCars[0]
+pub fn my_car(packet: &rlbot::LiveDataPacket) -> &rlbot::PlayerInfo {
+    &packet.GameCars[0]
 }
 
 /// Assuming the game is a 1v1, return my car and the enemy's car.
-pub fn one_v_one(packet: &rlbot::LiveDataPacket) -> (rlbot::PlayerInfo, rlbot::PlayerInfo) {
-    (packet.GameCars[0], packet.GameCars[1])
+pub fn one_v_one(packet: &rlbot::LiveDataPacket) -> (&rlbot::PlayerInfo, &rlbot::PlayerInfo) {
+    (&packet.GameCars[0], &packet.GameCars[1])
 }
 
-pub fn my_goal_center() -> Vector3<f32> {
-    Vector3::new(0.0, -5000.0, 0.0)
+pub fn my_goal_center() -> Vector2<f32> {
+    Vector2::new(0.0, -rl::FIELD_MAX_Y)
 }
 
 pub fn my_goal_center_2d() -> Vector2<f32> {
-    Vector2::new(0.0, -5000.0)
+    Vector2::new(0.0, -rl::FIELD_MAX_Y)
 }
 
 pub fn own_goal_left_post() -> Vector2<f32> {
@@ -34,8 +34,8 @@ pub fn own_goal_right_post() -> Vector2<f32> {
     Vector2::new(rl::GOALPOST_X, -rl::FIELD_MAX_Y)
 }
 
-pub fn enemy_goal_center() -> Vector3<f32> {
-    Vector3::new(0.0, 5000.0, 0.0)
+pub fn enemy_goal_center() -> Vector2<f32> {
+    Vector2::new(0.0, rl::FIELD_MAX_Y)
 }
 
 pub fn enemy_goal_left_post() -> Vector2<f32> {

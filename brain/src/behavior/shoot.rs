@@ -5,7 +5,10 @@ use maneuvers::GetToFlatGround;
 use mechanics::{simple_steer_towards, GroundAccelToLoc, QuickJumpAndDodge};
 use predict::intercept::estimate_intercept_car_ball;
 use rlbot;
-use utils::{enemy_goal_center, one_v_one, ExtendPhysics};
+use utils::{
+    enemy_goal_center, enemy_goal_left_post, enemy_goal_right_post, one_v_one, ExtendPhysics,
+    ExtendVector2, ExtendVector3,
+};
 
 pub struct Shoot {
     min_distance: Option<f32>,
@@ -26,9 +29,9 @@ impl Behavior for Shoot {
         let (me, _enemy) = one_v_one(packet);
         let intercept = estimate_intercept_car_ball(&me, &packet.GameBall);
 
-        let target_loc =
-            intercept.ball_loc + (intercept.ball_loc - enemy_goal_center()).normalize() * 150.0;
-        let target_dist = (target_loc - me.Physics.loc()).norm();
+        let target_loc = intercept.ball_loc.to_2d()
+            + (intercept.ball_loc.to_2d() - enemy_goal_center()).normalize() * 150.0;
+        let target_dist = (target_loc - me.Physics.loc().to_2d()).norm();
 
         // If the ball has moved further away, assume we hit it and we're done.
         match self.min_distance {

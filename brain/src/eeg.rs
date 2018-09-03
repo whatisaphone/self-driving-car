@@ -16,6 +16,7 @@ use std::collections::VecDeque;
 use std::mem;
 use std::path::PathBuf;
 use std::thread;
+use utils::ExtendVector2;
 
 pub struct EEG {
     tx: Option<crossbeam_channel::Sender<ThreadMessage>>,
@@ -77,6 +78,10 @@ pub enum Drawable {
 }
 
 impl Drawable {
+    pub fn ghost_car_ground(loc: Vector2<f32>, rot: Rotation3<f32>) -> Drawable {
+        Drawable::GhostCar(loc.to_3d(rl::OCTANE_NEUTRAL_Z), rot)
+    }
+
     pub fn print(text: impl Into<String>, color: Color) -> Drawable {
         Drawable::Print(text.into(), color)
     }
