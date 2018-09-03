@@ -1,16 +1,18 @@
 // This file is a hot mess, don't look at it please :)
 
+use behavior::Behavior;
 use collect::ExtendRotation3;
 use crossbeam_channel;
 use graphics::types::Color;
 use graphics::Transformed;
-use nalgebra::{Rotation3, Vector3};
+use nalgebra::{Rotation3, Vector2, Vector3};
 use piston_window::{
-    clear, ellipse, rectangle, text, AdvancedWindow, Ellipse, Glyphs, OpenGL, PistonWindow,
-    Position, Rectangle, TextureSettings, WindowSettings,
+    clear, ellipse, line, rectangle, text, AdvancedWindow, Ellipse, Glyphs, Line, OpenGL,
+    PistonWindow, Position, Rectangle, TextureSettings, WindowSettings,
 };
 use rlbot;
 use simulate::rl;
+use std::collections::VecDeque;
 use std::mem;
 use std::path::PathBuf;
 use std::thread;
@@ -19,6 +21,7 @@ pub struct EEG {
     tx: Option<crossbeam_channel::Sender<ThreadMessage>>,
     join_handle: Option<thread::JoinHandle<()>>,
     draw_list: Vec<Drawable>,
+    pub log: VecDeque<String>,
 }
 
 impl EEG {
@@ -29,6 +32,7 @@ impl EEG {
             tx: Some(tx),
             join_handle: Some(join_handle),
             draw_list: Vec::new(),
+            log: VecDeque::new(),
         }
     }
 }
@@ -45,6 +49,17 @@ impl EEG {
         self.draw_list.push(drawable);
     }
 
+    pub fn log(&mut self, message: impl Into<String>) {
+        let message = message.into();
+        println!("{}", message);
+        self.log.push_back(message);
+
+        // Limit RAM usage
+        while self.log.len() > 100 {
+            self.log.pop_front();
+        }
+    }
+
     pub fn show(&mut self, packet: &rlbot::LiveDataPacket) {
         let draw_list = mem::replace(&mut self.draw_list, Vec::new());
         self.tx.as_ref().unwrap().send(ThreadMessage::Draw(
@@ -57,6 +72,7 @@ impl EEG {
 pub enum Drawable {
     GhostBall(Vector3<f32>),
     GhostCar(Vector3<f32>, Rotation3<f32>),
+    Crosshair(Vector2<f32>),
     Print(String, Color),
 }
 
@@ -194,6 +210,32 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
                                     transform
                                         .trans(loc.x as f64, loc.y as f64)
                                         .rot_rad(rot.yaw() as f64),
+                                    g,
+                                );
+                            }
+                            Drawable::Crosshair(loc) => {
+                                line(
+                                    color::YELLOW,
+                                    OUTLINE_RADIUS,
+                                    [
+                                        loc.x as f64 - 100.0,
+                                        loc.y as f64 - 100.0,
+                                        loc.x as f64 + 100.0,
+                                        loc.y as f64 + 100.0,
+                                    ],
+                                    transform,
+                                    g,
+                                );
+                                line(
+                                    color::YELLOW,
+                                    OUTLINE_RADIUS,
+                                    [
+                                        loc.x as f64 - 50.0,
+                                        loc.y as f64 + 50.0,
+                                        loc.x as f64 + 50.0,
+                                        loc.y as f64 - 50.0,
+                                    ],
+                                    transform,
                                     g,
                                 );
                             }

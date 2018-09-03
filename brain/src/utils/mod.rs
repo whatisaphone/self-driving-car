@@ -1,8 +1,9 @@
 use collect::ExtendRotation3;
-use nalgebra::{Rotation3, Vector3};
+use nalgebra::{Rotation3, Vector2, Vector3};
 use rlbot;
+use simulate::rl;
 pub use utils::fps_counter::FPSCounter;
-pub use utils::geometry::{ExtendF32, ExtendVector3};
+pub use utils::geometry::{ExtendF32, ExtendVector2, ExtendVector3};
 
 mod fps_counter;
 mod geometry;
@@ -21,16 +22,28 @@ pub fn my_goal_center() -> Vector3<f32> {
     Vector3::new(0.0, -5000.0, 0.0)
 }
 
+pub fn my_goal_center_2d() -> Vector2<f32> {
+    Vector2::new(0.0, -5000.0)
+}
+
+pub fn own_goal_left_post() -> Vector2<f32> {
+    Vector2::new(-rl::GOALPOST_X, -rl::FIELD_MAX_Y)
+}
+
+pub fn own_goal_right_post() -> Vector2<f32> {
+    Vector2::new(rl::GOALPOST_X, -rl::FIELD_MAX_Y)
+}
+
 pub fn enemy_goal_center() -> Vector3<f32> {
     Vector3::new(0.0, 5000.0, 0.0)
 }
 
-pub fn enemy_goal_left_post() -> Vector3<f32> {
-    Vector3::new(1000.0, 5000.0, 0.0)
+pub fn enemy_goal_left_post() -> Vector2<f32> {
+    Vector2::new(rl::GOALPOST_X, rl::FIELD_MAX_Y)
 }
 
-pub fn enemy_goal_right_post() -> Vector3<f32> {
-    Vector3::new(-1000.0, 5000.0, 0.0)
+pub fn enemy_goal_right_post() -> Vector2<f32> {
+    Vector2::new(-rl::GOALPOST_X, rl::FIELD_MAX_Y)
 }
 
 pub trait ExtendPhysics {

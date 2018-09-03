@@ -32,26 +32,26 @@ impl Behavior for RootBehavior {
 
         self.last_eval = Some(packet.GameInfo.TimeSeconds);
 
-        let what_it_do = eval(packet);
-        info!("{:?}", what_it_do);
+        let plan = eval(packet);
+        eeg.log(format!("{:?}", plan));
 
-        Some(Action::Call(choose(what_it_do)))
+        Some(Action::Call(plan.to_behavior()))
     }
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
         self.last_eval = Some(packet.GameInfo.TimeSeconds);
 
-        let what_it_do = eval(packet);
-        info!("{:?}", what_it_do);
+        let plan = eval(packet);
+        eeg.log(format!("{:?}", plan));
 
-        Action::Call(choose(what_it_do))
+        Action::Call(plan.to_behavior())
     }
 }
 
 // This is a pretty naive and heavyweight implementation. Basically simulate a
 // "race to the ball" and see if one player gets there much earlier than the
 // other.
-fn eval(packet: &rlbot::LiveDataPacket) -> WhatItDo {
+fn eval(packet: &rlbot::LiveDataPacket) -> Plan {
     const DT: f32 = 1.0 / 60.0;
 
     let (me, enemy) = one_v_one(packet);
@@ -66,7 +66,7 @@ fn eval(packet: &rlbot::LiveDataPacket) -> WhatItDo {
 
     let mut me_time = None;
     let mut enemy_time = None;
-    let mut situation = None;
+    let mut ball_at_interception = None;
 
     while me_time.is_none() || enemy_time.is_none() {
         t += DT;
@@ -76,8 +76,8 @@ fn eval(packet: &rlbot::LiveDataPacket) -> WhatItDo {
             sim_me.step(DT, 1.0, true);
             if sim_me.distance_traveled() >= (me.Physics.loc() - sim_ball.loc()).to_2d().norm() {
                 me_time = Some(t);
-                if situation.is_none() {
-                    situation = Some(eval_situation(sim_ball.loc()));
+                if ball_at_interception.is_none() {
+                    ball_at_interception = Some(sim_ball.clone());
                 }
             }
         }
@@ -88,8 +88,8 @@ fn eval(packet: &rlbot::LiveDataPacket) -> WhatItDo {
                 >= (enemy.Physics.loc() - sim_ball.loc()).to_2d().norm()
             {
                 enemy_time = Some(t);
-                if situation.is_none() {
-                    situation = Some(eval_situation(sim_ball.loc()));
+                if ball_at_interception.is_none() {
+                    ball_at_interception = Some(sim_ball.clone());
                 }
             }
         }
@@ -97,7 +97,11 @@ fn eval(packet: &rlbot::LiveDataPacket) -> WhatItDo {
 
     let mut me_time = me_time.unwrap();
     let mut enemy_time = enemy_time.unwrap();
-    let mut situation = situation.unwrap();
+    let mut ball_at_interception = ball_at_interception.unwrap();
+
+    ball_at_interception.step(1.0); // Fast forward a bit
+    let situation = eval_situation(ball_at_interception.loc());
+    println!("{:?}", situation);
 
     let possession = match me_time / enemy_time {
         x if x < 0.75 => Possession::Me,
@@ -105,35 +109,22 @@ fn eval(packet: &rlbot::LiveDataPacket) -> WhatItDo {
         _ => Possession::Enemy,
     };
 
-    WhatItDo {
-        situation,
-        possession,
-    }
-}
-
-fn choose(what_it_do: WhatItDo) -> Box<Behavior> {
-    match (what_it_do.situation, what_it_do.possession) {
-        (Situation::OwnBox, _) => Box::new(Defense::new()),
-        (_, Possession::Me) => Box::new(Offense::new()),
-        (_, Possession::Unsure) => Box::new(Offense::new()),
-        (_, Possession::Enemy) => Box::new(Defense::new()),
+    match (situation, possession) {
+        (Situation::OwnBox, _) => Plan::Defense,
+        (_, Possession::Me) => Plan::Offense,
+        (_, Possession::Unsure) => Plan::Offense,
+        (_, Possession::Enemy) => Plan::Defense,
     }
 }
 
 fn eval_situation(loc: Vector3<f32>) -> Situation {
     match () {
-        () if loc.y > 3000.0 && loc.x.abs() < 2500.0 => Situation::EnemyBox,
-        () if loc.y > 3000.0 => Situation::EnemyCorner,
-        () if loc.y < -3000.0 && loc.x.abs() < 2500.0 => Situation::OwnBox,
-        () if loc.y < -3000.0 => Situation::OwnCorner,
+        () if loc.y > 2500.0 && loc.x.abs() < 1800.0 => Situation::EnemyBox,
+        () if loc.y > 2500.0 => Situation::EnemyCorner,
+        () if loc.y < -2500.0 && loc.x.abs() < 1800.0 => Situation::OwnBox,
+        () if loc.y < -2500.0 => Situation::OwnCorner,
         () => Situation::Midfield,
     }
-}
-
-#[derive(Debug)]
-struct WhatItDo {
-    situation: Situation,
-    possession: Possession,
 }
 
 #[derive(Debug)]
@@ -150,4 +141,19 @@ enum Possession {
     Me,
     Enemy,
     Unsure,
+}
+
+#[derive(Debug)]
+enum Plan {
+    Offense,
+    Defense,
+}
+
+impl Plan {
+    fn to_behavior(&self) -> Box<Behavior> {
+        match self {
+            Plan::Offense => Box::new(Offense::new()),
+            Plan::Defense => Box::new(Defense::new()),
+        }
+    }
 }

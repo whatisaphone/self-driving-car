@@ -8,6 +8,7 @@ use nalgebra::Vector3;
 
 const BALL_RADIUS: f32 = 91.25;
 
+#[derive(Clone)]
 pub struct Ball {
     #[allow(dead_code)]
     count: i32,

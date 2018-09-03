@@ -19,6 +19,16 @@ impl ExtendF32 for f32 {
     }
 }
 
+pub trait ExtendVector2 {
+    fn to_3d(&self, z: f32) -> Vector3<f32>;
+}
+
+impl ExtendVector2 for Vector2<f32> {
+    fn to_3d(&self, z: f32) -> Vector3<f32> {
+        Vector3::new(self.x, self.y, z)
+    }
+}
+
 pub trait ExtendVector3 {
     fn to_2d(&self) -> Vector2<f32>;
     fn angle_to(&self, other: &Self) -> f32;

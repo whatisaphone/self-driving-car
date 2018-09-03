@@ -1,5 +1,5 @@
 use behavior::{Action, Behavior};
-use eeg::EEG;
+use eeg::{color, Drawable, EEG};
 use rlbot;
 
 pub struct BehaviorRunner {
@@ -14,6 +14,7 @@ impl BehaviorRunner {
     pub fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> rlbot::PlayerInput {
         let capture = 'capture: loop {
             for (bi, behavior) in self.stack.iter_mut().enumerate() {
+                eeg.draw(Drawable::print(behavior.name(), color::YELLOW));
                 if let Some(action) = behavior.capture(packet, eeg) {
                     break 'capture Some((bi, action));
                 }
@@ -24,7 +25,7 @@ impl BehaviorRunner {
         let action = match capture {
             Some((bi, action)) => {
                 self.stack.truncate(bi + 1);
-                warn!("<< {}", self.top().name());
+                eeg.log(format!("<< {}", self.top().name()));
                 action
             }
             None => self.top().execute(packet, eeg),
@@ -34,7 +35,7 @@ impl BehaviorRunner {
             Action::Yield(result) => return result,
             Action::Call(behavior) => {
                 self.stack.push(behavior);
-                info!("> {}", self.top().name());
+                eeg.log(format!("> {}", self.top().name()));
                 self.execute(packet, eeg)
             }
             Action::Return => {
@@ -42,7 +43,7 @@ impl BehaviorRunner {
                     panic!("Can't return from root behavior");
                 }
                 self.stack.pop();
-                info!("< {}", self.top().name());
+                eeg.log(format!("< {}", self.top().name()));
                 self.execute(packet, eeg)
             }
         }

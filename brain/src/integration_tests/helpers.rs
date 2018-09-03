@@ -1,10 +1,10 @@
 use bakkesmod::BakkesMod;
-use behavior::Behavior;
-use behavior::NullBehavior;
+use behavior::{Behavior, NullBehavior};
 use brain::Brain;
 use collect::{ExtendRotation3, Snapshot};
 use crossbeam_channel;
 use csv;
+use eeg::EEG;
 use nalgebra::{Rotation3, Vector3};
 use rlbot;
 use std::error::Error;
@@ -20,6 +20,7 @@ pub struct TestRunner {
     sniff_packet: crossbeam_channel::Sender<crossbeam_channel::Sender<rlbot::LiveDataPacket>>,
     set_behavior: crossbeam_channel::Sender<Box<Behavior + Send>>,
     has_scored: crossbeam_channel::Sender<crossbeam_channel::Sender<bool>>,
+    messages: crossbeam_channel::Sender<Message>,
     terminate: Option<crossbeam_channel::Sender<()>>,
     join_handle: Option<thread::JoinHandle<()>>,
 }
@@ -50,6 +51,7 @@ impl TestRunner {
         let (sniff_packet_tx, sniff_packet_rx) = crossbeam_channel::unbounded();
         let (set_behavior_tx, set_behavior_rx) = crossbeam_channel::unbounded();
         let (has_scored_tx, has_scored_rx) = crossbeam_channel::unbounded();
+        let (messages_tx, messages_rx) = crossbeam_channel::unbounded();
         let thread = thread::spawn(|| {
             test_thread(
                 scenario,
@@ -58,6 +60,7 @@ impl TestRunner {
                 sniff_packet_rx,
                 set_behavior_rx,
                 has_scored_rx,
+                messages_rx,
                 terminate_rx,
             )
         });
@@ -67,6 +70,7 @@ impl TestRunner {
             sniff_packet: sniff_packet_tx,
             set_behavior: set_behavior_tx,
             has_scored: has_scored_tx,
+            messages: messages_tx,
             terminate: Some(terminate_tx),
             join_handle: Some(thread),
         }
@@ -104,6 +108,19 @@ impl TestRunner {
         self.has_scored.send(tx);
         rx.recv().unwrap()
     }
+
+    pub fn examine_eeg(&self, f: impl Fn(&EEG) + Send + 'static) {
+        let (tx, rx) = crossbeam_channel::bounded(1);
+        self.messages.send(Message::ExamineEEG(Box::new(move |eeg| {
+            f(eeg);
+            tx.send(());
+        })));
+        rx.recv().unwrap();
+    }
+}
+
+enum Message {
+    ExamineEEG(Box<Fn(&EEG) + Send>),
 }
 
 lazy_static! {
@@ -128,6 +145,7 @@ fn test_thread(
     sniff_packet: crossbeam_channel::Receiver<crossbeam_channel::Sender<rlbot::LiveDataPacket>>,
     set_behavior: crossbeam_channel::Receiver<Box<Behavior + Send>>,
     has_scored: crossbeam_channel::Receiver<crossbeam_channel::Sender<bool>>,
+    messages: crossbeam_channel::Receiver<Message>,
     terminate: crossbeam_channel::Receiver<()>,
 ) {
     let rlbot_guard = unlock_rlbot_singleton();
@@ -138,9 +156,11 @@ fn test_thread(
                 MatchLength: rlbot::MatchLength::Unlimited,
                 ..Default::default()
             },
+            SkipReplays: true,
             ..rlbot::MatchSettings::simple_1v1("Subject", "Goon")
         }).unwrap();
 
+    let mut eeg = EEG::new();
     let mut brain = Brain::with_behavior(Box::new(NullBehavior::new()));
 
     let mut packets = rlbot.packeteer();
@@ -158,8 +178,9 @@ fn test_thread(
 
     loop {
         let packet = packets.next().unwrap();
-        let input = brain.tick(&packet);
+        let input = brain.tick(&packet, &mut eeg);
         rlbot.update_player_input(input, 0).unwrap();
+        eeg.show(&packet);
 
         if let Some(chan) = has_scored.try_recv() {
             let first_score = first_packet.match_score();
@@ -168,13 +189,17 @@ fn test_thread(
         }
 
         if let Some(chan) = sniff_packet.try_recv() {
-            println!("{} packet", packet.GameInfo.TimeSeconds);
             chan.send(packet);
         }
 
         if let Some(behavior) = set_behavior.try_recv() {
-            println!("{} behavior", packet.GameInfo.TimeSeconds);
             brain.set_behavior(behavior)
+        }
+
+        while let Some(message) = messages.try_recv() {
+            match message {
+                Message::ExamineEEG(f) => f(&eeg),
+            }
         }
 
         if let Some(()) = terminate.try_recv() {

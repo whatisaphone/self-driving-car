@@ -7,7 +7,7 @@ extern crate lazy_static;
 extern crate env_logger;
 extern crate rlbot;
 
-use brain::Brain;
+use brain::{Brain, EEG};
 use chrono::Local;
 use collect::Collector;
 use std::fs::{hard_link, remove_file, File};
@@ -36,6 +36,7 @@ fn main() {
     while !packets.next().unwrap().GameInfo.RoundActive {}
 
     let mut collector = create_collector();
+    let mut eeg = EEG::new();
     let mut brain = Brain::with_root_behavior();
 
     loop {
@@ -43,10 +44,11 @@ fn main() {
 
         logging::STATE.lock().unwrap().game_time = Some(packet.GameInfo.TimeSeconds);
 
-        let input = brain.tick(&packet);
+        let input = brain.tick(&packet, &mut eeg);
         rlbot.update_player_input(input, 0).unwrap();
 
         collector.write(&packet).unwrap();
+        eeg.show(&packet);
     }
 }
 

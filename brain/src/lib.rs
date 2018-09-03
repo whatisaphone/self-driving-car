@@ -15,6 +15,7 @@ extern crate rlbot;
 extern crate simulate;
 
 pub use brain::Brain;
+pub use eeg::EEG;
 
 mod behavior;
 mod brain;

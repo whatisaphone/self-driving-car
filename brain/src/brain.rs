@@ -7,7 +7,6 @@ use utils::FPSCounter;
 pub struct Brain {
     runner: BehaviorRunner,
     fps_counter: FPSCounter,
-    eeg: EEG,
 }
 
 impl Brain {
@@ -19,7 +18,6 @@ impl Brain {
         Self {
             runner: BehaviorRunner::new(behavior),
             fps_counter: FPSCounter::new(),
-            eeg: EEG::new(),
         }
     }
 
@@ -27,21 +25,19 @@ impl Brain {
         self.runner = BehaviorRunner::new(behavior);
     }
 
-    pub fn tick(&mut self, packet: &rlbot::LiveDataPacket) -> rlbot::PlayerInput {
+    pub fn tick(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> rlbot::PlayerInput {
         self.fps_counter.tick(packet.GameInfo.TimeSeconds);
 
-        self.eeg.draw(Drawable::print(
+        eeg.draw(Drawable::print(
             format!("game_time: {:.2}", packet.GameInfo.TimeSeconds),
             color::GREEN,
         ));
-        self.eeg.draw(Drawable::print(
+        eeg.draw(Drawable::print(
             format!("fps: {}", format_fps(self.fps_counter.fps())),
             color::GREEN,
         ));
 
-        let mut result = self.runner.execute(&packet, &mut self.eeg);
-
-        self.eeg.show(packet);
+        let mut result = self.runner.execute(&packet, eeg);
 
         result.Throttle = clamp(result.Throttle, -1.0, 1.0);
         result.Steer = clamp(result.Steer, -1.0, 1.0);
