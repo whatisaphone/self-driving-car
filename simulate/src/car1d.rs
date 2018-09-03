@@ -1,3 +1,4 @@
+use math::linear_interpolate;
 use rl;
 use tables;
 
@@ -105,17 +106,6 @@ impl Car1D {
         let new_time = old_time + dt;
         linear_interpolate(time_table, vel_table, new_time)
     }
-}
-
-fn linear_interpolate(xs: &[f32], ys: &[f32], x: f32) -> f32 {
-    let index = match xs.binary_search_by(|n| n.partial_cmp(&x).unwrap()) {
-        Ok(x) => x,
-        Err(0) => 0,
-        Err(x) => x - 1,
-    };
-    // TODO: This should do a linear interpolation instead of naively returning
-    // the lower endpoint.
-    return ys[index];
 }
 
 #[cfg(test)]

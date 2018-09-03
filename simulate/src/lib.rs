@@ -1,9 +1,12 @@
 extern crate nalgebra;
 
 pub use car1d::Car1D;
+pub use car_aerial_60deg::CarAerial60Deg;
 
 mod car1d;
+mod car_aerial_60deg;
 pub mod car_single_jump;
 pub mod chip;
+mod math;
 pub mod rl;
 mod tables;

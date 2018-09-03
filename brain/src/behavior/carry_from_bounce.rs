@@ -21,7 +21,7 @@ impl Behavior for CarryFromBounce {
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
         let (me, _enemy) = one_v_one(packet);
-        let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |loc, vel| {
+        let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |t, loc, vel| {
             120.0 <= loc.z && loc.z < 140.0 && vel.z < 0.0
         });
 

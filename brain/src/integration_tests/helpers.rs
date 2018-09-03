@@ -7,6 +7,7 @@ use crossbeam_channel;
 use csv;
 use nalgebra::{Rotation3, Vector3};
 use rlbot;
+use std::error::Error;
 use std::f32::consts::PI;
 use std::fs::File;
 use std::path::Path;
@@ -17,6 +18,7 @@ use std::time::Duration;
 
 pub struct TestRunner {
     sniff_packet: crossbeam_channel::Sender<crossbeam_channel::Sender<rlbot::LiveDataPacket>>,
+    set_behavior: crossbeam_channel::Sender<Box<Behavior + Send>>,
     has_scored: crossbeam_channel::Sender<crossbeam_channel::Sender<bool>>,
     terminate: Option<crossbeam_channel::Sender<()>>,
     join_handle: Option<thread::JoinHandle<()>>,
@@ -28,6 +30,10 @@ impl TestRunner {
         scenario: impl BakkesModCommand + Send + 'static,
     ) -> TestRunner {
         TestRunner::start2(scenario, |_| behavior)
+    }
+
+    pub fn start0(scenario: impl BakkesModCommand + Send + 'static) -> TestRunner {
+        Self::start2(scenario, |_| NullBehavior::new())
     }
 
     pub fn start2<B, BF>(
@@ -42,6 +48,7 @@ impl TestRunner {
         let ready_wait_send = ready_wait.clone();
         let (terminate_tx, terminate_rx) = crossbeam_channel::unbounded();
         let (sniff_packet_tx, sniff_packet_rx) = crossbeam_channel::unbounded();
+        let (set_behavior_tx, set_behavior_rx) = crossbeam_channel::unbounded();
         let (has_scored_tx, has_scored_rx) = crossbeam_channel::unbounded();
         let thread = thread::spawn(|| {
             test_thread(
@@ -49,6 +56,7 @@ impl TestRunner {
                 |p| Box::new(behavior(p)),
                 ready_wait_send,
                 sniff_packet_rx,
+                set_behavior_rx,
                 has_scored_rx,
                 terminate_rx,
             )
@@ -57,6 +65,7 @@ impl TestRunner {
         ready_wait.wait();
         TestRunner {
             sniff_packet: sniff_packet_tx,
+            set_behavior: set_behavior_tx,
             has_scored: has_scored_tx,
             terminate: Some(terminate_tx),
             join_handle: Some(thread),
@@ -78,6 +87,10 @@ impl TestRunner {
     // course).
     pub fn sleep_millis(&self, millis: u64) {
         sleep(Duration::from_millis(millis))
+    }
+
+    pub fn set_behavior(&self, behavior: impl Behavior + Send + 'static) {
+        self.set_behavior.send(Box::new(behavior));
     }
 
     pub fn sniff_packet(&self) -> rlbot::LiveDataPacket {
@@ -113,14 +126,20 @@ fn test_thread(
     behavior: impl FnOnce(&rlbot::LiveDataPacket) -> Box<Behavior>,
     ready_wait: Arc<Barrier>,
     sniff_packet: crossbeam_channel::Receiver<crossbeam_channel::Sender<rlbot::LiveDataPacket>>,
+    set_behavior: crossbeam_channel::Receiver<Box<Behavior + Send>>,
     has_scored: crossbeam_channel::Receiver<crossbeam_channel::Sender<bool>>,
     terminate: crossbeam_channel::Receiver<()>,
 ) {
     let rlbot_guard = unlock_rlbot_singleton();
     let rlbot = rlbot_guard.as_ref().unwrap();
     rlbot
-        .start_match(rlbot::MatchSettings::simple_1v1("Subject", "Goon"))
-        .unwrap();
+        .start_match(rlbot::MatchSettings {
+            MutatorSettings: rlbot::MutatorSettings {
+                MatchLength: rlbot::MatchLength::Unlimited,
+                ..Default::default()
+            },
+            ..rlbot::MatchSettings::simple_1v1("Subject", "Goon")
+        }).unwrap();
 
     let mut brain = Brain::with_behavior(Box::new(NullBehavior::new()));
 
@@ -128,7 +147,10 @@ fn test_thread(
     // Wait for RoundActive
     while !packets.next().unwrap().GameInfo.RoundActive {}
 
+    rlbot.update_player_input(Default::default(), 0).unwrap();
+
     setup_scenario(scenario);
+    wait_for_bakkesmod_flush(&mut packets).unwrap();
 
     let first_packet = packets.next().unwrap();
     brain.set_behavior(behavior(&first_packet));
@@ -146,7 +168,13 @@ fn test_thread(
         }
 
         if let Some(chan) = sniff_packet.try_recv() {
+            println!("{} packet", packet.GameInfo.TimeSeconds);
             chan.send(packet);
+        }
+
+        if let Some(behavior) = set_behavior.try_recv() {
+            println!("{} behavior", packet.GameInfo.TimeSeconds);
+            brain.set_behavior(behavior)
         }
 
         if let Some(()) = terminate.try_recv() {
@@ -162,8 +190,8 @@ fn setup_scenario(scenario: impl BakkesModCommand) {
     let bakkesmod = BakkesMod::connect().unwrap();
 
     let neutral = TestScenario {
-        car_loc: Vector3::new(1000.0, 0.0, 20.0),
-        enemy_loc: Vector3::new(-1000.0, 0.0, 20.0),
+        car_loc: Vector3::new(1000.0, 0.0, 17.01),
+        enemy_loc: Vector3::new(-1000.0, 0.0, 17.01),
         boost: 0,
         ..Default::default()
     }.to_bakkesmod_command();
@@ -175,6 +203,19 @@ fn setup_scenario(scenario: impl BakkesModCommand) {
 
     let command = scenario.to_bakkesmod_command();
     bakkesmod.send(command);
+}
+
+/// Wait for the scenario to be returned from the game so we don't "leak" the
+/// reset scenario to the tested code.
+fn wait_for_bakkesmod_flush(packets: &mut rlbot::Packeteer) -> Result<(), Box<Error>> {
+    for _ in 0..10 {
+        let packet = packets.next()?;
+        if (packet.GameCars[0].Physics.Location.X - 1000.0).abs() >= 1.0 {
+            return Ok(());
+        }
+    }
+
+    Err(From::from("BakkesMod command seemed not to work"))
 }
 
 pub trait BakkesModCommand {
@@ -216,7 +257,7 @@ impl Default for TestScenario {
             ball_rot: Rotation3::from_unreal_angles(0.0, 0.0, 0.0),
             ball_vel: Vector3::new(0.0, 0.0, 0.0),
             ball_ang_vel: Vector3::new(0.0, 0.0, 0.0),
-            car_loc: Vector3::new(0.0, 0.0, 0.0),
+            car_loc: Vector3::new(0.0, 0.0, 17.01),
             car_rot: Rotation3::from_unreal_angles(0.0, PI / 2.0, 0.0),
             car_vel: Vector3::new(0.0, 0.0, 0.0),
             car_ang_vel: Vector3::new(0.0, 0.0, 0.0),

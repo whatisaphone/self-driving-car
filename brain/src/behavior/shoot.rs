@@ -46,7 +46,6 @@ impl Behavior for Shoot {
             color::GREEN,
         ));
         eeg.draw(Drawable::GhostBall(intercept.ball_loc));
-        eeg.draw(Drawable::GhostCar(target_loc, me.Physics.rot()));
 
         // This behavior currently just operates in 2D
         if !GetToFlatGround::on_flat_ground(packet) {

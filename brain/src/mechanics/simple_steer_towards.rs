@@ -4,9 +4,12 @@ use rlbot;
 use utils::{ExtendF32, ExtendPhysics, ExtendVector3};
 
 pub fn simple_steer_towards(car: &rlbot::Physics, target_loc: Vector3<f32>) -> f32 {
+    simple_yaw_diff(car, &target_loc).max(-1.0).min(1.0) * 2.0
+}
+
+pub fn simple_yaw_diff(car: &rlbot::Physics, target_loc: &Vector3<f32>) -> f32 {
     let target_yaw = car.loc().angle_to(&target_loc);
-    let result = (target_yaw - car.rot().yaw()).normalize_angle();
-    result.max(-1.0).min(1.0) * 2.0
+    (target_yaw - car.rot().yaw()).normalize_angle()
 }
 
 #[cfg(test)]

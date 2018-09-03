@@ -31,6 +31,7 @@ impl Behavior for BlitzToLocation {
         let steer = simple_steer_towards(&me.Physics, self.target_loc);
 
         eeg.draw(Drawable::print(self.name(), color::YELLOW));
+        eeg.draw(Drawable::GhostCar(self.target_loc, me.Physics.rot()));
         eeg.draw(Drawable::print(
             format!("distance: {:.0}", distance),
             color::GREEN,

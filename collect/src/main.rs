@@ -28,7 +28,7 @@ pub fn main() -> Result<(), Box<Error>> {
     let commands = [
         "ball location 2000 0 0",
         "ball velocity 0 0 0",
-        "player 0 location 0 -5000 0",
+        "player 0 location 0 0 0",
         "player 0 rotation 0 16384 0",
         "player 0 velocity 0 0 0",
         "player 1 location 6000 6000 0",
@@ -53,7 +53,7 @@ pub fn main() -> Result<(), Box<Error>> {
         }
     }
 
-    // Stop the car before exiting (just like IRL!)
+    // Stop the car before exiting (this is good safety advice IRL as well)
     rlbot.update_player_input(Default::default(), 0)?;
 
     Ok(())

@@ -27,7 +27,6 @@ impl Behavior for BounceShot {
             format!("intercept_time: {:.2}", intercept.time),
             color::GREEN,
         ));
-        eeg.draw(Drawable::GhostCar(intercept.car_loc, me.Physics.rot()));
 
         // TODO: this is not how this works…
         let mut child = GroundAccelToLoc::new(

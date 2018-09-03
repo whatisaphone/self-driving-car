@@ -4,13 +4,13 @@ use simulate::{chip::Ball, Car1D};
 use utils::ExtendPhysics;
 
 pub fn estimate_intercept_car_ball(car: &rlbot::PlayerInfo, ball: &rlbot::BallInfo) -> Intercept {
-    estimate_intercept_car_ball_2(car, ball, |loc, _vel| loc.z < 110.0)
+    estimate_intercept_car_ball_2(car, ball, |_t, loc, _vel| loc.z < 110.0)
 }
 
 pub fn estimate_intercept_car_ball_2(
     car: &rlbot::PlayerInfo,
     ball: &rlbot::BallInfo,
-    predicate: impl FnOnce(&Vector3<f32>, &Vector3<f32>) -> bool,
+    predicate: impl Fn(f32, &Vector3<f32>, &Vector3<f32>) -> bool,
 ) -> Intercept {
     const DT: f32 = 1.0 / 60.0;
 
@@ -31,8 +31,8 @@ pub fn estimate_intercept_car_ball_2(
         sim_ball.step(DT);
         sim_car.step(DT, 1.0, true);
 
-        if sim_ball.loc().z > 110.0 {
-            continue; // The ball is so high and I don't know how to jump :(
+        if !predicate(t, &sim_ball.loc(), &sim_ball.vel()) {
+            continue;
         }
 
         let target_traveled = (sim_ball.loc() - car.Physics.loc()).norm() - RADII;

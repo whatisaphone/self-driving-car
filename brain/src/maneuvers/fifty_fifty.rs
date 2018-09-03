@@ -37,7 +37,6 @@ impl Behavior for FiftyFifty {
             format!("intercept_time: {:.2}", intercept.time),
             color::GREEN,
         ));
-        eeg.draw(Drawable::GhostCar(target_loc, me.Physics.rot()));
 
         if target_dist >= 300.0 {
             // TODO: this is not how this works…
