@@ -40,7 +40,6 @@ impl Behavior for DriveLocTimeDecelerate {
             return Action::Return;
         }
 
-        eeg.draw(Drawable::print(self.name(), color::YELLOW));
         eeg.draw(Drawable::GhostCar(self.target_loc, me.Physics.rot()));
         eeg.draw(Drawable::print(
             format!("target_speed: {:.0}", self.target_speed),

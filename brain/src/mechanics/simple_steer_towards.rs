@@ -31,8 +31,6 @@ mod integration_tests {
         }
 
         fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-            eeg.draw(Drawable::print(self.name(), color::YELLOW));
-
             let me = packet.GameCars[0];
             let ball = packet.GameBall;
             Action::Yield(rlbot::PlayerInput {

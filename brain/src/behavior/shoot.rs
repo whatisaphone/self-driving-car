@@ -36,7 +36,6 @@ impl Behavior for Shoot {
             _ => self.min_distance = Some(target_dist),
         }
 
-        eeg.draw(Drawable::print(self.name(), color::YELLOW));
         eeg.draw(Drawable::print(
             format!("intercept_time: {:.2}", intercept.time),
             color::GREEN,

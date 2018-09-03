@@ -47,7 +47,6 @@ impl Behavior for AerialShot {
             _ => self.min_distance = Some(ball_dist),
         }
 
-        eeg.draw(Drawable::print(self.name(), color::YELLOW));
         eeg.draw(Drawable::print(format!("{:?}", self.phase), color::GREEN));
 
         match self.phase {

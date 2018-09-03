@@ -16,7 +16,6 @@ impl Behavior for NullBehavior {
     }
 
     fn execute(&mut self, _packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-        eeg.draw(Drawable::print(self.name(), color::YELLOW));
         Action::Yield(rlbot::PlayerInput::default())
     }
 }

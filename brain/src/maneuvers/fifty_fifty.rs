@@ -28,7 +28,6 @@ impl Behavior for FiftyFifty {
             intercept.ball_loc + (my_goal_center() - intercept.ball_loc).normalize() * 200.0;
         let target_dist = (target_loc - me.Physics.loc()).norm();
 
-        eeg.draw(Drawable::print(self.name(), color::YELLOW));
         eeg.draw(Drawable::print(
             format!("target_dist: {:.0}", target_dist),
             color::GREEN,

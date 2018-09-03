@@ -19,8 +19,6 @@ impl Behavior for Offense {
     }
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-        eeg.draw(Drawable::print(self.name(), color::YELLOW));
-
         // TODO: this is not how this works…
         let mut child = Shoot::new();
         child.execute(packet, eeg)

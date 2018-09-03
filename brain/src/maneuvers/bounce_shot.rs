@@ -47,7 +47,6 @@ impl Behavior for BounceShot {
             + (intercept.ball_loc.to_2d() - self.target_loc).normalize() * 220.0;
         let distance = (me.Physics.loc().to_2d() - self.intercept_car_loc).norm();
 
-        eeg.draw(Drawable::print(self.name(), color::YELLOW));
         eeg.draw(Drawable::Crosshair(self.target_loc));
         eeg.draw(Drawable::GhostBall(intercept.ball_loc));
         eeg.draw(Drawable::print(

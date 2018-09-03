@@ -31,7 +31,6 @@ impl Behavior for CarryFromBounce {
         let target_loc = intercept.ball_loc + Vector3::new(theta.cos(), theta.sin(), 0.0) * 200.0;
         let target_dist = (target_loc - me.Physics.loc()).norm();
 
-        eeg.draw(Drawable::print(self.name(), color::YELLOW));
         eeg.draw(Drawable::print(
             format!("target_dist: {:.0}", target_dist),
             color::GREEN,

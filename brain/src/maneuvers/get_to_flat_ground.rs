@@ -35,8 +35,6 @@ impl Behavior for GetToFlatGround {
 
         let me = my_car(packet);
 
-        eeg.draw(Drawable::print(self.name(), color::YELLOW));
-
         return Action::Yield(rlbot::PlayerInput {
             Throttle: 1.0,
             Steer: simple_steer_towards(&me.Physics, Vector3::zeros()),

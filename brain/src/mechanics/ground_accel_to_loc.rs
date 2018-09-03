@@ -32,7 +32,6 @@ impl Behavior for GroundAccelToLoc {
         let distance = (me.Physics.loc() - self.target_loc).norm();
         let time_remaining = self.target_time - packet.GameInfo.TimeSeconds;
 
-        eeg.draw(Drawable::print(self.name(), color::YELLOW));
         eeg.draw(Drawable::GhostCar(self.target_loc, me.Physics.rot()));
         eeg.draw(Drawable::print(
             format!("distance: {:.0}", distance),
