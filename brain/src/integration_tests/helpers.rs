@@ -1,5 +1,5 @@
 use bakkesmod::BakkesMod;
-use behavior::{Behavior, NullBehavior};
+use behavior::{Behavior, Fuse, NullBehavior};
 use brain::Brain;
 use collect::{ExtendRotation3, Snapshot};
 use crossbeam_channel;
@@ -173,7 +173,7 @@ fn test_thread(
     wait_for_bakkesmod_flush(&mut packets).unwrap();
 
     let first_packet = packets.next().unwrap();
-    brain.set_behavior(behavior(&first_packet));
+    brain.set_behavior(Box::new(Fuse::new(behavior(&first_packet))), &mut eeg);
     ready_wait.wait();
 
     loop {
@@ -193,7 +193,7 @@ fn test_thread(
         }
 
         if let Some(behavior) = set_behavior.try_recv() {
-            brain.set_behavior(behavior)
+            brain.set_behavior(Box::new(Fuse::new(behavior)), &mut eeg);
         }
 
         while let Some(message) = messages.try_recv() {

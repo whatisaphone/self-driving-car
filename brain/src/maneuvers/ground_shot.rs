@@ -14,11 +14,15 @@ use utils::{
 
 pub struct GroundShot {
     min_distance: Option<f32>,
+    finished: bool,
 }
 
 impl GroundShot {
     pub fn new() -> GroundShot {
-        GroundShot { min_distance: None }
+        GroundShot {
+            min_distance: None,
+            finished: false,
+        }
     }
 
     pub fn good_angle(ball_loc: Vector3<f32>) -> bool {
@@ -28,7 +32,7 @@ impl GroundShot {
         // This is woefully incomplete
         if ball_loc.x.abs() >= rl::FIELD_MAX_X || ball_loc.y.abs() >= rl::FIELD_MAX_Y {
             false // Ball is outside the field; clearly prediction has gone wrong somehow.
-        } else if ball_loc.y.abs() >= rl::FIELD_MAX_Y - 500.0 && ball_loc.x.abs() >= rl::GOALPOST_X
+        } else if ball_loc.y.abs() >= rl::FIELD_MAX_Y - 250.0 && ball_loc.x.abs() >= rl::GOALPOST_X
         {
             false
         } else {
@@ -43,13 +47,17 @@ impl Behavior for GroundShot {
     }
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
+        if self.finished {
+            return Action::Return;
+        }
+
         let (me, _enemy) = one_v_one(packet);
         let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |t, &loc, vel| {
-            Self::good_angle(loc)
+            loc.z < 110.0 && Self::good_angle(loc)
         });
 
         if !Self::good_angle(intercept.ball_loc) {
-            eeg.log("No good angle");
+            eeg.log(format!("Bad angle from {:?}", intercept.ball_loc));
             return Action::Return;
         }
 
@@ -79,6 +87,7 @@ impl Behavior for GroundShot {
         }
 
         if target_dist <= 250.0 {
+            self.finished = true;
             let angle = simple_steer_towards(&me.Physics, enemy_goal_center());
             return Action::call(QuickJumpAndDodge::begin(packet).yaw(angle));
         }

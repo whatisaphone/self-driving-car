@@ -1,5 +1,5 @@
 pub use behavior::behavior::{Action, Behavior};
-pub use behavior::higher_order::Once;
+pub use behavior::higher_order::Fuse;
 pub use behavior::null::NullBehavior;
 pub use behavior::root::RootBehavior;
 pub use behavior::runner::BehaviorRunner;

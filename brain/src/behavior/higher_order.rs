@@ -3,19 +3,19 @@ use eeg::EEG;
 use rlbot;
 
 /// Run a [`Behavior`] until it returns, then do nothing forever.
-pub struct Once {
+pub struct Fuse {
     child: Option<Box<Behavior>>,
 }
 
-impl Once {
-    pub fn new(child: Box<Behavior>) -> Once {
-        Once { child: Some(child) }
+impl Fuse {
+    pub fn new(child: Box<Behavior>) -> Fuse {
+        Fuse { child: Some(child) }
     }
 }
 
-impl Behavior for Once {
+impl Behavior for Fuse {
     fn name(&self) -> &'static str {
-        "Once"
+        "Fuse"
     }
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {

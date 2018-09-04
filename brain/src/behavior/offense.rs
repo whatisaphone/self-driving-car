@@ -55,12 +55,9 @@ impl Behavior for Offense {
                 ..Default::default()
             });
         }
-        if good_angle {
-            eeg.log(format!("Good angle found {:?}", intercept.ball_loc));
-            return Action::call(Shoot::new());
-        }
 
-        Action::Yield(Default::default())
+        eeg.log(format!("Good angle found {:?}", intercept.ball_loc));
+        return Action::call(Shoot::new());
     }
 }
 

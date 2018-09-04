@@ -154,7 +154,6 @@ struct SS {
 
 #[cfg(test)]
 mod integration_tests {
-    use behavior::Once;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use mechanics::DriveLocTimeDecelerate;
     use nalgebra::{Vector2, Vector3};
@@ -180,11 +179,11 @@ mod integration_tests {
                     ..Default::default()
                 },
                 move |p| {
-                    Once::new(Box::new(DriveLocTimeDecelerate::new(
+                    DriveLocTimeDecelerate::new(
                         target_loc,
                         target_speed,
                         p.GameInfo.TimeSeconds + 2.0,
-                    )))
+                    )
                 },
             );
 

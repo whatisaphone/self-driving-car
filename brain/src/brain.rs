@@ -21,7 +21,8 @@ impl Brain {
         }
     }
 
-    pub fn set_behavior(&mut self, behavior: Box<Behavior>) {
+    pub fn set_behavior(&mut self, behavior: Box<Behavior>, eeg: &mut EEG) {
+        eeg.log(format!("! {}", behavior.name()));
         self.runner = BehaviorRunner::new(behavior);
     }
 
