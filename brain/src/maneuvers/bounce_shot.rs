@@ -40,7 +40,10 @@ impl Behavior for BounceShot {
 
         let (me, _enemy) = one_v_one(packet);
         let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |_t, loc, vel| {
-            loc.z < 110.0 && vel.z >= 0.0
+            // What we actually want is vel.z >= 0, e.g. the upward half of a bounce. But
+            // velocity will be approx. -6.8 when the ball is stationary, due to gravity
+            // being applied after collision handling.
+            loc.z < 110.0 && vel.z >= -10.0
         });
         self.intercept_time = intercept.time;
         self.intercept_car_loc = intercept.ball_loc.to_2d()
