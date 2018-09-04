@@ -63,7 +63,7 @@ mod integration_tests {
             },
         );
 
-        test.sleep_millis(5000);
+        test.sleep_millis(5500);
 
         assert!(test.has_scored());
     }
