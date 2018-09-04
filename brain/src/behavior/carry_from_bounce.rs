@@ -50,8 +50,8 @@ impl Behavior for CarryFromBounce {
         // TODO: this is not how this works…
         DriveLocTimeDecelerate::new(
             target_loc,
-            packet.GameInfo.TimeSeconds + intercept.time,
             me.Physics.vel().norm() / 2.0,
+            packet.GameInfo.TimeSeconds + intercept.time,
         ).execute(packet, eeg)
     }
 }
