@@ -32,7 +32,7 @@ impl Behavior for RootBehavior {
 
         self.last_eval = Some(packet.GameInfo.TimeSeconds);
 
-        let plan = eval(packet);
+        let plan = eval(packet, eeg);
         eeg.log(format!("{:?}", plan));
 
         Some(Action::Call(plan.to_behavior()))
@@ -41,7 +41,7 @@ impl Behavior for RootBehavior {
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
         self.last_eval = Some(packet.GameInfo.TimeSeconds);
 
-        let plan = eval(packet);
+        let plan = eval(packet, eeg);
         eeg.log(format!("{:?}", plan));
 
         Action::Call(plan.to_behavior())
@@ -51,7 +51,7 @@ impl Behavior for RootBehavior {
 // This is a pretty naive and heavyweight implementation. Basically simulate a
 // "race to the ball" and see if one player gets there much earlier than the
 // other.
-fn eval(packet: &rlbot::LiveDataPacket) -> Plan {
+fn eval(packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Plan {
     const DT: f32 = 1.0 / 60.0;
 
     let (me, enemy) = one_v_one(packet);
@@ -101,7 +101,6 @@ fn eval(packet: &rlbot::LiveDataPacket) -> Plan {
 
     ball_at_interception.step(1.0); // Fast forward a bit
     let situation = eval_situation(ball_at_interception.loc());
-    println!("{:?}", situation);
 
     let possession = match me_time / enemy_time {
         x if x < 0.75 => Possession::Me,
@@ -109,8 +108,12 @@ fn eval(packet: &rlbot::LiveDataPacket) -> Plan {
         _ => Possession::Enemy,
     };
 
+    eeg.log(format!("{:?}", situation));
+    eeg.log(format!("{:?}", possession));
+
     match (situation, possession) {
         (Situation::OwnBox, _) => Plan::Defense,
+        (Situation::OwnCorner, _) => Plan::Defense,
         (_, Possession::Me) => Plan::Offense,
         (_, Possession::Unsure) => Plan::Offense,
         (_, Possession::Enemy) => Plan::Defense,
