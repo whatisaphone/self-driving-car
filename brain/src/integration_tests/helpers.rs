@@ -308,8 +308,7 @@ impl TestScenario {
             let row_time: f32 = row[0].parse().unwrap();
             if row_time >= time {
                 let snapshot = Snapshot::from_row(row.iter().map(|x| x.parse().unwrap())).unwrap();
-                println!("{:?}", row);
-                return Self {
+                let result = Self {
                     ball_loc: snapshot.ball.loc,
                     ball_rot: snapshot.ball.rot,
                     ball_vel: snapshot.ball.vel,
@@ -324,6 +323,8 @@ impl TestScenario {
                     enemy_ang_vel: snapshot.cars[1].ang_vel,
                     ..Default::default()
                 };
+                println!("{}", result.to_source());
+                return result;
             }
         }
         panic!("Time not found in recording.");
@@ -353,6 +354,34 @@ impl TestScenario {
             enemy_ang_vel: enemy.ang_vel,
             boost: 100,
         }
+    }
+
+    fn to_source(&self) -> String {
+        format!(
+            "TestScenario {{
+            ball_loc: Vector3::new({}, {}, {}),
+            ball_vel: Vector3::new({}, {}, {}),
+            car_loc: Vector3::new({}, {}, {}),
+            car_rot: Rotation3::from_unreal_angles({}, {}, {}),
+            car_vel: Vector3::new({}, {}, {}),
+            ..Default::default()
+        }}",
+            self.ball_loc.x,
+            self.ball_loc.y,
+            self.ball_loc.z,
+            self.ball_vel.x,
+            self.ball_vel.y,
+            self.ball_vel.z,
+            self.car_loc.x,
+            self.car_loc.y,
+            self.car_loc.z,
+            self.car_rot.pitch(),
+            self.car_rot.yaw(),
+            self.car_rot.roll(),
+            self.car_vel.x,
+            self.car_vel.y,
+            self.car_vel.z,
+        )
     }
 }
 

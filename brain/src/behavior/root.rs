@@ -48,10 +48,28 @@ impl Behavior for RootBehavior {
     }
 }
 
+fn eval(packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Plan {
+    let situation = eval_situation(packet);
+    let (place, possession) = eval_possession(packet);
+
+    eeg.log(format!("{:?}", situation));
+    eeg.log(format!("{:?}", place));
+    eeg.log(format!("{:?}", possession));
+
+    match (situation, place, possession) {
+        (Situation::Retreat, _, _) => Plan::Defense,
+        (_, Place::OwnBox, _) => Plan::Defense,
+        (_, Place::OwnCorner, _) => Plan::Defense,
+        (_, _, Possession::Me) => Plan::Offense,
+        (_, _, Possession::Unsure) => Plan::Offense,
+        (_, _, Possession::Enemy) => Plan::Defense,
+    }
+}
+
 // This is a pretty naive and heavyweight implementation. Basically simulate a
 // "race to the ball" and see if one player gets there much earlier than the
 // other.
-fn eval(packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Plan {
+fn eval_possession(packet: &rlbot::LiveDataPacket) -> (Place, Possession) {
     const DT: f32 = 1.0 / 60.0;
 
     let (me, enemy) = one_v_one(packet);
@@ -100,7 +118,7 @@ fn eval(packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Plan {
     let mut ball_at_interception = ball_at_interception.unwrap();
 
     ball_at_interception.step(1.0); // Fast forward a bit
-    let situation = eval_situation(ball_at_interception.loc());
+    let place = eval_ball(ball_at_interception.loc());
 
     let possession = match me_time / enemy_time {
         x if x < 0.75 => Possession::Me,
@@ -108,30 +126,32 @@ fn eval(packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Plan {
         _ => Possession::Enemy,
     };
 
-    eeg.log(format!("{:?}", situation));
-    eeg.log(format!("{:?}", possession));
+    (place, possession)
+}
 
-    match (situation, possession) {
-        (Situation::OwnBox, _) => Plan::Defense,
-        (Situation::OwnCorner, _) => Plan::Defense,
-        (_, Possession::Me) => Plan::Offense,
-        (_, Possession::Unsure) => Plan::Offense,
-        (_, Possession::Enemy) => Plan::Defense,
+fn eval_ball(loc: Vector3<f32>) -> Place {
+    match () {
+        _ if loc.y > 2500.0 && loc.x.abs() < 1800.0 => Place::EnemyBox,
+        _ if loc.y > 2500.0 => Place::EnemyCorner,
+        _ if loc.y < -2500.0 && loc.x.abs() < 1800.0 => Place::OwnBox,
+        _ if loc.y < -2500.0 => Place::OwnCorner,
+        _ => Place::Midfield,
     }
 }
 
-fn eval_situation(loc: Vector3<f32>) -> Situation {
-    match () {
-        () if loc.y > 2500.0 && loc.x.abs() < 1800.0 => Situation::EnemyBox,
-        () if loc.y > 2500.0 => Situation::EnemyCorner,
-        () if loc.y < -2500.0 && loc.x.abs() < 1800.0 => Situation::OwnBox,
-        () if loc.y < -2500.0 => Situation::OwnCorner,
-        () => Situation::Midfield,
+fn eval_situation(packet: &rlbot::LiveDataPacket) -> Situation {
+    let ball = packet.GameBall;
+    let (me, enemy) = one_v_one(packet);
+
+    if ball.Physics.vel().y < -500.0 && me.Physics.loc().y > ball.Physics.vel().y {
+        Situation::Retreat
+    } else {
+        Situation::Unsure
     }
 }
 
 #[derive(Debug)]
-enum Situation {
+enum Place {
     OwnBox,
     OwnCorner,
     Midfield,
@@ -143,6 +163,12 @@ enum Situation {
 enum Possession {
     Me,
     Enemy,
+    Unsure,
+}
+
+#[derive(Debug)]
+enum Situation {
+    Retreat,
     Unsure,
 }
 

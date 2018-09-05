@@ -96,4 +96,27 @@ mod integration_tests {
         // Should power-shot, meaning the ball bounces high.
         assert!(max_z >= 400.0, "{}", max_z);
     }
+
+    #[test]
+    fn redirect_away_from_goal() {
+        let test = TestRunner::start(
+            RootBehavior::new(),
+            TestScenario {
+                ball_loc: Vector3::new(-2667.985, 779.3049, 186.92154),
+                ball_vel: Vector3::new(760.02606, -1394.5569, -368.39642),
+                car_loc: Vector3::new(-2920.1282, 1346.1251, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.1758921, 0.0),
+                car_vel: Vector3::new(688.0767, -1651.0865, 8.181303),
+                ..Default::default()
+            },
+        );
+
+        // This result is just *okay*
+        test.sleep_millis(100);
+        test.examine_eeg(|eeg| {
+            assert!(eeg.log.iter().any(|x| x == "Defense"));
+            assert!(eeg.log.iter().any(|x| x == "redirect to own corner"));
+            assert!(eeg.log.iter().any(|x| x == "push from left to right"));
+        });
+    }
 }
