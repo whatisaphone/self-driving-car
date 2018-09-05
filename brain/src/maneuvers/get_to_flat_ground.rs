@@ -1,6 +1,6 @@
 use behavior::{Action, Behavior};
 use collect::ExtendRotation3;
-use eeg::EEG;
+use eeg::{color, Drawable, EEG};
 use mechanics::simple_steer_towards;
 use nalgebra::Vector2;
 use rlbot;
@@ -26,17 +26,69 @@ impl Behavior for GetToFlatGround {
         "GetToFlatGround"
     }
 
-    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
+    fn capture(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Option<Action> {
         if Self::on_flat_ground(packet) {
-            return Action::Return;
+            return Some(Action::Return);
         }
+        None
+    }
 
+    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
         let me = my_car(packet);
 
-        return Action::Yield(rlbot::PlayerInput {
+        // Should we reverse down the wall?
+        if me.OnGround && me.Physics.rot().pitch() >= 30.0_f32.to_radians() {
+            return Action::call(ReverseSlide::new());
+        }
+
+        Action::call(Simple::new())
+    }
+}
+
+struct Simple;
+
+impl Simple {
+    pub fn new() -> Simple {
+        Simple
+    }
+}
+
+impl Behavior for Simple {
+    fn name(&self) -> &'static str {
+        "Simple"
+    }
+
+    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
+        let me = my_car(packet);
+
+        Action::Yield(rlbot::PlayerInput {
             Throttle: 1.0,
             Steer: simple_steer_towards(&me.Physics, Vector2::zeros()),
             ..Default::default()
-        });
+        })
+    }
+}
+
+struct ReverseSlide;
+
+impl ReverseSlide {
+    pub fn new() -> ReverseSlide {
+        ReverseSlide
+    }
+}
+
+impl Behavior for ReverseSlide {
+    fn name(&self) -> &'static str {
+        "ReverseSlide"
+    }
+
+    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
+        eeg.draw(Drawable::print("Hilarity ensues", color::GREEN));
+        Action::Yield(rlbot::PlayerInput {
+            Throttle: -1.0,
+            Steer: 1.0,
+            Handbrake: true,
+            ..Default::default()
+        })
     }
 }

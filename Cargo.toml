@@ -6,3 +6,6 @@ members = [
     "play",
     "simulate",
 ]
+
+#[patch.crates-io]
+#rlbot = { path = "../rlbot-rust" }
