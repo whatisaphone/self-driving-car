@@ -44,18 +44,9 @@ impl Behavior for AerialShot {
         let cost = CarAerial60Deg::cost(intercept.ball_loc.z);
 
         eeg.draw(Drawable::GhostBall(intercept.ball_loc));
-        eeg.draw(Drawable::print(
-            format!("intercept_ball_z: {:.0}", intercept.ball_loc.z),
-            color::GREEN,
-        ));
-        eeg.draw(Drawable::print(
-            format!("intercept_time: {:.2}", intercept.time),
-            color::GREEN,
-        ));
-        eeg.draw(Drawable::print(
-            format!("aerial_time: {:.2}", cost.time),
-            color::GREEN,
-        ));
+        eeg.log(format!("intercept_ball_z: {:.0}", intercept.ball_loc.z));
+        eeg.log(format!("intercept_time: {:.2}", intercept.time));
+        eeg.log(format!("aerial_time: {:.2}", cost.time));
 
         self.finished = true;
         Action::call(AerialLocTime::new(
