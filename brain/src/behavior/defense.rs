@@ -119,4 +119,39 @@ mod integration_tests {
             assert!(eeg.log.iter().any(|x| x == "push from left to right"));
         });
     }
+
+    #[test]
+    #[ignore] // TODO
+    fn last_second_save() {
+        let test = TestRunner::start(
+            RootBehavior::new(),
+            TestScenario {
+                ball_loc: Vector3::new(-1150.811, -1606.0569, 102.36157),
+                ball_vel: Vector3::new(484.87906, -1624.8169, 32.10115),
+                car_loc: Vector3::new(-1596.7955, -1039.2034, 17.0),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.4007162, 0.0000958738),
+                car_vel: Vector3::new(242.38637, -1733.6719, 8.41),
+                boost: 0,
+                ..Default::default()
+            },
+        );
+
+        test.sleep_millis(3000);
+        assert!(!test.enemy_has_scored());
+    }
+
+    #[test]
+    fn slow_bouncer() {
+        let test = TestRunner::start(
+            RootBehavior::new(),
+            TestScenario {
+                enemy_loc: Vector3::new(6000.0, 6000.0, 0.0),
+                ..TestScenario::from_collected_row("../logs/play-2018-09-07_02.00.01.csv", 413.0)
+            },
+        );
+
+        test.sleep_millis(5000);
+
+        assert!(!test.enemy_has_scored());
+    }
 }

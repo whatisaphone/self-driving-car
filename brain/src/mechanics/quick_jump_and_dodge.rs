@@ -40,6 +40,10 @@ impl Behavior for QuickJumpAndDodge {
         let elapsed = packet.GameInfo.TimeSeconds - self.start_time;
 
         eeg.draw(Drawable::print(
+            format!("yaw: {:.0}°", self.yaw.to_degrees()),
+            color::GREEN,
+        ));
+        eeg.draw(Drawable::print(
             format!("elapsed: {:.2}", elapsed),
             color::GREEN,
         ));

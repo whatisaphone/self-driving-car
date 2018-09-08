@@ -34,25 +34,14 @@ fn todo() {
 }
 
 #[test]
-#[cfg(never)]
+#[ignore]
 fn template() {
-    let scenario = TestScenario {
-        enemy_loc: Vector3::new(6000.0, 6000.0, 0.0),
-        ..TestScenario::from_collected_row("../logs/play.csv", 100.0)
-    };
     let test = TestRunner::start(
         RootBehavior::new(),
-        scenario,
-        /*
         TestScenario {
-            ball_loc: Vector3::new(),
-            ball_vel: Vector3::new(),
-            car_loc: Vector3::new(),
-            car_rot: Rotation3::from_unreal_angles(),
-            car_vel: Vector3::new(),
-            ..Default::default()
+            enemy_loc: Vector3::new(6000.0, 6000.0, 0.0),
+            ..TestScenario::from_collected_row("../logs/play.csv", 100.0)
         },
-        */
     );
 
     test.sleep_millis(5000);

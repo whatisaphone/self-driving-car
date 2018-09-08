@@ -71,6 +71,7 @@ impl Behavior for Shoot {
             return Action::call(AerialShot::new());
         }
 
+        self.finished = true;
         Action::call(GroundShot::new())
     }
 }
@@ -78,6 +79,7 @@ impl Behavior for Shoot {
 #[cfg(test)]
 mod integration_tests {
     use behavior::shoot::Shoot;
+    use behavior::RootBehavior;
     use collect::ExtendRotation3;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use nalgebra::{Rotation3, Vector3};
@@ -217,6 +219,25 @@ mod integration_tests {
         );
 
         test.sleep_millis(6000);
+        assert!(test.has_scored());
+    }
+
+    #[test]
+    #[ignore] // TODO
+    fn awkward_corner_angle() {
+        let test = TestRunner::start(
+            RootBehavior::new(),
+            TestScenario {
+                ball_loc: Vector3::new(3074.1807, 4219.743, 506.9326),
+                ball_vel: Vector3::new(-1596.3938, 1474.6923, -355.48773),
+                car_loc: Vector3::new(-970.7269, 2484.3645, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, 1.5245851, -0.0000958738),
+                car_vel: Vector3::new(64.24027, 1407.491, 8.309999),
+                ..Default::default()
+            },
+        );
+
+        test.sleep_millis(4000);
         assert!(test.has_scored());
     }
 }

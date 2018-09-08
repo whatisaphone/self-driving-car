@@ -58,9 +58,9 @@ fn eval(packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Plan {
 
     match (situation, place, possession) {
         (Situation::Retreat, _, _) => Plan::Defense,
+        (_, _, Possession::Me) => Plan::Offense,
         (_, Place::OwnBox, _) => Plan::Defense,
         (_, Place::OwnCorner, _) => Plan::Defense,
-        (_, _, Possession::Me) => Plan::Offense,
         (_, _, Possession::Unsure) => Plan::Offense,
         (_, _, Possession::Enemy) => Plan::Defense,
     }
@@ -143,11 +143,14 @@ fn eval_situation(packet: &rlbot::LiveDataPacket) -> Situation {
     let ball = packet.GameBall;
     let (me, enemy) = one_v_one(packet);
 
-    if ball.Physics.vel().y < -500.0 && me.Physics.loc().y > ball.Physics.vel().y {
-        Situation::Retreat
-    } else {
-        Situation::Unsure
+    if ball.Physics.vel().y < -500.0 {
+        if me.Physics.loc().y > ball.Physics.loc().y {
+            return Situation::Retreat;
+        } else if me.Physics.loc().y > ball.Physics.loc().y - 500.0 && me.Physics.vel().y < -100.0 {
+            return Situation::Retreat;
+        }
     }
+    return Situation::Unsure;
 }
 
 #[derive(Debug)]

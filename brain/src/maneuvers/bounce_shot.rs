@@ -1,10 +1,11 @@
 use behavior::{Action, Behavior};
 use eeg::{color, Drawable, EEG};
-use mechanics::{GroundAccelToLoc, QuickJumpAndDodge};
+use mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
 use nalgebra::Vector2;
 use predict::estimate_intercept_car_ball_2;
 use rlbot;
-use utils::{enemy_goal_center, one_v_one, ExtendPhysics, ExtendVector3};
+use std::f32::consts::PI;
+use utils::{enemy_goal_center, my_car, one_v_one, ExtendPhysics, ExtendVector3};
 
 pub struct BounceShot {
     target_loc: Vector2<f32>,
@@ -64,7 +65,7 @@ impl Behavior for BounceShot {
         // TODO the threshold
         if distance < 100.0 {
             self.finished = true;
-            Some(Action::call(QuickJumpAndDodge::begin(packet)))
+            Some(self.flip(packet, eeg))
         } else {
             None
         }
@@ -84,8 +85,22 @@ impl Behavior for BounceShot {
     }
 }
 
+impl BounceShot {
+    fn flip(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
+        let me = my_car(packet);
+        let angle = simple_yaw_diff(&me.Physics, self.target_loc);
+        if angle.abs() >= PI / 2.0 {
+            eeg.log("Incorrect approach angle");
+            return Action::Return;
+        }
+
+        Action::call(QuickJumpAndDodge::begin(packet).yaw(angle))
+    }
+}
+
 #[cfg(test)]
 mod integration_tests {
+    use behavior::RootBehavior;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use maneuvers::bounce_shot::BounceShot;
     use nalgebra::Vector3;

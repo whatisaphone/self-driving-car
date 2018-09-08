@@ -87,4 +87,24 @@ mod integration_tests {
 
         assert!(test.has_scored());
     }
+
+    #[test]
+    #[ignore] // TODO
+    fn in_corner_barely_cant_reach() {
+        let test = TestRunner::start(
+            Offense::new(),
+            TestScenario {
+                ball_loc: Vector3::new(2230.9802, 2748.329, 93.14),
+                ball_vel: Vector3::new(640.13696, 820.1949, 0.0),
+                car_loc: Vector3::new(2847.7441, 1709.6339, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, 1.4079068, 0.0000958738),
+                car_vel: Vector3::new(286.62524, 1500.3096, 8.17),
+                boost: 0,
+                ..Default::default()
+            },
+        );
+
+        test.sleep_millis(3000);
+        assert!(test.has_scored());
+    }
 }

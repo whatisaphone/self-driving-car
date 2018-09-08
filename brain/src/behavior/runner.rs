@@ -6,6 +6,10 @@ pub struct BehaviorRunner {
     stack: Vec<Box<Behavior>>,
 }
 
+pub const PUSHED: &str = ">";
+pub const POPPED: &str = "<";
+pub const UNWOUND: &str = "<<";
+
 impl BehaviorRunner {
     pub fn new(root: Box<Behavior>) -> BehaviorRunner {
         BehaviorRunner { stack: vec![root] }
@@ -39,7 +43,7 @@ impl BehaviorRunner {
         let action = match capture {
             Some((bi, action)) => {
                 self.stack.truncate(bi + 1);
-                eeg.log(format!("<< {}", self.top().name()));
+                eeg.log(format!("{} {}", UNWOUND, self.top().name()));
                 action
             }
             None => self.top().execute(packet, eeg),
@@ -49,7 +53,7 @@ impl BehaviorRunner {
             Action::Yield(result) => return result,
             Action::Call(behavior) => {
                 self.stack.push(behavior);
-                eeg.log(format!("> {}", self.top().name()));
+                eeg.log(format!("{} {}", PUSHED, self.top().name()));
                 self.recurse(depth + 1, packet, eeg)
             }
             Action::Return => {
@@ -57,7 +61,7 @@ impl BehaviorRunner {
                     panic!("Can't return from root behavior");
                 }
                 self.stack.pop();
-                eeg.log(format!("< {}", self.top().name()));
+                eeg.log(format!("{} {}", POPPED, self.top().name()));
                 self.recurse(depth + 1, packet, eeg)
             }
         }

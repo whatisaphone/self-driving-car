@@ -2,11 +2,12 @@ use behavior::{Action, Behavior};
 use collect::ExtendRotation3;
 use eeg::{color, Drawable, EEG};
 use maneuvers::GetToFlatGround;
-use mechanics::{simple_steer_towards, GroundAccelToLoc, QuickJumpAndDodge};
+use mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
 use nalgebra::Vector3;
 use predict::estimate_intercept_car_ball_2;
 use rlbot;
 use simulate::rl;
+use std::f32::consts::PI;
 use utils::{
     enemy_goal_center, enemy_goal_left_post, enemy_goal_right_post, one_v_one, ExtendPhysics,
     ExtendVector2, ExtendVector3,
@@ -88,13 +89,54 @@ impl Behavior for GroundShot {
 
         if target_dist <= 250.0 {
             self.finished = true;
-            let angle = simple_steer_towards(&me.Physics, enemy_goal_center());
-            return Action::call(QuickJumpAndDodge::begin(packet).yaw(angle));
+            return shoot(packet, eeg);
         }
 
         // TODO: this is not how this works…
         let mut child =
             GroundAccelToLoc::new(target_loc, packet.GameInfo.TimeSeconds + intercept.time);
         child.execute(packet, eeg)
+    }
+}
+
+fn shoot(packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
+    let (me, _enemy) = one_v_one(packet);
+    let angle = simple_yaw_diff(&me.Physics, enemy_goal_center());
+    if angle.abs() >= PI / 2.0 {
+        eeg.log("Incorrect approach angle");
+        return Action::Return;
+    }
+
+    return Action::call(QuickJumpAndDodge::begin(packet).yaw(angle));
+}
+
+#[cfg(test)]
+mod integration_tests {
+    use behavior::runner::PUSHED;
+    use behavior::RootBehavior;
+    use integration_tests::helpers::{TestRunner, TestScenario};
+    use maneuvers::bounce_shot::BounceShot;
+    use nalgebra::{Rotation3, Vector3};
+
+    #[test]
+    #[ignore] // TODO
+    fn crossing_the_midfield() {
+        let test = TestRunner::start(
+            RootBehavior::new(),
+            TestScenario {
+                enemy_loc: Vector3::new(6000.0, 6000.0, 0.0),
+                ..TestScenario::from_collected_row("../logs/play.csv", 1677.0)
+            },
+        );
+
+        test.sleep_millis(4000);
+        test.examine_eeg(|eeg| {
+            assert!(
+                eeg.log
+                    .iter()
+                    .any(|x| *x == format!("{} GroundShot", PUSHED))
+            );
+        });
+        assert!(test.has_scored());
     }
 }

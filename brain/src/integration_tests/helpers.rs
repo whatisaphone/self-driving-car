@@ -109,6 +109,12 @@ impl TestRunner {
         rx.recv().unwrap()
     }
 
+    pub fn enemy_has_scored(&self) -> bool {
+        let (tx, rx) = crossbeam_channel::bounded(1);
+        self.messages.send(Message::EnemyHasScored(tx));
+        rx.recv().unwrap()
+    }
+
     pub fn examine_eeg(&self, f: impl Fn(&EEG) + Send + 'static) {
         let (tx, rx) = crossbeam_channel::bounded(1);
         self.messages.send(Message::ExamineEEG(Box::new(move |eeg| {
@@ -121,6 +127,7 @@ impl TestRunner {
 
 enum Message {
     ExamineEEG(Box<Fn(&EEG) + Send>),
+    EnemyHasScored(crossbeam_channel::Sender<bool>),
 }
 
 lazy_static! {
@@ -199,6 +206,11 @@ fn test_thread(
         while let Some(message) = messages.try_recv() {
             match message {
                 Message::ExamineEEG(f) => f(&eeg),
+                Message::EnemyHasScored(tx) => {
+                    let first_score = first_packet.match_score();
+                    let current_score = packet.match_score();
+                    tx.send(current_score[1] > first_score[1]); // Index 1 means enemy team
+                }
             }
         }
 

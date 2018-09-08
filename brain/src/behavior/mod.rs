@@ -6,6 +6,7 @@ pub use behavior::runner::BehaviorRunner;
 
 mod aerial_shot;
 mod behavior;
+mod bounce_dribble;
 mod carry_from_bounce;
 mod corner_offense;
 mod defense;
@@ -16,6 +17,6 @@ mod offense;
 mod regroup;
 mod retreating_save;
 mod root;
-mod runner;
+pub mod runner;
 mod shoot;
 mod side_wall_self_pass;
