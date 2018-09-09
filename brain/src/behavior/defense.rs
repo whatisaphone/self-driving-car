@@ -33,9 +33,9 @@ impl Behavior for Defense {
 
         eeg.log("redirect to own corner");
         let me_loc = me.Physics.loc().to_2d();
-        let angle_to_own_goal = me_loc.angle_to(enemy_goal_center());
+        let angle_to_own_goal = intercept.ball_loc.to_2d().angle_to(my_goal_center_2d());
         let angle_to_ball_intercept = me_loc.angle_to(intercept.ball_loc.to_2d());
-        let target_loc = if angle_to_own_goal > angle_to_ball_intercept {
+        let target_loc = if angle_to_ball_intercept > angle_to_own_goal {
             eeg.log("push from left to right");
             my_goal_center_2d() + (own_goal_right_post() - my_goal_center_2d()) * 4.0
         } else {
@@ -52,6 +52,7 @@ impl Behavior for Defense {
 
 #[cfg(test)]
 mod integration_tests {
+    use behavior::defense::Defense;
     use behavior::RootBehavior;
     use collect::ExtendRotation3;
     use integration_tests::helpers::{TestRunner, TestScenario};
@@ -175,5 +176,56 @@ mod integration_tests {
 
         let packet = test.sniff_packet();
         assert!(packet.GameBall.Physics.loc().x >= 2000.0);
+    }
+
+    #[test]
+    fn retreating_push_to_corner() {
+        let test = TestRunner::start0(TestScenario {
+            ball_loc: Vector3::new(436.92395, 1428.1085, 93.15),
+            ball_vel: Vector3::new(-112.55582, -978.27814, 0.0),
+            car_loc: Vector3::new(1105.1365, 2072.0022, 17.0),
+            car_rot: Rotation3::from_unreal_angles(-0.009491506, -2.061095, -0.0000958738),
+            car_vel: Vector3::new(-546.6459, -1095.6816, 8.29),
+            ..Default::default()
+        });
+
+        test.set_behavior(Defense::new());
+
+        test.sleep_millis(1000);
+
+        test.examine_eeg(|eeg| {
+            assert!(eeg.log.iter().any(|x| x == "redirect to own corner"));
+            assert!(eeg.log.iter().any(|x| x == "push from right to left"));
+        });
+
+        let packet = test.sniff_packet();
+        println!("{:?}", packet.GameBall.Physics.Velocity);
+        assert!(packet.GameBall.Physics.vel().norm() >= 2000.0);
+    }
+
+    #[test]
+    #[ignore] // TODO
+    fn retreating_push_to_corner_from_awkward_side() {
+        let test = TestRunner::start0(TestScenario {
+            ball_loc: Vector3::new(1948.3385, 1729.5826, 97.89405),
+            ball_vel: Vector3::new(185.58005, -1414.3043, -5.051092),
+            car_loc: Vector3::new(896.22095, 1962.7969, 15.68419),
+            car_rot: Rotation3::from_unreal_angles(-0.0131347105, -2.0592732, -0.010450244),
+            car_vel: Vector3::new(-660.1856, -1449.2916, -3.7354965),
+            ..Default::default()
+        });
+
+        test.set_behavior(Defense::new());
+
+        test.sleep_millis(2000);
+
+        test.examine_eeg(|eeg| {
+            assert!(eeg.log.iter().any(|x| x == "redirect to own corner"));
+            assert!(eeg.log.iter().any(|x| x == "push from left to right"));
+        });
+
+        let packet = test.sniff_packet();
+        println!("{:?}", packet.GameBall.Physics.Velocity);
+        assert!(packet.GameBall.Physics.vel().norm() >= 2000.0);
     }
 }

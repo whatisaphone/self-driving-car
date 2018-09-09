@@ -8,6 +8,7 @@ use mechanics::{simple_steer_towards, GroundAccelToLoc, QuickJumpAndDodge};
 use nalgebra::Vector3;
 use predict::estimate_intercept_car_ball_2;
 use rlbot;
+use rules::Finishable;
 use simulate::rl;
 use utils::{
     enemy_goal_center, enemy_goal_left_post, enemy_goal_right_post, one_v_one, ExtendPhysics,
@@ -16,14 +17,14 @@ use utils::{
 
 pub struct Shoot {
     min_distance: Option<f32>,
-    finished: bool,
+    finished: Finishable,
 }
 
 impl Shoot {
     pub fn new() -> Shoot {
         Shoot {
             min_distance: None,
-            finished: false,
+            finished: Finishable::new(),
         }
     }
 
@@ -49,9 +50,7 @@ impl Behavior for Shoot {
     }
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-        if self.finished {
-            return Action::Return;
-        }
+        return_some!(self.finished.execute(packet, eeg));
 
         let (me, _enemy) = one_v_one(packet);
         let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |t, &loc, vel| {
@@ -67,11 +66,11 @@ impl Behavior for Shoot {
         }
 
         if intercept.ball_loc.z >= 500.0 {
-            self.finished = true;
+            self.finished.set_finished();
             return Action::call(AerialShot::new());
         }
 
-        self.finished = true;
+        self.finished.set_finished();
         Action::call(GroundShot::new())
     }
 }

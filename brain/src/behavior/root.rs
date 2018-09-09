@@ -38,7 +38,7 @@ impl Behavior for RootBehavior {
         self.last_eval = Some(packet.GameInfo.TimeSeconds);
 
         let plan = eval(packet, eeg);
-        eeg.log(format!("{:?}", plan));
+        eeg.log(format!("{}::{:?}", stringify!(Plan), plan));
 
         Some(Action::Call(plan.to_behavior()))
     }
@@ -47,7 +47,7 @@ impl Behavior for RootBehavior {
         self.last_eval = Some(packet.GameInfo.TimeSeconds);
 
         let plan = eval(packet, eeg);
-        eeg.log(format!("{:?}", plan));
+        eeg.log(format!("{}::{:?}", stringify!(Plan), plan));
 
         Action::Call(plan.to_behavior())
     }
@@ -65,9 +65,7 @@ fn eval(packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Plan {
     match (situation, place, possession, push_wall) {
         (_, _, _, Wall::OwnGoal) => Plan::Defense,
         (_, _, _, Wall::OwnBackWall) => Plan::Defense,
-        (_, _, Possession::Me, _) => Plan::Offense,
-        (_, _, Possession::Unsure, _) => Plan::Offense,
-        (_, _, Possession::Enemy, _) => Plan::Defense,
+        (_, _, _, _) => Plan::Offense,
     }
 }
 

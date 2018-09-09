@@ -18,6 +18,14 @@ extern crate simulate;
 pub use brain::Brain;
 pub use eeg::EEG;
 
+macro_rules! return_some {
+    ($rule:expr) => {
+        if let Some(x) = $rule {
+            return x;
+        }
+    };
+}
+
 mod behavior;
 mod brain;
 mod eeg;
@@ -26,4 +34,5 @@ mod integration_tests;
 mod maneuvers;
 mod mechanics;
 mod predict;
+mod rules;
 mod utils;
