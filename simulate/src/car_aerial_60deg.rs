@@ -20,10 +20,8 @@ impl CarAerial60Deg {
     /// Using a jump plus 60° aerial, what will it take to climb to the given
     /// height?
     pub fn cost(z: f32) -> Cost {
-        let i = tables::AERIAL_60DEG_CAR_LOC_Z
-            .binary_search_by(|n| n.partial_cmp(&z).unwrap())
-            .unwrap_or_else(|i| i);
-        let time = tables::AERIAL_60DEG_TIME[i] - tables::AERIAL_60DEG_TIME[0];
+        let time = linear_interpolate(tables::AERIAL_60DEG_CAR_LOC_Z, tables::AERIAL_60DEG_TIME, z);
+        let time = time - tables::AERIAL_60DEG_TIME[0];
         let boost = time * rl::BOOST_DEPLETION;
         return Cost { time, boost };
     }
@@ -93,5 +91,11 @@ mod tests {
     fn time_to_z() {
         let cost = CarAerial60Deg::cost(1000.0);
         assert!(cost.time - (18.466011 - 16.360859) < 0.01);
+    }
+
+    #[test]
+    fn time_to_z_maximum() {
+        let cost = CarAerial60Deg::cost(2000.0);
+        assert!(cost.time - (13.844277 - 10.662176) < 0.01);
     }
 }
