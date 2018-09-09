@@ -114,6 +114,7 @@ fn shoot(packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
 mod integration_tests {
     use behavior::runner::PUSHED;
     use behavior::RootBehavior;
+    use collect::ExtendRotation3;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use maneuvers::bounce_shot::BounceShot;
     use nalgebra::{Rotation3, Vector3};
@@ -124,8 +125,12 @@ mod integration_tests {
         let test = TestRunner::start(
             RootBehavior::new(),
             TestScenario {
-                enemy_loc: Vector3::new(6000.0, 6000.0, 0.0),
-                ..TestScenario::from_collected_row("../logs/play.csv", 1677.0)
+                ball_loc: Vector3::new(-1794.4557, -681.9332, 99.93823),
+                ball_vel: Vector3::new(-619.51764, 1485.6294, -12.806913),
+                car_loc: Vector3::new(-3472.8125, -1983.225, 16.937647),
+                car_rot: Rotation3::from_unreal_angles(-0.009779127, 2.4388378, -0.0011504856),
+                car_vel: Vector3::new(-1599.1952, 1223.4504, 9.51471),
+                ..Default::default()
             },
         );
 

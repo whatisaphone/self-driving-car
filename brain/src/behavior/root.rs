@@ -2,10 +2,15 @@ use behavior::defense::Defense;
 use behavior::offense::Offense;
 use behavior::{Action, Behavior};
 use eeg::EEG;
-use nalgebra::Vector3;
+use nalgebra::{Isometry2, Point2, Vector2, Vector3};
+use ncollide2d::query::Ray;
+use ncollide2d::shape::{Plane, ShapeHandle};
+use ncollide2d::world::{CollisionGroups, CollisionWorld, GeometricQueryType};
 use rlbot;
+use simulate::rl;
 use simulate::{chip::Ball, Car1D};
-use utils::{one_v_one, ExtendPhysics, ExtendVector3};
+use std::f32::consts::PI;
+use utils::{one_v_one, ExtendF32, ExtendPhysics, ExtendVector3, TotalF32};
 
 pub struct RootBehavior {
     last_eval: Option<f32>,
@@ -50,26 +55,43 @@ impl Behavior for RootBehavior {
 
 fn eval(packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Plan {
     let situation = eval_situation(packet);
-    let (place, possession) = eval_possession(packet);
+    let (place, possession, push_wall) = eval_possession(packet);
 
-    eeg.log(format!("{:?}", situation));
-    eeg.log(format!("{:?}", place));
-    eeg.log(format!("{:?}", possession));
+    eeg.log(format!("{}::{:?}", stringify!(Situation), situation));
+    eeg.log(format!("{}::{:?}", stringify!(Situation), place));
+    eeg.log(format!("{}::{:?}", stringify!(Possession), possession));
+    eeg.log(format!("{}::{:?}", stringify!(Wall), push_wall));
 
-    match (situation, place, possession) {
-        (Situation::Retreat, _, _) => Plan::Defense,
-        (_, _, Possession::Me) => Plan::Offense,
-        (_, Place::OwnBox, _) => Plan::Defense,
-        (_, Place::OwnCorner, _) => Plan::Defense,
-        (_, _, Possession::Unsure) => Plan::Offense,
-        (_, _, Possession::Enemy) => Plan::Defense,
+    match (situation, place, possession, push_wall) {
+        (_, _, _, Wall::EnemyGoal) => Plan::Offense,
+        (Situation::Retreat, _, _, _) => Plan::Defense,
+        (_, _, Possession::Me, _) => Plan::Offense,
+        (_, Place::OwnBox, _, _) => Plan::Defense,
+        (_, Place::OwnCorner, _, _) => Plan::Defense,
+        (_, _, Possession::Unsure, _) => Plan::Offense,
+        (_, _, Possession::Enemy, _) => Plan::Defense,
     }
+}
+
+fn eval_possession(packet: &rlbot::LiveDataPacket) -> (Place, Possession, Wall) {
+    let (me, enemy) = one_v_one(packet);
+
+    let (blitz_me_time, blitz_enemy_time, blitz_ball_loc) = simulate_ball_blitz(packet);
+    let place = eval_ball(blitz_ball_loc);
+    let possession = match blitz_me_time / blitz_enemy_time {
+        x if x < 0.75 => Possession::Me,
+        x if x < 1.33 => Possession::Unsure,
+        _ => Possession::Enemy,
+    };
+    let push_wall = eval_push_wall(&me.Physics.loc(), &blitz_ball_loc);
+
+    (place, possession, push_wall)
 }
 
 // This is a pretty naive and heavyweight implementation. Basically simulate a
 // "race to the ball" and see if one player gets there much earlier than the
 // other.
-fn eval_possession(packet: &rlbot::LiveDataPacket) -> (Place, Possession) {
+fn simulate_ball_blitz(packet: &rlbot::LiveDataPacket) -> (f32, f32, Vector3<f32>) {
     const DT: f32 = 1.0 / 60.0;
 
     let (me, enemy) = one_v_one(packet);
@@ -113,20 +135,11 @@ fn eval_possession(packet: &rlbot::LiveDataPacket) -> (Place, Possession) {
         }
     }
 
-    let mut me_time = me_time.unwrap();
-    let mut enemy_time = enemy_time.unwrap();
-    let mut ball_at_interception = ball_at_interception.unwrap();
-
-    ball_at_interception.step(1.0); // Fast forward a bit
-    let place = eval_ball(ball_at_interception.loc());
-
-    let possession = match me_time / enemy_time {
-        x if x < 0.75 => Possession::Me,
-        x if x < 1.33 => Possession::Unsure,
-        _ => Possession::Enemy,
-    };
-
-    (place, possession)
+    (
+        me_time.unwrap(),
+        enemy_time.unwrap(),
+        ball_at_interception.unwrap().loc(),
+    )
 }
 
 fn eval_ball(loc: Vector3<f32>) -> Place {
@@ -153,6 +166,64 @@ fn eval_situation(packet: &rlbot::LiveDataPacket) -> Situation {
     return Situation::Unsure;
 }
 
+fn eval_push_wall(car: &Vector3<f32>, ball: &Vector3<f32>) -> Wall {
+    let world = simple_stupid_2d_field();
+    let ray = Ray::new(Point2::from_coordinates(car.to_2d()), (ball - car).to_2d());
+    let (_, intersect) = world
+        .interferences_with_ray(&ray, &CollisionGroups::new())
+        .min_by_key(|(_, intersect)| TotalF32(intersect.toi))
+        .unwrap();
+    let point = ray.origin + ray.dir * intersect.toi;
+    let theta = f32::atan2(point.y, point.x);
+    let strike_angle = (theta - PI / 2.0).normalize_angle().abs();
+    println!("strike_angle: {:.0}°", strike_angle.to_degrees());
+    match strike_angle {
+        a if a < f32::atan2(rl::GOALPOST_X, rl::FIELD_MAX_Y) => Wall::EnemyGoal,
+        a if a < f32::atan2(rl::FIELD_MAX_X, rl::FIELD_MAX_Y / 3.0) => Wall::EnemyBackWall,
+        a if a < f32::atan2(rl::FIELD_MAX_X, -rl::FIELD_MAX_Y / 3.0) => Wall::Midfield,
+        a if a < f32::atan2(rl::GOALPOST_X, -rl::FIELD_MAX_Y) => Wall::OwnBackWall,
+        _ => Wall::OwnGoal,
+    }
+}
+
+fn simple_stupid_2d_field() -> CollisionWorld<f32, ()> {
+    let mut fixed = CollisionGroups::new();
+    fixed.set_membership(&[0]);
+
+    let mut world = CollisionWorld::new(1.0);
+    let exact = GeometricQueryType::Contacts(0.0, 0.0);
+    world.add(
+        Isometry2::new(Vector2::new(-rl::FIELD_MAX_X, 0.0), 0.0),
+        ShapeHandle::new(Plane::new(Vector2::x_axis())),
+        fixed,
+        exact,
+        (),
+    );
+    world.add(
+        Isometry2::new(Vector2::new(0.0, -rl::FIELD_MAX_Y), 0.0),
+        ShapeHandle::new(Plane::new(Vector2::y_axis())),
+        fixed,
+        exact,
+        (),
+    );
+    world.add(
+        Isometry2::new(Vector2::new(rl::FIELD_MAX_X, 0.0), 0.0),
+        ShapeHandle::new(Plane::new(-Vector2::x_axis())),
+        fixed,
+        exact,
+        (),
+    );
+    world.add(
+        Isometry2::new(Vector2::new(0.0, rl::FIELD_MAX_Y), 0.0),
+        ShapeHandle::new(Plane::new(-Vector2::y_axis())),
+        fixed,
+        exact,
+        (),
+    );
+    world.update();
+    world
+}
+
 #[derive(Debug)]
 enum Place {
     OwnBox,
@@ -160,6 +231,15 @@ enum Place {
     Midfield,
     EnemyCorner,
     EnemyBox,
+}
+
+#[derive(Debug)]
+enum Wall {
+    EnemyGoal,
+    EnemyBackWall,
+    Midfield,
+    OwnBackWall,
+    OwnGoal,
 }
 
 #[derive(Debug)]

@@ -104,9 +104,10 @@ dependencies = [
  "lazy_static 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "nalgebra 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ncollide2d 0.17.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "piston2d-graphics 0.26.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "piston_window 0.80.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "rlbot 0.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rlbot 0.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "simulate 0.1.0",
 ]
 
@@ -180,7 +181,7 @@ dependencies = [
  "bakkesmod 0.1.0",
  "csv 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "nalgebra 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "rlbot 0.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rlbot 0.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -828,6 +829,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "ncollide2d"
+version = "0.17.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "alga 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "approx 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "nalgebra 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "num-traits 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.5.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "slab 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "smallvec 0.6.4 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "net2"
 version = "0.2.33"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1131,7 +1146,7 @@ dependencies = [
  "env_logger 0.5.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "rlbot 0.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rlbot 0.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -1287,7 +1302,7 @@ dependencies = [
 
 [[package]]
 name = "rlbot"
-version = "0.0.3"
+version = "0.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "libloading 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2025,6 +2040,7 @@ dependencies = [
 "checksum miow 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "8c1f2f3b1cf331de6896aabf6e9d55dca90356cc9960cca7eaaf408a355ae919"
 "checksum nalgebra 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)" = "4534bc88a178e411e634e1e44e7f2ad6e9bf062ea539f40e579bd49ef2fad056"
 "checksum native-tls 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "f74dbadc8b43df7864539cedb7bc91345e532fdd913cfdc23ad94f4d2d40fbc0"
+"checksum ncollide2d 0.17.1 (registry+https://github.com/rust-lang/crates.io-index)" = "425882363e3630b61ec2462d0d4ad650e692bcff1bd199a8d085226a9dc0f79e"
 "checksum net2 0.2.33 (registry+https://github.com/rust-lang/crates.io-index)" = "42550d9fb7b6684a6d404d9fa7250c2eb2646df731d1c06afc06dcee9e1bcf88"
 "checksum nodrop 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)" = "9a2228dca57108069a5262f2ed8bd2e82496d2e074a06d1ccc7ce1687b6ae0a2"
 "checksum num-complex 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "68de83578789e0fbda3fa923035be83cf8bfd3b30ccfdecd5aa89bf8601f408e"
@@ -2077,7 +2093,7 @@ dependencies = [
 "checksum regex 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)" = "3d8c9f33201f46669484bacc312b00e7541bed6aaf296dffe2bb4e0ac6b8ce2a"
 "checksum regex-syntax 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)" = "747ba3b235651f6e2f67dfa8bcdcd073ddb7c243cb21c442fc12395dfcac212d"
 "checksum remove_dir_all 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "3488ba1b9a2084d38645c4c08276a1752dcbf2c7130d74f1569681ad5d2799c5"
-"checksum rlbot 0.0.3 (registry+https://github.com/rust-lang/crates.io-index)" = "d7b5be15013680f2175068b27857a5bf0f795d65a36974cbcd43e6d6a9b6d820"
+"checksum rlbot 0.0.4 (registry+https://github.com/rust-lang/crates.io-index)" = "b3e45fdc73974e32d29b0846f6d4f18cf366dc3a8a7949c77e3b48d6dd379485"
 "checksum rusttype 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)" = "11ff03da02f6d340bbee5ec55eed03ff9abd6ea013b93bc7c35973cc28f65999"
 "checksum safemem 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "e27a8b19b835f7aea908818e871f5cc3a5a186550c30773be987e155e8163d8f"
 "checksum schannel 0.1.13 (registry+https://github.com/rust-lang/crates.io-index)" = "dc1fabf2a7b6483a141426e1afd09ad543520a77ac49bd03c286e7696ccfd77f"

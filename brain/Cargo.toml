@@ -7,14 +7,16 @@ authors = ["John Simon <john@whatisaph.one>"]
 crossbeam-channel = "0.2.4"
 csv = "1.0.0"
 lazy_static = "1.1.0"
+
 nalgebra = "0.16.0"
+ncollide2d = "0.17.1"
 
 log = "0.4.4"
 
 piston_window = "0.80.0"
 piston2d-graphics = "0.26.0"
 
-rlbot = "0.0.3"
+rlbot = "0.0.4"
 
 bakkesmod = { path = "../bakkesmod" }
 collect = { path = "../collect" }

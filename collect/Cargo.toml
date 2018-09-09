@@ -7,6 +7,6 @@ authors = ["John Simon <john@whatisaph.one>"]
 csv = "1.0.0"
 nalgebra = "0.16.0"
 
-rlbot = "0.0.3"
+rlbot = "0.0.4"
 
 bakkesmod = { path = "../bakkesmod" }

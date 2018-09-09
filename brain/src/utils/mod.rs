@@ -4,9 +4,11 @@ use rlbot;
 use simulate::rl;
 pub use utils::fps_counter::FPSCounter;
 pub use utils::geometry::{ExtendF32, ExtendVector2, ExtendVector3};
+pub use utils::iter::TotalF32;
 
 mod fps_counter;
 mod geometry;
+mod iter;
 
 /// Assuming I am the first car, return the first car.
 pub fn my_car(packet: &rlbot::LiveDataPacket) -> &rlbot::PlayerInfo {
