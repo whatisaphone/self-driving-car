@@ -56,6 +56,7 @@ mod integration_tests {
     use collect::ExtendRotation3;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use nalgebra::{Rotation3, Vector3};
+    use utils::ExtendPhysics;
 
     #[test]
     fn bouncing_save() {
@@ -153,5 +154,26 @@ mod integration_tests {
         test.sleep_millis(5000);
 
         assert!(!test.enemy_has_scored());
+    }
+
+    #[test]
+    fn falling_save_from_the_side() {
+        let test = TestRunner::start(
+            RootBehavior::new(),
+            TestScenario {
+                ball_loc: Vector3::new(2353.9868, -5024.7144, 236.38712),
+                ball_vel: Vector3::new(-1114.3461, 32.5409, 897.3589),
+                car_loc: Vector3::new(2907.8083, -4751.0806, 17.010809),
+                car_rot: Rotation3::from_unreal_angles(-0.018216021, -2.7451544, -0.0073822825),
+                car_vel: Vector3::new(-1412.7858, -672.18933, -6.2963967),
+                boost: 0,
+                ..Default::default()
+            },
+        );
+
+        test.sleep_millis(3000);
+
+        let packet = test.sniff_packet();
+        assert!(packet.GameBall.Physics.loc().x >= 2000.0);
     }
 }

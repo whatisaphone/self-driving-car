@@ -55,25 +55,23 @@ impl Behavior for RootBehavior {
 
 fn eval(packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Plan {
     let situation = eval_situation(packet);
-    let (place, possession, push_wall) = eval_possession(packet);
+    let (place, possession, push_wall) = eval_possession(packet, eeg);
 
     eeg.log(format!("{}::{:?}", stringify!(Situation), situation));
-    eeg.log(format!("{}::{:?}", stringify!(Situation), place));
+    eeg.log(format!("{}::{:?}", stringify!(Place), place));
     eeg.log(format!("{}::{:?}", stringify!(Possession), possession));
     eeg.log(format!("{}::{:?}", stringify!(Wall), push_wall));
 
     match (situation, place, possession, push_wall) {
-        (_, _, _, Wall::EnemyGoal) => Plan::Offense,
-        (Situation::Retreat, _, _, _) => Plan::Defense,
+        (_, _, _, Wall::OwnGoal) => Plan::Defense,
+        (_, _, _, Wall::OwnBackWall) => Plan::Defense,
         (_, _, Possession::Me, _) => Plan::Offense,
-        (_, Place::OwnBox, _, _) => Plan::Defense,
-        (_, Place::OwnCorner, _, _) => Plan::Defense,
         (_, _, Possession::Unsure, _) => Plan::Offense,
         (_, _, Possession::Enemy, _) => Plan::Defense,
     }
 }
 
-fn eval_possession(packet: &rlbot::LiveDataPacket) -> (Place, Possession, Wall) {
+fn eval_possession(packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> (Place, Possession, Wall) {
     let (me, enemy) = one_v_one(packet);
 
     let (blitz_me_time, blitz_enemy_time, blitz_ball_loc) = simulate_ball_blitz(packet);
@@ -83,7 +81,7 @@ fn eval_possession(packet: &rlbot::LiveDataPacket) -> (Place, Possession, Wall) 
         x if x < 1.33 => Possession::Unsure,
         _ => Possession::Enemy,
     };
-    let push_wall = eval_push_wall(&me.Physics.loc(), &blitz_ball_loc);
+    let push_wall = eval_push_wall(&me.Physics.loc(), &blitz_ball_loc, eeg);
 
     (place, possession, push_wall)
 }
@@ -166,7 +164,7 @@ fn eval_situation(packet: &rlbot::LiveDataPacket) -> Situation {
     return Situation::Unsure;
 }
 
-fn eval_push_wall(car: &Vector3<f32>, ball: &Vector3<f32>) -> Wall {
+fn eval_push_wall(car: &Vector3<f32>, ball: &Vector3<f32>, eeg: &mut EEG) -> Wall {
     let world = simple_stupid_2d_field();
     let ray = Ray::new(Point2::from_coordinates(car.to_2d()), (ball - car).to_2d());
     let (_, intersect) = world
@@ -176,7 +174,9 @@ fn eval_push_wall(car: &Vector3<f32>, ball: &Vector3<f32>) -> Wall {
     let point = ray.origin + ray.dir * intersect.toi;
     let theta = f32::atan2(point.y, point.x);
     let strike_angle = (theta - PI / 2.0).normalize_angle().abs();
-    println!("strike_angle: {:.0}°", strike_angle.to_degrees());
+    eeg.log(format!("point: {:?}", point));
+    eeg.log(format!("theta: {:.0}°", theta.to_degrees()));
+    eeg.log(format!("strike_angle: {:.0}°", strike_angle.to_degrees()));
     match strike_angle {
         a if a < f32::atan2(rl::GOALPOST_X, rl::FIELD_MAX_Y) => Wall::EnemyGoal,
         a if a < f32::atan2(rl::FIELD_MAX_X, rl::FIELD_MAX_Y / 3.0) => Wall::EnemyBackWall,

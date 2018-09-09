@@ -121,7 +121,13 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
             None => break,
         };
 
-        match rx.recv() {
+        let mut message = rx.recv();
+        // Only process the latest message
+        while let Some(m) = rx.try_recv() {
+            message = Some(m);
+        }
+
+        match message {
             None => break, // The channel was closed, so exit the thread.
             Some(ThreadMessage::Draw(packet, drawables)) => {
                 window.draw_2d(&event, |c, g| {
