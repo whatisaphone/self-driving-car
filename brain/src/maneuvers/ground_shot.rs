@@ -101,7 +101,7 @@ impl Behavior for GroundShot {
 
 fn shoot(packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
     let (me, _enemy) = one_v_one(packet);
-    let angle = simple_yaw_diff(&me.Physics, enemy_goal_center());
+    let angle = simple_yaw_diff(&me.Physics, packet.GameBall.Physics.loc().to_2d());
     if angle.abs() >= PI / 2.0 {
         eeg.log("Incorrect approach angle");
         return Action::Return;
@@ -135,6 +135,32 @@ mod integration_tests {
         );
 
         test.sleep_millis(4000);
+        test.examine_eeg(|eeg| {
+            assert!(
+                eeg.log
+                    .iter()
+                    .any(|x| *x == format!("{} GroundShot", PUSHED))
+            );
+        });
+        assert!(test.has_scored());
+    }
+
+    #[test]
+    #[ignore] // TODO
+    fn crossing_the_box() {
+        let test = TestRunner::start(
+            RootBehavior::new(),
+            TestScenario {
+                ball_loc: Vector3::new(-726.1142, -673.77716, 118.28892),
+                ball_vel: Vector3::new(1032.4805, 1531.884, -72.43818),
+                car_loc: Vector3::new(-45.566628, -1993.5394, 16.711021),
+                car_rot: Rotation3::from_unreal_angles(-0.010258497, 0.60458016, 0.0013422332),
+                car_vel: Vector3::new(1566.5747, 1017.1486, 13.497895),
+                ..Default::default()
+            },
+        );
+
+        test.sleep_millis(3000);
         test.examine_eeg(|eeg| {
             assert!(
                 eeg.log

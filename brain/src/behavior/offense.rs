@@ -64,9 +64,11 @@ impl Behavior for Offense {
 #[cfg(test)]
 mod integration_tests {
     use behavior::offense::Offense;
+    use behavior::root::RootBehavior;
     use collect::ExtendRotation3;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use nalgebra::{Rotation3, Vector3};
+    use utils::ExtendPhysics;
 
     #[test]
     #[ignore] // TODO
@@ -106,5 +108,25 @@ mod integration_tests {
 
         test.sleep_millis(3000);
         assert!(test.has_scored());
+    }
+
+    #[test]
+    #[ignore] // TODO
+    fn wait_for_ball_to_fall() {
+        let test = TestRunner::start(
+            RootBehavior::new(),
+            TestScenario {
+                ball_loc: Vector3::new(-3987.7068, -2086.639, 329.19128),
+                ball_vel: Vector3::new(277.659, -238.58536, 992.14404),
+                car_loc: Vector3::new(-2913.0967, -3791.6895, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, 1.9806569, -0.0000958738),
+                car_vel: Vector3::new(-352.9971, 833.215, 8.34),
+                ..Default::default()
+            },
+        );
+
+        test.sleep_millis(3000);
+        let packet = test.sniff_packet();
+        assert!(packet.GameBall.Physics.vel().y >= 1000.0);
     }
 }
