@@ -129,4 +129,24 @@ mod integration_tests {
         let packet = test.sniff_packet();
         assert!(packet.GameBall.Physics.vel().y >= 1000.0);
     }
+
+    #[test]
+    #[ignore] // TODO
+    fn shoot_across_the_goal() {
+        let test = TestRunner::start(
+            RootBehavior::new(),
+            TestScenario {
+                ball_loc: Vector3::new(-1438.1412, 4697.7017, 92.71),
+                ball_vel: Vector3::new(452.51102, -191.12935, 0.0),
+                car_loc: Vector3::new(-2771.101, 4448.831, 17.0),
+                car_rot: Rotation3::from_unreal_angles(-0.009491506, -0.038637143, -0.0000958738),
+                car_vel: Vector3::new(974.10455, -28.867546, 8.429999),
+                boost: 0,
+                ..Default::default()
+            },
+        );
+
+        test.sleep_millis(3000);
+        assert!(test.has_scored());
+    }
 }

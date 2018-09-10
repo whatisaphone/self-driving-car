@@ -312,4 +312,52 @@ mod integration_tests {
         let packet = test.sniff_packet();
         assert!(packet.GameBall.Physics.vel().norm() >= 2000.0);
     }
+
+    #[test]
+    #[ignore] // TODO
+    fn push_from_corner_to_corner_2() {
+        let test = TestRunner::start(
+            RootBehavior::new(),
+            TestScenario {
+                ball_loc: Vector3::new(2517.809, -4768.475, 93.13),
+                ball_vel: Vector3::new(-318.6226, 490.17892, 0.0),
+                car_loc: Vector3::new(3742.2703, -3277.4558, 16.954643),
+                car_rot: Rotation3::from_unreal_angles(-0.009108011, 2.528288, -0.0015339808),
+                car_vel: Vector3::new(-462.4023, 288.65112, 9.278907),
+                boost: 10,
+                ..Default::default()
+            },
+        );
+
+        test.sleep_millis(2000);
+        test.examine_eeg(|eeg| {
+            assert!(eeg.log.iter().any(|x| x == "redirect to own corner"));
+            assert!(eeg.log.iter().any(|x| x == "push from right to left"));
+            assert!(!eeg.log.iter().any(|x| x == "push from left to right"));
+        });
+        let packet = test.sniff_packet();
+        assert!(packet.GameBall.Physics.vel().norm() >= 2000.0);
+    }
+
+    #[test]
+    #[ignore] // TODO
+    fn slow_rolling_save() {
+        let test = TestRunner::start(
+            RootBehavior::new(),
+            TestScenario {
+                ball_loc: Vector3::new(1455.9731, -4179.0796, 93.15),
+                ball_vel: Vector3::new(-474.48724, -247.0518, 0.0),
+                car_loc: Vector3::new(2522.638, -708.08484, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, 2.6835077, 0.0),
+                car_vel: Vector3::new(-1433.151, 800.56586, 8.33),
+                boost: 0,
+                ..Default::default()
+            },
+        );
+
+        test.sleep_millis(5000);
+        assert!(!test.enemy_has_scored());
+        let packet = test.sniff_packet();
+        assert!(packet.GameBall.Physics.vel().x < -1000.0);
+    }
 }
