@@ -2,15 +2,12 @@ use behavior::defense::Defense;
 use behavior::offense::Offense;
 use behavior::{Action, Behavior};
 use eeg::EEG;
-use nalgebra::{Isometry2, Point2, Vector2, Vector3};
-use ncollide2d::query::Ray;
-use ncollide2d::shape::{Plane, ShapeHandle};
-use ncollide2d::world::{CollisionGroups, CollisionWorld, GeometricQueryType};
+use nalgebra::Vector3;
 use rlbot;
 use simulate::rl;
 use simulate::{chip::Ball, Car1D};
 use std::f32::consts::PI;
-use utils::{one_v_one, ExtendF32, ExtendPhysics, ExtendVector3, TotalF32};
+use utils::{one_v_one, ExtendF32, ExtendPhysics, ExtendVector3, WALL_RAY_CALCULATOR};
 
 pub struct RootBehavior {
     last_eval: Option<f32>,
@@ -163,18 +160,16 @@ fn eval_situation(packet: &rlbot::LiveDataPacket) -> Situation {
 }
 
 fn eval_push_wall(car: &Vector3<f32>, ball: &Vector3<f32>, eeg: &mut EEG) -> Wall {
-    let world = simple_stupid_2d_field();
-    let ray = Ray::new(Point2::from_coordinates(car.to_2d()), (ball - car).to_2d());
-    let (_, intersect) = world
-        .interferences_with_ray(&ray, &CollisionGroups::new())
-        .min_by_key(|(_, intersect)| TotalF32(intersect.toi))
-        .unwrap();
-    let point = ray.origin + ray.dir * intersect.toi;
+    let point = WALL_RAY_CALCULATOR.calculate(car.to_2d(), ball.to_2d());
     let theta = f32::atan2(point.y, point.x);
+
+    // For ease of math, center 0° on the enemy goal, with +/- on either side.
     let strike_angle = (theta - PI / 2.0).normalize_angle().abs();
+
     eeg.log(format!("point: {:?}", point));
     eeg.log(format!("theta: {:.0}°", theta.to_degrees()));
     eeg.log(format!("strike_angle: {:.0}°", strike_angle.to_degrees()));
+
     match strike_angle {
         a if a < f32::atan2(rl::GOALPOST_X, rl::FIELD_MAX_Y) => Wall::EnemyGoal,
         a if a < f32::atan2(rl::FIELD_MAX_X, rl::FIELD_MAX_Y / 3.0) => Wall::EnemyBackWall,
@@ -182,44 +177,6 @@ fn eval_push_wall(car: &Vector3<f32>, ball: &Vector3<f32>, eeg: &mut EEG) -> Wal
         a if a < f32::atan2(rl::GOALPOST_X, -rl::FIELD_MAX_Y) => Wall::OwnBackWall,
         _ => Wall::OwnGoal,
     }
-}
-
-fn simple_stupid_2d_field() -> CollisionWorld<f32, ()> {
-    let mut fixed = CollisionGroups::new();
-    fixed.set_membership(&[0]);
-
-    let mut world = CollisionWorld::new(1.0);
-    let exact = GeometricQueryType::Contacts(0.0, 0.0);
-    world.add(
-        Isometry2::new(Vector2::new(-rl::FIELD_MAX_X, 0.0), 0.0),
-        ShapeHandle::new(Plane::new(Vector2::x_axis())),
-        fixed,
-        exact,
-        (),
-    );
-    world.add(
-        Isometry2::new(Vector2::new(0.0, -rl::FIELD_MAX_Y), 0.0),
-        ShapeHandle::new(Plane::new(Vector2::y_axis())),
-        fixed,
-        exact,
-        (),
-    );
-    world.add(
-        Isometry2::new(Vector2::new(rl::FIELD_MAX_X, 0.0), 0.0),
-        ShapeHandle::new(Plane::new(-Vector2::x_axis())),
-        fixed,
-        exact,
-        (),
-    );
-    world.add(
-        Isometry2::new(Vector2::new(0.0, rl::FIELD_MAX_Y), 0.0),
-        ShapeHandle::new(Plane::new(-Vector2::y_axis())),
-        fixed,
-        exact,
-        (),
-    );
-    world.update();
-    world
 }
 
 #[derive(Debug)]
