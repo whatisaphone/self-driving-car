@@ -1,5 +1,6 @@
 use nalgebra::Vector3;
 use rlbot;
+use simulate::rl;
 use simulate::{chip::Ball, Car1D};
 use utils::ExtendPhysics;
 
@@ -47,6 +48,10 @@ pub fn estimate_intercept_car_ball_2(
         ball_loc: sim_ball.loc(),
         car_loc: intercept_loc,
     }
+}
+
+pub fn is_sane_ball_loc(loc: Vector3<f32>) -> bool {
+    loc.x.abs() < rl::FIELD_MAX_X && loc.y.abs() < rl::FIELD_MAX_Y
 }
 
 pub struct Intercept {
