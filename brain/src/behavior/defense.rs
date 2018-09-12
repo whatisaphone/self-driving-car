@@ -20,7 +20,7 @@ impl Defense {
 
 impl Behavior for Defense {
     fn name(&self) -> &'static str {
-        "Defense"
+        stringify!(Defense)
     }
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {

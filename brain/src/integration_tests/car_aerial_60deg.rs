@@ -18,7 +18,7 @@ impl CarAerial60DegBehavior {
 
 impl Behavior for CarAerial60DegBehavior {
     fn name(&self) -> &'static str {
-        "CarAerial60DegBehavior"
+        stringify!(CarAerial60DegBehavior)
     }
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {

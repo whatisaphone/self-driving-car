@@ -21,7 +21,7 @@ impl AerialShot {
 
 impl Behavior for AerialShot {
     fn name(&self) -> &'static str {
-        "AerialShot"
+        stringify!(AerialShot)
     }
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {

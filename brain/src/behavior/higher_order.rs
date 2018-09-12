@@ -15,7 +15,7 @@ impl Fuse {
 
 impl Behavior for Fuse {
     fn name(&self) -> &'static str {
-        "Fuse"
+        stringify!(Fuse)
     }
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
@@ -43,7 +43,7 @@ impl Delay {
 
 impl Behavior for Delay {
     fn name(&self) -> &'static str {
-        "Delay"
+        stringify!(Delay)
     }
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {

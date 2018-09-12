@@ -12,7 +12,7 @@ impl NullBehavior {
 
 impl Behavior for NullBehavior {
     fn name(&self) -> &'static str {
-        "NullBehavior"
+        stringify!(NullBehavior)
     }
 
     fn execute(&mut self, _packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {

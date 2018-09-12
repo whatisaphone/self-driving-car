@@ -24,7 +24,7 @@ impl GroundAccelToLoc {
 
 impl Behavior for GroundAccelToLoc {
     fn name(&self) -> &'static str {
-        "GroundAccelToLoc"
+        stringify!(GroundAccelToLoc)
     }
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {

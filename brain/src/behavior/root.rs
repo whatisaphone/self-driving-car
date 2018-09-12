@@ -21,7 +21,7 @@ impl RootBehavior {
 
 impl Behavior for RootBehavior {
     fn name(&self) -> &'static str {
-        "RootBehavior"
+        stringify!(RootBehavior)
     }
 
     fn capture(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Option<Action> {

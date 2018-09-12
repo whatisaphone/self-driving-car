@@ -16,7 +16,7 @@ impl CarryFromBounce {
 
 impl Behavior for CarryFromBounce {
     fn name(&self) -> &'static str {
-        "CarryFromBounce"
+        stringify!(CarryFromBounce)
     }
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {

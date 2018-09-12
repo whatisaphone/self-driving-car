@@ -37,7 +37,7 @@ impl AerialLocTime {
 
 impl Behavior for AerialLocTime {
     fn name(&self) -> &'static str {
-        "AerialLocTime"
+        stringify!(AerialLocTime)
     }
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {

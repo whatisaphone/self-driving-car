@@ -33,7 +33,7 @@ impl QuickJumpAndDodge {
 
 impl Behavior for QuickJumpAndDodge {
     fn name(&self) -> &'static str {
-        "QuickJumpAndDodge"
+        stringify!(QuickJumpAndDodge)
     }
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {

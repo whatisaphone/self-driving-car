@@ -1,4 +1,4 @@
-use eeg::{Drawable, EEG};
+use eeg::{color, Drawable, EEG};
 use mechanics::simple_yaw_diff;
 use nalgebra::Vector2;
 use rlbot;
@@ -15,6 +15,7 @@ pub fn drive_towards(
     let yaw_diff = simple_yaw_diff(&me.Physics, target_loc);
     let steer = yaw_diff.max(-1.0).min(1.0) * 2.0;
 
+    eeg.draw(Drawable::print(stringify!(drive_towards), color::YELLOW));
     eeg.draw(Drawable::ghost_car_ground(target_loc, me.Physics.rot()));
 
     rlbot::PlayerInput {

@@ -43,7 +43,7 @@ impl Shoot {
 
 impl Behavior for Shoot {
     fn name(&self) -> &'static str {
-        "Shoot"
+        stringify!(Shoot)
     }
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {

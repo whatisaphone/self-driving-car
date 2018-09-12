@@ -17,7 +17,7 @@ impl HesitantDriveToLoc {
 
 impl Behavior for HesitantDriveToLoc {
     fn name(&self) -> &'static str {
-        "HesitantDriveToLoc"
+        stringify!(HesitantDriveToLoc)
     }
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {

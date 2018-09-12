@@ -36,7 +36,7 @@ impl GroundShot {
 
 impl Behavior for GroundShot {
     fn name(&self) -> &'static str {
-        "GroundShot"
+        stringify!(GroundShot)
     }
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {

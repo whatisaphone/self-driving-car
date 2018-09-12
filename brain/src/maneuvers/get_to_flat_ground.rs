@@ -23,7 +23,7 @@ impl GetToFlatGround {
 
 impl Behavior for GetToFlatGround {
     fn name(&self) -> &'static str {
-        "GetToFlatGround"
+        stringify!(GetToFlatGround)
     }
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {

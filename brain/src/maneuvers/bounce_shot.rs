@@ -31,7 +31,7 @@ impl BounceShot {
 
 impl Behavior for BounceShot {
     fn name(&self) -> &'static str {
-        "BounceShot"
+        stringify!(BounceShot)
     }
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {

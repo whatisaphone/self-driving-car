@@ -22,7 +22,7 @@ impl Offense {
 
 impl Behavior for Offense {
     fn name(&self) -> &'static str {
-        "Offense"
+        stringify!(Offense)
     }
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {

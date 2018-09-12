@@ -12,7 +12,7 @@ impl JumpShot {
 
 impl Behavior for JumpShot {
     fn name(&self) -> &'static str {
-        "JumpShot"
+        stringify!(JumpShot)
     }
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {

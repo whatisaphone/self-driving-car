@@ -27,7 +27,7 @@ mod integration_tests {
 
     impl Behavior for SimpleSteerTowardsBall {
         fn name(&self) -> &'static str {
-            "SimpleSteerTowardsBall"
+            stringify!(SimpleSteerTowardsBall)
         }
 
         fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {

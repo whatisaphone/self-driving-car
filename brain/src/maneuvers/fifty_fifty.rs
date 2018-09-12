@@ -16,7 +16,7 @@ impl FiftyFifty {
 
 impl Behavior for FiftyFifty {
     fn name(&self) -> &'static str {
-        "FiftyFifty"
+        stringify!(FiftyFifty)
     }
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
