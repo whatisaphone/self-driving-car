@@ -51,7 +51,7 @@ impl Behavior for Offense {
 
         // For now, just fall back to a stupid behavior
         // TODO: possession! if have it, can wait. otherwise, 50/50
-        let ball = packet.GameBall.Physics.loc().to_2d();
+        let ball = intercept.ball_loc.to_2d();
         let goal = enemy_goal_center();
         let target_loc = ball + (ball - goal).normalize() * 1000.0;
         Action::call(HesitantDriveToLoc::new(target_loc))
