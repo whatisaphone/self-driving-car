@@ -1,7 +1,7 @@
 use behavior::{Action, Behavior};
 use eeg::{color, Drawable, EEG};
-use maneuvers::GetToFlatGround;
-use mechanics::simple_steer_towards;
+use maneuvers::{drive_towards, GetToFlatGround};
+use mechanics::simple_yaw_diff;
 use nalgebra::Vector2;
 use rlbot;
 use simulate::{rl, Car1D};
@@ -50,12 +50,15 @@ impl Behavior for GroundAccelToLoc {
             return Action::call(GetToFlatGround::new());
         }
 
-        let mut result = rlbot::PlayerInput::default();
-        result.Steer = simple_steer_towards(&me.Physics, self.target_loc);
-        if !estimate_approach(&me, distance, time_remaining - 2.0 / 120.0) {
-            result.Throttle = 1.0;
+        let yaw_diff = simple_yaw_diff(&me.Physics, self.target_loc);
+        let too_fast = estimate_approach(&me, distance, time_remaining - 2.0 / 120.0);
+
+        let mut result = drive_towards(packet, eeg, self.target_loc);
+        if too_fast {
+            result.Throttle = 0.0;
+        } else {
             if me.OnGround
-                && result.Steer.abs() < PI / 4.0
+                && yaw_diff.abs() < PI / 4.0
                 && me.Physics.vel().norm() < rl::CAR_ALMOST_MAX_SPEED
                 && me.Boost > 0
             {

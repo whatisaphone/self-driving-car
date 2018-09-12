@@ -1,7 +1,6 @@
 use behavior::{Action, Behavior};
 use eeg::{Drawable, EEG};
-use maneuvers::GetToFlatGround;
-use mechanics::simple_steer_towards;
+use maneuvers::{drive_towards, GetToFlatGround};
 use nalgebra::Vector2;
 use rlbot;
 use utils::{my_car, ExtendPhysics};
@@ -34,10 +33,6 @@ impl Behavior for HesitantDriveToLoc {
             return Action::call(GetToFlatGround::new());
         }
 
-        let mut result = rlbot::PlayerInput::default();
-        result.Steer = simple_steer_towards(&me.Physics, self.target_loc);
-        result.Throttle = 1.0;
-
-        Action::Yield(result)
+        Action::Yield(drive_towards(packet, eeg, self.target_loc))
     }
 }

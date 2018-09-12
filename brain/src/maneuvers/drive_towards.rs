@@ -20,7 +20,7 @@ pub fn drive_towards(
     rlbot::PlayerInput {
         Throttle: 1.0,
         Steer: steer,
-        Handbrake: yaw_diff.abs() >= PI / 2.0,
+        Handbrake: yaw_diff.abs() >= PI * 0.75,
         ..Default::default()
     }
 }
