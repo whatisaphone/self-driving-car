@@ -46,6 +46,7 @@ pub fn estimate_intercept_car_ball_2(
     Intercept {
         time: t,
         ball_loc: sim_ball.loc(),
+        ball_vel: sim_ball.vel(),
         car_loc: intercept_loc,
     }
 }
@@ -57,5 +58,6 @@ pub fn is_sane_ball_loc(loc: Vector3<f32>) -> bool {
 pub struct Intercept {
     pub time: f32,
     pub ball_loc: Vector3<f32>,
+    pub ball_vel: Vector3<f32>,
     pub car_loc: Vector3<f32>,
 }

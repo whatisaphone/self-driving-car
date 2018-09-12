@@ -80,14 +80,13 @@ endeavor.
 
 Plan:
 
-- powerslide in simple_steer_towards related stuff
 - shoot: choose bounce shot or ground shot depending on whether ball is bouncing
 - shoot: increase valid z-range in intercept estimation, and add ability to jump
-- do the vector calulation for shots so as to not miss every shot
 - bounce shot: come up with some heuristic to aim slightly better (i.e. make the tests pass, aiming for the exact middle of goal)
+  - i.e. do the fabled vector calulation for shots so as to not miss every shot
 - defense averting insanity --> blitz to goal with an idea of which direction to turn
 - workaround for root capture interruption
 - chip recovery
 - finish chip bvh
 - add the offense swing-around stuff (when no good shot angle)
-- defense averting insanity --> blitz to goal with an idea of which direction to turn
+- defense -> bounce shot (and possibly more): if very far away and turned the wrong way, fix yaw before waiting
