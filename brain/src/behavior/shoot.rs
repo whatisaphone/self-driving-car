@@ -28,19 +28,16 @@ impl Shoot {
         }
     }
 
-    pub fn good_angle(ball_loc: Vector3<f32>) -> bool {
-        // let angle_l = ball_loc.to_2d().angle_to(enemy_goal_left_post());
-        // let angle_r = ball_loc.to_2d().angle_to(enemy_goal_right_post());
-
+    pub fn good_angle(ball_loc: Vector3<f32>, car_loc: Vector3<f32>) -> bool {
         // This is woefully incomplete
         if ball_loc.x.abs() >= rl::FIELD_MAX_X || ball_loc.y.abs() >= rl::FIELD_MAX_Y {
-            false // Ball is outside the field; clearly prediction has gone wrong somehow.
+            return false; // Ball is outside the field; clearly prediction has gone wrong somehow.
         } else if ball_loc.y.abs() >= rl::FIELD_MAX_Y - 250.0 && ball_loc.x.abs() >= rl::GOALPOST_X
         {
-            false
-        } else {
-            true
+            return false;
         }
+
+        GroundShot::good_angle(ball_loc, car_loc)
     }
 }
 
@@ -57,10 +54,10 @@ impl Behavior for Shoot {
             if loc.z >= 120.0 {
                 return false; // Aerials are not ready for prime-time yet
             }
-            Self::good_angle(loc)
+            Self::good_angle(loc, me.Physics.loc())
         });
 
-        if !Self::good_angle(intercept.ball_loc) {
+        if !Self::good_angle(intercept.ball_loc, me.Physics.loc()) {
             eeg.log(format!("Bad angle from {:?}", intercept.ball_loc));
             return Action::Return;
         }

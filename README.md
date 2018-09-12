@@ -70,9 +70,23 @@ endeavor.
   * bender
   * RoboCar
   * rosie the rocket maid
+  * Rock-E
 * Chat
   * misc quickchat
   * they told me they would delete me if i lost
   * wrong name handling
 * Play
   * brazil
+
+Plan:
+
+- powerslide in simple_steer_towards related stuff
+- shoot: choose bounce shot or ground shot depending on whether ball is bouncing
+- shoot: increase valid z-range in intercept estimation, and add ability to jump
+- bounce shot: come up with some heuristic to aim slightly better (i.e. make the tests pass, aiming for the exact middle of goal)
+- defense averting insanity --> blitz to goal with an idea of which direction to turn
+- workaround for root capture interruption
+- chip recovery
+- finish chip bvh
+- add the offense swing-around stuff (when no good shot angle)
+- defense averting insanity --> blitz to goal with an idea of which direction to turn

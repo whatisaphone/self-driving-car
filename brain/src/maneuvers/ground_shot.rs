@@ -9,8 +9,8 @@ use rlbot;
 use simulate::rl;
 use std::f32::consts::PI;
 use utils::{
-    enemy_goal_center, enemy_goal_left_post, enemy_goal_right_post, one_v_one, ExtendPhysics,
-    ExtendVector2, ExtendVector3,
+    enemy_goal_center, enemy_goal_left_post, enemy_goal_right_post, one_v_one, ExtendF32,
+    ExtendPhysics, ExtendVector2, ExtendVector3,
 };
 
 pub struct GroundShot {
@@ -26,19 +26,11 @@ impl GroundShot {
         }
     }
 
-    pub fn good_angle(ball_loc: Vector3<f32>) -> bool {
-        // let angle_l = ball_loc.to_2d().angle_to(enemy_goal_left_post());
-        // let angle_r = ball_loc.to_2d().angle_to(enemy_goal_right_post());
-
-        // This is woefully incomplete
-        if ball_loc.x.abs() >= rl::FIELD_MAX_X || ball_loc.y.abs() >= rl::FIELD_MAX_Y {
-            false // Ball is outside the field; clearly prediction has gone wrong somehow.
-        } else if ball_loc.y.abs() >= rl::FIELD_MAX_Y - 250.0 && ball_loc.x.abs() >= rl::GOALPOST_X
-        {
-            false
-        } else {
-            true
-        }
+    pub fn good_angle(ball_loc: Vector3<f32>, car_loc: Vector3<f32>) -> bool {
+        let angle_me_ball = car_loc.to_2d().angle_to(ball_loc.to_2d());
+        let angle_ball_goal = ball_loc.to_2d().angle_to(enemy_goal_center());
+        let goodness = (angle_me_ball - angle_ball_goal).normalize_angle().abs();
+        goodness < 60.0_f32.to_radians()
     }
 }
 
@@ -54,10 +46,10 @@ impl Behavior for GroundShot {
 
         let (me, _enemy) = one_v_one(packet);
         let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |t, &loc, vel| {
-            loc.z < 110.0 && Self::good_angle(loc)
+            loc.z < 110.0 && Self::good_angle(loc, me.Physics.loc())
         });
 
-        if !Self::good_angle(intercept.ball_loc) {
+        if !Self::good_angle(intercept.ball_loc, me.Physics.loc()) {
             eeg.log(format!("Bad angle from {:?}", intercept.ball_loc));
             return Action::Return;
         }

@@ -172,8 +172,8 @@ fn eval_push_wall(car: &Vector3<f32>, ball: &Vector3<f32>, eeg: &mut EEG) -> Wal
 
     match strike_angle {
         a if a < f32::atan2(rl::GOALPOST_X, rl::FIELD_MAX_Y) => Wall::EnemyGoal,
-        a if a < f32::atan2(rl::FIELD_MAX_X, rl::FIELD_MAX_Y / 3.0) => Wall::EnemyBackWall,
-        a if a < f32::atan2(rl::FIELD_MAX_X, -rl::FIELD_MAX_Y / 3.0) => Wall::Midfield,
+        a if a < f32::atan2(rl::FIELD_MAX_X, rl::FIELD_MAX_Y) => Wall::EnemyBackWall,
+        a if a < f32::atan2(rl::FIELD_MAX_X, -rl::FIELD_MAX_Y) => Wall::Midfield,
         a if a < f32::atan2(rl::GOALPOST_X, -rl::FIELD_MAX_Y) => Wall::OwnBackWall,
         _ => Wall::OwnGoal,
     }

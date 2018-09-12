@@ -3,10 +3,12 @@ use behavior::{Action, Behavior};
 use eeg::{color, Drawable, EEG};
 use maneuvers::GetToFlatGround;
 use mechanics::simple_steer_towards;
+use mechanics::HesitantDriveToLoc;
+use nalgebra::Vector2;
 use predict::estimate_intercept_car_ball_2;
 use rlbot;
 use simulate::rl;
-use utils::{one_v_one, ExtendPhysics, ExtendVector3};
+use utils::{enemy_goal_center, one_v_one, ExtendPhysics, ExtendVector3};
 
 pub struct Offense {
     min_distance: Option<f32>,
@@ -30,34 +32,29 @@ impl Behavior for Offense {
 
         let (me, _enemy) = one_v_one(packet);
         let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |t, &loc, vel| {
-            Shoot::good_angle(loc)
+            Shoot::good_angle(loc, me.Physics.loc())
         });
 
-        let good_angle = Shoot::good_angle(intercept.ball_loc);
-        if !good_angle {
-            // Stop near the perimeter and wait
-            //
-            // This is VERY temporary code. It should be replaced with other "idle" tasks
-            // like getting boost or lining up with the predicted ball in a place where we
-            // can do something useful, etc
-            eeg.draw(Drawable::print("Waiting for a good angle", color::GREEN));
-            return Action::Yield(rlbot::PlayerInput {
-                Throttle: if me.Physics.loc().y.abs() >= rl::FIELD_MAX_Y - 2000.0 {
-                    if me.Physics.vel().y >= 250.0 {
-                        -1.0
-                    } else {
-                        0.0
-                    }
-                } else {
-                    1.0
-                },
-                Steer: simple_steer_towards(&me.Physics, intercept.ball_loc.to_2d()),
-                ..Default::default()
-            });
+        if Shoot::good_angle(intercept.ball_loc, me.Physics.loc()) {
+            eeg.log(format!("Good angle found {:?}", intercept.ball_loc));
+            return Action::call(Shoot::new());
         }
 
-        eeg.log(format!("Good angle found {:?}", intercept.ball_loc));
-        return Action::call(Shoot::new());
+        // TODO: if angle is almost good, slightly adjust path such that good_angle
+        // becomes true
+
+        // TODO: otherwise drive to a point where me.y < ball.y, then slam the ball
+        // sideways
+
+        // also for the above, do something sane about possession e.g. if we clearly do
+        // not have possession, probably just run back to defense for now?
+
+        // For now, just fall back to a stupid behavior
+        // TODO: possession! if have it, can wait. otherwise, 50/50
+        let ball = packet.GameBall.Physics.loc().to_2d();
+        let goal = enemy_goal_center();
+        let target_loc = ball + (ball - goal).normalize() * 1000.0;
+        Action::call(HesitantDriveToLoc::new(target_loc))
     }
 }
 

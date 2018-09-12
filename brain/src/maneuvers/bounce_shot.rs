@@ -34,9 +34,9 @@ impl Behavior for BounceShot {
         "BounceShot"
     }
 
-    fn capture(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Option<Action> {
+    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
         if self.finished {
-            return None;
+            return Action::Return;
         }
 
         let (me, _enemy) = one_v_one(packet);
@@ -65,15 +65,7 @@ impl Behavior for BounceShot {
         // TODO the threshold
         if distance < 100.0 {
             self.finished = true;
-            Some(self.flip(packet, eeg))
-        } else {
-            None
-        }
-    }
-
-    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-        if self.finished {
-            return Action::Return;
+            return self.flip(packet, eeg);
         }
 
         // TODO: this is not how this works…
