@@ -3,8 +3,10 @@ use eeg::{color, Drawable, EEG};
 use rlbot;
 
 pub struct QuickJumpAndDodge {
-    yaw: f32,
     start_time: f32,
+    pitch: f32,
+    yaw: f32,
+    dodge_time: f32,
     phase: Phase,
 }
 
@@ -17,16 +19,34 @@ enum Phase {
 }
 
 impl QuickJumpAndDodge {
-    pub fn begin(packet: &rlbot::LiveDataPacket) -> QuickJumpAndDodge {
-        QuickJumpAndDodge {
-            yaw: 0.0,
+    pub fn begin(packet: &rlbot::LiveDataPacket) -> Self {
+        Self {
             start_time: packet.GameInfo.TimeSeconds,
+            pitch: -1.0,
+            yaw: 0.0,
+            dodge_time: 0.1,
             phase: Phase::Jump,
         }
     }
 
-    pub fn yaw(mut self, steer: f32) -> QuickJumpAndDodge {
+    pub fn yaw(mut self, steer: f32) -> Self {
+        self.pitch = -1.0;
         self.yaw = steer;
+        self
+    }
+
+    pub fn angle(mut self, angle: f32) -> Self {
+        self.pitch = -angle.cos();
+        self.yaw = angle.sin();
+        self
+    }
+
+    pub fn dodge_time(mut self, mut dodge_time: f32) -> Self {
+        if dodge_time < 0.1 {
+            warn!("dodge_time too low");
+            dodge_time = 0.1;
+        }
+        self.dodge_time = dodge_time;
         self
     }
 }
@@ -40,7 +60,15 @@ impl Behavior for QuickJumpAndDodge {
         let elapsed = packet.GameInfo.TimeSeconds - self.start_time;
 
         eeg.draw(Drawable::print(
+            format!("pitch: {:.0}°", self.pitch.to_degrees()),
+            color::GREEN,
+        ));
+        eeg.draw(Drawable::print(
             format!("yaw: {:.0}°", self.yaw.to_degrees()),
+            color::GREEN,
+        ));
+        eeg.draw(Drawable::print(
+            format!("dodge_time: {:.2}", self.dodge_time),
             color::GREEN,
         ));
         eeg.draw(Drawable::print(
@@ -53,17 +81,17 @@ impl Behavior for QuickJumpAndDodge {
             ..Default::default()
         };
 
-        if self.phase == Phase::Jump || elapsed < 0.05 {
+        if self.phase == Phase::Jump || elapsed < self.dodge_time - 0.05 {
             self.phase = Phase::And;
             result.Jump = true;
             Action::Yield(result)
-        } else if self.phase == Phase::And || elapsed < 0.10 {
+        } else if self.phase == Phase::And || elapsed < self.dodge_time {
             self.phase = Phase::Dodge;
             Action::Yield(result)
-        } else if self.phase == Phase::Dodge || elapsed < 0.15 {
+        } else if self.phase == Phase::Dodge || elapsed < self.dodge_time + 0.05 {
             self.phase = Phase::Finished;
             result.Jump = true;
-            result.Pitch = -1.0;
+            result.Pitch = self.pitch;
             result.Yaw = self.yaw;
             Action::Yield(result)
         } else {

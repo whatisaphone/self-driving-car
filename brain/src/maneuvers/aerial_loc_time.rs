@@ -5,8 +5,7 @@ use mechanics::{simple_steer_towards, simple_yaw_diff};
 use nalgebra::Vector3;
 use rlbot;
 use simulate::rl;
-use simulate::Car1D;
-use simulate::CarAerial60Deg;
+use simulate::{Car1D, CarAerial60Deg};
 use std::f32::consts::PI;
 use utils::{my_car, one_v_one, ExtendPhysics, ExtendVector3};
 

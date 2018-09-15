@@ -78,16 +78,25 @@ endeavor.
 * Play
   * brazil
 
-Plan:
+## Roadmap
+
+### Next
+
+- cache simulations to save on cpu
+- make it work when 60fps
+- make it work when orange
+- workaround for root capture interruption
+- add the offense swing-around stuff (when no good shot angle)
+
+### Backlog
 
 - shoot: choose bounce shot or ground shot depending on whether ball is bouncing
-- shoot: increase valid z-range in intercept estimation, and add ability to jump
-- workaround for root capture interruption
 - [chip recovery](https://pastebin.com/XtFL5JzV)
 - finish chip bvh
-- add the offense swing-around stuff (when no good shot angle)
-- defense -> bounce shot (and possibly more): if very far away and turned the wrong way, fix yaw before sitting stationary and waiting
-- if inside own goal and wall ray goes through own goal, still treat as offense (can wall collision be directional?)
+- generic long-range pathfinding
+  - if far away, waiting stationary, and turned the wrong way, fix yaw before sitting still
+  - if in TIME CRUNCH MODE, just blitz to destination
+  - otherwise: weave for pennies, opportunistic demos, etc
 - if inside a goal, never drive in a path that overlaps inner walls of goal
 - fix whiffs when retreating redirects to corner
 - [half flip](https://discordapp.com/channels/348658686962696195/348661571297214465/489479593632464901)

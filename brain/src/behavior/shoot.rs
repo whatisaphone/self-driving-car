@@ -2,8 +2,7 @@ use behavior::aerial_shot::AerialShot;
 use behavior::{Action, Behavior};
 use collect::ExtendRotation3;
 use eeg::{color, Drawable, EEG};
-use maneuvers::GetToFlatGround;
-use maneuvers::GroundShot;
+use maneuvers::{GetToFlatGround, GroundShot, JumpShot};
 use mechanics::{simple_steer_towards, GroundAccelToLoc, QuickJumpAndDodge};
 use nalgebra::Vector3;
 use predict::estimate_intercept_car_ball_2;
@@ -51,7 +50,7 @@ impl Behavior for Shoot {
 
         let (me, _enemy) = one_v_one(packet);
         let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |t, &loc, vel| {
-            if loc.z >= 120.0 {
+            if loc.z >= JumpShot::MAX_BALL_Z {
                 return false; // Aerials are not ready for prime-time yet
             }
             Self::good_angle(loc, me.Physics.loc())
@@ -62,13 +61,18 @@ impl Behavior for Shoot {
             return Action::Return;
         }
 
-        if intercept.ball_loc.z >= 500.0 {
+        if intercept.ball_loc.z < GroundShot::MAX_BALL_Z {
             self.finished.set_finished();
-            return Action::call(AerialShot::new());
+            return Action::call(GroundShot::new());
+        }
+
+        if intercept.ball_loc.z < JumpShot::MAX_BALL_Z {
+            self.finished.set_finished();
+            return Action::call(JumpShot::new());
         }
 
         self.finished.set_finished();
-        Action::call(GroundShot::new())
+        Action::call(AerialShot::new())
     }
 }
 

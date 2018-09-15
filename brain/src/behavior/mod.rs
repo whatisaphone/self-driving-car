@@ -11,7 +11,6 @@ mod carry_from_bounce;
 mod corner_offense;
 mod defense;
 mod higher_order;
-mod jump_shot;
 mod null;
 mod offense;
 mod regroup;

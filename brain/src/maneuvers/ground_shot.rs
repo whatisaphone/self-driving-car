@@ -19,6 +19,8 @@ pub struct GroundShot {
 }
 
 impl GroundShot {
+    pub const MAX_BALL_Z: f32 = 120.0; // sloppy number
+
     pub fn new() -> GroundShot {
         GroundShot {
             min_distance: None,
@@ -76,6 +78,7 @@ impl Behavior for GroundShot {
 
         // This behavior currently just operates in 2D
         if !GetToFlatGround::on_flat_ground(packet) {
+            // TODO: this is not how this works…
             return Action::call(GetToFlatGround::new());
         }
 
