@@ -67,7 +67,7 @@ mod integration_tests {
     use nalgebra::{Rotation3, Vector3};
 
     #[test]
-    //    #[ignore] // TODO
+    #[ignore] // TODO
     fn quick_pickup() {
         let test = TestRunner::start(
             CarryFromBounce::new(),

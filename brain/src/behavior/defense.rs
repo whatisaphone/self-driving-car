@@ -131,10 +131,11 @@ mod integration_tests {
 
         let packet = test.sniff_packet();
         println!("{:?}", packet.GameBall.Physics.Location);
-        assert!(packet.GameBall.Physics.Location.X >= 1000.0, "{:?}");
+        assert!(packet.GameBall.Physics.Location.X >= 800.0);
+        assert!(packet.GameBall.Physics.Location.Y >= -4000.0);
 
         // Should power-shot, meaning the ball bounces high.
-        assert!(max_z >= 400.0, "{}", max_z);
+        assert!(max_z >= 500.0, "{}", max_z);
     }
 
     #[test]
@@ -307,7 +308,7 @@ mod integration_tests {
     #[test]
     fn push_from_corner_to_corner() {
         let test = TestRunner::start(
-            RootBehavior::new(),
+            Defense::new(),
             TestScenario {
                 ball_loc: Vector3::new(1620.9868, -4204.8145, 93.14),
                 ball_vel: Vector3::new(-105.58675, 298.33023, 0.0),
