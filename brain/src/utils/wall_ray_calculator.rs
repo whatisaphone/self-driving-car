@@ -57,7 +57,20 @@ impl WallRayCalculator {
         let (_, intersect) = self
             .world
             .interferences_with_ray(&ray, &CollisionGroups::new())
-            .min_by_key(|(_, intersect)| TotalF32(intersect.toi))
+            .filter(|(cobj, _)| {
+                // Ignore walls that the `from` point is "behind"
+                if cobj.position().translation.vector.y == -rl::FIELD_MAX_Y
+                    && from.y < -rl::FIELD_MAX_Y
+                {
+                    return false;
+                }
+                if cobj.position().translation.vector.y == rl::FIELD_MAX_Y
+                    && from.y > rl::FIELD_MAX_Y
+                {
+                    return false;
+                }
+                true
+            }).min_by_key(|(_, intersect)| TotalF32(intersect.toi))
             .unwrap();
         ray.origin + ray.dir * intersect.toi
     }
