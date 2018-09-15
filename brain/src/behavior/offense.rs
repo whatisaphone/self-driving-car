@@ -54,6 +54,16 @@ impl Behavior for Offense {
         let ball = intercept.ball_loc.to_2d();
         let goal = enemy_goal_center();
         let target_loc = ball + (ball - goal).normalize() * 1000.0;
+        let target_loc = Vector2::new(
+            target_loc
+                .x
+                .max(-rl::FIELD_MAX_X * 0.9)
+                .min(rl::FIELD_MAX_X * 0.9),
+            target_loc
+                .y
+                .max(-rl::FIELD_MAX_Y * 0.9)
+                .min(rl::FIELD_MAX_Y * 0.9),
+        );
         Action::call(HesitantDriveToLoc::new(target_loc))
     }
 }

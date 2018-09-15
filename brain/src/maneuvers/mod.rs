@@ -5,6 +5,7 @@ pub use maneuvers::drive_towards::drive_towards;
 pub use maneuvers::fifty_fifty::FiftyFifty;
 pub use maneuvers::get_to_flat_ground::GetToFlatGround;
 pub use maneuvers::ground_shot::GroundShot;
+pub use maneuvers::panic_defense::PanicDefense;
 
 mod aerial_loc_time;
 mod blitz_to_location;
@@ -13,3 +14,4 @@ mod drive_towards;
 mod fifty_fifty;
 mod get_to_flat_ground;
 mod ground_shot;
+mod panic_defense;

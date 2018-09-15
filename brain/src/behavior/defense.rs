@@ -1,8 +1,10 @@
 use behavior::{Action, Behavior};
 use eeg::{color, Drawable, EEG};
-use maneuvers::BounceShot;
-use predict::{estimate_intercept_car_ball, is_sane_ball_loc};
+use maneuvers::{BlitzToLocation, BounceShot, PanicDefense};
+use nalgebra::Vector2;
+use predict::{estimate_intercept_car_ball, is_sane_ball_loc, Intercept};
 use rlbot;
+use simulate::rl;
 use utils::{
     my_car, my_goal_center_2d, own_goal_left_post, own_goal_right_post, ExtendF32, ExtendPhysics,
     ExtendVector2, ExtendVector3, WALL_RAY_CALCULATOR,
@@ -28,13 +30,32 @@ impl Behavior for Defense {
             return Action::Return;
         }
 
+        self.finished = true;
+
         let me = my_car(packet);
         let intercept = estimate_intercept_car_ball(&me, &packet.GameBall);
+
         if !is_sane_ball_loc(intercept.ball_loc) {
-            eeg.draw(Drawable::print("averting insanity", color::GREEN));
-            return Action::Yield(Default::default());
+            eeg.draw(Drawable::print("panicking", color::GREEN));
+            let aim_hint = Vector2::new(
+                packet.GameBall.Physics.loc().x.signum() * rl::FIELD_MAX_X,
+                my_goal_center_2d().y,
+            );
+            return Action::call(PanicDefense::new(aim_hint));
         }
 
+        self.push_to_corner(packet, eeg, &intercept)
+    }
+}
+
+impl Defense {
+    fn push_to_corner(
+        &mut self,
+        packet: &rlbot::LiveDataPacket,
+        eeg: &mut EEG,
+        intercept: &Intercept,
+    ) -> Action {
+        let me = my_car(packet);
         let me_loc = me.Physics.loc().to_2d();
         let angle_to_ball_intercept = me_loc.angle_to(intercept.ball_loc.to_2d());
 
@@ -42,12 +63,6 @@ impl Behavior for Defense {
         let rtl = my_goal_center_2d() + (own_goal_left_post() - my_goal_center_2d()) * 4.0;
         let angle_ltr = intercept.ball_loc.to_2d().angle_to(ltr);
         let angle_rtl = intercept.ball_loc.to_2d().angle_to(rtl);
-        println!(
-            "{:.0}° {:.0}° {:.0}°",
-            angle_to_ball_intercept.to_degrees(),
-            angle_ltr.to_degrees(),
-            angle_rtl.to_degrees(),
-        );
         let ltr_fitness = (angle_ltr - angle_to_ball_intercept)
             .normalize_angle()
             .abs();

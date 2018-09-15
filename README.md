@@ -84,9 +84,12 @@ Plan:
 - shoot: increase valid z-range in intercept estimation, and add ability to jump
 - bounce shot: come up with some heuristic to aim slightly better (i.e. make the tests pass, aiming for the exact middle of goal)
   - i.e. do the fabled vector calulation for shots so as to not miss every shot
-- defense averting insanity --> blitz to goal with an idea of which direction to turn
 - workaround for root capture interruption
-- chip recovery
+- [chip recovery](https://pastebin.com/XtFL5JzV)
 - finish chip bvh
 - add the offense swing-around stuff (when no good shot angle)
-- defense -> bounce shot (and possibly more): if very far away and turned the wrong way, fix yaw before waiting
+- defense -> bounce shot (and possibly more): if very far away and turned the wrong way, fix yaw before sitting stationary and waiting
+- if inside own goal and wall ray goes through own goal, still treat as offense (can wall collision be directional?)
+- if inside a goal, never drive in a path that overlaps inner walls of goal
+- fix whiffs when retreating redirects to corner
+- [half flip](https://discordapp.com/channels/348658686962696195/348661571297214465/489479593632464901)
