@@ -48,6 +48,7 @@ pub fn estimate_intercept_car_ball_2(
         ball_loc: sim_ball.loc(),
         ball_vel: sim_ball.vel(),
         car_loc: intercept_loc,
+        car_speed: sim_car.speed(),
     }
 }
 
@@ -60,4 +61,5 @@ pub struct Intercept {
     pub ball_loc: Vector3<f32>,
     pub ball_vel: Vector3<f32>,
     pub car_loc: Vector3<f32>,
+    pub car_speed: f32,
 }

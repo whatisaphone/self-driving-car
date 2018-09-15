@@ -4,6 +4,7 @@ use mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
 use nalgebra::Vector2;
 use predict::estimate_intercept_car_ball_2;
 use rlbot;
+use simulate::rl;
 use std::f32::consts::PI;
 use utils::{enemy_goal_center, my_car, one_v_one, ExtendPhysics, ExtendVector3};
 
@@ -42,7 +43,10 @@ impl Behavior for BounceShot {
             // being applied after collision handling.
             loc.z < 110.0 && vel.z >= -10.0
         });
-        let desired_vel = (self.aim_loc - intercept.ball_loc.to_2d()).normalize() * 2000.0;
+        // This is not the greatest guess
+        let guess_final_ball_speed = f32::min(intercept.car_speed * 1.25, rl::CAR_MAX_SPEED);
+        let desired_vel =
+            (self.aim_loc - intercept.ball_loc.to_2d()).normalize() * guess_final_ball_speed;
         let intercept_vel = intercept.ball_vel.to_2d();
         let impulse = desired_vel - intercept_vel;
         let intercept_car_loc = intercept.ball_loc.to_2d() - impulse.normalize() * 220.0;
@@ -52,6 +56,10 @@ impl Behavior for BounceShot {
         eeg.draw(Drawable::GhostBall(intercept.ball_loc));
         eeg.draw(Drawable::print(
             format!("intercept_time: {:.2}", intercept.time),
+            color::GREEN,
+        ));
+        eeg.draw(Drawable::print(
+            format!("guess_ball_speed: {:.0}", guess_final_ball_speed),
             color::GREEN,
         ));
         eeg.draw(Drawable::print(

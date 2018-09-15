@@ -82,8 +82,6 @@ Plan:
 
 - shoot: choose bounce shot or ground shot depending on whether ball is bouncing
 - shoot: increase valid z-range in intercept estimation, and add ability to jump
-- bounce shot: come up with some heuristic to aim slightly better (i.e. make the tests pass, aiming for the exact middle of goal)
-  - i.e. do the fabled vector calulation for shots so as to not miss every shot
 - workaround for root capture interruption
 - [chip recovery](https://pastebin.com/XtFL5JzV)
 - finish chip bvh
