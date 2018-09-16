@@ -156,4 +156,24 @@ mod integration_tests {
         test.sleep_millis(3000);
         assert!(test.has_scored());
     }
+
+    #[test]
+    #[ignore] // TODO
+    fn awkward_breakaway_shot() {
+        let test = TestRunner::start(
+            RootBehavior::new(),
+            TestScenario {
+                ball_loc: Vector3::new(1463.9786, -1842.5327, 93.15),
+                ball_vel: Vector3::new(-1061.1782, 224.63322, 0.0),
+                car_loc: Vector3::new(2019.6799, -3689.1953, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, 2.376328, 0.0),
+                car_vel: Vector3::new(-962.35034, 924.71826, 8.309999),
+                boost: 0,
+                ..Default::default()
+            },
+        );
+
+        test.sleep_millis(5000);
+        assert!(test.has_scored());
+    }
 }

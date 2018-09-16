@@ -140,6 +140,12 @@ impl JumpShot {
     ) -> Action {
         let elapsed = packet.GameInfo.TimeSeconds - start_time;
         let time_remaining = duration - elapsed;
+
+        eeg.draw(Drawable::print(
+            format!("time_remaining: {:.2}", time_remaining),
+            color::GREEN,
+        ));
+
         if time_remaining <= 0.0 {
             self.phase = Phase::Dodge {
                 start_time: packet.GameInfo.TimeSeconds,
