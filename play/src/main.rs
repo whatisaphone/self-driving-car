@@ -10,6 +10,7 @@ extern crate rlbot;
 use brain::{Brain, EEG};
 use chrono::Local;
 use collect::Collector;
+use std::env;
 use std::fs::{hard_link, remove_file, File};
 use std::path::Path;
 
@@ -21,7 +22,22 @@ fn main() {
         .format(logging::format)
         .init();
 
+    let mut collector = create_collector();
+    let mut eeg = EEG::new();
+    let mut brain = Brain::with_root_behavior();
+    let bot = FormulaNone::new(collector, eeg, brain);
+
+    let use_framework = env::args().len() != 1;
+    if use_framework {
+        rlbot::run_bot(bot);
+    } else {
+        my_run_bot(bot);
+    }
+}
+
+fn my_run_bot(mut bot: impl rlbot::Bot) {
     let rlbot = rlbot::init().unwrap();
+
     let match_settings = rlbot::MatchSettings {
         MutatorSettings: rlbot::MutatorSettings {
             MatchLength: rlbot::MatchLength::Unlimited,
@@ -32,23 +48,14 @@ fn main() {
     rlbot.start_match(match_settings).unwrap();
 
     let mut packets = rlbot.packeteer();
-    // Wait for RoundActive
     while !packets.next().unwrap().GameInfo.RoundActive {}
 
-    let mut collector = create_collector();
-    let mut eeg = EEG::new();
-    let mut brain = Brain::with_root_behavior();
+    bot.set_player_index(0);
 
     loop {
         let packet = packets.next().unwrap();
-
-        logging::STATE.lock().unwrap().game_time = Some(packet.GameInfo.TimeSeconds);
-
-        let input = brain.tick(&packet, &mut eeg);
+        let input = bot.tick(&packet);
         rlbot.update_player_input(input, 0).unwrap();
-
-        collector.write(&packet).unwrap();
-        eeg.show(&packet);
     }
 }
 
@@ -67,4 +74,39 @@ fn create_collector() -> Collector {
     hard_link(filename, link).unwrap();
 
     collector
+}
+
+struct FormulaNone {
+    collector: collect::Collector,
+    eeg: EEG,
+    brain: Brain,
+}
+
+impl FormulaNone {
+    fn new(collector: collect::Collector, eeg: brain::EEG, brain: brain::Brain) -> Self {
+        Self {
+            collector,
+            eeg,
+            brain,
+        }
+    }
+}
+
+impl rlbot::Bot for FormulaNone {
+    fn set_player_index(&mut self, index: usize) {
+        if index != 0 {
+            unimplemented!();
+        }
+    }
+
+    fn tick(&mut self, packet: &rlbot::LiveDataPacket) -> rlbot::PlayerInput {
+        logging::STATE.lock().unwrap().game_time = Some(packet.GameInfo.TimeSeconds);
+
+        let input = self.brain.tick(packet, &mut self.eeg);
+
+        self.collector.write(&packet).unwrap();
+        self.eeg.show(&packet);
+
+        input
+    }
 }

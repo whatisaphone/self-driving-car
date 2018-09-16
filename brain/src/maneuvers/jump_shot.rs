@@ -227,4 +227,24 @@ mod integration_tests {
 
         assert!(test.has_scored());
     }
+
+    #[test]
+    #[ignore] // TODO
+    fn sideways_jump() {
+        let test = TestRunner::start(
+            JumpShot::new(),
+            TestScenario {
+                ball_loc: Vector3::new(3882.8804, 1246.1459, 145.22563),
+                ball_vel: Vector3::new(-48.063526, 172.48882, -818.2703),
+                car_loc: Vector3::new(3656.8044, -12.230183, 16.709408),
+                car_rot: Rotation3::from_unreal_angles(-0.0069029136, 2.6237783, -0.002396845),
+                car_vel: Vector3::new(-855.45123, 459.4182, 14.042989),
+                ..Default::default()
+            },
+        );
+
+        test.sleep_millis(5000);
+
+        unimplemented!();
+    }
 }

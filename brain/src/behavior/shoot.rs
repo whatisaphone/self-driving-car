@@ -28,6 +28,11 @@ impl Shoot {
     }
 
     pub fn good_angle(ball_loc: Vector3<f32>, car_loc: Vector3<f32>) -> bool {
+        // Aerials are not ready for prime-time yet
+        if ball_loc.z >= JumpShot::MAX_BALL_Z {
+            return false;
+        }
+
         // This is woefully incomplete
         if ball_loc.x.abs() >= rl::FIELD_MAX_X || ball_loc.y.abs() >= rl::FIELD_MAX_Y {
             return false; // Ball is outside the field; clearly prediction has gone wrong somehow.
@@ -50,9 +55,6 @@ impl Behavior for Shoot {
 
         let (me, _enemy) = one_v_one(packet);
         let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |t, &loc, vel| {
-            if loc.z >= JumpShot::MAX_BALL_Z {
-                return false; // Aerials are not ready for prime-time yet
-            }
             Self::good_angle(loc, me.Physics.loc())
         });
 

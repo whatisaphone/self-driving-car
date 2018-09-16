@@ -55,7 +55,7 @@ impl EEG {
         self.log.push_back(message);
 
         // Limit RAM usage
-        while self.log.len() > 100 {
+        while self.log.len() > 250 {
             self.log.pop_front();
         }
     }

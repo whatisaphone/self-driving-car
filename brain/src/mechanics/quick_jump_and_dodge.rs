@@ -19,12 +19,15 @@ enum Phase {
 }
 
 impl QuickJumpAndDodge {
+    const MIN_PHASE_TIME: f32 = 0.05;
+    pub const MIN_DODGE_TIME: f32 = Self::MIN_PHASE_TIME * 2.0;
+
     pub fn begin(packet: &rlbot::LiveDataPacket) -> Self {
         Self {
             start_time: packet.GameInfo.TimeSeconds,
             pitch: -1.0,
             yaw: 0.0,
-            dodge_time: 0.1,
+            dodge_time: Self::MIN_DODGE_TIME,
             phase: Phase::Jump,
         }
     }
@@ -42,9 +45,9 @@ impl QuickJumpAndDodge {
     }
 
     pub fn dodge_time(mut self, mut dodge_time: f32) -> Self {
-        if dodge_time < 0.1 {
+        if dodge_time < Self::MIN_DODGE_TIME {
             warn!("dodge_time too low");
-            dodge_time = 0.1;
+            dodge_time = Self::MIN_DODGE_TIME;
         }
         self.dodge_time = dodge_time;
         self
@@ -81,14 +84,14 @@ impl Behavior for QuickJumpAndDodge {
             ..Default::default()
         };
 
-        if self.phase == Phase::Jump || elapsed < self.dodge_time - 0.05 {
+        if self.phase == Phase::Jump || elapsed < self.dodge_time - Self::MIN_PHASE_TIME {
             self.phase = Phase::And;
             result.Jump = true;
             Action::Yield(result)
         } else if self.phase == Phase::And || elapsed < self.dodge_time {
             self.phase = Phase::Dodge;
             Action::Yield(result)
-        } else if self.phase == Phase::Dodge || elapsed < self.dodge_time + 0.05 {
+        } else if self.phase == Phase::Dodge || elapsed < self.dodge_time + Self::MIN_PHASE_TIME {
             self.phase = Phase::Finished;
             result.Jump = true;
             result.Pitch = self.pitch;

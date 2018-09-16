@@ -46,5 +46,5 @@ fn template() {
 
     test.sleep_millis(5000);
 
-    assert!(test.has_scored());
+    unimplemented!();
 }

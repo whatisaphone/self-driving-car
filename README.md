@@ -82,11 +82,10 @@ endeavor.
 
 ### Next
 
-- cache simulations to save on cpu
-- make it work when 60fps
 - make it work when orange
 - workaround for root capture interruption
 - add the offense swing-around stuff (when no good shot angle)
+- cache simulations to save on cpu
 
 ### Backlog
 

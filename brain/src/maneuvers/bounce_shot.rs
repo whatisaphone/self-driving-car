@@ -61,7 +61,7 @@ impl Behavior for BounceShot {
         ));
 
         // TODO the threshold
-        if distance < 100.0 {
+        if intercept.time < QuickJumpAndDodge::MIN_DODGE_TIME {
             self.finished = true;
             return self.flip(packet, eeg);
         }
@@ -77,11 +77,16 @@ impl Behavior for BounceShot {
 
 impl BounceShot {
     /// Given a ball location, where should we aim the shot?
-    // This is a rough throwaway implementation
     pub fn aim_loc(ball_loc: Vector2<f32>) -> Vector2<f32> {
         if ball_loc.x.abs() >= rl::GOALPOST_X {
             return enemy_goal_center();
         }
+
+        // If the ball is very close to net – aim straight in for an easy shot.
+        // If there's some distance – aim to the middle of net so we're less likely to
+        // miss.
+        //
+        // This is a pretty rough concept, but it's better than nothing.
 
         let dist = distance(
             &Isometry2::new(Vector2::zeros(), 0.0),

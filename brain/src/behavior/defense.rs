@@ -1,10 +1,11 @@
 use behavior::{Action, Behavior};
 use eeg::{color, Drawable, EEG};
 use maneuvers::{BlitzToLocation, BounceShot, PanicDefense};
-use nalgebra::Vector2;
+use nalgebra::{Rotation2, Vector2};
 use predict::{estimate_intercept_car_ball, is_sane_ball_loc, Intercept};
 use rlbot;
 use simulate::rl;
+use std::f32::consts::PI;
 use utils::{
     my_car, my_goal_center_2d, own_goal_left_post, own_goal_right_post, ExtendF32, ExtendPhysics,
     ExtendVector2, ExtendVector3, WALL_RAY_CALCULATOR,
@@ -55,33 +56,38 @@ impl Defense {
         eeg: &mut EEG,
         intercept: &Intercept,
     ) -> Action {
-        let me = my_car(packet);
-        let me_loc = me.Physics.loc().to_2d();
-        let angle_to_ball_intercept = me_loc.angle_to(intercept.ball_loc.to_2d());
-
-        let ltr = my_goal_center_2d() + (own_goal_right_post() - my_goal_center_2d()) * 4.0;
-        let rtl = my_goal_center_2d() + (own_goal_left_post() - my_goal_center_2d()) * 4.0;
-        let angle_ltr = intercept.ball_loc.to_2d().angle_to(ltr);
-        let angle_rtl = intercept.ball_loc.to_2d().angle_to(rtl);
-        let ltr_fitness = (angle_ltr - angle_to_ball_intercept)
-            .normalize_angle()
-            .abs();
-        let rtl_weight = (angle_rtl - angle_to_ball_intercept)
-            .normalize_angle()
-            .abs();
         eeg.log("redirect to own corner");
-        let target_loc = if ltr_fitness < rtl_weight {
-            eeg.log("push from left to right");
-            my_goal_center_2d() + (own_goal_right_post() - my_goal_center_2d()) * 4.0
-        } else {
-            eeg.log("push from right to left");
-            my_goal_center_2d() + (own_goal_left_post() - my_goal_center_2d()) * 4.0
-        };
+
+        let target_loc = Self::aim_loc(packet, eeg, intercept);
 
         eeg.draw(Drawable::GhostBall(intercept.ball_loc));
 
         self.finished = true;
         Action::call(BounceShot::new().with_target_loc(target_loc))
+    }
+
+    fn aim_loc(
+        packet: &rlbot::LiveDataPacket,
+        eeg: &mut EEG,
+        intercept: &Intercept,
+    ) -> Vector2<f32> {
+        let me = my_car(packet);
+        let me_loc = me.Physics.loc().to_2d();
+        let ball_loc = intercept.ball_loc.to_2d();
+        let me_to_ball = ball_loc - me_loc;
+
+        let ltr_dir = Rotation2::new(PI / 6.0) * me_to_ball;
+        let ltr = WALL_RAY_CALCULATOR.calculate(ball_loc, ball_loc + ltr_dir);
+        let rtl_dir = Rotation2::new(-PI / 6.0) * me_to_ball;
+        let rtl = WALL_RAY_CALCULATOR.calculate(ball_loc, ball_loc + rtl_dir);
+
+        if ltr.coords.x.abs() > rtl.coords.x.abs() {
+            eeg.log("push from left to right");
+            Vector2::new(ltr.coords.x, my_goal_center_2d().y)
+        } else {
+            eeg.log("push from right to left");
+            Vector2::new(rtl.coords.x, my_goal_center_2d().y)
+        }
     }
 }
 
@@ -356,6 +362,31 @@ mod integration_tests {
     }
 
     #[test]
+    fn same_side_corner_push() {
+        let test = TestRunner::start(
+            RootBehavior::new(),
+            TestScenario {
+                ball_loc: Vector3::new(-2545.9438, -4174.64, 318.26862),
+                ball_vel: Vector3::new(985.6374, -479.52872, -236.39767),
+                car_loc: Vector3::new(-1808.3466, -3266.7039, 16.41444),
+                car_rot: Rotation3::from_unreal_angles(-0.009203885, -0.65855706, -0.0015339808),
+                car_vel: Vector3::new(947.339, -565.98175, 15.669456),
+                ..Default::default()
+            },
+        );
+
+        test.sleep_millis(2000);
+        test.examine_eeg(|eeg| {
+            assert!(eeg.log.iter().any(|x| x == "redirect to own corner"));
+            assert!(eeg.log.iter().any(|x| x == "push from right to left"));
+            assert!(!eeg.log.iter().any(|x| x == "push from left to right"));
+        });
+        let packet = test.sniff_packet();
+        println!("{:?}", packet.GameBall.Physics.vel());
+        assert!(packet.GameBall.Physics.vel().x < -500.0);
+    }
+
+    #[test]
     #[ignore] // TODO
     fn slow_rolling_save() {
         let test = TestRunner::start(
@@ -396,5 +427,26 @@ mod integration_tests {
         let packet = test.sniff_packet();
         assert!(packet.GameBall.Physics.loc().x >= 1000.0);
         assert!(packet.GameBall.Physics.vel().x >= 500.0);
+    }
+
+    #[test]
+    fn fast_retreating_save() {
+        let test = TestRunner::start(
+            RootBehavior::new(),
+            TestScenario {
+                ball_loc: Vector3::new(63.619453, -336.2556, 93.03),
+                ball_vel: Vector3::new(-189.17311, -1918.067, 0.0),
+                car_loc: Vector3::new(-103.64991, 955.411, 16.99),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.5927514, 0.0),
+                car_vel: Vector3::new(-57.26778, -2296.9263, 8.53),
+                ..Default::default()
+            },
+        );
+
+        test.sleep_millis(4000);
+        assert!(!test.enemy_has_scored());
+        let packet = test.sniff_packet();
+        assert!(packet.GameBall.Physics.loc().x < 1000.0);
+        assert!(packet.GameBall.Physics.vel().x < 500.0);
     }
 }

@@ -2,6 +2,8 @@ use eeg::{color, Drawable, EEG};
 use mechanics::simple_yaw_diff;
 use nalgebra::Vector2;
 use rlbot;
+use simulate::linear_interpolate;
+use simulate::rl;
 use std::f32::consts::PI;
 use utils::{one_v_one, ExtendPhysics};
 
@@ -18,10 +20,16 @@ pub fn drive_towards(
     eeg.draw(Drawable::print(stringify!(drive_towards), color::YELLOW));
     eeg.draw(Drawable::ghost_car_ground(target_loc, me.Physics.rot()));
 
+    let handbrake_cutoff = linear_interpolate(
+        &[0.0, rl::CAR_NORMAL_SPEED],
+        &[PI * 0.25, PI * 0.75],
+        me.Physics.vel().norm(),
+    );
+
     rlbot::PlayerInput {
         Throttle: 1.0,
         Steer: steer,
-        Handbrake: yaw_diff.abs() >= PI * 0.75,
+        Handbrake: yaw_diff.abs() >= handbrake_cutoff,
         ..Default::default()
     }
 }

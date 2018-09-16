@@ -25,7 +25,7 @@ impl PanicDefense {
         Self {
             finish_aim_hint,
             phase: Phase::Rush {
-                child: BlitzToLocation::new(my_goal_center_2d()),
+                child: BlitzToLocation::new(Self::blitz_loc(finish_aim_hint)),
             },
         }
     }
@@ -65,6 +65,10 @@ impl Behavior for PanicDefense {
 }
 
 impl PanicDefense {
+    fn blitz_loc(aim_loc: Vector2<f32>) -> Vector2<f32> {
+        Vector2::new(800.0 * -aim_loc.x.signum(), my_goal_center_2d().y)
+    }
+
     fn next_phase(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Option<Phase> {
         let me = my_car(packet);
 
