@@ -376,4 +376,25 @@ mod integration_tests {
         let packet = test.sniff_packet();
         assert!(packet.GameBall.Physics.vel().x < -1000.0);
     }
+
+    #[test]
+    fn slow_retreating_save() {
+        let test = TestRunner::start(
+            RootBehavior::new(),
+            TestScenario {
+                ball_loc: Vector3::new(1446.3031, -2056.4917, 213.57251),
+                ball_vel: Vector3::new(-1024.0333, -1593.1566, -244.15135),
+                car_loc: Vector3::new(314.3022, -1980.4884, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.7653242, 0.0),
+                car_vel: Vector3::new(-268.87683, -1383.9724, 8.309999),
+                ..Default::default()
+            },
+        );
+
+        test.sleep_millis(2000);
+        assert!(!test.enemy_has_scored());
+        let packet = test.sniff_packet();
+        assert!(packet.GameBall.Physics.loc().x >= 1000.0);
+        assert!(packet.GameBall.Physics.vel().x >= 500.0);
+    }
 }

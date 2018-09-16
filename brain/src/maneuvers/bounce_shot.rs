@@ -114,12 +114,7 @@ impl BounceShot {
     fn flip(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
         let me = my_car(packet);
         let angle = simple_yaw_diff(&me.Physics, packet.GameBall.Physics.loc().to_2d());
-        if angle.abs() >= PI / 2.0 {
-            eeg.log("Incorrect approach angle");
-            return Action::Return;
-        }
-
-        Action::call(QuickJumpAndDodge::begin(packet).yaw(angle))
+        Action::call(QuickJumpAndDodge::begin(packet).angle(angle))
     }
 }
 
