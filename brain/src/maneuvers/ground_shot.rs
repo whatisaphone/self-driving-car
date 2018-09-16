@@ -111,7 +111,7 @@ mod integration_tests {
     use behavior::RootBehavior;
     use collect::ExtendRotation3;
     use integration_tests::helpers::{TestRunner, TestScenario};
-    use maneuvers::bounce_shot::BounceShot;
+    use maneuvers::{BounceShot, GroundShot};
     use nalgebra::{Rotation3, Vector3};
 
     #[test]
@@ -177,6 +177,26 @@ mod integration_tests {
                 car_loc: Vector3::new(-2374.2222, 3805.5469, 17.01),
                 car_rot: Rotation3::from_unreal_angles(-0.009970875, 1.0610354, -0.0002876214),
                 car_vel: Vector3::new(521.8343, 928.79755, 8.326952),
+                ..Default::default()
+            },
+        );
+
+        test.sleep_millis(4000);
+        assert!(test.has_scored());
+    }
+
+    #[test]
+    #[ignore] // TODO
+    fn easy_open_net() {
+        let test = TestRunner::start(
+            GroundShot::new(),
+            TestScenario {
+                ball_loc: Vector3::new(999.651, 3636.9731, 93.14),
+                ball_vel: Vector3::new(-271.7422, -1642.4099, 0.0),
+                car_loc: Vector3::new(1981.3068, -3343.5154, 16.99),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, 1.9184347, 0.0),
+                car_vel: Vector3::new(-544.83453, 1537.2355, 8.53),
+                boost: 0,
                 ..Default::default()
             },
         );
