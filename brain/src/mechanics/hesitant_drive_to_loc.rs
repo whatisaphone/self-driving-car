@@ -5,13 +5,19 @@ use nalgebra::Vector2;
 use rlbot;
 use utils::{my_car, ExtendPhysics};
 
+const DURATION: f32 = 0.25;
+
 pub struct HesitantDriveToLoc {
+    start_time: f32,
     target_loc: Vector2<f32>,
 }
 
 impl HesitantDriveToLoc {
-    pub fn new(target_loc: Vector2<f32>) -> HesitantDriveToLoc {
-        HesitantDriveToLoc { target_loc }
+    pub fn begin(packet: &rlbot::LiveDataPacket, target_loc: Vector2<f32>) -> HesitantDriveToLoc {
+        HesitantDriveToLoc {
+            start_time: packet.GameInfo.TimeSeconds,
+            target_loc,
+        }
     }
 }
 
@@ -21,6 +27,13 @@ impl Behavior for HesitantDriveToLoc {
     }
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
+        // As part of being hesitant, give up frequently so the current strategy gets
+        // re-evaluated.
+        let elapsed = packet.GameInfo.TimeSeconds - self.start_time;
+        if elapsed >= DURATION {
+            return Action::Return;
+        }
+
         let me = my_car(packet);
 
         eeg.draw(Drawable::ghost_car_ground(

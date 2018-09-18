@@ -102,6 +102,8 @@ impl rlbot::Bot for FormulaNone {
     fn tick(&mut self, packet: &rlbot::LiveDataPacket) -> rlbot::PlayerInput {
         logging::STATE.lock().unwrap().game_time = Some(packet.GameInfo.TimeSeconds);
 
+        self.eeg.begin(&packet);
+
         let input = self.brain.tick(packet, &mut self.eeg);
 
         self.collector.write(&packet).unwrap();

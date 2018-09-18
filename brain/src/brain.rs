@@ -1,7 +1,8 @@
-use behavior::{Behavior, BehaviorRunner, RootBehavior};
+use behavior::{Behavior, BehaviorRunner};
 use eeg::{color, Drawable, EEG};
 use nalgebra::clamp;
 use rlbot;
+use strategy::Runner2;
 use utils::FPSCounter;
 
 pub struct Brain {
@@ -11,7 +12,7 @@ pub struct Brain {
 
 impl Brain {
     pub fn with_root_behavior() -> Self {
-        Self::with_behavior(Box::new(RootBehavior::new()))
+        Self::with_behavior(Box::new(Runner2::new()))
     }
 
     pub fn with_behavior(behavior: Box<Behavior>) -> Self {

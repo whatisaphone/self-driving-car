@@ -20,6 +20,7 @@ use utils::ExtendVector2;
 pub struct EEG {
     tx: Option<crossbeam_channel::Sender<ThreadMessage>>,
     join_handle: Option<thread::JoinHandle<()>>,
+    current_packet_time: f32,
     draw_list: Vec<Drawable>,
     pub log: VecDeque<String>,
 }
@@ -31,6 +32,7 @@ impl EEG {
         EEG {
             tx: Some(tx),
             join_handle: Some(join_handle),
+            current_packet_time: 0.0,
             draw_list: Vec::new(),
             log: VecDeque::new(),
         }
@@ -49,9 +51,15 @@ impl EEG {
         self.draw_list.push(drawable);
     }
 
+    pub fn begin(&mut self, packet: &rlbot::LiveDataPacket) {
+        self.current_packet_time = packet.GameInfo.TimeSeconds;
+    }
+
     pub fn log(&mut self, message: impl Into<String>) {
         let message = message.into();
-        println!("{}", message);
+
+        println!("{:>8.3} {}", self.current_packet_time, message);
+
         self.log.push_back(message);
 
         // Limit RAM usage

@@ -185,6 +185,7 @@ fn test_thread(
 
     loop {
         let packet = packets.next().unwrap();
+        eeg.begin(&packet);
         let input = brain.tick(&packet, &mut eeg);
         rlbot.update_player_input(input, 0).unwrap();
         eeg.show(&packet);

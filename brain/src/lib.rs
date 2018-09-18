@@ -34,4 +34,5 @@ mod maneuvers;
 mod mechanics;
 mod predict;
 mod rules;
+mod strategy;
 mod utils;

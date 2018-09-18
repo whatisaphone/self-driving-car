@@ -35,6 +35,12 @@ A bot that loses at Rocket League using [RLBot].
 cargo run -p play
 ```
 
+### Run the bot with the RLBot framework
+
+```sh
+cargo build && python -c "from rlbot import runner; runner.main()"
+```
+
 ### Run integration tests
 
 The integration tests require a copy of Rocket League running (naturally). There

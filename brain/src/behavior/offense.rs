@@ -64,7 +64,7 @@ impl Behavior for Offense {
                 .max(-rl::FIELD_MAX_Y * 0.9)
                 .min(rl::FIELD_MAX_Y * 0.9),
         );
-        Action::call(HesitantDriveToLoc::new(target_loc))
+        Action::call(HesitantDriveToLoc::begin(packet, target_loc))
     }
 }
 
