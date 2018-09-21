@@ -93,7 +93,7 @@ impl PanicDefense {
             }
             // Fail-safe
             let elapsed = packet.GameInfo.TimeSeconds - start_time;
-            if elapsed >= 0.5 {
+            if elapsed >= 0.75 {
                 eeg.log("done, time elapsed failsafe");
                 return Some(Phase::Finished);
             }
