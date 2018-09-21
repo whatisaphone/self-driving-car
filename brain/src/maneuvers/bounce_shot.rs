@@ -1,16 +1,15 @@
 use behavior::{Action, Behavior};
 use eeg::{color, Drawable, EEG};
 use mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
-use nalgebra::{Isometry2, Point2, Vector2};
-use ncollide2d::{
+use nalgebra::{Isometry3, Point3, Vector2, Vector3};
+use ncollide3d::{
     query::distance,
-    shape::{Ball, ConvexPolygon},
+    shape::{Ball, Triangle},
 };
 use predict::{estimate_intercept_car_ball_2, Intercept};
 use rlbot;
 use simulate::rl;
-use std::f32::consts::PI;
-use utils::{enemy_goal_center, my_car, one_v_one, ExtendPhysics, ExtendVector3};
+use utils::{enemy_goal_center, my_car, one_v_one, ExtendPhysics, ExtendVector2, ExtendVector3};
 
 pub struct BounceShot {
     aim_loc: Vector2<f32>,
@@ -91,13 +90,13 @@ impl BounceShot {
         // This is a pretty rough concept, but it's better than nothing.
 
         let dist = distance(
-            &Isometry2::new(Vector2::zeros(), 0.0),
-            &ConvexPolygon::try_new(vec![
-                Point2::from_coordinates(Vector2::new(-rl::GOALPOST_X, rl::FIELD_MAX_Y)),
-                Point2::from_coordinates(Vector2::new(rl::GOALPOST_X, rl::FIELD_MAX_Y)),
-                Point2::from_coordinates(Vector2::new(0.0, rl::FIELD_MAX_Y - rl::GOALPOST_X)),
-            ]).unwrap(),
-            &Isometry2::new(ball_loc, 0.0),
+            &Isometry3::new(Vector3::zeros(), Vector3::zeros()),
+            &Triangle::new(
+                Point3::from_coordinates(Vector3::new(-rl::GOALPOST_X, rl::FIELD_MAX_Y, 0.0)),
+                Point3::from_coordinates(Vector3::new(rl::GOALPOST_X, rl::FIELD_MAX_Y, 0.0)),
+                Point3::from_coordinates(Vector3::new(0.0, rl::FIELD_MAX_Y - rl::GOALPOST_X, 0.0)),
+            ),
+            &Isometry3::new(ball_loc.to_3d(0.0), Vector3::zeros()),
             &Ball::new(rl::BALL_RADIUS),
         );
 

@@ -9,7 +9,7 @@ csv = "1.0.0"
 lazy_static = "1.1.0"
 
 nalgebra = "0.16.0"
-ncollide2d = "0.17.1"
+ncollide3d = "0.17.1"
 
 log = "0.4.4"
 

@@ -9,7 +9,7 @@ extern crate lazy_static;
 #[macro_use]
 extern crate log;
 extern crate nalgebra;
-extern crate ncollide2d;
+extern crate ncollide3d;
 extern crate piston_window;
 extern crate rlbot;
 extern crate simulate;
