@@ -2,8 +2,7 @@
 
 use collect::ExtendRotation3;
 use crossbeam_channel;
-use graphics::types::Color;
-use graphics::Transformed;
+use graphics::{types::Color, Transformed};
 use nalgebra::{Rotation3, Vector2, Vector3};
 use piston_window::{
     clear, ellipse, line, rectangle, text, AdvancedWindow, Ellipse, Glyphs, OpenGL, PistonWindow,
@@ -11,10 +10,7 @@ use piston_window::{
 };
 use rlbot;
 use simulate::rl;
-use std::collections::VecDeque;
-use std::mem;
-use std::path::PathBuf;
-use std::thread;
+use std::{collections::VecDeque, mem, path::PathBuf, thread};
 use utils::ExtendVector2;
 
 pub struct EEG {

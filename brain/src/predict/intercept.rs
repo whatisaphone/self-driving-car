@@ -1,7 +1,6 @@
 use nalgebra::Vector3;
 use rlbot;
-use simulate::rl;
-use simulate::{chip::Ball, Car1D};
+use simulate::{chip::Ball, rl, Car1D};
 use utils::ExtendPhysics;
 
 pub fn estimate_intercept_car_ball(car: &rlbot::PlayerInfo, ball: &rlbot::BallInfo) -> Intercept {

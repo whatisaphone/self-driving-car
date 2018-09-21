@@ -93,9 +93,7 @@ impl Defense {
 
 #[cfg(test)]
 mod integration_tests {
-    use behavior::defense::Defense;
-    use behavior::runner::PUSHED;
-    use behavior::RootBehavior;
+    use behavior::{defense::Defense, runner::PUSHED, RootBehavior};
     use collect::ExtendRotation3;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use nalgebra::{Rotation3, Vector3};

@@ -4,10 +4,7 @@ extern crate rlbot;
 
 use bakkesmod::BakkesMod;
 use collector::Collector;
-use std::error::Error;
-use std::fs::File;
-use std::thread::sleep;
-use std::time::Duration;
+use std::{error::Error, fs::File, thread::sleep, time::Duration};
 
 mod collector;
 mod scenarios;

@@ -1,11 +1,8 @@
-use behavior::defense::Defense;
-use behavior::offense::Offense;
-use behavior::{Action, Behavior};
+use behavior::{defense::Defense, offense::Offense, Action, Behavior};
 use eeg::EEG;
 use nalgebra::Vector3;
 use rlbot;
-use simulate::rl;
-use simulate::{chip::Ball, Car1D};
+use simulate::{chip::Ball, rl, Car1D};
 use std::f32::consts::PI;
 use utils::{one_v_one, ExtendF32, ExtendPhysics, ExtendVector3, WALL_RAY_CALCULATOR};
 

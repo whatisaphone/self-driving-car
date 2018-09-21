@@ -1,11 +1,14 @@
 extern crate crossbeam_channel;
 extern crate websocket;
 
-use std::io::{Read, Write};
-use std::thread;
-use websocket::client::sync::Client;
-use websocket::client::ClientBuilder;
-use websocket::{Message, OwnedMessage, WebSocketError};
+use std::{
+    io::{Read, Write},
+    thread,
+};
+use websocket::{
+    client::{sync::Client, ClientBuilder},
+    Message, OwnedMessage, WebSocketError,
+};
 
 pub struct BakkesMod {
     tx: Option<crossbeam_channel::Sender<String>>,

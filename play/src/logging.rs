@@ -1,8 +1,9 @@
 use env_logger::{Color, Formatter};
 use log::{Level, Record};
-use std::io;
-use std::io::Write;
-use std::sync::Mutex;
+use std::{
+    io::{self, Write},
+    sync::Mutex,
+};
 
 pub struct State {
     pub game_time: Option<f32>,

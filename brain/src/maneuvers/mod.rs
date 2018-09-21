@@ -1,12 +1,8 @@
-pub use maneuvers::aerial_loc_time::AerialLocTime;
-pub use maneuvers::blitz_to_location::BlitzToLocation;
-pub use maneuvers::bounce_shot::BounceShot;
-pub use maneuvers::drive_towards::drive_towards;
-pub use maneuvers::fifty_fifty::FiftyFifty;
-pub use maneuvers::get_to_flat_ground::GetToFlatGround;
-pub use maneuvers::ground_shot::GroundShot;
-pub use maneuvers::jump_shot::JumpShot;
-pub use maneuvers::panic_defense::PanicDefense;
+pub use maneuvers::{
+    aerial_loc_time::AerialLocTime, blitz_to_location::BlitzToLocation, bounce_shot::BounceShot,
+    drive_towards::drive_towards, fifty_fifty::FiftyFifty, get_to_flat_ground::GetToFlatGround,
+    ground_shot::GroundShot, jump_shot::JumpShot, panic_defense::PanicDefense,
+};
 
 mod aerial_loc_time;
 mod blitz_to_location;

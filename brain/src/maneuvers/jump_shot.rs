@@ -1,12 +1,10 @@
 use behavior::{Action, Behavior};
 use eeg::{color, Drawable, EEG};
-use maneuvers::BounceShot;
-use maneuvers::{drive_towards, GetToFlatGround};
+use maneuvers::{drive_towards, BounceShot, GetToFlatGround};
 use mechanics::{simple_yaw_diff, GroundAccelToLoc};
 use predict::estimate_intercept_car_ball_2;
 use rlbot;
-use simulate::rl;
-use simulate::{Car1D, CarAerial60Deg};
+use simulate::{rl, Car1D, CarAerial60Deg};
 use std::f32::consts::PI;
 use utils::{enemy_goal_center, one_v_one, ExtendPhysics, ExtendVector2, ExtendVector3};
 

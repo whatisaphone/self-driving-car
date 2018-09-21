@@ -1,10 +1,12 @@
-pub use behavior::behavior::{Action, Behavior};
-pub use behavior::defense::Defense;
-pub use behavior::higher_order::Fuse;
-pub use behavior::null::NullBehavior;
-pub use behavior::offense::Offense;
-pub use behavior::root::RootBehavior;
-pub use behavior::runner::BehaviorRunner;
+pub use behavior::{
+    behavior::{Action, Behavior},
+    defense::Defense,
+    higher_order::Fuse,
+    null::NullBehavior,
+    offense::Offense,
+    root::RootBehavior,
+    runner::BehaviorRunner,
+};
 
 mod aerial_shot;
 mod behavior;

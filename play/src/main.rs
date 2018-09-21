@@ -10,9 +10,11 @@ extern crate rlbot;
 use brain::{Brain, EEG};
 use chrono::Local;
 use collect::Collector;
-use std::env;
-use std::fs::{hard_link, remove_file, File};
-use std::path::Path;
+use std::{
+    env,
+    fs::{hard_link, remove_file, File},
+    path::Path,
+};
 
 mod logging;
 

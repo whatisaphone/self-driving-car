@@ -1,11 +1,13 @@
 extern crate csv;
 
-use std::borrow::Cow;
-use std::env;
-use std::fmt::Write as FmtWrite;
-use std::fs::File;
-use std::io::{Read, Write};
-use std::path::PathBuf;
+use std::{
+    borrow::Cow,
+    env,
+    fmt::Write as FmtWrite,
+    fs::File,
+    io::{Read, Write},
+    path::PathBuf,
+};
 
 /// Load data from the CSVs in `data`, and generate constants so the data is
 /// available at runtime.

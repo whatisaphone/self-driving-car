@@ -1,7 +1,9 @@
 use nalgebra::{Isometry2, Point2, Vector2};
-use ncollide2d::query::Ray;
-use ncollide2d::shape::{Plane, ShapeHandle};
-use ncollide2d::world::{CollisionGroups, CollisionWorld, GeometricQueryType};
+use ncollide2d::{
+    query::Ray,
+    shape::{Plane, ShapeHandle},
+    world::{CollisionGroups, CollisionWorld, GeometricQueryType},
+};
 use simulate::rl;
 use utils::TotalF32;
 

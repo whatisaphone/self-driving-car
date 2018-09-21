@@ -2,8 +2,10 @@ use behavior::{Action, Behavior};
 use eeg::{color, Drawable, EEG};
 use mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
 use nalgebra::{Isometry2, Point2, Vector2};
-use ncollide2d::query::distance;
-use ncollide2d::shape::{Ball, ConvexPolygon};
+use ncollide2d::{
+    query::distance,
+    shape::{Ball, ConvexPolygon},
+};
 use predict::{estimate_intercept_car_ball_2, Intercept};
 use rlbot;
 use simulate::rl;

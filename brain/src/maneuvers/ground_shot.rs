@@ -107,8 +107,7 @@ fn shoot(packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
 
 #[cfg(test)]
 mod integration_tests {
-    use behavior::runner::PUSHED;
-    use behavior::RootBehavior;
+    use behavior::{runner::PUSHED, RootBehavior};
     use collect::ExtendRotation3;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use maneuvers::{BounceShot, GroundShot};

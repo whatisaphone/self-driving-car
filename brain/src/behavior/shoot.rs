@@ -1,5 +1,4 @@
-use behavior::aerial_shot::AerialShot;
-use behavior::{Action, Behavior};
+use behavior::{aerial_shot::AerialShot, Action, Behavior};
 use collect::ExtendRotation3;
 use eeg::{color, Drawable, EEG};
 use maneuvers::{GetToFlatGround, GroundShot, JumpShot};
@@ -80,8 +79,7 @@ impl Behavior for Shoot {
 
 #[cfg(test)]
 mod integration_tests {
-    use behavior::shoot::Shoot;
-    use behavior::RootBehavior;
+    use behavior::{shoot::Shoot, RootBehavior};
     use collect::ExtendRotation3;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use nalgebra::{Rotation3, Vector3};

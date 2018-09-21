@@ -2,10 +2,12 @@ use collect::ExtendRotation3;
 use nalgebra::{Rotation3, Vector2, Vector3};
 use rlbot;
 use simulate::rl;
-pub use utils::fps_counter::FPSCounter;
-pub use utils::geometry::{ExtendF32, ExtendVector2, ExtendVector3};
-pub use utils::iter::TotalF32;
-pub use utils::wall_ray_calculator::WALL_RAY_CALCULATOR;
+pub use utils::{
+    fps_counter::FPSCounter,
+    geometry::{ExtendF32, ExtendVector2, ExtendVector3},
+    iter::TotalF32,
+    wall_ray_calculator::WALL_RAY_CALCULATOR,
+};
 
 mod fps_counter;
 mod geometry;

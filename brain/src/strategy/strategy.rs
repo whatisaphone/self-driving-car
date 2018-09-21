@@ -3,11 +3,8 @@ use eeg::EEG;
 use maneuvers::FiftyFifty;
 use nalgebra::Vector3;
 use rlbot;
-use simulate::chip::Ball;
-use simulate::rl;
-use simulate::Car1D;
-use std::f32::consts::PI;
-use std::time::Duration;
+use simulate::{chip::Ball, rl, Car1D};
+use std::{f32::consts::PI, time::Duration};
 use strategy::Context;
 use utils::{one_v_one, ExtendF32, ExtendPhysics, ExtendVector3, WALL_RAY_CALCULATOR};
 

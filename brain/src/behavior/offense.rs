@@ -1,9 +1,7 @@
-use behavior::shoot::Shoot;
-use behavior::{Action, Behavior};
+use behavior::{shoot::Shoot, Action, Behavior};
 use eeg::{color, Drawable, EEG};
 use maneuvers::GetToFlatGround;
-use mechanics::simple_steer_towards;
-use mechanics::HesitantDriveToLoc;
+use mechanics::{simple_steer_towards, HesitantDriveToLoc};
 use nalgebra::Vector2;
 use predict::estimate_intercept_car_ball_2;
 use rlbot;
@@ -70,8 +68,7 @@ impl Behavior for Offense {
 
 #[cfg(test)]
 mod integration_tests {
-    use behavior::offense::Offense;
-    use behavior::root::RootBehavior;
+    use behavior::{offense::Offense, root::RootBehavior};
     use collect::ExtendRotation3;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use nalgebra::{Rotation3, Vector3};

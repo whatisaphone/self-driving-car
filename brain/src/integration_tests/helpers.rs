@@ -7,14 +7,15 @@ use csv;
 use eeg::EEG;
 use nalgebra::{Rotation3, Vector3};
 use rlbot;
-use std::error::Error;
-use std::f32::consts::PI;
-use std::fs::File;
-use std::path::Path;
-use std::sync::{Arc, Barrier, Mutex, MutexGuard};
-use std::thread;
-use std::thread::sleep;
-use std::time::Duration;
+use std::{
+    error::Error,
+    f32::consts::PI,
+    fs::File,
+    path::Path,
+    sync::{Arc, Barrier, Mutex, MutexGuard},
+    thread::{self, sleep},
+    time::Duration,
+};
 
 pub struct TestRunner {
     sniff_packet: crossbeam_channel::Sender<crossbeam_channel::Sender<rlbot::LiveDataPacket>>,
