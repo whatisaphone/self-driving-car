@@ -113,6 +113,7 @@ mod integration_tests {
     use integration_tests::helpers::{TestRunner, TestScenario};
     use maneuvers::{BounceShot, GroundShot};
     use nalgebra::{Rotation3, Vector3};
+    use strategy::Runner2;
 
     #[test]
     #[ignore] // TODO
@@ -202,6 +203,23 @@ mod integration_tests {
         );
 
         test.sleep_millis(4000);
+        assert!(test.has_scored());
+    }
+
+    #[test]
+    #[ignore] // TODO
+    fn tight_angle_needs_correction() {
+        let test = TestRunner::start0(TestScenario {
+            ball_loc: Vector3::new(-2618.1267, 4567.453, 93.14),
+            ball_vel: Vector3::new(204.82155, -438.9531, 0.0),
+            car_loc: Vector3::new(-3850.746, 3749.8147, 16.319502),
+            car_rot: Rotation3::from_unreal_angles(-0.15867114, -0.33191508, 0.005273059),
+            car_vel: Vector3::new(1287.4675, -433.82834, -183.28568),
+            ..Default::default()
+        });
+        test.set_behavior(Runner2::new());
+
+        test.sleep_millis(2000);
         assert!(test.has_scored());
     }
 }

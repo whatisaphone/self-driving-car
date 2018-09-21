@@ -75,6 +75,7 @@ mod integration_tests {
     use collect::ExtendRotation3;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use nalgebra::{Rotation3, Vector3};
+    use strategy::Runner2;
     use utils::ExtendPhysics;
 
     #[test]
@@ -174,6 +175,23 @@ mod integration_tests {
         );
 
         test.sleep_millis(5000);
+        assert!(test.has_scored());
+    }
+
+    #[test]
+    #[ignore] // TODO
+    fn juicy_bouncing() {
+        let test = TestRunner::start0(TestScenario {
+            ball_loc: Vector3::new(3811.8657, 1580.2241, 1172.8545),
+            ball_vel: Vector3::new(-1703.4757, 753.66534, 210.33441),
+            car_loc: Vector3::new(-1648.8497, 1804.7543, 17.01),
+            car_rot: Rotation3::from_unreal_angles(-0.009779127, 1.909902, 0.0000958738),
+            car_vel: Vector3::new(-702.66034, 1446.7336, 8.615206),
+            ..Default::default()
+        });
+        test.set_behavior(Runner2::new());
+
+        test.sleep_millis(3000);
         assert!(test.has_scored());
     }
 }

@@ -2,7 +2,7 @@ use eeg::EEG;
 use rlbot;
 use strategy::Context;
 
-pub trait Behavior {
+pub trait Behavior: Send {
     fn name(&self) -> &'static str;
 
     // Soon to be deprecated

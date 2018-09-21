@@ -2,6 +2,7 @@ use behavior::RootBehavior;
 use collect::ExtendRotation3;
 use integration_tests::helpers::{TestRunner, TestScenario};
 use nalgebra::{Rotation3, Vector3};
+use strategy::Runner2;
 
 #[test]
 fn clear_ball_out_of_goal() {
@@ -36,13 +37,11 @@ fn todo() {
 #[test]
 #[ignore]
 fn template() {
-    let test = TestRunner::start(
-        RootBehavior::new(),
-        TestScenario {
-            enemy_loc: Vector3::new(6000.0, 6000.0, 0.0),
-            ..TestScenario::from_collected_row("../logs/play.csv", 100.0)
-        },
-    );
+    let test = TestRunner::start0(TestScenario {
+        enemy_loc: Vector3::new(6000.0, 6000.0, 0.0),
+        ..TestScenario::from_collected_row("../logs/play.csv", 100.0)
+    });
+    test.set_behavior(Runner2::new());
 
     test.sleep_millis(5000);
 
