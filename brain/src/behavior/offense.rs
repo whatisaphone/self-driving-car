@@ -1,20 +1,18 @@
 use behavior::{shoot::Shoot, Action, Behavior};
-use eeg::{color, Drawable, EEG};
+use eeg::EEG;
 use maneuvers::GetToFlatGround;
-use mechanics::{simple_steer_towards, HesitantDriveToLoc};
+use mechanics::HesitantDriveToLoc;
 use nalgebra::Vector2;
 use predict::estimate_intercept_car_ball_2;
 use rlbot;
 use simulate::rl;
 use utils::{enemy_goal_center, one_v_one, ExtendPhysics, ExtendVector3};
 
-pub struct Offense {
-    min_distance: Option<f32>,
-}
+pub struct Offense;
 
 impl Offense {
-    pub fn new() -> Offense {
-        Offense { min_distance: None }
+    pub fn new() -> Self {
+        Offense
     }
 }
 
@@ -29,7 +27,7 @@ impl Behavior for Offense {
         }
 
         let (me, _enemy) = one_v_one(packet);
-        let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |t, &loc, vel| {
+        let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |_t, &loc, _vel| {
             Shoot::good_angle(loc, me.Physics.loc())
         });
 

@@ -1,11 +1,10 @@
 use behavior::{Action, Behavior};
-use eeg::{color, Drawable, EEG};
-use maneuvers::{AerialLocTime, GetToFlatGround};
-use mechanics::{simple_yaw_diff, GroundAccelToLoc};
+use eeg::{Drawable, EEG};
+use maneuvers::AerialLocTime;
 use predict::estimate_intercept_car_ball_2;
 use rlbot;
 use simulate::{rl, CarAerial60Deg};
-use utils::{enemy_goal_center, my_car, one_v_one, ExtendPhysics, ExtendVector3};
+use utils::{enemy_goal_center, one_v_one};
 
 pub struct AerialShot {
     finished: bool,
@@ -28,9 +27,8 @@ impl Behavior for AerialShot {
         }
 
         let (me, _enemy) = one_v_one(packet);
-        let ball_dist = (me.Physics.loc() - packet.GameBall.Physics.loc()).norm();
 
-        let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |t, loc, vel| {
+        let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |t, loc, _vel| {
             let max_comfortable_z = rl::CROSSBAR_Z + enemy_goal_center().y - loc.y;
             if loc.z >= max_comfortable_z {
                 return false;

@@ -1,17 +1,12 @@
 use behavior::{Action, Behavior};
-use collect::ExtendRotation3;
 use eeg::{color, Drawable, EEG};
 use maneuvers::GetToFlatGround;
 use mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
 use nalgebra::Vector3;
 use predict::estimate_intercept_car_ball_2;
 use rlbot;
-use simulate::rl;
 use std::f32::consts::PI;
-use utils::{
-    enemy_goal_center, enemy_goal_left_post, enemy_goal_right_post, one_v_one, ExtendF32,
-    ExtendPhysics, ExtendVector2, ExtendVector3,
-};
+use utils::{enemy_goal_center, one_v_one, ExtendF32, ExtendPhysics, ExtendVector2, ExtendVector3};
 
 pub struct GroundShot {
     min_distance: Option<f32>,
@@ -47,7 +42,7 @@ impl Behavior for GroundShot {
         }
 
         let (me, _enemy) = one_v_one(packet);
-        let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |t, &loc, vel| {
+        let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |_t, &loc, _vel| {
             loc.z < 110.0 && Self::good_angle(loc, me.Physics.loc())
         });
 

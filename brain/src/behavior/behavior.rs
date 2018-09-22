@@ -10,12 +10,12 @@ pub trait Behavior: Send {
     }
 
     // Soon to be deprecated
-    fn capture(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Option<Action> {
+    fn capture(&mut self, _packet: &rlbot::LiveDataPacket, _eeg: &mut EEG) -> Option<Action> {
         None
     }
 
     // Soon to be deprecated
-    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
+    fn execute(&mut self, _packet: &rlbot::LiveDataPacket, _eeg: &mut EEG) -> Action {
         unimplemented!("deprecated, use execute2 instead");
     }
 

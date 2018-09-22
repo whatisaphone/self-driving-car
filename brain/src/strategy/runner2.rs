@@ -1,7 +1,6 @@
 use behavior::{Action, Behavior};
 use eeg::{color, Drawable, EEG};
 use rlbot;
-use std::collections::VecDeque;
 use strategy::{strategy, Context};
 
 pub struct Runner2 {

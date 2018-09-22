@@ -64,7 +64,7 @@ impl Behavior for BounceShot {
         // TODO the threshold
         if intercept.time < QuickJumpAndDodge::MIN_DODGE_TIME {
             self.finished = true;
-            return self.flip(packet, eeg);
+            return self.flip(packet);
         }
 
         // TODO: this is not how this works…
@@ -117,7 +117,7 @@ impl BounceShot {
         intercept.ball_loc.to_2d() - impulse.normalize() * 200.0
     }
 
-    fn flip(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
+    fn flip(&mut self, packet: &rlbot::LiveDataPacket) -> Action {
         let me = my_car(packet);
         let angle = simple_yaw_diff(&me.Physics, packet.GameBall.Physics.loc().to_2d());
         Action::call(QuickJumpAndDodge::begin(packet).angle(angle))

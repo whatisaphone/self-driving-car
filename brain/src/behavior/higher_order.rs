@@ -5,11 +5,14 @@ use std::collections::VecDeque;
 use strategy::Context;
 
 /// Run `child` until it returns, then do nothing forever.
+
+#[allow(dead_code)]
 pub struct Fuse {
     child: Option<Box<Behavior>>,
 }
 
 impl Fuse {
+    #[allow(dead_code)]
     pub fn new(child: Box<Behavior>) -> Fuse {
         Fuse { child: Some(child) }
     }
@@ -20,7 +23,7 @@ impl Behavior for Fuse {
         stringify!(Fuse)
     }
 
-    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
+    fn execute(&mut self, _packet: &rlbot::LiveDataPacket, _eeg: &mut EEG) -> Action {
         // `take()` leaves a None behind, so this can only match `Some` once.
         match self.child.take() {
             Some(b) => Action::Call(b),
@@ -30,12 +33,14 @@ impl Behavior for Fuse {
 }
 
 /// Do nothing for `time` seconds, then run `child`.
+#[allow(dead_code)]
 pub struct Delay {
     time: f32,
     child: Option<Box<Behavior>>,
 }
 
 impl Delay {
+    #[allow(dead_code)]
     pub fn new(time: f32, child: Box<Behavior>) -> Delay {
         Delay {
             time,
@@ -49,7 +54,7 @@ impl Behavior for Delay {
         stringify!(Delay)
     }
 
-    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
+    fn execute(&mut self, packet: &rlbot::LiveDataPacket, _eeg: &mut EEG) -> Action {
         if packet.GameInfo.TimeSeconds < self.time {
             Action::Yield(Default::default())
         } else {

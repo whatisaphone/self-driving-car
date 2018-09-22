@@ -32,24 +32,8 @@ pub fn my_goal_center_2d() -> Vector2<f32> {
     Vector2::new(0.0, -rl::FIELD_MAX_Y)
 }
 
-pub fn own_goal_left_post() -> Vector2<f32> {
-    Vector2::new(-rl::GOALPOST_X, -rl::FIELD_MAX_Y)
-}
-
-pub fn own_goal_right_post() -> Vector2<f32> {
-    Vector2::new(rl::GOALPOST_X, -rl::FIELD_MAX_Y)
-}
-
 pub fn enemy_goal_center() -> Vector2<f32> {
     Vector2::new(0.0, rl::FIELD_MAX_Y)
-}
-
-pub fn enemy_goal_left_post() -> Vector2<f32> {
-    Vector2::new(rl::GOALPOST_X, rl::FIELD_MAX_Y)
-}
-
-pub fn enemy_goal_right_post() -> Vector2<f32> {
-    Vector2::new(-rl::GOALPOST_X, rl::FIELD_MAX_Y)
 }
 
 pub trait ExtendPhysics {

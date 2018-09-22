@@ -2,12 +2,11 @@ use behavior::{Action, Behavior};
 use collect::ExtendRotation3;
 use eeg::{color, Drawable, EEG};
 use maneuvers::BlitzToLocation;
-use mechanics::{simple_steer_towards, simple_yaw_diff, QuickJumpAndDodge};
+use mechanics::simple_steer_towards;
 use nalgebra::Vector2;
 use rlbot;
 use simulate::rl;
-use std::f32::consts::PI;
-use utils::{my_car, my_goal_center_2d, ExtendF32, ExtendPhysics, ExtendVector2, ExtendVector3};
+use utils::{my_car, my_goal_center_2d, ExtendF32, ExtendPhysics, ExtendVector2};
 
 pub struct PanicDefense {
     finish_aim_hint: Vector2<f32>,
@@ -50,7 +49,7 @@ impl Behavior for PanicDefense {
                 eeg.draw(Drawable::print("Rush", color::GREEN));
                 child.execute(packet, eeg)
             }
-            Phase::Turn { target_yaw, .. } => {
+            Phase::Turn { .. } => {
                 eeg.draw(Drawable::print("Turn", color::GREEN));
                 Action::Yield(rlbot::PlayerInput {
                     Throttle: 1.0,

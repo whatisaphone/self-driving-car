@@ -1,27 +1,20 @@
 use behavior::{aerial_shot::AerialShot, Action, Behavior};
-use collect::ExtendRotation3;
-use eeg::{color, Drawable, EEG};
-use maneuvers::{GetToFlatGround, GroundShot, JumpShot};
-use mechanics::{simple_steer_towards, GroundAccelToLoc, QuickJumpAndDodge};
+use eeg::EEG;
+use maneuvers::{GroundShot, JumpShot};
 use nalgebra::Vector3;
 use predict::estimate_intercept_car_ball_2;
 use rlbot;
 use rules::Finishable;
 use simulate::rl;
-use utils::{
-    enemy_goal_center, enemy_goal_left_post, enemy_goal_right_post, one_v_one, ExtendPhysics,
-    ExtendVector2, ExtendVector3,
-};
+use utils::{one_v_one, ExtendPhysics};
 
 pub struct Shoot {
-    min_distance: Option<f32>,
     finished: Finishable,
 }
 
 impl Shoot {
     pub fn new() -> Shoot {
         Shoot {
-            min_distance: None,
             finished: Finishable::new(),
         }
     }
@@ -53,7 +46,7 @@ impl Behavior for Shoot {
         return_some!(self.finished.execute(packet, eeg));
 
         let (me, _enemy) = one_v_one(packet);
-        let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |t, &loc, vel| {
+        let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |_t, &loc, _vel| {
             Self::good_angle(loc, me.Physics.loc())
         });
 

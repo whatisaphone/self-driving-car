@@ -3,7 +3,6 @@ use rlbot;
 use simulate::{chip::Ball, rl, Car1D};
 use std::f32::consts::PI;
 use utils::{one_v_one, ExtendF32, ExtendPhysics, ExtendVector3, WALL_RAY_CALCULATOR};
-use EEG;
 
 pub struct Scenario<'a> {
     packet: &'a rlbot::LiveDataPacket,
@@ -37,7 +36,7 @@ impl<'a> Scenario<'a> {
     /// Number of seconds I can reach the ball before the opponent
     pub fn possession(&mut self) -> f32 {
         self.possession.unwrap_or_else(|| {
-            let (me, enemy) = one_v_one(self.packet);
+            let (me, _enemy) = one_v_one(self.packet);
 
             let ((blitz_me_time, blitz_me_loc), (blitz_enemy_time, blitz_enemy_loc)) =
                 simulate_ball_blitz(self.packet);

@@ -6,11 +6,13 @@ use simulate::{chip::Ball, rl, Car1D};
 use std::f32::consts::PI;
 use utils::{one_v_one, ExtendF32, ExtendPhysics, ExtendVector3, WALL_RAY_CALCULATOR};
 
+#[allow(dead_code)]
 pub struct RootBehavior {
     last_eval: Option<f32>,
 }
 
 impl RootBehavior {
+    #[allow(dead_code)]
     pub fn new() -> RootBehavior {
         RootBehavior { last_eval: None }
     }
@@ -64,7 +66,7 @@ fn eval(packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Plan {
 }
 
 fn eval_possession(packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> (Place, Possession, Wall) {
-    let (me, enemy) = one_v_one(packet);
+    let (me, _enemy) = one_v_one(packet);
 
     let (blitz_me_time, blitz_enemy_time, blitz_ball_loc) = simulate_ball_blitz(packet);
     let place = eval_ball(blitz_ball_loc);
@@ -144,7 +146,7 @@ fn eval_ball(loc: Vector3<f32>) -> Place {
 
 fn eval_situation(packet: &rlbot::LiveDataPacket) -> Situation {
     let ball = packet.GameBall;
-    let (me, enemy) = one_v_one(packet);
+    let (me, _enemy) = one_v_one(packet);
 
     if ball.Physics.vel().y < -500.0 {
         if me.Physics.loc().y > ball.Physics.loc().y {

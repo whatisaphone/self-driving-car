@@ -43,15 +43,6 @@ impl QuickJumpAndDodge {
         self.yaw = angle.sin();
         self
     }
-
-    pub fn dodge_time(mut self, mut dodge_time: f32) -> Self {
-        if dodge_time < Self::MIN_DODGE_TIME {
-            warn!("dodge_time too low");
-            dodge_time = Self::MIN_DODGE_TIME;
-        }
-        self.dodge_time = dodge_time;
-        self
-    }
 }
 
 impl Behavior for QuickJumpAndDodge {

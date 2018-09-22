@@ -1,15 +1,12 @@
 use behavior::{Action, Behavior};
 use eeg::{color, Drawable, EEG};
-use maneuvers::{BlitzToLocation, BounceShot, PanicDefense};
+use maneuvers::{BounceShot, PanicDefense};
 use nalgebra::{Rotation2, Vector2};
 use predict::{estimate_intercept_car_ball, is_sane_ball_loc, Intercept};
 use rlbot;
 use simulate::rl;
 use std::f32::consts::PI;
-use utils::{
-    my_car, my_goal_center_2d, own_goal_left_post, own_goal_right_post, ExtendF32, ExtendPhysics,
-    ExtendVector2, ExtendVector3, WALL_RAY_CALCULATOR,
-};
+use utils::{my_car, my_goal_center_2d, ExtendPhysics, ExtendVector3, WALL_RAY_CALCULATOR};
 
 pub struct Defense {
     finished: bool,

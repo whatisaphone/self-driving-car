@@ -1,12 +1,12 @@
 use behavior::{Action, Behavior};
 use eeg::{color, Drawable, EEG};
 use maneuvers::{drive_towards, BounceShot, GetToFlatGround};
-use mechanics::{simple_yaw_diff, GroundAccelToLoc};
+use mechanics::simple_yaw_diff;
 use predict::estimate_intercept_car_ball_2;
 use rlbot;
 use simulate::{rl, Car1D, CarAerial60Deg};
 use std::f32::consts::PI;
-use utils::{enemy_goal_center, one_v_one, ExtendPhysics, ExtendVector2, ExtendVector3};
+use utils::{one_v_one, ExtendPhysics, ExtendVector2, ExtendVector3};
 
 const Z_FUDGE: f32 = 75.0;
 
@@ -58,7 +58,7 @@ impl JumpShot {
 
         let (me, _enemy) = one_v_one(packet);
 
-        let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |t, &loc, vel| {
+        let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |t, &loc, _vel| {
             let air_time = CarAerial60Deg::cost(loc.z - Z_FUDGE).time;
             if t < air_time {
                 return false;

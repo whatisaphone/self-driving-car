@@ -24,6 +24,13 @@
       files: '[.]rs$'
       entry: rustup run nightly rustfmt
 
+    - id: check-brain
+      name: check-brain
+      language: system
+      files: '[.]rs$'
+      entry: cargo rustc -p brain -- -D warnings
+      pass_filenames: false
+
     - id: test
       name: test
       language: system

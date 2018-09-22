@@ -1,6 +1,6 @@
 use behavior::{Behavior, Chain, Defense, Offense, Priority};
 use maneuvers::FiftyFifty;
-use std::{f32::consts::PI, iter::once};
+use std::f32::consts::PI;
 use strategy::{scenario::Wall, Context};
 use utils::{my_goal_center_2d, ExtendF32, ExtendPhysics, ExtendVector2, ExtendVector3};
 

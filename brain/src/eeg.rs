@@ -90,6 +90,7 @@ impl Drawable {
     }
 }
 
+#[allow(dead_code)]
 pub mod color {
     pub const TRANSPARENT: [f32; 4] = [0.0, 0.0, 0.0, 0.0];
     pub const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];

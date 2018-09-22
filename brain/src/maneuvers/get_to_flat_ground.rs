@@ -1,6 +1,6 @@
 use behavior::{Action, Behavior};
 use collect::ExtendRotation3;
-use eeg::{color, Drawable, EEG};
+use eeg::EEG;
 use maneuvers::drive_towards;
 use nalgebra::Vector2;
 use rlbot;
@@ -30,8 +30,6 @@ impl Behavior for GetToFlatGround {
         if Self::on_flat_ground(packet) {
             return Action::Return;
         }
-
-        let me = my_car(packet);
 
         Action::Yield(drive_towards(packet, eeg, Vector2::zeros()))
     }
