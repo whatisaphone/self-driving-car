@@ -30,6 +30,7 @@ pub trait Behavior: Send {
 pub enum Priority {
     Idle,
     Save,
+    Force,
 }
 
 pub enum Action {

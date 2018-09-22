@@ -1,4 +1,4 @@
-use behavior::{Action, Behavior};
+use behavior::{Action, Behavior, Priority};
 use eeg::{color, Drawable, EEG};
 use rlbot;
 
@@ -48,6 +48,10 @@ impl QuickJumpAndDodge {
 impl Behavior for QuickJumpAndDodge {
     fn name(&self) -> &'static str {
         stringify!(QuickJumpAndDodge)
+    }
+
+    fn priority(&self) -> Priority {
+        Priority::Force
     }
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
