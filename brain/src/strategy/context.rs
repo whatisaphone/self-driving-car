@@ -1,23 +1,32 @@
-use behavior::Behavior;
 use rlbot;
-use std::collections::VecDeque;
-use strategy::Runner2;
+use strategy::scenario::Scenario;
 use utils::{my_car, one_v_one};
 use EEG;
 
 pub struct Context<'a> {
     pub packet: &'a rlbot::LiveDataPacket,
     pub eeg: &'a mut EEG,
+    pub scenario: Scenario<'a>,
 }
 
 impl<'a> Context<'a> {
     pub fn new(packet: &'a rlbot::LiveDataPacket, eeg: &'a mut EEG) -> Self {
-        Self { packet, eeg }
+        Self {
+            packet,
+            eeg,
+            scenario: Scenario::new(packet),
+        }
     }
 
     /// Return the player we are controlling.
     pub fn me(&self) -> &'a rlbot::PlayerInfo {
         my_car(self.packet)
+    }
+
+    /// Return the villain.
+    pub fn enemy(&self) -> &'a rlbot::PlayerInfo {
+        let (_me, enemy) = self.one_v_one();
+        enemy
     }
 
     /// Assert that the game is a 1v1, and return a tuple of (me, enemy).

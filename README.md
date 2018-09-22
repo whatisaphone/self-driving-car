@@ -92,6 +92,7 @@ endeavor.
 - workaround for root capture interruption
 - add the offense swing-around stuff (when no good shot angle)
 - cache simulations to save on cpu
+- stop JumpShot freezing
 
 ### Backlog
 

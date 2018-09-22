@@ -5,6 +5,10 @@ use strategy::Context;
 pub trait Behavior: Send {
     fn name(&self) -> &'static str;
 
+    fn priority(&self) -> Priority {
+        Priority::Idle
+    }
+
     // Soon to be deprecated
     fn capture(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Option<Action> {
         None
@@ -20,6 +24,12 @@ pub trait Behavior: Send {
         self.capture(ctx.packet, ctx.eeg)
             .unwrap_or_else(|| self.execute(ctx.packet, ctx.eeg))
     }
+}
+
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+pub enum Priority {
+    Idle,
+    Save,
 }
 
 pub enum Action {

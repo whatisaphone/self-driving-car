@@ -1,8 +1,10 @@
-use behavior::{Action, Behavior};
-use eeg::EEG;
+use behavior::{Action, Behavior, Priority};
+use eeg::{color, Drawable, EEG};
 use rlbot;
+use std::collections::VecDeque;
+use strategy::Context;
 
-/// Run a [`Behavior`] until it returns, then do nothing forever.
+/// Run `child` until it returns, then do nothing forever.
 pub struct Fuse {
     child: Option<Box<Behavior>>,
 }
@@ -27,6 +29,7 @@ impl Behavior for Fuse {
     }
 }
 
+/// Do nothing for `time` seconds, then run `child`.
 pub struct Delay {
     time: f32,
     child: Option<Box<Behavior>>,
@@ -55,6 +58,62 @@ impl Behavior for Delay {
                 Some(b) => Action::Call(b),
                 None => Action::Yield(Default::default()),
             }
+        }
+    }
+}
+
+/// Run `children` in sequence.
+pub struct Chain {
+    priority: Priority,
+    children: VecDeque<Box<Behavior>>,
+}
+
+impl Chain {
+    pub fn new<B>(priority: Priority, children: Vec<Box<B>>) -> Self
+    where
+        B: Behavior + 'static,
+    {
+        Self {
+            priority,
+            children: children.into_iter().map(|b| b as Box<Behavior>).collect(),
+        }
+    }
+}
+
+impl Behavior for Chain {
+    fn name(&self) -> &'static str {
+        stringify!(Chain)
+    }
+
+    fn priority(&self) -> Priority {
+        self.priority
+    }
+
+    fn execute2(&mut self, ctx: &mut Context) -> Action {
+        ctx.eeg.draw(Drawable::print(
+            self.children
+                .iter()
+                .map(|b| b.name())
+                .collect::<Vec<_>>()
+                .join(", "),
+            color::GREEN,
+        ));
+
+        let action = {
+            let mut front = match self.children.front_mut() {
+                None => return Action::Return,
+                Some(b) => b,
+            };
+            ctx.eeg.draw(Drawable::print(front.name(), color::YELLOW));
+            front.execute2(ctx)
+        };
+
+        match action {
+            Action::Return => {
+                self.children.pop_front();
+                self.execute2(ctx)
+            }
+            a => a,
         }
     }
 }
