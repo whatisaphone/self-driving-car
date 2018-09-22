@@ -10,6 +10,7 @@ use utils::{my_car, my_goal_center_2d, ExtendF32, ExtendPhysics, ExtendVector2};
 
 pub struct PanicDefense {
     finish_aim_hint: Vector2<f32>,
+    use_boost: bool,
     phase: Phase,
 }
 
@@ -23,10 +24,15 @@ impl PanicDefense {
     pub fn new(finish_aim_hint: Vector2<f32>) -> Self {
         Self {
             finish_aim_hint,
+            use_boost: true,
             phase: Phase::Rush {
                 child: BlitzToLocation::new(Self::blitz_loc(finish_aim_hint)),
             },
         }
+    }
+
+    pub fn use_boost(self, use_boost: bool) -> Self {
+        Self { use_boost, ..self }
     }
 }
 
@@ -42,6 +48,10 @@ impl Behavior for PanicDefense {
 
         let me = my_car(packet);
         let target_loc = my_goal_center_2d();
+        eeg.draw(Drawable::print(
+            format!("use_boost: {}", self.use_boost),
+            color::GREEN,
+        ));
         eeg.draw(Drawable::ghost_car_ground(target_loc, me.Physics.rot()));
 
         match self.phase {

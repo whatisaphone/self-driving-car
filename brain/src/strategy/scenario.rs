@@ -13,6 +13,8 @@ pub struct Scenario<'a> {
 }
 
 impl<'a> Scenario<'a> {
+    pub const POSSESSION_CONTESTABLE: f32 = 0.5;
+
     pub fn new(packet: &'a rlbot::LiveDataPacket) -> Scenario<'a> {
         Scenario {
             packet,

@@ -1,11 +1,14 @@
 use behavior::{Action, Behavior};
 use eeg::{color, Drawable, EEG};
-use maneuvers::{BounceShot, PanicDefense};
+use maneuvers::{BounceShot, FiftyFifty, GroundShot, JumpShot, PanicDefense};
 use nalgebra::{Rotation2, Vector2};
-use predict::{estimate_intercept_car_ball, is_sane_ball_loc, Intercept};
+use predict::{
+    estimate_intercept_car_ball, estimate_intercept_car_ball_3, is_sane_ball_loc, Intercept,
+};
 use rlbot;
 use simulate::rl;
 use std::f32::consts::PI;
+use strategy::{Context, Scenario};
 use utils::{my_car, my_goal_center_2d, ExtendPhysics, ExtendVector3, WALL_RAY_CALCULATOR};
 
 pub struct Defense {
@@ -42,33 +45,102 @@ impl Behavior for Defense {
             return Action::call(PanicDefense::new(aim_hint));
         }
 
-        self.push_to_corner(packet, eeg, &intercept)
+        Action::call(PushToOwnCorner::new())
     }
 }
 
-impl Defense {
-    fn push_to_corner(
-        &mut self,
-        packet: &rlbot::LiveDataPacket,
-        eeg: &mut EEG,
-        intercept: &Intercept,
-    ) -> Action {
-        eeg.log("redirect to own corner");
+struct PushToOwnCorner;
 
-        let target_loc = Self::aim_loc(packet, eeg, intercept);
+impl PushToOwnCorner {
+    fn new() -> Self {
+        PushToOwnCorner
+    }
+}
 
-        eeg.draw(Drawable::GhostBall(intercept.ball_loc));
-
-        self.finished = true;
-        Action::call(BounceShot::new().with_target_loc(target_loc))
+impl Behavior for PushToOwnCorner {
+    fn name(&self) -> &'static str {
+        stringify!(PushToOwnCorner)
     }
 
-    fn aim_loc(
-        packet: &rlbot::LiveDataPacket,
-        eeg: &mut EEG,
-        intercept: &Intercept,
-    ) -> Vector2<f32> {
-        let me = my_car(packet);
+    fn execute2(&mut self, ctx: &mut Context) -> Action {
+        let me_intercept =
+            estimate_intercept_car_ball_3(ctx.enemy(), &ctx.packet.GameBall, |_t, &loc, _vel| {
+                loc.z < JumpShot::MAX_BALL_Z
+                    && GroundShot::good_angle(ctx.enemy().Physics.loc(), loc)
+            });
+
+        let enemy_shootable_intercept =
+            estimate_intercept_car_ball_3(ctx.enemy(), &ctx.packet.GameBall, |_t, &loc, _vel| {
+                loc.z < JumpShot::MAX_BALL_Z
+                    && GroundShot::good_angle(ctx.enemy().Physics.loc(), loc)
+            });
+
+        assert_eq!(ctx.me().Team, 0); // or the colors below won't be right
+        if let Some(ref i) = me_intercept {
+            ctx.eeg.draw(Drawable::GhostBall2(i.ball_loc, color::BLUE));
+        }
+        if let Some(ref i) = enemy_shootable_intercept {
+            ctx.eeg
+                .draw(Drawable::GhostBall2(i.ball_loc, color::ORANGE));
+        }
+
+        let panic_aim_hint = Vector2::new(
+            ctx.packet.GameBall.Physics.loc().x.signum() * rl::FIELD_MAX_X,
+            my_goal_center_2d().y,
+        );
+
+        match (me_intercept, enemy_shootable_intercept) {
+            (_, None) => {
+                ctx.eeg.log("Safe for now; resetting in goal");
+                Action::call(PanicDefense::new(panic_aim_hint).use_boost(false))
+            }
+            (None, _) => {
+                ctx.eeg.log("Can't reach ball; panicking");
+                Action::call(PanicDefense::new(panic_aim_hint))
+            }
+            (Some(me), Some(enemy)) => {
+                if me.time < enemy.time - Scenario::POSSESSION_CONTESTABLE {
+                    ctx.eeg.log("Swatting ball away from enemy");
+                    Action::call(HitToOwnCorner::new(me))
+                } else if me.time < enemy.time + Scenario::POSSESSION_CONTESTABLE {
+                    ctx.eeg.log("Defense race 50/50");
+                    Action::call(FiftyFifty::new())
+                } else {
+                    ctx.eeg.log("Can't reach ball before enemy; panicking");
+                    Action::call(PanicDefense::new(panic_aim_hint))
+                }
+            }
+        }
+    }
+}
+
+struct HitToOwnCorner {
+    intercept: Intercept,
+}
+
+impl HitToOwnCorner {
+    fn new(intercept: Intercept) -> HitToOwnCorner {
+        HitToOwnCorner { intercept }
+    }
+}
+
+impl Behavior for HitToOwnCorner {
+    fn name(&self) -> &'static str {
+        stringify!(HitToOwnCorner)
+    }
+
+    fn execute2(&mut self, ctx: &mut Context) -> Action {
+        ctx.eeg.log("redirect to own corner");
+
+        let target_loc = Self::aim_loc(ctx, &self.intercept);
+
+        Action::call(BounceShot::new().with_target_loc(target_loc))
+    }
+}
+
+impl HitToOwnCorner {
+    fn aim_loc(ctx: &mut Context, intercept: &Intercept) -> Vector2<f32> {
+        let me = my_car(ctx.packet);
         let me_loc = me.Physics.loc().to_2d();
         let ball_loc = intercept.ball_loc.to_2d();
         let me_to_ball = ball_loc - me_loc;
@@ -79,10 +151,10 @@ impl Defense {
         let rtl = WALL_RAY_CALCULATOR.calculate(ball_loc, ball_loc + rtl_dir);
 
         if ltr.coords.x.abs() > rtl.coords.x.abs() {
-            eeg.log("push from left to right");
+            ctx.eeg.log("push from left to right");
             Vector2::new(ltr.coords.x, my_goal_center_2d().y)
         } else {
-            eeg.log("push from right to left");
+            ctx.eeg.log("push from right to left");
             Vector2::new(rtl.coords.x, my_goal_center_2d().y)
         }
     }

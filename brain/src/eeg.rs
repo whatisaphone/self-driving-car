@@ -75,6 +75,7 @@ impl EEG {
 
 pub enum Drawable {
     GhostBall(Vector3<f32>),
+    GhostBall2(Vector3<f32>, Color),
     GhostCar(Vector3<f32>, Rotation3<f32>),
     Crosshair(Vector2<f32>),
     Print(String, Color),
@@ -212,6 +213,14 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
                         match drawable {
                             Drawable::GhostBall(loc) => {
                                 Ellipse::new_border(color::WHITE, OUTLINE_RADIUS).draw(
+                                    ball_rect,
+                                    &Default::default(),
+                                    transform.trans(loc.x as f64, loc.y as f64),
+                                    g,
+                                );
+                            }
+                            Drawable::GhostBall2(loc, color) => {
+                                Ellipse::new_border(*color, OUTLINE_RADIUS).draw(
                                     ball_rect,
                                     &Default::default(),
                                     transform.trans(loc.x as f64, loc.y as f64),

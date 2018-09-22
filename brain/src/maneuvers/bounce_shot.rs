@@ -1,5 +1,5 @@
 use behavior::{Action, Behavior};
-use eeg::{color, Drawable, EEG};
+use eeg::{color, Drawable};
 use mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
 use nalgebra::{Isometry3, Point3, Vector2, Vector3};
 use ncollide3d::{
@@ -7,20 +7,21 @@ use ncollide3d::{
     shape::{Ball, Triangle},
 };
 use predict::{estimate_intercept_car_ball_2, Intercept};
-use rlbot;
+use rules::SameBallTrajectory;
 use simulate::rl;
-use utils::{enemy_goal_center, my_car, one_v_one, ExtendPhysics, ExtendVector2, ExtendVector3};
+use strategy::Context;
+use utils::{enemy_goal_center, one_v_one, ExtendPhysics, ExtendVector2, ExtendVector3};
 
 pub struct BounceShot {
     aim_loc: Vector2<f32>,
-    finished: bool,
+    same_ball_trajectory: SameBallTrajectory,
 }
 
 impl BounceShot {
     pub fn new() -> Self {
         Self {
             aim_loc: enemy_goal_center(),
-            finished: false,
+            same_ball_trajectory: SameBallTrajectory::new(),
         }
     }
 
@@ -34,13 +35,11 @@ impl Behavior for BounceShot {
         stringify!(BounceShot)
     }
 
-    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-        if self.finished {
-            return Action::Return;
-        }
+    fn execute2(&mut self, ctx: &mut Context) -> Action {
+        return_some!(self.same_ball_trajectory.execute(ctx));
 
-        let (me, _enemy) = one_v_one(packet);
-        let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |_t, loc, vel| {
+        let (me, _enemy) = one_v_one(ctx.packet);
+        let intercept = estimate_intercept_car_ball_2(&me, &ctx.packet.GameBall, |_t, loc, vel| {
             // What we actually want is vel.z >= 0, e.g. the upward half of a bounce. But
             // velocity will be approx. -6.8 when the ball is stationary, due to gravity
             // being applied after collision handling.
@@ -50,29 +49,28 @@ impl Behavior for BounceShot {
         let intercept_car_loc = Self::rough_shooting_spot(&intercept, self.aim_loc);
         let distance = (me.Physics.loc().to_2d() - intercept_car_loc).norm();
 
-        eeg.draw(Drawable::Crosshair(self.aim_loc));
-        eeg.draw(Drawable::GhostBall(intercept.ball_loc));
-        eeg.draw(Drawable::print(
+        ctx.eeg.draw(Drawable::Crosshair(self.aim_loc));
+        ctx.eeg.draw(Drawable::GhostBall(intercept.ball_loc));
+        ctx.eeg.draw(Drawable::print(
             format!("intercept_time: {:.2}", intercept.time),
             color::GREEN,
         ));
-        eeg.draw(Drawable::print(
+        ctx.eeg.draw(Drawable::print(
             format!("distance: {:.0}", distance),
             color::GREEN,
         ));
 
         // TODO the threshold
         if intercept.time < QuickJumpAndDodge::MIN_DODGE_TIME {
-            self.finished = true;
-            return self.flip(packet);
+            return self.flip(ctx);
         }
 
         // TODO: this is not how this works…
         let mut child = GroundAccelToLoc::new(
             intercept_car_loc,
-            packet.GameInfo.TimeSeconds + intercept.time,
+            ctx.packet.GameInfo.TimeSeconds + intercept.time,
         );
-        child.execute(packet, eeg)
+        child.execute2(ctx)
     }
 }
 
@@ -117,10 +115,9 @@ impl BounceShot {
         intercept.ball_loc.to_2d() - impulse.normalize() * 200.0
     }
 
-    fn flip(&mut self, packet: &rlbot::LiveDataPacket) -> Action {
-        let me = my_car(packet);
-        let angle = simple_yaw_diff(&me.Physics, packet.GameBall.Physics.loc().to_2d());
-        Action::call(QuickJumpAndDodge::begin(packet).angle(angle))
+    fn flip(&mut self, ctx: &mut Context) -> Action {
+        let angle = simple_yaw_diff(&ctx.me().Physics, ctx.packet.GameBall.Physics.loc().to_2d());
+        Action::call(QuickJumpAndDodge::begin(ctx.packet).angle(angle))
     }
 }
 

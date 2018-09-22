@@ -1,10 +1,11 @@
 use behavior::{Behavior, Chain, Defense, Offense, Priority};
 use maneuvers::FiftyFifty;
 use std::f32::consts::PI;
-use strategy::{scenario::Wall, Context};
+use strategy::{
+    scenario::{Scenario, Wall},
+    Context,
+};
 use utils::{my_goal_center_2d, ExtendF32, ExtendPhysics, ExtendVector2, ExtendVector3};
-
-const POSSESSION_CONTESTABLE: f32 = 0.5;
 
 pub fn baseline(ctx: &mut Context) -> Box<Behavior> {
     match ctx.scenario.push_wall() {
@@ -15,7 +16,7 @@ pub fn baseline(ctx: &mut Context) -> Box<Behavior> {
 
 pub fn override_(ctx: &mut Context, current: &Behavior) -> Option<Box<Behavior>> {
     if current.priority() < Priority::Save
-        && ctx.scenario.possession().abs() < POSSESSION_CONTESTABLE
+        && ctx.scenario.possession().abs() < Scenario::POSSESSION_CONTESTABLE
         && enemy_can_shoot(ctx)
     {
         return Some(Box::new(Chain::new(
