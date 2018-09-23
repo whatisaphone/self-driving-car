@@ -1,8 +1,9 @@
-use behavior::{Action, Behavior};
+use behavior::{Action, Behavior, Chain};
 use eeg::{color, Drawable, EEG};
 use maneuvers::{drive_towards, GetToFlatGround};
 use mechanics::simple_yaw_diff;
 use nalgebra::Vector2;
+use plan::drive::get_route_dodge;
 use rlbot;
 use simulate::{rl, Car1D};
 use std::f32::consts::PI;
@@ -48,6 +49,15 @@ impl Behavior for GroundAccelToLoc {
         // This behavior currently just operates in 2D
         if !GetToFlatGround::on_flat_ground(packet) {
             return Action::call(GetToFlatGround::new());
+        }
+
+        // A bit sloppy reasoning here
+        if let Some(dodge) = get_route_dodge(me, self.target_loc) {
+            // Dodge, then continue with `self`
+            return Action::call(Chain::new(
+                self.priority(),
+                vec![dodge, Box::new(Self { ..*self })],
+            ));
         }
 
         let yaw_diff = simple_yaw_diff(&me.Physics, self.target_loc);

@@ -27,7 +27,7 @@ pub fn override_(ctx: &mut Context, current: &Behavior) -> Option<Box<Behavior>>
         if ctx.scenario.possession() < -Scenario::POSSESSION_CONTESTABLE {
             ctx.eeg.log(format!(
                 "enemy can shoot, possession = {:.2}, going to defense",
-                ctx.scenario.possession().abs()
+                ctx.scenario.possession()
             ));
             return Some(Box::new(Chain::new(
                 Priority::Save,

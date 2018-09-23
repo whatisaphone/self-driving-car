@@ -62,7 +62,6 @@ impl Behavior for BounceShot {
             color::GREEN,
         ));
 
-        // TODO the threshold
         if intercept.time < QuickJumpAndDodge::MIN_DODGE_TIME {
             return self.flip(ctx);
         }
