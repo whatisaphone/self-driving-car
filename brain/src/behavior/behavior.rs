@@ -37,6 +37,7 @@ pub enum Action {
     Yield(rlbot::PlayerInput),
     Call(Box<Behavior>),
     Return,
+    Abort,
 }
 
 impl Action {

@@ -43,7 +43,7 @@ impl Behavior for GroundShot {
 
         let (me, _enemy) = one_v_one(packet);
         let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |_t, &loc, _vel| {
-            loc.z < 110.0 && Self::good_angle(loc, me.Physics.loc())
+            loc.z < Self::MAX_BALL_Z && Self::good_angle(loc, me.Physics.loc())
         });
 
         if !Self::good_angle(intercept.ball_loc, me.Physics.loc()) {

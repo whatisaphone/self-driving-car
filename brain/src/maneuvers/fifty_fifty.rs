@@ -1,18 +1,22 @@
 use behavior::{Action, Behavior};
-use eeg::{color, Drawable, EEG};
-use maneuvers::BlitzToLocation;
-use mechanics::{simple_yaw_diff, QuickJumpAndDodge};
+use eeg::{color, Drawable};
+use mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
 use nalgebra::Vector2;
 use predict::intercept::estimate_intercept_car_ball;
-use rlbot;
+use rules::SameBallTrajectory;
 use std::f32::consts::PI;
-use utils::{my_goal_center, one_v_one, ExtendF32, ExtendPhysics, ExtendVector2, ExtendVector3};
+use strategy::Context;
+use utils::{my_goal_center, ExtendF32, ExtendPhysics, ExtendVector2, ExtendVector3};
 
-pub struct FiftyFifty;
+pub struct FiftyFifty {
+    same_ball_trajectory: SameBallTrajectory,
+}
 
 impl FiftyFifty {
     pub fn new() -> FiftyFifty {
-        FiftyFifty
+        FiftyFifty {
+            same_ball_trajectory: SameBallTrajectory::new(),
+        }
     }
 }
 
@@ -21,9 +25,11 @@ impl Behavior for FiftyFifty {
         stringify!(FiftyFifty)
     }
 
-    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-        let (me, _enemy) = one_v_one(packet);
-        let intercept = estimate_intercept_car_ball(&me, &packet.GameBall);
+    fn execute2(&mut self, ctx: &mut Context) -> Action {
+        return_some!(self.same_ball_trajectory.execute(ctx));
+
+        let me = ctx.me();
+        let intercept = estimate_intercept_car_ball(&me, &ctx.packet.GameBall);
 
         let target_angle = blocking_angle(
             intercept.ball_loc.to_2d(),
@@ -34,23 +40,24 @@ impl Behavior for FiftyFifty {
         let target_loc = intercept.ball_loc.to_2d() + Vector2::unit(target_angle) * 200.0;
         let target_dist = (target_loc - me.Physics.loc().to_2d()).norm();
 
-        eeg.draw(Drawable::GhostBall(intercept.ball_loc));
-        eeg.draw(Drawable::print(
+        ctx.eeg.draw(Drawable::GhostBall(intercept.ball_loc));
+        ctx.eeg.draw(Drawable::print(
             format!("target_dist: {:.0}", target_dist),
             color::GREEN,
         ));
-        eeg.draw(Drawable::print(
+        ctx.eeg.draw(Drawable::print(
             format!("intercept_time: {:.2}", intercept.time),
             color::GREEN,
         ));
 
         if intercept.time >= 0.2 {
             // TODO: this is not how this works…
-            let mut child = BlitzToLocation::new(target_loc);
-            child.execute(packet, eeg)
+            let mut child =
+                GroundAccelToLoc::new(target_loc, ctx.packet.GameInfo.TimeSeconds + intercept.time);
+            child.execute2(ctx)
         } else {
             let angle = simple_yaw_diff(&me.Physics, intercept.ball_loc.to_2d());
-            Action::call(QuickJumpAndDodge::begin(packet).angle(angle))
+            Action::call(QuickJumpAndDodge::begin(ctx.packet).angle(angle))
         }
     }
 }
@@ -82,7 +89,7 @@ mod integration_tests {
     #[test]
     fn kickoff_off_center() {
         let test = TestRunner::start(
-            FiftyFifty,
+            FiftyFifty::new(),
             TestScenario {
                 car_loc: Vector3::new(256.0, -3839.98, 17.01),
                 ..Default::default()

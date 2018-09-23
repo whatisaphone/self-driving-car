@@ -1,5 +1,4 @@
 use behavior::Action;
-use eeg::{color, Drawable};
 use nalgebra::Vector2;
 use rlbot;
 use strategy::Context;
@@ -38,7 +37,7 @@ impl SameBallTrajectory {
 
     pub fn execute(&mut self, ctx: &mut Context) -> Option<Action> {
         if self.eval_vel_changed(ctx) {
-            Some(Action::Return)
+            Some(Action::Abort)
         } else {
             None
         }
@@ -49,8 +48,7 @@ impl SameBallTrajectory {
         let mut result = false;
         if let Some(prev_vel) = self.prev_vel {
             if (vel - prev_vel).norm() >= 10.0 {
-                ctx.eeg
-                    .draw(Drawable::print("Ball trajectory has changed", color::GREEN));
+                ctx.eeg.log("Ball trajectory has changed");
                 result = true;
             }
         }

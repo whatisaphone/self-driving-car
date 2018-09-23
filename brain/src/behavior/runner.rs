@@ -62,6 +62,14 @@ impl BehaviorRunner {
                 ctx.eeg.log(format!("{} {}", POPPED, self.top().name()));
                 self.recurse(depth + 1, ctx)
             }
+            Action::Abort => {
+                if self.stack.len() == 1 {
+                    panic!("Can't abort root behavior");
+                }
+                self.stack.drain(1..);
+                ctx.eeg.log(format!("{} {}", UNWOUND, self.top().name()));
+                self.recurse(depth + 1, ctx)
+            }
         }
     }
 

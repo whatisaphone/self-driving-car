@@ -18,6 +18,8 @@ pub struct BounceShot {
 }
 
 impl BounceShot {
+    pub const MAX_BALL_Z: f32 = 110.0;
+
     pub fn new() -> Self {
         Self {
             aim_loc: enemy_goal_center(),
@@ -43,7 +45,7 @@ impl Behavior for BounceShot {
             // What we actually want is vel.z >= 0, e.g. the upward half of a bounce. But
             // velocity will be approx. -6.8 when the ball is stationary, due to gravity
             // being applied after collision handling.
-            loc.z < 110.0 && vel.z >= -10.0
+            loc.z < Self::MAX_BALL_Z && vel.z >= -10.0
         });
 
         let intercept_car_loc = Self::rough_shooting_spot(&intercept, self.aim_loc);

@@ -1,12 +1,15 @@
 use behavior::{shoot::Shoot, Action, Behavior};
 use eeg::EEG;
-use maneuvers::GetToFlatGround;
-use mechanics::HesitantDriveToLoc;
+use maneuvers::{BounceShot, GetToFlatGround};
 use nalgebra::Vector2;
-use predict::estimate_intercept_car_ball_2;
+use plan::hit_angle::feasible_hit_angle;
+use predict::{estimate_intercept_car_ball_2, Intercept};
 use rlbot;
-use simulate::rl;
-use utils::{enemy_goal_center, one_v_one, ExtendPhysics, ExtendVector3};
+use std::f32::consts::PI;
+use utils::{
+    enemy_goal_center, my_car, one_v_one, ExtendPhysics, ExtendVector2, ExtendVector3,
+    WallRayCalculator,
+};
 
 pub struct Offense;
 
@@ -47,21 +50,21 @@ impl Behavior for Offense {
 
         // For now, just fall back to a stupid behavior
         // TODO: possession! if have it, can wait. otherwise, 50/50
-        let ball = intercept.ball_loc.to_2d();
-        let goal = enemy_goal_center();
-        let target_loc = ball + (ball - goal).normalize() * 1000.0;
-        let target_loc = Vector2::new(
-            target_loc
-                .x
-                .max(-rl::FIELD_MAX_X * 0.9)
-                .min(rl::FIELD_MAX_X * 0.9),
-            target_loc
-                .y
-                .max(-rl::FIELD_MAX_Y * 0.9)
-                .min(rl::FIELD_MAX_Y * 0.9),
-        );
-        Action::call(HesitantDriveToLoc::begin(packet, target_loc))
+        tepid_hit(packet, eeg, intercept)
     }
+}
+
+fn tepid_hit(packet: &rlbot::LiveDataPacket, eeg: &mut EEG, intercept: Intercept) -> Action {
+    eeg.log("no good hit; going for a tepid hit");
+
+    let me = my_car(packet);
+    let ball = intercept.ball_loc.to_2d();
+    let goal = enemy_goal_center();
+    let theta = feasible_hit_angle(ball, me.Physics.loc().to_2d(), goal, PI / 6.0);
+    let aim_loc = WallRayCalculator::calculate(ball, ball + Vector2::unit(theta))
+        .coords
+        .to_2d();
+    Action::call(BounceShot::new().with_target_loc(aim_loc))
 }
 
 #[cfg(test)]

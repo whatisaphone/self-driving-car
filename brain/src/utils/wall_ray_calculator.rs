@@ -5,10 +5,11 @@ use ncollide3d::{
     world::{CollisionGroups, CollisionWorld, GeometricQueryType},
 };
 use simulate::rl;
-use utils::{ExtendVector2, TotalF32};
+use std::f32::consts::PI;
+use utils::{geometry::ExtendF32, ExtendVector2, TotalF32};
 
 lazy_static! {
-    pub static ref WALL_RAY_CALCULATOR: WallRayCalculator = WallRayCalculator::new();
+    static ref WALL_RAY_CALCULATOR: WallRayCalculator = WallRayCalculator::new();
 }
 
 pub struct WallRayCalculator {
@@ -16,7 +17,7 @@ pub struct WallRayCalculator {
 }
 
 impl WallRayCalculator {
-    fn new() -> WallRayCalculator {
+    fn new() -> Self {
         let mut fixed = CollisionGroups::new();
         fixed.set_membership(&[0]);
 
@@ -51,15 +52,15 @@ impl WallRayCalculator {
             (),
         );
         world.update();
-        WallRayCalculator { world }
+        Self { world }
     }
 
-    pub fn calculate(&self, from: Vector2<f32>, to: Vector2<f32>) -> Point3<f32> {
+    pub fn calculate(from: Vector2<f32>, to: Vector2<f32>) -> Point3<f32> {
         let ray = Ray::new(
             Point3::from_coordinates(from.to_3d(0.0)),
             (to - from).to_3d(0.0),
         );
-        let (_, intersect) = self
+        let (_, intersect) = WALL_RAY_CALCULATOR
             .world
             .interferences_with_ray(&ray, &CollisionGroups::new())
             .filter(|(cobj, _)| {
@@ -79,4 +80,29 @@ impl WallRayCalculator {
             .unwrap();
         ray.origin + ray.dir * intersect.toi
     }
+
+    pub fn wall_for_point(point: Point3<f32>) -> Wall {
+        let theta = f32::atan2(point.y, point.x);
+
+        // For ease of math, center 0° on the enemy goal, 180° on own goal.
+        let theta = (theta - PI / 2.0).normalize_angle().abs();
+
+        // These are atan2(x, y) instead of atan2(y, x) because we rotated by 90° above.
+        match theta {
+            a if a < f32::atan2(rl::GOALPOST_X, rl::FIELD_MAX_Y) => Wall::EnemyGoal,
+            a if a < f32::atan2(rl::FIELD_MAX_X, rl::FIELD_MAX_Y) => Wall::EnemyBackWall,
+            a if a < f32::atan2(rl::FIELD_MAX_X, -rl::FIELD_MAX_Y) => Wall::Midfield,
+            a if a < f32::atan2(rl::GOALPOST_X, -rl::FIELD_MAX_Y) => Wall::OwnBackWall,
+            _ => Wall::OwnGoal,
+        }
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
+pub enum Wall {
+    EnemyGoal,
+    EnemyBackWall,
+    Midfield,
+    OwnBackWall,
+    OwnGoal,
 }

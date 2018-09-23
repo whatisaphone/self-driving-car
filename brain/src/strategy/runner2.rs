@@ -52,7 +52,7 @@ impl Runner2 {
                 self.current = Some(b);
                 self.exec(depth + 1, ctx)
             }
-            Action::Return => {
+            Action::Return | Action::Abort => {
                 ctx.eeg
                     .log(format!("< {}", self.current.as_ref().unwrap().name()));
                 self.current = None;

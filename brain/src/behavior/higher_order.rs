@@ -74,13 +74,10 @@ pub struct Chain {
 }
 
 impl Chain {
-    pub fn new<B>(priority: Priority, children: Vec<Box<B>>) -> Self
-    where
-        B: Behavior + 'static,
-    {
+    pub fn new(priority: Priority, children: Vec<Box<Behavior>>) -> Self {
         Self {
             priority,
-            children: children.into_iter().map(|b| b as Box<Behavior>).collect(),
+            children: children.into_iter().collect(),
         }
     }
 }
@@ -114,11 +111,22 @@ impl Behavior for Chain {
         };
 
         match action {
+            Action::Yield(x) => Action::Yield(x),
+            Action::Call(b) => {
+                ctx.eeg
+                    .log(format!("[Chain] replacing head with {}", b.name()));
+                self.children[0] = b;
+                self.execute2(ctx)
+            }
             Action::Return => {
+                ctx.eeg.log("[Chain] advancing");
                 self.children.pop_front();
                 self.execute2(ctx)
             }
-            a => a,
+            Action::Abort => {
+                ctx.eeg.log("[Chain] aborting");
+                Action::Abort
+            }
         }
     }
 }

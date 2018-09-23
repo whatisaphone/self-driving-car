@@ -109,7 +109,7 @@ impl JumpShot {
         let too_fast = estimate_approach(
             me.Physics.vel().norm(),
             distance,
-            available_ground_time,
+            available_ground_time - 2.0 / 120.0,
             air_time,
         );
 

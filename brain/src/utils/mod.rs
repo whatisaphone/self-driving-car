@@ -6,7 +6,7 @@ pub use utils::{
     fps_counter::FPSCounter,
     geometry::{ExtendF32, ExtendVector2, ExtendVector3},
     iter::TotalF32,
-    wall_ray_calculator::WALL_RAY_CALCULATOR,
+    wall_ray_calculator::{Wall, WallRayCalculator},
 };
 
 mod fps_counter;

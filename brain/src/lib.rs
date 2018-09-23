@@ -32,6 +32,7 @@ mod eeg;
 mod integration_tests;
 mod maneuvers;
 mod mechanics;
+mod plan;
 mod predict;
 mod rules;
 mod strategy;

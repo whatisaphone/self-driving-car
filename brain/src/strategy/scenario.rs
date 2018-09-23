@@ -1,8 +1,7 @@
 use nalgebra::Vector3;
 use rlbot;
-use simulate::{chip::Ball, rl, Car1D};
-use std::f32::consts::PI;
-use utils::{one_v_one, ExtendF32, ExtendPhysics, ExtendVector3, WALL_RAY_CALCULATOR};
+use simulate::{chip::Ball, Car1D};
+use utils::{one_v_one, ExtendPhysics, ExtendVector3, Wall, WallRayCalculator};
 
 pub struct Scenario<'a> {
     packet: &'a rlbot::LiveDataPacket,
@@ -105,27 +104,6 @@ fn simulate_ball_blitz(
 }
 
 fn eval_push_wall(car: &Vector3<f32>, ball: &Vector3<f32>) -> Wall {
-    let point = WALL_RAY_CALCULATOR.calculate(car.to_2d(), ball.to_2d());
-    let theta = f32::atan2(point.y, point.x);
-
-    // For ease of math, center 0° on the enemy goal, 180° on own goal.
-    let theta = (theta - PI / 2.0).normalize_angle().abs();
-
-    // These are atan2(x, y) instead of atan2(y, x) because we rotated by 90° above.
-    match theta {
-        a if a < f32::atan2(rl::GOALPOST_X, rl::FIELD_MAX_Y) => Wall::EnemyGoal,
-        a if a < f32::atan2(rl::FIELD_MAX_X, rl::FIELD_MAX_Y) => Wall::EnemyBackWall,
-        a if a < f32::atan2(rl::FIELD_MAX_X, -rl::FIELD_MAX_Y) => Wall::Midfield,
-        a if a < f32::atan2(rl::GOALPOST_X, -rl::FIELD_MAX_Y) => Wall::OwnBackWall,
-        _ => Wall::OwnGoal,
-    }
-}
-
-#[derive(Copy, Clone, Debug)]
-pub enum Wall {
-    EnemyGoal,
-    EnemyBackWall,
-    Midfield,
-    OwnBackWall,
-    OwnGoal,
+    let point = WallRayCalculator::calculate(car.to_2d(), ball.to_2d());
+    WallRayCalculator::wall_for_point(point)
 }

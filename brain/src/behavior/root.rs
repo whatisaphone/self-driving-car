@@ -4,7 +4,7 @@ use nalgebra::Vector3;
 use rlbot;
 use simulate::{chip::Ball, rl, Car1D};
 use std::f32::consts::PI;
-use utils::{one_v_one, ExtendF32, ExtendPhysics, ExtendVector3, WALL_RAY_CALCULATOR};
+use utils::{one_v_one, ExtendF32, ExtendPhysics, ExtendVector3, WallRayCalculator};
 
 #[allow(dead_code)]
 pub struct RootBehavior {
@@ -159,7 +159,7 @@ fn eval_situation(packet: &rlbot::LiveDataPacket) -> Situation {
 }
 
 fn eval_push_wall(car: &Vector3<f32>, ball: &Vector3<f32>, eeg: &mut EEG) -> Wall {
-    let point = WALL_RAY_CALCULATOR.calculate(car.to_2d(), ball.to_2d());
+    let point = WallRayCalculator::calculate(car.to_2d(), ball.to_2d());
     let theta = f32::atan2(point.y, point.x);
 
     // For ease of math, center 0° on the enemy goal, with +/- on either side.
