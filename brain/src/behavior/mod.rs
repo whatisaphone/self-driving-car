@@ -1,7 +1,7 @@
 pub use behavior::{
     behavior::{Action, Behavior, Priority},
     defense::{Defense, HitToOwnCorner},
-    higher_order::{Chain, Fuse},
+    higher_order::{Chain, Fuse, Repeat},
     null::NullBehavior,
     offense::Offense,
     root::RootBehavior,

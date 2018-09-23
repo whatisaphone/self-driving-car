@@ -125,15 +125,18 @@ impl BounceShot {
 
 #[cfg(test)]
 mod integration_tests {
-    use behavior::RootBehavior;
+    use behavior::{Repeat, RootBehavior};
     use integration_tests::helpers::{TestRunner, TestScenario};
     use maneuvers::bounce_shot::BounceShot;
     use nalgebra::Vector3;
 
+    // `Repeat` is used in these tests so the shot is not aborted by
+    // `SameBallTrajectory` when the ball bounces.
+
     #[test]
     fn normal() {
         let test = TestRunner::start(
-            BounceShot::new(),
+            Repeat::new(BounceShot::new),
             TestScenario {
                 ball_loc: Vector3::new(-2000.0, 2000.0, 500.0),
                 ball_vel: Vector3::new(1000.0, 0.0, 0.0),
@@ -151,7 +154,7 @@ mod integration_tests {
     #[test]
     fn slow_no_boost() {
         let test = TestRunner::start(
-            BounceShot::new(),
+            Repeat::new(BounceShot::new),
             TestScenario {
                 ball_loc: Vector3::new(-2000.0, 2000.0, 1000.0),
                 ball_vel: Vector3::new(500.0, 0.0, 0.0),

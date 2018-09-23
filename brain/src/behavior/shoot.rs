@@ -4,19 +4,14 @@ use maneuvers::{GroundShot, JumpShot};
 use nalgebra::Vector3;
 use predict::estimate_intercept_car_ball_2;
 use rlbot;
-use rules::Finishable;
 use simulate::rl;
 use utils::{one_v_one, ExtendPhysics};
 
-pub struct Shoot {
-    finished: Finishable,
-}
+pub struct Shoot;
 
 impl Shoot {
     pub fn new() -> Shoot {
-        Shoot {
-            finished: Finishable::new(),
-        }
+        Shoot
     }
 
     pub fn good_angle(ball_loc: Vector3<f32>, car_loc: Vector3<f32>) -> bool {
@@ -43,8 +38,6 @@ impl Behavior for Shoot {
     }
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-        return_some!(self.finished.execute(packet, eeg));
-
         let (me, _enemy) = one_v_one(packet);
         let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |_t, &loc, _vel| {
             Self::good_angle(loc, me.Physics.loc())
@@ -56,16 +49,13 @@ impl Behavior for Shoot {
         }
 
         if intercept.ball_loc.z < GroundShot::MAX_BALL_Z {
-            self.finished.set_finished();
             return Action::call(GroundShot::new());
         }
 
         if intercept.ball_loc.z < JumpShot::MAX_BALL_Z {
-            self.finished.set_finished();
             return Action::call(JumpShot::new());
         }
 
-        self.finished.set_finished();
         Action::call(AerialShot::new())
     }
 }

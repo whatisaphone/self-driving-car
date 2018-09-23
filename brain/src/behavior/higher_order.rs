@@ -13,8 +13,8 @@ pub struct Fuse {
 
 impl Fuse {
     #[allow(dead_code)]
-    pub fn new(child: Box<Behavior>) -> Fuse {
-        Fuse { child: Some(child) }
+    pub fn new(child: Box<Behavior>) -> Self {
+        Self { child: Some(child) }
     }
 }
 
@@ -32,36 +32,48 @@ impl Behavior for Fuse {
     }
 }
 
-/// Do nothing for `time` seconds, then run `child`.
+/// Do `behavior` forever
 #[allow(dead_code)]
-pub struct Delay {
-    time: f32,
-    child: Option<Box<Behavior>>,
+pub struct Repeat<B, F>
+where
+    B: Behavior,
+    F: Fn() -> B + Send,
+{
+    factory: F,
+    current: B,
 }
 
-impl Delay {
+impl<B, F> Repeat<B, F>
+where
+    B: Behavior,
+    F: Fn() -> B + Send,
+{
     #[allow(dead_code)]
-    pub fn new(time: f32, child: Box<Behavior>) -> Delay {
-        Delay {
-            time,
-            child: Some(child),
-        }
+    pub fn new(factory: F) -> Self {
+        let current = factory();
+        Self { factory, current }
     }
 }
 
-impl Behavior for Delay {
+impl<B, F> Behavior for Repeat<B, F>
+where
+    B: Behavior,
+    F: Fn() -> B + Send,
+{
     fn name(&self) -> &'static str {
-        stringify!(Delay)
+        stringify!(Repeat)
     }
 
-    fn execute(&mut self, packet: &rlbot::LiveDataPacket, _eeg: &mut EEG) -> Action {
-        if packet.GameInfo.TimeSeconds < self.time {
-            Action::Yield(Default::default())
-        } else {
-            // `take()` leaves a None behind, so this can only match `Some` once.
-            match self.child.take() {
-                Some(b) => Action::Call(b),
-                None => Action::Yield(Default::default()),
+    fn execute2(&mut self, ctx: &mut Context) -> Action {
+        ctx.eeg
+            .draw(Drawable::print(self.current.name(), color::YELLOW));
+        match self.current.execute2(ctx) {
+            Action::Yield(i) => Action::Yield(i),
+            Action::Call(b) => Action::Call(b),
+            Action::Return | Action::Abort => {
+                ctx.eeg.log("[Repeat] repeating");
+                self.current = (self.factory)();
+                self.execute2(ctx)
             }
         }
     }

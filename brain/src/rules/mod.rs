@@ -1,30 +1,7 @@
 use behavior::Action;
 use nalgebra::Vector2;
-use rlbot;
 use strategy::Context;
 use utils::{ExtendPhysics, ExtendVector3};
-use EEG;
-
-pub struct Finishable {
-    finished: bool,
-}
-
-impl Finishable {
-    pub fn new() -> Finishable {
-        Finishable { finished: false }
-    }
-
-    pub fn execute(&mut self, _packet: &rlbot::LiveDataPacket, _eeg: &mut EEG) -> Option<Action> {
-        if self.finished {
-            return Some(Action::Return);
-        }
-        None
-    }
-
-    pub fn set_finished(&mut self) {
-        self.finished = true;
-    }
-}
 
 pub struct SameBallTrajectory {
     prev_vel: Option<Vector2<f32>>,
@@ -48,7 +25,7 @@ impl SameBallTrajectory {
         let mut result = false;
         if let Some(prev_vel) = self.prev_vel {
             if (vel - prev_vel).norm() >= 10.0 {
-                ctx.eeg.log("Ball trajectory has changed");
+                ctx.eeg.log("[SameBallTrajectory] Change detected");
                 result = true;
             }
         }
