@@ -1,16 +1,19 @@
 use behavior::{Action, Behavior};
 use collect::ExtendRotation3;
-use eeg::{color, Drawable, EEG};
+use eeg::{color, Drawable};
 use maneuvers::BlitzToLocation;
 use mechanics::simple_steer_towards;
 use nalgebra::Vector2;
 use plan::{ball::predict_ball, drive::rough_time_drive_to_loc};
 use rlbot;
+use rules::SameBallTrajectory;
 use simulate::rl;
-use utils::{my_car, my_goal_center_2d, ExtendF32, ExtendPhysics, ExtendVector2};
+use strategy::Context;
+use utils::{my_goal_center_2d, ExtendF32, ExtendPhysics, ExtendVector2};
 
 pub struct PanicDefense {
     use_boost: bool,
+    same_ball_trajectory: SameBallTrajectory,
     phase: Phase,
 }
 
@@ -32,6 +35,7 @@ impl PanicDefense {
     pub fn new() -> Self {
         Self {
             use_boost: true,
+            same_ball_trajectory: SameBallTrajectory::new(),
             phase: Phase::Start,
         }
     }
@@ -46,27 +50,30 @@ impl Behavior for PanicDefense {
         stringify!(PanicDefense)
     }
 
-    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-        if let Some(phase) = self.next_phase(packet, eeg) {
+    fn execute2(&mut self, ctx: &mut Context) -> Action {
+        return_some!(self.same_ball_trajectory.execute(ctx));
+
+        if let Some(phase) = self.next_phase(ctx) {
             self.phase = phase;
         }
 
-        let me = my_car(packet);
+        let me = ctx.me();
         let target_loc = my_goal_center_2d();
-        eeg.draw(Drawable::print(
+        ctx.eeg.draw(Drawable::print(
             format!("use_boost: {}", self.use_boost),
             color::GREEN,
         ));
-        eeg.draw(Drawable::ghost_car_ground(target_loc, me.Physics.rot()));
+        ctx.eeg
+            .draw(Drawable::ghost_car_ground(target_loc, me.Physics.rot()));
 
         match self.phase {
             Phase::Start => unreachable!(),
             Phase::Rush { ref mut child, .. } => {
-                eeg.draw(Drawable::print("Rush", color::GREEN));
-                child.execute(packet, eeg)
+                ctx.eeg.draw(Drawable::print("Rush", color::GREEN));
+                child.execute2(ctx)
             }
             Phase::Turn { aim_hint, .. } => {
-                eeg.draw(Drawable::print("Turn", color::GREEN));
+                ctx.eeg.draw(Drawable::print("Turn", color::GREEN));
                 Action::Yield(rlbot::PlayerInput {
                     Throttle: 1.0,
                     Steer: simple_steer_towards(&me.Physics, aim_hint),
@@ -84,11 +91,11 @@ impl PanicDefense {
         Vector2::new(800.0 * -aim_loc.x.signum(), my_goal_center_2d().y)
     }
 
-    fn next_phase(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Option<Phase> {
-        let me = my_car(packet);
+    fn next_phase(&mut self, ctx: &mut Context) -> Option<Phase> {
+        let me = ctx.me();
 
         if let Phase::Start = self.phase {
-            let aim_hint = calc_aim_hint(&packet.GameBall, me);
+            let aim_hint = calc_aim_hint(&ctx.packet.GameBall, me);
             return Some(Phase::Rush {
                 aim_hint,
                 child: BlitzToLocation::new(Self::blitz_loc(aim_hint)),
@@ -112,28 +119,28 @@ impl PanicDefense {
         {
             let theta = (me.Physics.rot().yaw() - target_yaw).normalize_angle();
             if theta.abs() <= 15.0_f32.to_radians() {
-                eeg.log("done, facing the right way");
+                ctx.eeg.log("done, facing the right way");
                 return Some(Phase::Finished);
             }
             // Fail-safe
-            let elapsed = packet.GameInfo.TimeSeconds - start_time;
+            let elapsed = ctx.packet.GameInfo.TimeSeconds - start_time;
             if elapsed >= 0.75 {
-                eeg.log("done, time elapsed failsafe");
+                ctx.eeg.log("done, time elapsed failsafe");
                 return Some(Phase::Finished);
             }
         }
 
         if let Phase::Rush { aim_hint, .. } = self.phase {
             let cutoff = -rl::FIELD_MAX_Y - me.Physics.vel().y * 0.75;
-            eeg.draw(Drawable::print(
+            ctx.eeg.draw(Drawable::print(
                 format!("cutoff_distance: {:.0}", me.Physics.loc().y - cutoff),
                 color::GREEN,
             ));
             if me.Physics.loc().y <= cutoff {
                 let target_yaw = my_goal_center_2d().angle_to(aim_hint);
                 return Some(Phase::Turn {
-                    aim_hint: calc_aim_hint(&packet.GameBall, me),
-                    start_time: packet.GameInfo.TimeSeconds,
+                    aim_hint: calc_aim_hint(&ctx.packet.GameBall, me),
+                    start_time: ctx.packet.GameInfo.TimeSeconds,
                     target_yaw,
                 });
             }
