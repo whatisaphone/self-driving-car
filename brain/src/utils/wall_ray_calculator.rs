@@ -6,7 +6,7 @@ use ncollide3d::{
 };
 use simulate::rl;
 use std::f32::consts::PI;
-use utils::{geometry::ExtendF32, ExtendVector2, TotalF32};
+use utils::{geometry::ExtendF32, ExtendVector2, ExtendVector3, TotalF32};
 
 lazy_static! {
     static ref WALL_RAY_CALCULATOR: WallRayCalculator = WallRayCalculator::new();
@@ -79,6 +79,14 @@ impl WallRayCalculator {
             }).min_by_key(|(_, intersect)| TotalF32(intersect.toi))
             .unwrap();
         ray.origin + ray.dir * intersect.toi
+    }
+
+    pub fn calc_segment(from: Vector2<f32>, to: Vector2<f32>) -> Vector2<f32> {
+        Self::calculate(from, to).coords.to_2d()
+    }
+
+    pub fn calc_ray(from: Vector2<f32>, angle: f32) -> Vector2<f32> {
+        Self::calc_segment(from, from + Vector2::unit(angle))
     }
 
     pub fn wall_for_point(point: Point3<f32>) -> Wall {

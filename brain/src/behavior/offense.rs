@@ -1,13 +1,12 @@
 use behavior::{shoot::Shoot, Action, Behavior};
 use eeg::EEG;
 use maneuvers::{BounceShot, GetToFlatGround};
-use nalgebra::Vector2;
-use plan::hit_angle::feasible_hit_angle;
+use plan::hit_angle::{feasible_hit_angle_away, feasible_hit_angle_toward};
 use predict::{estimate_intercept_car_ball_2, Intercept};
 use rlbot;
 use std::f32::consts::PI;
 use utils::{
-    enemy_goal_center, my_car, one_v_one, ExtendPhysics, ExtendVector2, ExtendVector3,
+    enemy_goal_center, my_car, my_goal_center_2d, one_v_one, ExtendPhysics, ExtendVector3,
     WallRayCalculator,
 };
 
@@ -60,10 +59,19 @@ fn tepid_hit(packet: &rlbot::LiveDataPacket, eeg: &mut EEG, intercept: Intercept
     let me = my_car(packet);
     let ball = intercept.ball_loc.to_2d();
     let goal = enemy_goal_center();
-    let theta = feasible_hit_angle(ball, me.Physics.loc().to_2d(), goal, PI / 6.0);
-    let aim_loc = WallRayCalculator::calculate(ball, ball + Vector2::unit(theta))
-        .coords
-        .to_2d();
+    let avoid = my_goal_center_2d();
+
+    // If we're retreating, explicitly hit it away from our goal to avoid an own
+    // goal.
+    let naive_wall = WallRayCalculator::calc_segment(me.Physics.loc().to_2d(), ball);
+    let theta = if (naive_wall - goal).norm() < (naive_wall - avoid).norm() {
+        eeg.log("hitting toward enemy goal");
+        feasible_hit_angle_toward(ball, me.Physics.loc().to_2d(), goal, PI / 6.0)
+    } else {
+        eeg.log("hitting away from own goal");
+        feasible_hit_angle_away(ball, me.Physics.loc().to_2d(), avoid, PI / 6.0)
+    };
+    let aim_loc = WallRayCalculator::calc_ray(ball, theta);
     Action::call(BounceShot::new().with_target_loc(aim_loc))
 }
 
