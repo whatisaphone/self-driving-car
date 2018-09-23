@@ -74,6 +74,7 @@ impl JumpShot {
         let air_time = CarAerial60Deg::cost(intercept.ball_loc.z - Z_FUDGE).time;
         let available_ground_time = intercept.time - air_time;
 
+        eeg.draw(Drawable::print(stringify!(Phase::Ground), color::GREEN));
         eeg.draw(Drawable::GhostBall(intercept.ball_loc));
         eeg.draw(Drawable::Crosshair(aim_loc));
         eeg.draw(Drawable::GhostCar(
@@ -93,7 +94,7 @@ impl JumpShot {
             color::GREEN,
         ));
         eeg.draw(Drawable::print(
-            format!("available_ground_time: {:.2}", available_ground_time),
+            format!("avail_ground_time: {:.2}", available_ground_time),
             color::GREEN,
         ));
 
@@ -139,6 +140,7 @@ impl JumpShot {
         let elapsed = packet.GameInfo.TimeSeconds - start_time;
         let time_remaining = duration - elapsed;
 
+        eeg.draw(Drawable::print(stringify!(Phase::Air), color::GREEN));
         eeg.draw(Drawable::print(
             format!("time_remaining: {:.2}", time_remaining),
             color::GREEN,
@@ -158,6 +160,8 @@ impl JumpShot {
     }
 
     fn dodge(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG, start_time: f32) -> Action {
+        eeg.draw(Drawable::print(stringify!(Phase::Dodge), color::GREEN));
+
         let elapsed = packet.GameInfo.TimeSeconds - start_time;
         if elapsed >= 0.05 {
             self.phase = Phase::Finished;
@@ -184,7 +188,6 @@ fn estimate_approach(
     air_time: f32,
 ) -> bool {
     const DT: f32 = 1.0 / 60.0;
-    const FUDGE: f32 = 1.5;
 
     let mut t = 2.0 / 120.0;
 
@@ -200,7 +203,7 @@ fn estimate_approach(
     // velocity.
     while t < ground_time + air_time {
         t += DT;
-        distance += car.speed() * DT * FUDGE;
+        distance += car.speed() * DT;
     }
 
     distance >= target_dist_2d
