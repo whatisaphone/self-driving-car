@@ -39,7 +39,8 @@ fn todo() {
 fn template() {
     let test = TestRunner::start0(TestScenario {
         enemy_loc: Vector3::new(6000.0, 6000.0, 0.0),
-        ..TestScenario::from_collected_row("../logs/play.csv", 100.0)
+        boost: 0,
+        ..TestScenario::from_collected_row("../logs/play.csv", 19.7)
     });
     test.set_behavior(Runner2::new());
 

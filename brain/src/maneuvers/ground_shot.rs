@@ -1,6 +1,6 @@
 use behavior::{Action, Behavior};
 use eeg::{color, Drawable, EEG};
-use maneuvers::GetToFlatGround;
+use maneuvers::{BounceShot, GetToFlatGround};
 use mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
 use nalgebra::Vector3;
 use predict::estimate_intercept_car_ball_2;
@@ -51,8 +51,8 @@ impl Behavior for GroundShot {
             return Action::Return;
         }
 
-        let target_loc = intercept.ball_loc.to_2d()
-            + (intercept.ball_loc.to_2d() - enemy_goal_center()).normalize() * 150.0;
+        let aim_loc = BounceShot::aim_loc(intercept.ball_loc.to_2d());
+        let target_loc = BounceShot::rough_shooting_spot(&intercept, aim_loc);
         let target_dist = (target_loc - me.Physics.loc().to_2d()).norm();
 
         // If the ball has moved further away, assume we hit it and we're done.
@@ -214,6 +214,26 @@ mod integration_tests {
         test.set_behavior(Runner2::new());
 
         test.sleep_millis(2000);
+        assert!(test.has_scored());
+    }
+
+    #[test]
+    fn corner_shot() {
+        let test = TestRunner::start0(TestScenario {
+            ball_loc: Vector3::new(-2616.377, 4173.1816, 122.709236),
+            ball_vel: Vector3::new(662.0207, -114.385414, 294.32352),
+            car_loc: Vector3::new(-3791.579, 2773.0996, 14.34),
+            car_rot: Rotation3::from_unreal_angles(0.013038836, 0.08504006, -0.0035473306),
+            car_vel: Vector3::new(1109.654, 62.572224, 22.532219),
+            boost: 0,
+            ..Default::default()
+        });
+        test.set_behavior(Runner2::new());
+        test.sleep_millis(2500);
+
+        test.examine_eeg(|eeg| {
+            assert!(eeg.log.iter().any(|x| x == "> GroundShot"));
+        });
         assert!(test.has_scored());
     }
 }
