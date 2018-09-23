@@ -124,7 +124,7 @@ impl BounceShot {
 
 #[cfg(test)]
 mod integration_tests {
-    use behavior::{Repeat, RootBehavior};
+    use behavior::Repeat;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use maneuvers::bounce_shot::BounceShot;
     use nalgebra::Vector3;

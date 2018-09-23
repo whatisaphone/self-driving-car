@@ -169,7 +169,7 @@ mod integration_tests {
     use collect::ExtendRotation3;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use maneuvers::PanicDefense;
-    use nalgebra::{Rotation3, Vector2, Vector3};
+    use nalgebra::{Rotation3, Vector3};
     use std::f32::consts::PI;
     use utils::ExtendPhysics;
 

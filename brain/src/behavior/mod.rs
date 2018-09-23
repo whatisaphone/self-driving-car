@@ -4,7 +4,6 @@ pub use behavior::{
     higher_order::{Chain, Fuse, Repeat},
     null::NullBehavior,
     offense::Offense,
-    root::RootBehavior,
     runner::BehaviorRunner,
 };
 
@@ -19,7 +18,6 @@ mod null;
 mod offense;
 mod regroup;
 mod retreating_save;
-mod root;
 pub mod runner;
 mod shoot;
 mod side_wall_self_pass;
