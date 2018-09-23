@@ -24,14 +24,14 @@ fn main() {
         .format(logging::format)
         .init();
 
-    let mut collector = create_collector();
-    let mut eeg = EEG::new();
-    let mut brain = Brain::with_root_behavior();
+    let collector = create_collector();
+    let eeg = EEG::new();
+    let brain = Brain::with_root_behavior();
     let bot = FormulaNone::new(collector, eeg, brain);
 
     let use_framework = env::args().len() != 1;
     if use_framework {
-        rlbot::run_bot(bot);
+        rlbot::run_bot(bot).unwrap();
     } else {
         my_run_bot(bot);
     }
