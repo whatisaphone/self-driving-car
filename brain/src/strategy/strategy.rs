@@ -6,8 +6,8 @@ use utils::{my_goal_center_2d, ExtendF32, ExtendPhysics, ExtendVector2, ExtendVe
 
 pub fn baseline(ctx: &mut Context) -> Box<Behavior> {
     match ctx.scenario.push_wall() {
-        Wall::OwnGoal | Wall::OwnBackWall => Box::new(Defense::new()),
-        _ => Box::new(Offense::new()),
+        Some(Wall::OwnGoal) | Some(Wall::OwnBackWall) | None => Box::new(Defense::new()),
+        Some(_) => Box::new(Offense::new()),
     }
 }
 
@@ -40,7 +40,11 @@ pub fn override_(ctx: &mut Context, current: &Behavior) -> Option<Box<Behavior>>
 }
 
 fn enemy_can_shoot(ctx: &mut Context) -> bool {
-    let ball_loc = ctx.scenario.enemy_intercept().1.to_2d();
+    let enemy_intercept = match ctx.scenario.enemy_intercept() {
+        Some(i) => i,
+        None => return false,
+    };
+    let ball_loc = enemy_intercept.1.to_2d();
     if (ball_loc - my_goal_center_2d()).norm() >= 3000.0 {
         return false;
     }

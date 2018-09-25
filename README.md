@@ -67,6 +67,7 @@ endeavor.
 * [Sam Mish's RL physics notes](https://samuelpmish.github.io/notes/RocketLeague/)
   * [The author's bot](https://github.com/samuelpmish/Lobot)
 * [BakkesMod commands](http://bakkesmod.wikia.com/wiki/Configuration)
+* [DomNomNom's bot](https://github.com/DomNomNom/RocketBot)
 
 ## Ideas
 
@@ -89,9 +90,12 @@ endeavor.
 ### Next
 
 - make it work when orange
-- workaround for root capture interruption
+- don't be scared of kickoffs
 - add the offense swing-around stuff (when no good shot angle)
 - cache simulations to save on cpu
+- for offense tepid hit, continually adjust aim instead of using stale value
+- backwards tepid hits should not dodge? (maybe all tepid hits)
+- ball prediction off walls
 
 ### Backlog
 

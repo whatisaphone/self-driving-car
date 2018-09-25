@@ -4,7 +4,7 @@ use eeg::{color, Drawable};
 use maneuvers::BlitzToLocation;
 use mechanics::simple_steer_towards;
 use nalgebra::Vector2;
-use plan::{ball::predict_ball, drive::rough_time_drive_to_loc};
+use plan::drive::rough_time_drive_to_loc;
 use rlbot;
 use rules::SameBallTrajectory;
 use simulate::rl;
@@ -95,7 +95,7 @@ impl PanicDefense {
         let me = ctx.me();
 
         if let Phase::Start = self.phase {
-            let aim_hint = calc_aim_hint(&ctx.packet.GameBall, me);
+            let aim_hint = calc_aim_hint(ctx);
             return Some(Phase::Rush {
                 aim_hint,
                 child: BlitzToLocation::new(Self::blitz_loc(aim_hint)),
@@ -139,7 +139,7 @@ impl PanicDefense {
             if me.Physics.loc().y <= cutoff {
                 let target_yaw = my_goal_center_2d().angle_to(aim_hint);
                 return Some(Phase::Turn {
-                    aim_hint: calc_aim_hint(&ctx.packet.GameBall, me),
+                    aim_hint: calc_aim_hint(ctx),
                     start_time: ctx.packet.GameInfo.TimeSeconds,
                     target_yaw,
                 });
@@ -150,13 +150,13 @@ impl PanicDefense {
     }
 }
 
-fn calc_aim_hint(ball: &rlbot::BallInfo, car: &rlbot::PlayerInfo) -> Vector2<f32> {
+fn calc_aim_hint(ctx: &mut Context) -> Vector2<f32> {
     // When we reach goal, which half of the field will the ball be on?
-    let time = rough_time_drive_to_loc(car, my_goal_center_2d());
-    let sim_ball = predict_ball(ball, |t, _, _| t >= time);
+    let time = rough_time_drive_to_loc(ctx.me(), my_goal_center_2d());
+    let sim_ball = ctx.scenario.ball_prediction().at_time(time);
     let sim_ball_loc = match sim_ball {
-        Some(b) => b.loc(),
-        None => ball.Physics.loc(),
+        Some(b) => b.loc,
+        None => ctx.packet.GameBall.Physics.loc(),
     };
     Vector2::new(
         sim_ball_loc.x.signum() * rl::FIELD_MAX_X,

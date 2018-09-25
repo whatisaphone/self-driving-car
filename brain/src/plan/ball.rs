@@ -1,33 +1,59 @@
 use nalgebra::Vector3;
 use rlbot;
 use simulate::chip::Ball;
-use utils::ExtendPhysics;
+use utils::{ExtendPhysics, TotalF32};
 
-const MAX_SIM_TIME: f32 = 3.0;
+const DT: f32 = 1.0 / 60.0;
+const PREDICT_DURATION: f32 = 5.0;
 
-pub fn predict_ball(
-    ball: &rlbot::BallInfo,
-    predicate: impl Fn(f32, &Vector3<f32>, &Vector3<f32>) -> bool,
-) -> Option<Ball> {
-    const DT: f32 = 1.0 / 60.0;
+pub struct BallTrajectory {
+    frames: Vec<BallFrame>,
+}
 
-    let mut t = 0.0;
-    let mut sim_ball = Ball::new(
-        ball.Physics.loc(),
-        ball.Physics.vel(),
-        ball.Physics.ang_vel(),
-    );
+pub struct BallFrame {
+    pub t: f32,
+    pub loc: Vector3<f32>,
+}
 
-    loop {
-        t += DT;
-        sim_ball.step(DT);
+impl BallFrame {
+    pub fn dt(&self) -> f32 {
+        DT
+    }
+}
 
-        if predicate(t, &sim_ball.loc(), &sim_ball.vel()) {
-            return Some(sim_ball);
+impl BallTrajectory {
+    pub fn predict(packet: &rlbot::LiveDataPacket) -> Self {
+        let mut ball = Ball::new(
+            packet.GameBall.Physics.loc(),
+            packet.GameBall.Physics.vel(),
+            packet.GameBall.Physics.ang_vel(),
+        );
+        let mut frames = Vec::with_capacity((PREDICT_DURATION / DT).ceil() as usize);
+        let mut t = 0.0;
+        while t < PREDICT_DURATION {
+            t += DT;
+            ball.step(DT);
+            frames.push(BallFrame { t, loc: ball.loc() });
         }
 
-        if t >= MAX_SIM_TIME {
+        Self { frames }
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &BallFrame> {
+        self.frames.iter()
+    }
+
+    pub fn at_time(&self, t: f32) -> Option<&BallFrame> {
+        let i = match self
+            .frames
+            .binary_search_by_key(&TotalF32(t), |f| TotalF32(f.t))
+        {
+            Ok(i) => i,
+            Err(i) => i,
+        };
+        if i >= self.frames.len() {
             return None;
         }
+        Some(&self.frames[i])
     }
 }
