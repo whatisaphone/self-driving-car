@@ -56,10 +56,9 @@ impl<'a> Scenario<'a> {
             self.enemy_intercept = Some(blitz_enemy);
             self.possession = Some(match (blitz_me, blitz_enemy) {
                 (Some((me, _)), Some((en, _))) => me - en,
-                (Some(_), None) => Self::POSSESSION_SATURATED,
-                (None, Some(_)) => -Self::POSSESSION_SATURATED,
-                (None, None) => {
-                    // Very bizarre situation? Let's just go for the ball here.
+                _ => {
+                    // To avoid mexican standoffs, just pretend we have full possession so we go
+                    // for the ball.
                     Self::POSSESSION_SATURATED
                 }
             });
