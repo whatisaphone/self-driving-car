@@ -16,8 +16,8 @@ impl GetToFlatGround {
     pub fn on_flat_ground(packet: &rlbot::LiveDataPacket) -> bool {
         let me = my_car(packet);
         me.OnGround
-            && me.Physics.rot().pitch().abs() < 45.0_f32.to_radians()
-            && me.Physics.rot().roll().abs() < 45.0_f32.to_radians()
+            && me.Physics.rot().pitch().abs() < 15.0_f32.to_radians()
+            && me.Physics.rot().roll().abs() < 15.0_f32.to_radians()
     }
 }
 
