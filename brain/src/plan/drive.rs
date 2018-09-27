@@ -50,7 +50,7 @@ pub fn get_route_dodge(car: &rlbot::PlayerInfo, target_loc: Vector2<f32>) -> Opt
         return None;
     }
 
-    if car.Physics.vel().norm() < 800.0 {
+    if car.Physics.vel().norm() < 1300.0 {
         // This number is just a total guess
         return None; // It's faster to accelerate.
     }
