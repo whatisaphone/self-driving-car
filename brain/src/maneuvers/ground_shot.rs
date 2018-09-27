@@ -51,7 +51,7 @@ impl Behavior for GroundShot {
             return Action::Return;
         }
 
-        let aim_loc = BounceShot::aim_loc(intercept.ball_loc.to_2d());
+        let aim_loc = BounceShot::aim_loc(me.Physics.loc().to_2d(), intercept.ball_loc.to_2d());
         let target_loc = BounceShot::rough_shooting_spot(&intercept, aim_loc);
         let target_dist = (target_loc - me.Physics.loc().to_2d()).norm();
 
@@ -61,6 +61,8 @@ impl Behavior for GroundShot {
             _ => self.min_distance = Some(target_dist),
         }
 
+        eeg.draw(Drawable::GhostBall(intercept.ball_loc));
+        eeg.draw(Drawable::Crosshair(aim_loc));
         eeg.draw(Drawable::print(
             format!("intercept_time: {:.2}", intercept.time),
             color::GREEN,
@@ -69,7 +71,6 @@ impl Behavior for GroundShot {
             format!("target_dist: {:.0}", target_dist),
             color::GREEN,
         ));
-        eeg.draw(Drawable::GhostBall(intercept.ball_loc));
 
         // This behavior currently just operates in 2D
         if !GetToFlatGround::on_flat_ground(packet) {
@@ -217,6 +218,25 @@ mod integration_tests {
         });
         test.set_behavior(Runner2::new());
         test.sleep_millis(2500);
+
+        test.examine_eeg(|eeg| {
+            assert!(eeg.log.iter().any(|x| x == "> GroundShot"));
+        });
+        assert!(test.has_scored());
+    }
+
+    #[test]
+    fn rolling_to_corner_of_goal() {
+        let test = TestRunner::start0(TestScenario {
+            ball_loc: Vector3::new(151.63426, 4371.35, 93.15),
+            ball_vel: Vector3::new(-435.87555, 272.40097, 0.0),
+            car_loc: Vector3::new(-2071.033, 4050.8577, 17.01),
+            car_rot: Rotation3::from_unreal_angles(-0.009491506, -0.61694795, 0.0),
+            car_vel: Vector3::new(232.67545, -405.04382, 8.36),
+            ..Default::default()
+        });
+        test.set_behavior(Runner2::new());
+        test.sleep_millis(2000);
 
         test.examine_eeg(|eeg| {
             assert!(eeg.log.iter().any(|x| x == "> GroundShot"));

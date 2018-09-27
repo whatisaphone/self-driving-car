@@ -1,16 +1,16 @@
 use behavior::{Action, Behavior};
 use eeg::{color, Drawable};
 use mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
-use nalgebra::{Isometry3, Point3, Vector2, Vector3};
-use ncollide3d::{
-    query::distance,
-    shape::{Ball, Triangle},
-};
+use nalgebra::Vector2;
 use predict::{estimate_intercept_car_ball_2, Intercept};
 use rules::SameBallTrajectory;
 use simulate::rl;
+use std::f32::consts::PI;
 use strategy::Context;
-use utils::{enemy_goal_center, one_v_one, ExtendPhysics, ExtendVector2, ExtendVector3};
+use utils::{
+    enemy_goal_center, one_v_one, ExtendF32, ExtendPhysics, ExtendVector2, ExtendVector3,
+    WallRayCalculator,
+};
 
 pub struct BounceShot {
     aim_loc: Vector2<f32>,
@@ -77,35 +77,21 @@ impl Behavior for BounceShot {
 
 impl BounceShot {
     /// Given a ball location, where should we aim the shot?
-    pub fn aim_loc(ball_loc: Vector2<f32>) -> Vector2<f32> {
-        if ball_loc.x.abs() >= rl::GOALPOST_X {
-            return enemy_goal_center();
-        }
-
-        // If the ball is very close to net – aim straight in for an easy shot.
-        // If there's some distance – aim to the middle of net so we're less likely to
-        // miss.
-        //
-        // This is a pretty rough concept, but it's better than nothing.
-
-        let dist = distance(
-            &Isometry3::new(Vector3::zeros(), Vector3::zeros()),
-            &Triangle::new(
-                Point3::from_coordinates(Vector3::new(-rl::GOALPOST_X, rl::FIELD_MAX_Y, 0.0)),
-                Point3::from_coordinates(Vector3::new(rl::GOALPOST_X, rl::FIELD_MAX_Y, 0.0)),
-                Point3::from_coordinates(Vector3::new(0.0, rl::FIELD_MAX_Y - rl::GOALPOST_X, 0.0)),
-            ),
-            &Isometry3::new(ball_loc.to_3d(0.0), Vector3::zeros()),
-            &Ball::new(rl::BALL_RADIUS),
-        );
-
-        Vector2::new(
-            (ball_loc.x.abs() - dist).max(0.0) * ball_loc.x.signum(),
-            rl::FIELD_MAX_Y,
-        )
+    pub fn aim_loc(car_loc: Vector2<f32>, ball_loc: Vector2<f32>) -> Vector2<f32> {
+        // If the ball is very close to goal, aim for a point in goal opposite from the
+        // ball for an easy shot. If there's some distance, aim at the middle of goal
+        // so we're less likely to miss.
+        let y_dist = (enemy_goal_center().y - ball_loc.y).abs();
+        let allow_angle_diff = ((1000.0 - y_dist) / 1000.0).max(0.0) * PI / 12.0;
+        let naive_angle = car_loc.angle_to(ball_loc);
+        let goal_angle = ball_loc.angle_to(enemy_goal_center());
+        let adjust = (naive_angle - goal_angle).normalize_angle();
+        let aim_angle = goal_angle + adjust.max(-allow_angle_diff).min(allow_angle_diff);
+        WallRayCalculator::calc_ray(ball_loc, aim_angle)
     }
 
-    /// Roughly where should the car be in order to shoot at `aim_loc`?
+    /// Roughly where should the car be when it makes contact with the ball, in
+    /// order to shoot at `aim_loc`?
     pub fn rough_shooting_spot(intercept: &Intercept, aim_loc: Vector2<f32>) -> Vector2<f32> {
         // This is not the greatest guess
         let guess_final_ball_speed = f32::min(intercept.car_speed * 1.25, rl::CAR_MAX_SPEED);

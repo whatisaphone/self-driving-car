@@ -75,7 +75,7 @@ impl JumpShot {
             }
         };
 
-        let aim_loc = BounceShot::aim_loc(intercept.ball_loc.to_2d());
+        let aim_loc = BounceShot::aim_loc(me.Physics.loc().to_2d(), intercept.ball_loc.to_2d());
         let target_loc = BounceShot::rough_shooting_spot(&intercept, aim_loc);
         let yaw_diff = simple_yaw_diff(&me.Physics, target_loc);
         let distance = (me.Physics.loc().to_2d() - target_loc).norm();
