@@ -2,7 +2,7 @@ use behavior::{Action, Behavior};
 use eeg::{color, Drawable, EEG};
 use maneuvers::{drive_towards, BounceShot, GetToFlatGround};
 use mechanics::simple_yaw_diff;
-use predict::estimate_intercept_car_ball_2;
+use predict::estimate_intercept_car_ball_3;
 use rlbot;
 use simulate::{rl, Car1D, CarAerial60Deg};
 use std::f32::consts::PI;
@@ -58,7 +58,7 @@ impl JumpShot {
 
         let (me, _enemy) = one_v_one(packet);
 
-        let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |t, &loc, _vel| {
+        let intercept = estimate_intercept_car_ball_3(&me, &packet.GameBall, |t, &loc, _vel| {
             let air_time = CarAerial60Deg::cost(loc.z - Z_FUDGE).time;
             if t < air_time {
                 return false;
@@ -66,6 +66,14 @@ impl JumpShot {
 
             loc.z < Self::MAX_BALL_Z
         });
+
+        let intercept = match intercept {
+            Some(i) => i,
+            None => {
+                eeg.log("[JumpShot] intercept not found; aborting");
+                return Action::Abort;
+            }
+        };
 
         let aim_loc = BounceShot::aim_loc(intercept.ball_loc.to_2d());
         let target_loc = BounceShot::rough_shooting_spot(&intercept, aim_loc);
