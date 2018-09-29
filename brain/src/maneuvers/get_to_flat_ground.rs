@@ -1,9 +1,9 @@
 use behavior::{Action, Behavior};
 use collect::ExtendRotation3;
-use eeg::EEG;
 use maneuvers::drive_towards;
 use nalgebra::Vector2;
 use rlbot;
+use strategy::Context;
 use utils::{my_car, ExtendPhysics};
 
 pub struct GetToFlatGround;
@@ -26,11 +26,11 @@ impl Behavior for GetToFlatGround {
         stringify!(GetToFlatGround)
     }
 
-    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-        if Self::on_flat_ground(packet) {
+    fn execute2(&mut self, ctx: &mut Context) -> Action {
+        if Self::on_flat_ground(ctx.packet) {
             return Action::Return;
         }
 
-        Action::Yield(drive_towards(packet, eeg, Vector2::zeros()))
+        Action::Yield(drive_towards(ctx.packet, ctx.eeg, Vector2::zeros()))
     }
 }

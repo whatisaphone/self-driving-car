@@ -1,5 +1,5 @@
 use behavior::{Action, Behavior, Chain};
-use eeg::{color, Drawable, EEG};
+use eeg::{color, Drawable};
 use maneuvers::{drive_towards, GetToFlatGround};
 use mechanics::simple_yaw_diff;
 use nalgebra::Vector2;
@@ -7,7 +7,8 @@ use plan::drive::get_route_dodge;
 use rlbot;
 use simulate::{rl, Car1D};
 use std::f32::consts::PI;
-use utils::{my_car, ExtendPhysics, ExtendVector3};
+use strategy::Context;
+use utils::{ExtendPhysics, ExtendVector3};
 
 pub struct GroundAccelToLoc {
     target_loc: Vector2<f32>,
@@ -28,27 +29,27 @@ impl Behavior for GroundAccelToLoc {
         stringify!(GroundAccelToLoc)
     }
 
-    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-        let me = my_car(packet);
+    fn execute2(&mut self, ctx: &mut Context) -> Action {
+        let me = ctx.me();
         let distance = (me.Physics.loc().to_2d() - self.target_loc).norm();
-        let time_remaining = self.target_time - packet.GameInfo.TimeSeconds;
+        let time_remaining = self.target_time - ctx.packet.GameInfo.TimeSeconds;
 
-        eeg.draw(Drawable::ghost_car_ground(
+        ctx.eeg.draw(Drawable::ghost_car_ground(
             self.target_loc,
             me.Physics.rot(),
         ));
-        eeg.draw(Drawable::print(
+        ctx.eeg.draw(Drawable::print(
             format!("distance: {:.0}", distance),
             color::GREEN,
         ));
-        eeg.draw(Drawable::print(
+        ctx.eeg.draw(Drawable::print(
             format!("time_remaining: {:.2}", time_remaining),
             color::GREEN,
         ));
 
         // This behavior currently just operates in 2D
-        if !GetToFlatGround::on_flat_ground(packet) {
-            eeg.log("[GroudAccelToLoc] not on flat ground");
+        if !GetToFlatGround::on_flat_ground(ctx.packet) {
+            ctx.eeg.log("[GroudAccelToLoc] not on flat ground");
             return Action::Abort;
         }
 
@@ -64,7 +65,7 @@ impl Behavior for GroundAccelToLoc {
         let yaw_diff = simple_yaw_diff(&me.Physics, self.target_loc);
         let too_fast = estimate_approach(&me, distance, time_remaining - 2.0 / 120.0);
 
-        let mut result = drive_towards(packet, eeg, self.target_loc);
+        let mut result = drive_towards(ctx.packet, ctx.eeg, self.target_loc);
         if too_fast {
             result.Throttle = 0.0;
         } else {

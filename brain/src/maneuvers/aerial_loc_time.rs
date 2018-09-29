@@ -1,12 +1,13 @@
 use behavior::{Action, Behavior};
-use eeg::{color, Drawable, EEG};
+use eeg::{color, Drawable};
 use maneuvers::GetToFlatGround;
 use mechanics::{simple_steer_towards, simple_yaw_diff};
 use nalgebra::Vector3;
 use rlbot;
 use simulate::{rl, Car1D, CarAerial60Deg};
 use std::f32::consts::PI;
-use utils::{my_car, one_v_one, ExtendPhysics, ExtendVector3};
+use strategy::Context;
+use utils::{ExtendPhysics, ExtendVector3};
 
 pub struct AerialLocTime {
     target_loc: Vector3<f32>,
@@ -38,8 +39,8 @@ impl Behavior for AerialLocTime {
         stringify!(AerialLocTime)
     }
 
-    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-        let (me, _enemy) = one_v_one(packet);
+    fn execute2(&mut self, ctx: &mut Context) -> Action {
+        let me = ctx.me();
         let distance = (me.Physics.loc() - self.target_loc).norm();
 
         // Return if we reached our target and are now moving away from it.
@@ -48,46 +49,48 @@ impl Behavior for AerialLocTime {
             _ => self.min_distance = Some(distance),
         }
 
-        eeg.draw(Drawable::GhostCar(self.target_loc, me.Physics.rot()));
-        eeg.draw(Drawable::print(format!("{:?}", self.phase), color::GREEN));
+        ctx.eeg
+            .draw(Drawable::GhostCar(self.target_loc, me.Physics.rot()));
+        ctx.eeg
+            .draw(Drawable::print(format!("{:?}", self.phase), color::GREEN));
 
         match self.phase {
-            Phase::Ground => self.ground(packet, eeg),
+            Phase::Ground => self.ground(ctx),
             Phase::Air {
                 start_time,
                 duration,
-            } => self.air(packet, eeg, start_time, duration),
+            } => self.air(ctx, start_time, duration),
             Phase::Shoot => Action::Return,
         }
     }
 }
 
 impl AerialLocTime {
-    fn ground(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-        let me = my_car(packet);
+    fn ground(&mut self, ctx: &mut Context) -> Action {
+        let me = ctx.me();
         let target_dist_2d = (me.Physics.loc() - self.target_loc).to_2d().norm();
-        let time_remaining = self.target_time - packet.GameInfo.TimeSeconds;
+        let time_remaining = self.target_time - ctx.packet.GameInfo.TimeSeconds;
         let yaw_diff = simple_yaw_diff(&me.Physics, self.target_loc.to_2d());
         let cost = CarAerial60Deg::cost(self.target_loc.z);
 
-        eeg.draw(Drawable::print(
+        ctx.eeg.draw(Drawable::print(
             format!("target_dist_2d: {:.0}", target_dist_2d),
             color::GREEN,
         ));
-        eeg.draw(Drawable::print(
+        ctx.eeg.draw(Drawable::print(
             format!("time_remaining: {:.2}", time_remaining),
             color::GREEN,
         ));
-        eeg.draw(Drawable::print(
+        ctx.eeg.draw(Drawable::print(
             format!("yaw_diff: {:.0}°", yaw_diff.to_degrees()),
             color::GREEN,
         ));
-        eeg.draw(Drawable::print(
+        ctx.eeg.draw(Drawable::print(
             format!("climb_time: {:.2}°", cost.time),
             color::GREEN,
         ));
 
-        if !GetToFlatGround::on_flat_ground(packet) {
+        if !GetToFlatGround::on_flat_ground(ctx.packet) {
             warn!("Not on flat ground");
             return Action::Abort;
         }
@@ -107,10 +110,10 @@ impl AerialLocTime {
             ))
         } else {
             self.phase = Phase::Air {
-                start_time: packet.GameInfo.TimeSeconds,
+                start_time: ctx.packet.GameInfo.TimeSeconds,
                 duration: cost.time,
             };
-            self.execute(packet, eeg)
+            self.execute2(ctx)
         }
     }
 
@@ -170,20 +173,14 @@ impl AerialLocTime {
 
     // This is really sloppy and cannot correct correct once you leave the ground.
     // Needs improvement.
-    fn air(
-        &mut self,
-        packet: &rlbot::LiveDataPacket,
-        eeg: &mut EEG,
-        start_time: f32,
-        duration: f32,
-    ) -> Action {
-        let elapsed = packet.GameInfo.TimeSeconds - start_time;
+    fn air(&mut self, ctx: &mut Context, start_time: f32, duration: f32) -> Action {
+        let elapsed = ctx.packet.GameInfo.TimeSeconds - start_time;
         if elapsed >= duration {
             self.phase = Phase::Shoot;
-            return self.execute(packet, eeg);
+            return self.execute2(ctx);
         }
 
-        let me = my_car(packet);
+        let me = ctx.me();
         let target_pitch = 60.0_f32.to_radians();
         let pitch = (target_pitch - me.Physics.Rotation.Pitch) / 2.0;
         let input = rlbot::PlayerInput {

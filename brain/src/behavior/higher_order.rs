@@ -1,6 +1,5 @@
 use behavior::{Action, Behavior, Priority};
-use eeg::{color, Drawable, EEG};
-use rlbot;
+use eeg::{color, Drawable};
 use std::collections::VecDeque;
 use strategy::Context;
 
@@ -23,7 +22,7 @@ impl Behavior for Fuse {
         stringify!(Fuse)
     }
 
-    fn execute(&mut self, _packet: &rlbot::LiveDataPacket, _eeg: &mut EEG) -> Action {
+    fn execute2(&mut self, _ctx: &mut Context) -> Action {
         // `take()` leaves a None behind, so this can only match `Some` once.
         match self.child.take() {
             Some(b) => Action::Call(b),

@@ -1,6 +1,6 @@
 use behavior::behavior::{Action, Behavior};
-use eeg::EEG;
 use rlbot;
+use strategy::Context;
 
 #[allow(dead_code)]
 pub struct NullBehavior;
@@ -17,7 +17,7 @@ impl Behavior for NullBehavior {
         stringify!(NullBehavior)
     }
 
-    fn execute(&mut self, _packet: &rlbot::LiveDataPacket, _eeg: &mut EEG) -> Action {
+    fn execute2(&mut self, _ctx: &mut Context) -> Action {
         Action::Yield(rlbot::PlayerInput::default())
     }
 }
