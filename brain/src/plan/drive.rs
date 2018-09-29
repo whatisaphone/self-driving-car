@@ -39,6 +39,11 @@ fn steer_penalty(car: &rlbot::PlayerInfo, desired_aim: f32) -> f32 {
 pub fn get_route_dodge(car: &rlbot::PlayerInfo, target_loc: Vector2<f32>) -> Option<Box<Behavior>> {
     const DODGE_SPEED_BOOST: f32 = 500.0; // TODO: Literally just guessed this
 
+    // Temporary until the rest of the bot has a little more smarts
+    if car.Boost > 1 {
+        return None;
+    }
+
     if !car.OnGround {
         return None;
     }

@@ -1,6 +1,6 @@
 use behavior::{shoot::Shoot, Action, Behavior};
 use eeg::EEG;
-use maneuvers::{BounceShot, GetToFlatGround};
+use maneuvers::BounceShot;
 use plan::hit_angle::{feasible_hit_angle_away, feasible_hit_angle_toward};
 use predict::{estimate_intercept_car_ball_2, Intercept};
 use rlbot;
@@ -24,10 +24,6 @@ impl Behavior for Offense {
     }
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-        if !GetToFlatGround::on_flat_ground(packet) {
-            return Action::call(GetToFlatGround::new());
-        }
-
         let (me, _enemy) = one_v_one(packet);
         let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |_t, &loc, _vel| {
             Shoot::good_angle(loc, me.Physics.loc())

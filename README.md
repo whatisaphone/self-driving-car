@@ -96,6 +96,9 @@ endeavor.
 - for offense tepid hit, continually adjust aim instead of using stale value
 - backwards tepid hits should not dodge? (maybe all tepid hits)
 - ball prediction off walls
+- BounceShot (and related) should verify the hit happened, and Action::Abort if not
+- don't jump directly after skidding and go the wrong way (probably test yaw vs velocity angle and see if match)
+- QuickJumpAndDodge should allow choosing the angle at apex instead of only ahead of time
 
 ### Backlog
 

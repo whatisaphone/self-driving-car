@@ -158,15 +158,26 @@ fn test_thread(
 ) {
     let rlbot_guard = unlock_rlbot_singleton();
     let rlbot = rlbot_guard.as_ref().unwrap();
-    rlbot
-        .start_match(rlbot::MatchSettings {
-            MutatorSettings: rlbot::MutatorSettings {
-                MatchLength: rlbot::MatchLength::Unlimited,
-                ..Default::default()
-            },
-            SkipReplays: true,
-            ..rlbot::MatchSettings::simple_1v1("Subject", "Goon")
-        }).unwrap();
+
+    let mut match_settings = rlbot::MatchSettings {
+        NumPlayers: 2,
+        MutatorSettings: rlbot::MutatorSettings {
+            MatchLength: rlbot::MatchLength::Unlimited,
+            ..Default::default()
+        },
+        SkipReplays: true,
+        ..Default::default()
+    };
+
+    match_settings.PlayerConfiguration[0].Bot = true;
+    match_settings.PlayerConfiguration[0].RLBotControlled = true;
+    match_settings.PlayerConfiguration[0].set_name("Subject");
+
+    match_settings.PlayerConfiguration[1].Bot = true;
+    match_settings.PlayerConfiguration[1].RLBotControlled = true;
+    match_settings.PlayerConfiguration[1].set_name("Mushroom");
+
+    rlbot.start_match(match_settings).unwrap();
 
     let mut eeg = EEG::new();
     let mut brain = Brain::with_behavior(Box::new(NullBehavior::new()));

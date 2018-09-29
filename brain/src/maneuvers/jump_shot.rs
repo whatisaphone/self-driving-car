@@ -1,16 +1,19 @@
 use behavior::{Action, Behavior};
-use eeg::{color, Drawable, EEG};
+use eeg::{color, Drawable};
 use maneuvers::{drive_towards, BounceShot, GetToFlatGround};
 use mechanics::simple_yaw_diff;
 use predict::estimate_intercept_car_ball_3;
 use rlbot;
+use rules::SameBallTrajectory;
 use simulate::{rl, Car1D, CarAerial60Deg};
 use std::f32::consts::PI;
-use utils::{one_v_one, ExtendPhysics, ExtendVector2, ExtendVector3};
+use strategy::Context;
+use utils::{ExtendPhysics, ExtendVector2, ExtendVector3};
 
 const Z_FUDGE: f32 = 75.0;
 
 pub struct JumpShot {
+    same_ball_trajectory: SameBallTrajectory,
     phase: Phase,
 }
 
@@ -26,6 +29,7 @@ impl JumpShot {
 
     pub fn new() -> JumpShot {
         JumpShot {
+            same_ball_trajectory: SameBallTrajectory::new(),
             phase: Phase::Ground,
         }
     }
@@ -36,41 +40,43 @@ impl Behavior for JumpShot {
         stringify!(JumpShot)
     }
 
-    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
+    fn execute2(&mut self, ctx: &mut Context) -> Action {
+        return_some!(self.same_ball_trajectory.execute(ctx));
+
         match self.phase {
-            Phase::Ground => self.ground(packet, eeg),
+            Phase::Ground => self.ground(ctx),
             Phase::Air {
                 start_time,
                 duration,
-            } => self.air(packet, eeg, start_time, duration),
-            Phase::Dodge { start_time } => self.dodge(packet, eeg, start_time),
+            } => self.air(ctx, start_time, duration),
+            Phase::Dodge { start_time } => self.dodge(ctx, start_time),
             Phase::Finished => Action::Return,
         }
     }
 }
 
 impl JumpShot {
-    fn ground(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-        if !GetToFlatGround::on_flat_ground(packet) {
-            // TODO: this is not how this works…
-            return Action::call(GetToFlatGround::new());
+    fn ground(&mut self, ctx: &mut Context) -> Action {
+        if !GetToFlatGround::on_flat_ground(ctx.packet) {
+            return Action::Abort;
         }
 
-        let (me, _enemy) = one_v_one(packet);
+        let me = ctx.me();
 
-        let intercept = estimate_intercept_car_ball_3(&me, &packet.GameBall, |t, &loc, _vel| {
-            let air_time = CarAerial60Deg::cost(loc.z - Z_FUDGE).time;
-            if t < air_time {
-                return false;
-            }
+        let intercept =
+            estimate_intercept_car_ball_3(&me, &ctx.packet.GameBall, |t, &loc, _vel| {
+                let air_time = CarAerial60Deg::cost(loc.z - Z_FUDGE).time;
+                if t < air_time {
+                    return false;
+                }
 
-            loc.z < Self::MAX_BALL_Z
-        });
+                loc.z < Self::MAX_BALL_Z
+            });
 
         let intercept = match intercept {
             Some(i) => i,
             None => {
-                eeg.log("[JumpShot] intercept not found; aborting");
+                ctx.eeg.log("[JumpShot] intercept not found; aborting");
                 return Action::Abort;
             }
         };
@@ -82,36 +88,38 @@ impl JumpShot {
         let air_time = CarAerial60Deg::cost(intercept.ball_loc.z - Z_FUDGE).time;
         let available_ground_time = intercept.time - air_time;
 
-        eeg.draw(Drawable::print(stringify!(Phase::Ground), color::GREEN));
-        eeg.draw(Drawable::GhostBall(intercept.ball_loc));
-        eeg.draw(Drawable::Crosshair(aim_loc));
-        eeg.draw(Drawable::GhostCar(
+        ctx.eeg
+            .draw(Drawable::print(stringify!(Phase::Ground), color::GREEN));
+        ctx.eeg.draw(Drawable::GhostBall(intercept.ball_loc));
+        ctx.eeg.draw(Drawable::Crosshair(aim_loc));
+        ctx.eeg.draw(Drawable::GhostCar(
             target_loc.to_3d(intercept.ball_loc.z),
             me.Physics.rot(),
         ));
-        eeg.draw(Drawable::print(
+        ctx.eeg.draw(Drawable::print(
             format!("yaw_diff: {:.0}°", yaw_diff.to_degrees()),
             color::GREEN,
         ));
-        eeg.draw(Drawable::print(
+        ctx.eeg.draw(Drawable::print(
             format!("distance: {:.0}", distance),
             color::GREEN,
         ));
-        eeg.draw(Drawable::print(
+        ctx.eeg.draw(Drawable::print(
             format!("air_time: {:.2}", air_time),
             color::GREEN,
         ));
-        eeg.draw(Drawable::print(
+        ctx.eeg.draw(Drawable::print(
             format!("avail_ground_time: {:.2}", available_ground_time),
             color::GREEN,
         ));
 
         if available_ground_time < 2.0 / 120.0 && yaw_diff.abs() < 5.0_f32.to_radians() {
+            ctx.eeg.log("[JumpShot] Air");
             self.phase = Phase::Air {
-                start_time: packet.GameInfo.TimeSeconds,
+                start_time: ctx.packet.GameInfo.TimeSeconds,
                 duration: air_time,
             };
-            return self.execute(packet, eeg);
+            return self.execute2(ctx);
         }
 
         let yaw_diff = simple_yaw_diff(&me.Physics, target_loc);
@@ -122,7 +130,7 @@ impl JumpShot {
             air_time,
         );
 
-        let mut result = drive_towards(packet, eeg, target_loc);
+        let mut result = drive_towards(ctx.packet, ctx.eeg, target_loc);
         if too_fast {
             result.Throttle = 0.0;
         } else {
@@ -138,27 +146,23 @@ impl JumpShot {
         Action::Yield(result)
     }
 
-    fn air(
-        &mut self,
-        packet: &rlbot::LiveDataPacket,
-        eeg: &mut EEG,
-        start_time: f32,
-        duration: f32,
-    ) -> Action {
-        let elapsed = packet.GameInfo.TimeSeconds - start_time;
+    fn air(&mut self, ctx: &mut Context, start_time: f32, duration: f32) -> Action {
+        let elapsed = ctx.packet.GameInfo.TimeSeconds - start_time;
         let time_remaining = duration - elapsed;
 
-        eeg.draw(Drawable::print(stringify!(Phase::Air), color::GREEN));
-        eeg.draw(Drawable::print(
+        ctx.eeg
+            .draw(Drawable::print(stringify!(Phase::Air), color::GREEN));
+        ctx.eeg.draw(Drawable::print(
             format!("time_remaining: {:.2}", time_remaining),
             color::GREEN,
         ));
 
         if time_remaining <= 0.0 {
+            ctx.eeg.log("[JumpShot] Dodge");
             self.phase = Phase::Dodge {
-                start_time: packet.GameInfo.TimeSeconds,
+                start_time: ctx.packet.GameInfo.TimeSeconds,
             };
-            return self.execute(packet, eeg);
+            return self.execute2(ctx);
         }
 
         Action::Yield(rlbot::PlayerInput {
@@ -167,17 +171,18 @@ impl JumpShot {
         })
     }
 
-    fn dodge(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG, start_time: f32) -> Action {
-        eeg.draw(Drawable::print(stringify!(Phase::Dodge), color::GREEN));
+    fn dodge(&mut self, ctx: &mut Context, start_time: f32) -> Action {
+        ctx.eeg
+            .draw(Drawable::print(stringify!(Phase::Dodge), color::GREEN));
 
-        let elapsed = packet.GameInfo.TimeSeconds - start_time;
+        let elapsed = ctx.packet.GameInfo.TimeSeconds - start_time;
         if elapsed >= 0.05 {
             self.phase = Phase::Finished;
-            return self.execute(packet, eeg);
+            return self.execute2(ctx);
         }
 
-        let (me, _enemy) = one_v_one(packet);
-        let angle = simple_yaw_diff(&me.Physics, packet.GameBall.Physics.loc().to_2d());
+        let me = ctx.me();
+        let angle = simple_yaw_diff(&me.Physics, ctx.packet.GameBall.Physics.loc().to_2d());
 
         Action::Yield(rlbot::PlayerInput {
             Pitch: -angle.cos(),

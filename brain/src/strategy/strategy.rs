@@ -1,10 +1,14 @@
 use behavior::{Behavior, Chain, Defense, Offense, Priority};
-use maneuvers::FiftyFifty;
+use maneuvers::{FiftyFifty, GetToFlatGround};
 use std::f32::consts::PI;
 use strategy::{scenario::Scenario, Context};
 use utils::{my_goal_center_2d, ExtendF32, ExtendPhysics, ExtendVector2, ExtendVector3, Wall};
 
 pub fn baseline(ctx: &mut Context) -> Box<Behavior> {
+    if !GetToFlatGround::on_flat_ground(ctx.packet) {
+        return Box::new(GetToFlatGround::new());
+    }
+
     match ctx.scenario.push_wall() {
         Some(Wall::OwnGoal) | Some(Wall::OwnBackWall) | None => Box::new(Defense::new()),
         Some(_) => Box::new(Offense::new()),
@@ -16,7 +20,7 @@ pub fn override_(ctx: &mut Context, current: &Behavior) -> Option<Box<Behavior>>
         if ctx.scenario.possession().abs() < Scenario::POSSESSION_CONTESTABLE {
             ctx.eeg.log(format!(
                 "enemy can shoot, possession = {:.2}, going for 50/50",
-                ctx.scenario.possession().abs()
+                ctx.scenario.possession()
             ));
             return Some(Box::new(Chain::new(
                 Priority::Save,

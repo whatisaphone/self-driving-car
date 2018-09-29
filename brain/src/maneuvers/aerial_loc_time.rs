@@ -89,7 +89,7 @@ impl AerialLocTime {
 
         if !GetToFlatGround::on_flat_ground(packet) {
             warn!("Not on flat ground");
-            return Action::Return;
+            return Action::Abort;
         }
 
         let fly = if yaw_diff.abs() >= 3.0_f32.to_radians() {

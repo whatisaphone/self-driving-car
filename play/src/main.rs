@@ -102,6 +102,10 @@ impl rlbot::Bot for FormulaNone {
     }
 
     fn tick(&mut self, packet: &rlbot::LiveDataPacket) -> rlbot::PlayerInput {
+        if !packet.GameInfo.RoundActive {
+            return Default::default();
+        }
+
         logging::STATE.lock().unwrap().game_time = Some(packet.GameInfo.TimeSeconds);
 
         self.eeg.begin(&packet);

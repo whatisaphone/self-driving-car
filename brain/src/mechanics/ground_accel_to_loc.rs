@@ -48,7 +48,8 @@ impl Behavior for GroundAccelToLoc {
 
         // This behavior currently just operates in 2D
         if !GetToFlatGround::on_flat_ground(packet) {
-            return Action::call(GetToFlatGround::new());
+            eeg.log("[GroudAccelToLoc] not on flat ground");
+            return Action::Abort;
         }
 
         // A bit sloppy reasoning here

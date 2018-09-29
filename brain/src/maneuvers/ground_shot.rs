@@ -10,24 +10,20 @@ use utils::{enemy_goal_center, one_v_one, ExtendF32, ExtendPhysics, ExtendVector
 
 pub struct GroundShot {
     min_distance: Option<f32>,
-    finished: bool,
 }
 
 impl GroundShot {
     pub const MAX_BALL_Z: f32 = 120.0; // sloppy number
 
     pub fn new() -> GroundShot {
-        GroundShot {
-            min_distance: None,
-            finished: false,
-        }
+        GroundShot { min_distance: None }
     }
 
     pub fn good_angle(ball_loc: Vector3<f32>, car_loc: Vector3<f32>) -> bool {
         let angle_me_ball = car_loc.to_2d().angle_to(ball_loc.to_2d());
         let angle_ball_goal = ball_loc.to_2d().angle_to(enemy_goal_center());
         let goodness = (angle_me_ball - angle_ball_goal).normalize_angle().abs();
-        goodness < 60.0_f32.to_radians()
+        goodness < 30.0_f32.to_radians()
     }
 }
 
@@ -37,8 +33,9 @@ impl Behavior for GroundShot {
     }
 
     fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-        if self.finished {
-            return Action::Return;
+        // This behavior currently just operates in 2D
+        if !GetToFlatGround::on_flat_ground(packet) {
+            return Action::Abort;
         }
 
         let (me, _enemy) = one_v_one(packet);
@@ -72,14 +69,7 @@ impl Behavior for GroundShot {
             color::GREEN,
         ));
 
-        // This behavior currently just operates in 2D
-        if !GetToFlatGround::on_flat_ground(packet) {
-            // TODO: this is not how this works…
-            return Action::call(GetToFlatGround::new());
-        }
-
         if target_dist <= 250.0 {
-            self.finished = true;
             return shoot(packet, eeg);
         }
 
