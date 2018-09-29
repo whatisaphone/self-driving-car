@@ -2,14 +2,13 @@ use behavior::{Action, Behavior};
 use eeg::{color, Drawable};
 use mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
 use nalgebra::Vector2;
-use predict::{estimate_intercept_car_ball_2, Intercept};
+use predict::{estimate_intercept_car_ball, Intercept};
 use rules::SameBallTrajectory;
 use simulate::rl;
 use std::f32::consts::PI;
 use strategy::Context;
 use utils::{
-    enemy_goal_center, one_v_one, ExtendF32, ExtendPhysics, ExtendVector2, ExtendVector3,
-    WallRayCalculator,
+    enemy_goal_center, ExtendF32, ExtendPhysics, ExtendVector2, ExtendVector3, WallRayCalculator,
 };
 
 pub struct BounceShot {
@@ -40,16 +39,21 @@ impl Behavior for BounceShot {
     fn execute2(&mut self, ctx: &mut Context) -> Action {
         return_some!(self.same_ball_trajectory.execute(ctx));
 
-        let (me, _enemy) = one_v_one(ctx.packet);
-        let intercept = estimate_intercept_car_ball_2(&me, &ctx.packet.GameBall, |_t, loc, vel| {
+        let me = ctx.me();
+        let intercept = estimate_intercept_car_ball(ctx, me, |_t, loc, vel| {
             // What we actually want is vel.z >= 0, e.g. the upward half of a bounce. But
             // velocity will be approx. -6.8 when the ball is stationary, due to gravity
             // being applied after collision handling.
             loc.z < Self::MAX_BALL_Z && vel.z >= -10.0
         });
 
+        let intercept = some_or_else!(intercept, {
+            ctx.eeg.log("[BounceShot] unknown intercept");
+            return Action::Abort;
+        });
+
         let intercept_car_loc = Self::rough_shooting_spot(&intercept, self.aim_loc);
-        let distance = (me.Physics.loc().to_2d() - intercept_car_loc).norm();
+        let distance = (ctx.me().Physics.loc().to_2d() - intercept_car_loc).norm();
 
         ctx.eeg.draw(Drawable::Crosshair(self.aim_loc));
         ctx.eeg.draw(Drawable::GhostBall(intercept.ball_loc));

@@ -1,22 +1,17 @@
 use behavior::{Action, Behavior, Chain, Priority};
-use eeg::{color, Drawable, EEG};
+use eeg::{color, Drawable};
 use maneuvers::{BounceShot, GroundShot, JumpShot, PanicDefense};
 use nalgebra::{Rotation2, Vector2};
-use predict::{
-    estimate_intercept_car_ball, estimate_intercept_car_ball_3, is_sane_ball_loc, Intercept,
-};
-use rlbot;
+use predict::{estimate_intercept_car_ball, is_sane_ball_loc, Intercept};
 use std::f32::consts::PI;
 use strategy::{Context, Scenario};
 use utils::{my_car, my_goal_center_2d, ExtendPhysics, ExtendVector3, Wall, WallRayCalculator};
 
-pub struct Defense {
-    finished: bool,
-}
+pub struct Defense;
 
 impl Defense {
     pub fn new() -> Defense {
-        Defense { finished: false }
+        Defense
     }
 }
 
@@ -25,18 +20,19 @@ impl Behavior for Defense {
         stringify!(Defense)
     }
 
-    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-        if self.finished {
-            return Action::Return;
-        }
+    fn execute2(&mut self, ctx: &mut Context) -> Action {
+        let me = ctx.me();
+        let intercept = estimate_intercept_car_ball(ctx, me, |_t, loc, _vel| {
+            loc.z < PushToOwnCorner::MAX_BALL_Z
+        });
 
-        self.finished = true;
+        let can_intercept = match intercept {
+            None => false,
+            Some(int) => is_sane_ball_loc(int.ball_loc),
+        };
 
-        let me = my_car(packet);
-        let intercept = estimate_intercept_car_ball(&me, &packet.GameBall);
-
-        if !is_sane_ball_loc(intercept.ball_loc) {
-            eeg.draw(Drawable::print("panicking", color::GREEN));
+        if !can_intercept {
+            ctx.eeg.log("[Defense] no good intercept; panicking");
             return Action::call(PanicDefense::new());
         }
 
@@ -53,6 +49,8 @@ impl Behavior for Defense {
 struct PushToOwnCorner;
 
 impl PushToOwnCorner {
+    const MAX_BALL_Z: f32 = HitToOwnCorner::MAX_BALL_Z;
+
     fn new() -> Self {
         PushToOwnCorner
     }
@@ -73,15 +71,14 @@ impl Behavior for PushToOwnCorner {
             _ => true,
         };
 
+        let (me, enemy) = ctx.one_v_one();
+
         let me_intercept =
-            estimate_intercept_car_ball_3(ctx.enemy(), &ctx.packet.GameBall, |_t, &loc, _vel| {
-                loc.z < JumpShot::MAX_BALL_Z
-            });
+            estimate_intercept_car_ball(ctx, me, |_t, &loc, _vel| loc.z < Self::MAX_BALL_Z);
 
         let enemy_shootable_intercept =
-            estimate_intercept_car_ball_3(ctx.enemy(), &ctx.packet.GameBall, |_t, &loc, _vel| {
-                loc.z < JumpShot::MAX_BALL_Z
-                    && GroundShot::good_angle(ctx.enemy().Physics.loc(), loc)
+            estimate_intercept_car_ball(ctx, enemy, |_t, &loc, _vel| {
+                loc.z < JumpShot::MAX_BALL_Z && GroundShot::good_angle(enemy.Physics.loc(), loc)
             });
 
         assert_eq!(ctx.me().Team, 0); // or the colors below won't be right
@@ -126,6 +123,8 @@ impl Behavior for PushToOwnCorner {
 pub struct HitToOwnCorner;
 
 impl HitToOwnCorner {
+    const MAX_BALL_Z: f32 = BounceShot::MAX_BALL_Z;
+
     pub fn new() -> Self {
         HitToOwnCorner
     }
@@ -139,10 +138,10 @@ impl Behavior for HitToOwnCorner {
     fn execute2(&mut self, ctx: &mut Context) -> Action {
         ctx.eeg.log("redirect to own corner");
 
+        let me = ctx.me();
+
         let intercept =
-            estimate_intercept_car_ball_3(ctx.me(), &ctx.packet.GameBall, |_t, &loc, _vel| {
-                loc.z < BounceShot::MAX_BALL_Z
-            });
+            estimate_intercept_car_ball(ctx, me, |_t, &loc, _vel| loc.z < Self::MAX_BALL_Z);
 
         match intercept {
             None => Action::Return,

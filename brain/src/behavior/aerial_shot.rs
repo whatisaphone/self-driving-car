@@ -1,10 +1,10 @@
 use behavior::{Action, Behavior};
-use eeg::{Drawable, EEG};
+use eeg::Drawable;
 use maneuvers::AerialLocTime;
-use predict::estimate_intercept_car_ball_2;
-use rlbot;
+use predict::estimate_intercept_car_ball;
 use simulate::{rl, CarAerial60Deg};
-use utils::{enemy_goal_center, one_v_one};
+use strategy::Context;
+use utils::enemy_goal_center;
 
 pub struct AerialShot {
     finished: bool,
@@ -21,14 +21,14 @@ impl Behavior for AerialShot {
         stringify!(AerialShot)
     }
 
-    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
+    fn execute2(&mut self, ctx: &mut Context) -> Action {
         if self.finished {
             return Action::Return;
         }
 
-        let (me, _enemy) = one_v_one(packet);
+        let me = ctx.me();
 
-        let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |t, loc, _vel| {
+        let intercept = estimate_intercept_car_ball(ctx, &me, |t, loc, _vel| {
             let max_comfortable_z = rl::CROSSBAR_Z + enemy_goal_center().y - loc.y;
             if loc.z >= max_comfortable_z {
                 return false;
@@ -37,17 +37,24 @@ impl Behavior for AerialShot {
             cost.time < t
         });
 
+        let intercept = some_or_else!(intercept, {
+            ctx.eeg.log("[AerialShot] no intercept");
+            return Action::Abort;
+        });
+
         let cost = CarAerial60Deg::cost(intercept.ball_loc.z);
 
-        eeg.draw(Drawable::GhostBall(intercept.ball_loc));
-        eeg.log(format!("intercept_ball_z: {:.0}", intercept.ball_loc.z));
-        eeg.log(format!("intercept_time: {:.2}", intercept.time));
-        eeg.log(format!("aerial_time: {:.2}", cost.time));
+        ctx.eeg.draw(Drawable::GhostBall(intercept.ball_loc));
+        ctx.eeg
+            .log(format!("intercept_ball_z: {:.0}", intercept.ball_loc.z));
+        ctx.eeg
+            .log(format!("intercept_time: {:.2}", intercept.time));
+        ctx.eeg.log(format!("aerial_time: {:.2}", cost.time));
 
         self.finished = true;
         Action::call(AerialLocTime::new(
             intercept.ball_loc,
-            packet.GameInfo.TimeSeconds + intercept.time,
+            ctx.packet.GameInfo.TimeSeconds + intercept.time,
         ))
     }
 }

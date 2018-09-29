@@ -25,6 +25,15 @@ macro_rules! return_some {
     };
 }
 
+macro_rules! some_or_else {
+    ($e:tt, $b:block) => {
+        match $e {
+            Some(x) => x,
+            None => $b,
+        };
+    };
+}
+
 mod behavior;
 mod brain;
 mod eeg;

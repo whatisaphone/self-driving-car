@@ -13,6 +13,8 @@ pub struct FiftyFifty {
 }
 
 impl FiftyFifty {
+    const BALL_MAX_Z: f32 = 110.0;
+
     pub fn new() -> FiftyFifty {
         FiftyFifty {
             same_ball_trajectory: SameBallTrajectory::new(),
@@ -29,7 +31,14 @@ impl Behavior for FiftyFifty {
         return_some!(self.same_ball_trajectory.execute(ctx));
 
         let me = ctx.me();
-        let intercept = estimate_intercept_car_ball(&me, &ctx.packet.GameBall);
+
+        let intercept =
+            estimate_intercept_car_ball(ctx, me, |_t, loc, _vel| loc.z < Self::BALL_MAX_Z);
+
+        let intercept = some_or_else!(intercept, {
+            ctx.eeg.log("[FiftyFifty] unknown intercept");
+            return Action::Abort;
+        });
 
         let target_angle = blocking_angle(
             intercept.ball_loc.to_2d(),

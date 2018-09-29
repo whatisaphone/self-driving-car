@@ -2,7 +2,7 @@ use behavior::{Action, Behavior};
 use eeg::{color, Drawable};
 use maneuvers::{drive_towards, BounceShot, GetToFlatGround};
 use mechanics::simple_yaw_diff;
-use predict::estimate_intercept_car_ball_3;
+use predict::estimate_intercept_car_ball;
 use rlbot;
 use rules::SameBallTrajectory;
 use simulate::{rl, Car1D, CarAerial60Deg};
@@ -63,23 +63,19 @@ impl JumpShot {
 
         let me = ctx.me();
 
-        let intercept =
-            estimate_intercept_car_ball_3(&me, &ctx.packet.GameBall, |t, &loc, _vel| {
-                let air_time = CarAerial60Deg::cost(loc.z - Z_FUDGE).time;
-                if t < air_time {
-                    return false;
-                }
-
-                loc.z < Self::MAX_BALL_Z
-            });
-
-        let intercept = match intercept {
-            Some(i) => i,
-            None => {
-                ctx.eeg.log("[JumpShot] intercept not found; aborting");
-                return Action::Abort;
+        let intercept = estimate_intercept_car_ball(ctx, me, |t, &loc, _vel| {
+            let air_time = CarAerial60Deg::cost(loc.z - Z_FUDGE).time;
+            if t < air_time {
+                return false;
             }
-        };
+
+            loc.z < Self::MAX_BALL_Z
+        });
+
+        let intercept = some_or_else!(intercept, {
+            ctx.eeg.log("[JumpShot] no good intercept");
+            return Action::Abort;
+        });
 
         let aim_loc = BounceShot::aim_loc(me.Physics.loc().to_2d(), intercept.ball_loc.to_2d());
         let target_loc = BounceShot::rough_shooting_spot(&intercept, aim_loc);

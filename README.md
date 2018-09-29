@@ -78,6 +78,7 @@ endeavor.
   * RoboCar
   * rosie the rocket maid
   * Rock-E
+  * self-driving car
 * Chat
   * misc quickchat
   * they told me they would delete me if i lost

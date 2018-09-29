@@ -1,11 +1,10 @@
 use behavior::{aerial_shot::AerialShot, Action, Behavior};
-use eeg::EEG;
 use maneuvers::{GroundShot, JumpShot};
 use nalgebra::Vector3;
-use predict::estimate_intercept_car_ball_2;
-use rlbot;
+use predict::estimate_intercept_car_ball;
 use simulate::rl;
-use utils::{one_v_one, ExtendPhysics};
+use strategy::Context;
+use utils::ExtendPhysics;
 
 pub struct Shoot;
 
@@ -37,16 +36,17 @@ impl Behavior for Shoot {
         stringify!(Shoot)
     }
 
-    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-        let (me, _enemy) = one_v_one(packet);
-        let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |_t, &loc, _vel| {
+    fn execute2(&mut self, ctx: &mut Context) -> Action {
+        let me = ctx.me();
+
+        let intercept = estimate_intercept_car_ball(ctx, me, |_t, &loc, _vel| {
             Self::good_angle(loc, me.Physics.loc())
         });
 
-        if !Self::good_angle(intercept.ball_loc, me.Physics.loc()) {
-            eeg.log(format!("Bad angle from {:?}", intercept.ball_loc));
-            return Action::Return;
-        }
+        let intercept = some_or_else!(intercept, {
+            ctx.eeg.log("[Shoot] no good intercept");
+            return Action::Abort;
+        });
 
         if intercept.ball_loc.z < GroundShot::MAX_BALL_Z {
             return Action::call(GroundShot::new());

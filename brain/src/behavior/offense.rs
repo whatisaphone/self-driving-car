@@ -1,13 +1,11 @@
 use behavior::{shoot::Shoot, Action, Behavior};
-use eeg::EEG;
 use maneuvers::BounceShot;
 use plan::hit_angle::{feasible_hit_angle_away, feasible_hit_angle_toward};
-use predict::{estimate_intercept_car_ball_2, Intercept};
-use rlbot;
+use predict::{estimate_intercept_car_ball, Intercept};
 use std::f32::consts::PI;
+use strategy::Context;
 use utils::{
-    enemy_goal_center, my_car, my_goal_center_2d, one_v_one, ExtendPhysics, ExtendVector3,
-    WallRayCalculator,
+    enemy_goal_center, my_goal_center_2d, ExtendPhysics, ExtendVector3, WallRayCalculator,
 };
 
 pub struct Offense;
@@ -23,15 +21,24 @@ impl Behavior for Offense {
         stringify!(Offense)
     }
 
-    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-        let (me, _enemy) = one_v_one(packet);
-        let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |_t, &loc, _vel| {
+    fn execute2(&mut self, ctx: &mut Context) -> Action {
+        let me = ctx.me();
+
+        let intercept = estimate_intercept_car_ball(ctx, me, |_t, &loc, _vel| {
             Shoot::good_angle(loc, me.Physics.loc())
         });
 
-        if Shoot::good_angle(intercept.ball_loc, me.Physics.loc()) {
-            eeg.log(format!("Good angle found {:?}", intercept.ball_loc));
+        if intercept.is_some() {
+            ctx.eeg.log("[Offense] good angle found");
             return Action::call(Shoot::new());
+        }
+
+        let intercept =
+            estimate_intercept_car_ball(ctx, me, |_t, &loc, _vel| loc.z < BounceShot::MAX_BALL_Z);
+
+        if let Some(intercept) = intercept {
+            ctx.eeg.log("[Offense] no good hit; going for a tepid hit");
+            return tepid_hit(ctx, intercept);
         }
 
         // TODO: if angle is almost good, slightly adjust path such that good_angle
@@ -45,14 +52,14 @@ impl Behavior for Offense {
 
         // For now, just fall back to a stupid behavior
         // TODO: possession! if have it, can wait. otherwise, 50/50
-        tepid_hit(packet, eeg, intercept)
+
+        ctx.eeg.log("[Offense] unknown intercept");
+        Action::Abort
     }
 }
 
-fn tepid_hit(packet: &rlbot::LiveDataPacket, eeg: &mut EEG, intercept: Intercept) -> Action {
-    eeg.log("no good hit; going for a tepid hit");
-
-    let me = my_car(packet);
+fn tepid_hit(ctx: &mut Context, intercept: Intercept) -> Action {
+    let me = ctx.me();
     let ball = intercept.ball_loc.to_2d();
     let goal = enemy_goal_center();
     let avoid = my_goal_center_2d();
@@ -61,10 +68,10 @@ fn tepid_hit(packet: &rlbot::LiveDataPacket, eeg: &mut EEG, intercept: Intercept
     // goal.
     let naive_wall = WallRayCalculator::calc_segment(me.Physics.loc().to_2d(), ball);
     let theta = if (naive_wall - goal).norm() < (naive_wall - avoid).norm() {
-        eeg.log("hitting toward enemy goal");
+        ctx.eeg.log("hitting toward enemy goal");
         feasible_hit_angle_toward(ball, me.Physics.loc().to_2d(), goal, PI / 6.0)
     } else {
-        eeg.log("hitting away from own goal");
+        ctx.eeg.log("hitting away from own goal");
         feasible_hit_angle_away(ball, me.Physics.loc().to_2d(), avoid, PI / 6.0)
     };
     let aim_loc = WallRayCalculator::calc_ray(ball, theta);

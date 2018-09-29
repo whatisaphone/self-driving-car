@@ -1,12 +1,12 @@
 use behavior::{Action, Behavior};
-use eeg::{color, Drawable, EEG};
+use eeg::{color, Drawable};
 use maneuvers::{BounceShot, GetToFlatGround};
 use mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
 use nalgebra::Vector3;
-use predict::estimate_intercept_car_ball_2;
-use rlbot;
+use predict::estimate_intercept_car_ball;
 use std::f32::consts::PI;
-use utils::{enemy_goal_center, one_v_one, ExtendF32, ExtendPhysics, ExtendVector2, ExtendVector3};
+use strategy::Context;
+use utils::{enemy_goal_center, ExtendF32, ExtendPhysics, ExtendVector2, ExtendVector3};
 
 pub struct GroundShot {
     min_distance: Option<f32>,
@@ -32,21 +32,21 @@ impl Behavior for GroundShot {
         stringify!(GroundShot)
     }
 
-    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
+    fn execute2(&mut self, ctx: &mut Context) -> Action {
         // This behavior currently just operates in 2D
-        if !GetToFlatGround::on_flat_ground(packet) {
+        if !GetToFlatGround::on_flat_ground(ctx.packet) {
             return Action::Abort;
         }
 
-        let (me, _enemy) = one_v_one(packet);
-        let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |_t, &loc, _vel| {
+        let me = ctx.me();
+        let intercept = estimate_intercept_car_ball(ctx, me, |_t, &loc, _vel| {
             loc.z < Self::MAX_BALL_Z && Self::good_angle(loc, me.Physics.loc())
         });
 
-        if !Self::good_angle(intercept.ball_loc, me.Physics.loc()) {
-            eeg.log(format!("Bad angle from {:?}", intercept.ball_loc));
-            return Action::Return;
-        }
+        let intercept = some_or_else!(intercept, {
+            ctx.eeg.log("[GroundShot] no good intercept");
+            return Action::Abort;
+        });
 
         let aim_loc = BounceShot::aim_loc(me.Physics.loc().to_2d(), intercept.ball_loc.to_2d());
         let target_loc = BounceShot::rough_shooting_spot(&intercept, aim_loc);
@@ -58,37 +58,37 @@ impl Behavior for GroundShot {
             _ => self.min_distance = Some(target_dist),
         }
 
-        eeg.draw(Drawable::GhostBall(intercept.ball_loc));
-        eeg.draw(Drawable::Crosshair(aim_loc));
-        eeg.draw(Drawable::print(
+        ctx.eeg.draw(Drawable::GhostBall(intercept.ball_loc));
+        ctx.eeg.draw(Drawable::Crosshair(aim_loc));
+        ctx.eeg.draw(Drawable::print(
             format!("intercept_time: {:.2}", intercept.time),
             color::GREEN,
         ));
-        eeg.draw(Drawable::print(
+        ctx.eeg.draw(Drawable::print(
             format!("target_dist: {:.0}", target_dist),
             color::GREEN,
         ));
 
         if target_dist <= 250.0 {
-            return shoot(packet, eeg);
+            return shoot(ctx);
         }
 
         // TODO: this is not how this works…
         let mut child =
-            GroundAccelToLoc::new(target_loc, packet.GameInfo.TimeSeconds + intercept.time);
-        child.execute(packet, eeg)
+            GroundAccelToLoc::new(target_loc, ctx.packet.GameInfo.TimeSeconds + intercept.time);
+        child.execute2(ctx)
     }
 }
 
-fn shoot(packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-    let (me, _enemy) = one_v_one(packet);
-    let angle = simple_yaw_diff(&me.Physics, packet.GameBall.Physics.loc().to_2d());
+fn shoot(ctx: &mut Context) -> Action {
+    let me = ctx.me();
+    let angle = simple_yaw_diff(&me.Physics, ctx.packet.GameBall.Physics.loc().to_2d());
     if angle.abs() >= PI / 2.0 {
-        eeg.log("Incorrect approach angle");
+        ctx.eeg.log("Incorrect approach angle");
         return Action::Return;
     }
 
-    return Action::call(QuickJumpAndDodge::begin(packet).yaw(angle));
+    return Action::call(QuickJumpAndDodge::begin(ctx.packet).yaw(angle));
 }
 
 #[cfg(test)]
