@@ -96,19 +96,25 @@ endeavor.
 - cache simulations to save on cpu
 - for offense tepid hit, continually adjust aim instead of using stale value
 - backwards tepid hits should not dodge? (maybe all tepid hits)
-- BounceShot (and related) should verify the hit happened, and Action::Abort if not
-- don't jump directly after skidding and go the wrong way (probably test yaw vs velocity angle and see if match)
-- QuickJumpAndDodge should allow choosing the angle at apex instead of only ahead of time
+- BounceShot (and related) should verify the hit happened, and Action::Abort if
+  not
+- don't jump directly after skidding and go the wrong way (probably test yaw vs
+  velocity angle and see if match)
+- QuickJumpAndDodge should allow choosing the angle at apex instead of only
+  ahead of time
 
 ### Backlog
 
 - shoot: choose bounce shot or ground shot depending on whether ball is bouncing
 - [chip recovery](https://pastebin.com/XtFL5JzV)
 - generic long-range pathfinding
-  - if far away, waiting stationary, and turned the wrong way, fix yaw before sitting still
+  - if far away, waiting stationary, and turned the wrong way, fix yaw before
+    sitting still
   - if in TIME CRUNCH MODE, just blitz to destination
   - otherwise: weave for pennies, opportunistic demos, etc
 - if inside a goal, never drive in a path that overlaps inner walls of goal
 - fix whiffs when retreating redirects to corner
 - [half flip](https://discordapp.com/channels/348658686962696195/348661571297214465/489479593632464901)
 - car-ball interacion simulation
+- for unit tests, replay entire recordings instead of just a snapshot (possibly
+  without a RL instance running at all!)
