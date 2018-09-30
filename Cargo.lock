@@ -97,6 +97,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "brain"
 version = "0.1.0"
 dependencies = [
+ "arrayvec 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "bakkesmod 0.1.0",
  "chip 0.0.1",
  "collect 0.1.0",

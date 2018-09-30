@@ -8,6 +8,7 @@ extern crate graphics;
 extern crate lazy_static;
 #[macro_use]
 extern crate log;
+extern crate arrayvec;
 extern crate chip;
 extern crate nalgebra;
 extern crate ncollide3d;

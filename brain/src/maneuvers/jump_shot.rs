@@ -221,6 +221,7 @@ fn estimate_approach(
 
 #[cfg(test)]
 mod integration_tests {
+    use behavior::Repeat;
     use collect::ExtendRotation3;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use maneuvers::jump_shot::JumpShot;
@@ -263,5 +264,24 @@ mod integration_tests {
         test.sleep_millis(5000);
 
         unimplemented!();
+    }
+
+    #[test]
+    fn correct_mispredicted_bounce() {
+        let test = TestRunner::start0(TestScenario {
+            ball_loc: Vector3::new(-3350.3652, 2287.6494, 537.7215),
+            ball_vel: Vector3::new(583.83765, 331.18698, -33.879772),
+            car_loc: Vector3::new(-3420.127, 75.629135, 17.02),
+            car_rot: Rotation3::from_unreal_angles(-0.009491506, 0.52864814, -0.0001917476),
+            car_vel: Vector3::new(1083.5627, 572.17487, 8.241),
+            ..Default::default()
+        });
+        test.set_behavior(Repeat::new(JumpShot::new));
+
+        test.sleep_millis(3000);
+        test.examine_eeg(|eeg| {
+            assert!(eeg.log.iter().any(|x| x == "[JumpShot] Air"));
+        });
+        assert!(test.has_scored());
     }
 }

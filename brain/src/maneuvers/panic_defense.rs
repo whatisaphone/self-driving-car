@@ -175,15 +175,13 @@ mod integration_tests {
 
     #[test]
     fn panic_defense() {
-        let test = TestRunner::start(
-            PanicDefense::new(),
-            TestScenario {
-                car_loc: Vector3::new(500.0, -1000.0, 17.01),
-                car_rot: Rotation3::from_unreal_angles(0.0, -PI / 2.0, 0.0),
-                car_vel: Vector3::new(0.0, 0.0, 0.0),
-                ..Default::default()
-            },
-        );
+        let test = TestRunner::start0(TestScenario {
+            car_loc: Vector3::new(500.0, -1000.0, 17.01),
+            car_rot: Rotation3::from_unreal_angles(0.0, -PI / 2.0, 0.0),
+            car_vel: Vector3::new(0.0, 0.0, 0.0),
+            ..Default::default()
+        });
+        test.set_behavior(PanicDefense::new());
 
         test.sleep_millis(4000);
 

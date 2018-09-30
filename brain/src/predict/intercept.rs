@@ -3,7 +3,7 @@ use nalgebra::Vector3;
 use rlbot;
 use simulate::{rl, Car1D};
 use strategy::Context;
-use utils::ExtendPhysics;
+use utils::{ExtendPhysics, ExtendVector3};
 
 const MAX_SIM_TIME: f32 = 5.0;
 
@@ -30,7 +30,7 @@ pub fn estimate_intercept_car_ball(
         sim_ball.step(DT);
         sim_car.step(DT, 1.0, true);
 
-        let target_traveled = (sim_ball.pos() - car.Physics.loc()).norm() - RADII;
+        let target_traveled = (sim_ball.pos() - car.Physics.loc()).to_2d().norm() - RADII;
         if sim_car.distance_traveled() >= target_traveled {
             if predicate(t, &sim_ball.pos(), &sim_ball.vel()) {
                 break;

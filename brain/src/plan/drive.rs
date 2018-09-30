@@ -7,7 +7,8 @@ use simulate::{rl, Car1D};
 use std::f32::consts::PI;
 use utils::{ExtendF32, ExtendPhysics, ExtendVector3};
 
-const GROUND_DODGE_TIME: f32 = 1.33333333; // Rough estimate
+// I'm keeping this value artificially high until I implement smarter routing.
+const GROUND_DODGE_TIME: f32 = 2.0;
 
 pub fn rough_time_drive_to_loc(car: &rlbot::PlayerInfo, target_loc: Vector2<f32>) -> f32 {
     const DT: f32 = 1.0 / 60.0;
@@ -38,11 +39,6 @@ fn steer_penalty(car: &rlbot::PlayerInfo, desired_aim: f32) -> f32 {
 
 pub fn get_route_dodge(car: &rlbot::PlayerInfo, target_loc: Vector2<f32>) -> Option<Box<Behavior>> {
     const DODGE_SPEED_BOOST: f32 = 500.0; // TODO: Literally just guessed this
-
-    // Temporary until the rest of the bot has a little more smarts
-    if car.Boost > 1 {
-        return None;
-    }
 
     if !car.OnGround {
         return None;

@@ -3,7 +3,7 @@ use rlbot;
 use simulate::chip::Ball;
 use utils::{ExtendPhysics, TotalF32};
 
-const DT: f32 = 1.0 / 60.0;
+const DT: f32 = 1.0 / 120.0;
 const PREDICT_DURATION: f32 = 5.0;
 
 pub struct BallTrajectory {
@@ -28,9 +28,13 @@ impl BallTrajectory {
             packet.GameBall.Physics.vel(),
             packet.GameBall.Physics.ang_vel(),
         );
-        let mut frames = Vec::with_capacity((PREDICT_DURATION / DT).ceil() as usize);
+        let num_frames = (PREDICT_DURATION / DT).ceil() as usize;
+        let mut frames = Vec::with_capacity(num_frames);
         let mut t = 0.0;
-        while t < PREDICT_DURATION {
+        // Include initial frame to allow interpolation when framerate is faster than
+        // `DT`.
+        frames.push(BallFrame { t, loc: ball.loc() });
+        while frames.len() < num_frames {
             t += DT;
             ball.step(DT);
             frames.push(BallFrame { t, loc: ball.loc() });
