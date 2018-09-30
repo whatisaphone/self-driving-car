@@ -49,7 +49,7 @@ impl<'a> Scenario<'a> {
 
     /// Number of seconds I can reach the ball before the opponent
     pub fn possession(&mut self) -> f32 {
-        self.possession.unwrap_or_else(|| {
+        if self.possession.is_none() {
             let (blitz_me, blitz_enemy) = simulate_ball_blitz(self.packet, self.ball_prediction());
 
             self.me_intercept = Some(blitz_me);
@@ -62,20 +62,21 @@ impl<'a> Scenario<'a> {
                     Self::POSSESSION_SATURATED
                 }
             });
+        }
 
-            self.possession.unwrap()
-        })
+        self.possession.unwrap()
     }
 
     /// If I blitz to the ball and hit it straight-on, where will it go?
     pub fn push_wall(&mut self) -> Option<Wall> {
-        self.push_wall.unwrap_or_else(|| {
+        if self.push_wall.is_none() {
             self.push_wall = Some(self.me_intercept().map(|(_t, loc)| {
                 let (me, _enemy) = one_v_one(self.packet);
                 eval_push_wall(&me.Physics.loc(), &loc)
             }));
-            self.push_wall.unwrap()
-        })
+        }
+
+        self.push_wall.unwrap()
     }
 }
 
