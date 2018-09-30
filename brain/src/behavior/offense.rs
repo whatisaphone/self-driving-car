@@ -1,9 +1,10 @@
-use behavior::{shoot::Shoot, Action, Behavior};
-use maneuvers::BounceShot;
+use behavior::{higher_order::TimeLimit, shoot::Shoot, Action, Behavior};
+use maneuvers::{BlitzToLocation, BounceShot};
+use nalgebra::Vector3;
 use plan::hit_angle::{feasible_hit_angle_away, feasible_hit_angle_toward};
-use predict::{estimate_intercept_car_ball, Intercept};
+use predict::estimate_intercept_car_ball;
 use std::f32::consts::PI;
-use strategy::Context;
+use strategy::{Context, Scenario};
 use utils::{
     enemy_goal_center, my_goal_center_2d, ExtendPhysics, ExtendVector3, WallRayCalculator,
 };
@@ -38,7 +39,7 @@ impl Behavior for Offense {
 
         if let Some(intercept) = intercept {
             ctx.eeg.log("[Offense] no good hit; going for a tepid hit");
-            return tepid_hit(ctx, intercept);
+            return tepid_hit(ctx, intercept.ball_loc);
         }
 
         // TODO: if angle is almost good, slightly adjust path such that good_angle
@@ -53,14 +54,21 @@ impl Behavior for Offense {
         // For now, just fall back to a stupid behavior
         // TODO: possession! if have it, can wait. otherwise, 50/50
 
+        if ctx.scenario.possession() >= -Scenario::POSSESSION_CONTESTABLE {
+            ctx.eeg
+                .log("[Offense] blindly wandering towards hypothetical intercept");
+            let loc = ctx.scenario.ball_prediction().iter().last().unwrap().loc;
+            return Action::call(TimeLimit::new(1.0, BlitzToLocation::new(loc.to_2d())));
+        }
+
         ctx.eeg.log("[Offense] unknown intercept");
         Action::Abort
     }
 }
 
-fn tepid_hit(ctx: &mut Context, intercept: Intercept) -> Action {
+fn tepid_hit(ctx: &mut Context, intercept_loc: Vector3<f32>) -> Action {
     let me = ctx.me();
-    let ball = intercept.ball_loc.to_2d();
+    let ball = intercept_loc.to_2d();
     let goal = enemy_goal_center();
     let avoid = my_goal_center_2d();
 

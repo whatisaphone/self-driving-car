@@ -39,7 +39,7 @@ impl BallTrajectory {
         Self { frames }
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = &BallFrame> {
+    pub fn iter(&self) -> impl DoubleEndedIterator<Item = &BallFrame> {
         self.frames.iter()
     }
 
