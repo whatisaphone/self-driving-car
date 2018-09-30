@@ -13,7 +13,7 @@ pub struct FiftyFifty {
 }
 
 impl FiftyFifty {
-    const BALL_MAX_Z: f32 = 110.0;
+    const BALL_MAX_Z: f32 = 130.0;
 
     pub fn new() -> FiftyFifty {
         FiftyFifty {
