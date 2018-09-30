@@ -72,7 +72,7 @@ where
             Action::Return | Action::Abort => {
                 ctx.eeg.log("[Repeat] repeating");
                 self.current = (self.factory)();
-                self.execute2(ctx)
+                Action::Yield(Default::default())
             }
         }
     }

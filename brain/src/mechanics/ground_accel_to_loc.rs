@@ -66,7 +66,9 @@ impl Behavior for GroundAccelToLoc {
         let too_fast = estimate_approach(&me, distance, time_remaining - 2.0 / 120.0);
 
         let mut result = drive_towards(ctx.packet, ctx.eeg, self.target_loc);
-        if too_fast {
+        if yaw_diff.abs() > PI / 8.0 && distance >= 500.0 {
+            // Can't estimate accurately if not facing the right way
+        } else if too_fast {
             result.Throttle = 0.0;
         } else {
             if me.OnGround

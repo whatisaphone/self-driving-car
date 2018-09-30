@@ -115,9 +115,12 @@ impl BounceShot {
 #[cfg(test)]
 mod integration_tests {
     use behavior::Repeat;
+    use collect::ExtendRotation3;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use maneuvers::bounce_shot::BounceShot;
-    use nalgebra::Vector3;
+    use nalgebra::{Rotation3, Vector2, Vector3};
+    use simulate::rl;
+    use utils::ExtendPhysics;
 
     // `Repeat` is used in these tests so the shot is not aborted by
     // `SameBallTrajectory` when the ball bounces.
@@ -157,5 +160,24 @@ mod integration_tests {
         test.sleep_millis(6000);
 
         assert!(test.has_scored());
+    }
+
+    #[test]
+    fn face_target_before_estimating_approach() {
+        let test = TestRunner::start0(TestScenario {
+            ball_loc: Vector3::new(866.92804, -4290.7188, 353.78827),
+            ball_vel: Vector3::new(-166.86324, -8.325447, 345.70105),
+            car_loc: Vector3::new(1816.7043, -4648.5, 17.01),
+            car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.3079103, 0.0),
+            car_vel: Vector3::new(30.373384, 216.24547, 8.311),
+            ..Default::default()
+        });
+        test.set_behavior(Repeat::new(|| {
+            BounceShot::new().with_target_loc(Vector2::new(-rl::FIELD_MAX_X, -1000.0))
+        }));
+
+        test.sleep_millis(3000);
+        let packet = test.sniff_packet();
+        assert!(packet.GameBall.Physics.vel().norm() >= 1000.0);
     }
 }
