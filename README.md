@@ -68,6 +68,7 @@ endeavor.
   * [The author's bot](https://github.com/samuelpmish/Lobot)
 * [BakkesMod commands](http://bakkesmod.wikia.com/wiki/Configuration)
 * [DomNomNom's bot](https://github.com/DomNomNom/RocketBot)
+* [Biarc interpolation](http://www.ryanjuckett.com/programming/biarc-interpolation/)
 
 ## Ideas
 
