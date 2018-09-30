@@ -41,10 +41,11 @@ impl Behavior for JumpShot {
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {
-        return_some!(self.same_ball_trajectory.execute(ctx));
-
         match self.phase {
-            Phase::Ground => self.ground(ctx),
+            Phase::Ground => {
+                return_some!(self.same_ball_trajectory.execute(ctx));
+                self.ground(ctx)
+            }
             Phase::Air {
                 start_time,
                 duration,
