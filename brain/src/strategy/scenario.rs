@@ -10,7 +10,7 @@ pub struct Scenario<'a> {
     me_intercept: Option<Option<(f32, Vector3<f32>)>>,
     enemy_intercept: Option<Option<(f32, Vector3<f32>)>>,
     possession: Option<f32>,
-    push_wall: Option<Option<Wall>>,
+    push_wall: Option<Wall>,
 }
 
 impl<'a> Scenario<'a> {
@@ -68,12 +68,14 @@ impl<'a> Scenario<'a> {
     }
 
     /// If I blitz to the ball and hit it straight-on, where will it go?
-    pub fn push_wall(&mut self) -> Option<Wall> {
+    pub fn push_wall(&mut self) -> Wall {
         if self.push_wall.is_none() {
-            self.push_wall = Some(self.me_intercept().map(|(_t, loc)| {
-                let (me, _enemy) = one_v_one(self.packet);
-                eval_push_wall(&me.Physics.loc(), &loc)
-            }));
+            let intercept_loc = match self.me_intercept() {
+                Some((_t, loc)) => loc,
+                None => self.ball_prediction().iter().last().unwrap().loc,
+            };
+            let (me, _enemy) = one_v_one(self.packet);
+            self.push_wall = Some(eval_push_wall(&me.Physics.loc(), &intercept_loc));
         }
 
         self.push_wall.unwrap()

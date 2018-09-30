@@ -3,6 +3,8 @@ use eeg::{color, Drawable, EEG};
 use rlbot;
 use strategy::{strategy, Context};
 
+pub const BASELINE: &str = "baseline:";
+
 pub struct Runner2 {
     current: Option<Box<Behavior>>,
 }
@@ -65,7 +67,8 @@ impl Runner2 {
         if self.current.is_none() {
             self.current = Some(strategy::baseline(ctx));
             ctx.eeg.log(format!(
-                "baseline: {}",
+                "{} {}",
+                BASELINE,
                 self.current.as_ref().unwrap().name()
             ));
         }

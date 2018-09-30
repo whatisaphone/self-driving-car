@@ -10,8 +10,8 @@ pub fn baseline(ctx: &mut Context) -> Box<Behavior> {
     }
 
     match ctx.scenario.push_wall() {
-        Some(Wall::OwnGoal) | Some(Wall::OwnBackWall) | None => Box::new(Defense::new()),
-        Some(_) => Box::new(Offense::new()),
+        Wall::OwnGoal | Wall::OwnBackWall => Box::new(Defense::new()),
+        _ => Box::new(Offense::new()),
     }
 }
 
@@ -56,4 +56,36 @@ fn enemy_can_shoot(ctx: &mut Context) -> bool {
     let angle_ball_goal = ball_loc.angle_to(my_goal_center_2d());
     let angle_diff = (angle_car_ball - angle_ball_goal).normalize_angle().abs();
     angle_diff < PI / 3.0
+}
+
+#[cfg(test)]
+mod tests {
+    use behavior::runner::PUSHED;
+    use collect::ExtendRotation3;
+    use integration_tests::helpers::{TestRunner, TestScenario};
+    use nalgebra::{Rotation3, Vector3};
+    use strategy::{runner2::BASELINE, Runner2};
+
+    #[test]
+    fn dont_panic_when_no_intercept() {
+        let test = TestRunner::start0(TestScenario {
+            enemy_loc: Vector3::new(6000.0, 6000.0, 0.0),
+            ..TestScenario::from_collected_row("../logs/play.csv", 717.0)
+        });
+        test.set_behavior(Runner2::new());
+        test.sleep_millis(100);
+
+        test.examine_eeg(|eeg| {
+            assert!(
+                !eeg.log
+                    .iter()
+                    .any(|x| *x == format!("{} PanicDefense", PUSHED))
+            );
+            assert!(
+                eeg.log
+                    .iter()
+                    .any(|x| *x == format!("{} Offense", BASELINE))
+            );
+        });
+    }
 }
