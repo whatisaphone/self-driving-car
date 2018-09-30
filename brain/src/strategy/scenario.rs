@@ -90,7 +90,7 @@ fn simulate_ball_blitz(
     ball_prediction: &BallTrajectory,
 ) -> (Option<(f32, Vector3<f32>)>, Option<(f32, Vector3<f32>)>) {
     let (me, enemy) = one_v_one(packet);
-    let t = 0.0;
+    let mut t = 0.0;
     let mut sim_me = Car1D::new(me.Physics.vel().norm()).with_boost(me.Boost);
     let mut sim_enemy = Car1D::new(enemy.Physics.vel().norm()).with_boost(enemy.Boost);
 
@@ -98,6 +98,8 @@ fn simulate_ball_blitz(
     let mut enemy_time = None;
 
     for ball in ball_prediction.iter() {
+        t += ball.dt();
+
         if me_time.is_none() {
             sim_me.step(ball.dt(), 1.0, true);
             let me_dist_to_ball = (me.Physics.loc() - ball.loc).to_2d().norm();
