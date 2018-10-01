@@ -92,6 +92,7 @@ endeavor.
 ### Next
 
 - make it work when orange
+- try changing the max handbrake threshold to 0.5?
 - diagonal kickoff
 - add the offense swing-around stuff (when no good shot angle)
 - cache simulations to save on cpu

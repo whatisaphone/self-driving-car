@@ -6,7 +6,8 @@ use predict::estimate_intercept_car_ball;
 use std::f32::consts::PI;
 use strategy::{Context, Scenario};
 use utils::{
-    enemy_goal_center, my_goal_center_2d, ExtendPhysics, ExtendVector3, WallRayCalculator,
+    enemy_goal_center, my_goal_center_2d, ExtendF32, ExtendPhysics, ExtendVector2, ExtendVector3,
+    WallRayCalculator,
 };
 
 pub struct Offense;
@@ -72,10 +73,14 @@ fn tepid_hit(ctx: &mut Context, intercept_loc: Vector3<f32>) -> Action {
     let goal = enemy_goal_center();
     let avoid = my_goal_center_2d();
 
-    // If we're retreating, explicitly hit it away from our goal to avoid an own
-    // goal.
-    let naive_wall = WallRayCalculator::calc_segment(me.Physics.loc().to_2d(), ball);
-    let theta = if (naive_wall - goal).norm() < (naive_wall - avoid).norm() {
+    let angle_ball = me.Physics.loc().to_2d().angle_to(ball);
+    let angle_forward = me.Physics.loc().to_2d().angle_to(enemy_goal_center());
+    let angle_backward = me.Physics.loc().to_2d().angle_to(my_goal_center_2d());
+
+    let angle_offense = (angle_ball - angle_forward).normalize_angle().abs();
+    let angle_defense = (angle_ball - angle_backward).normalize_angle().abs();
+
+    let theta = if angle_offense < angle_defense {
         ctx.eeg.log("hitting toward enemy goal");
         feasible_hit_angle_toward(ball, me.Physics.loc().to_2d(), goal, PI / 6.0)
     } else {
@@ -194,5 +199,27 @@ mod integration_tests {
         test.set_behavior(Runner2::new());
         test.sleep_millis(3000);
         assert!(test.has_scored());
+    }
+
+    #[test]
+    fn tepid_hit_from_own_goal() {
+        let test = TestRunner::start0(TestScenario {
+            ball_loc: Vector3::new(2869.6829, -4145.095, 97.65185),
+            ball_vel: Vector3::new(-327.0853, 243.21877, -42.864605),
+            car_loc: Vector3::new(286.2713, -5031.399, 16.99),
+            car_rot: Rotation3::from_unreal_angles(-0.00958738, 0.59949887, 0.0),
+            car_vel: Vector3::new(1251.7024, 854.6698, 8.411),
+            ..Default::default()
+        });
+        test.set_behavior(Runner2::new());
+        test.sleep_millis(100);
+        test.examine_eeg(|eeg| {
+            assert!(
+                eeg.log
+                    .iter()
+                    .any(|x| x == "[Offense] no good hit; going for a tepid hit")
+            );
+            assert!(eeg.log.iter().any(|x| x == "hitting toward enemy goal"));
+        });
     }
 }

@@ -46,7 +46,7 @@ impl Behavior for GetToFlatGround {
             })
         } else if me.OnGround {
             let target_loc =
-                (me.Physics.loc() + me.Physics.rot() * Vector3::new(-500.0, 0.0, 0.0)).to_2d();
+                (me.Physics.loc() + me.Physics.rot() * Vector3::new(500.0, 0.0, -500.0)).to_2d();
             ctx.eeg
                 .draw(Drawable::ghost_car_ground(target_loc, me.Physics.rot()));
             Action::Yield(drive_towards(ctx.packet, ctx.eeg, target_loc))
