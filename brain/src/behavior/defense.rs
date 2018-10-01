@@ -78,14 +78,20 @@ impl Behavior for PushToOwnCorner {
 
         let enemy_shootable_intercept =
             estimate_intercept_car_ball(ctx, enemy, |_t, &loc, _vel| {
-                loc.z < JumpShot::MAX_BALL_Z && GroundShot::good_angle(enemy.Physics.loc(), loc)
+                loc.z < JumpShot::MAX_BALL_Z
+                    && GroundShot::shot_angle(loc, enemy.Physics.loc(), my_goal_center_2d())
+                        < PI / 2.0
             });
 
         assert_eq!(ctx.me().Team, 0); // or the colors below won't be right
         if let Some(ref i) = me_intercept {
+            ctx.eeg
+                .log(format!("[Defense] me_intercept: {:.2}", i.time));
             ctx.eeg.draw(Drawable::GhostBall2(i.ball_loc, color::BLUE));
         }
         if let Some(ref i) = enemy_shootable_intercept {
+            ctx.eeg
+                .log(format!("[Defense] enemy_shoot_intercept: {:.2}", i.time));
             ctx.eeg
                 .draw(Drawable::GhostBall2(i.ball_loc, color::ORANGE));
         }

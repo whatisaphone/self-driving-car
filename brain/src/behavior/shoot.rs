@@ -4,7 +4,7 @@ use nalgebra::Vector3;
 use predict::estimate_intercept_car_ball;
 use simulate::rl;
 use strategy::Context;
-use utils::ExtendPhysics;
+use utils::{enemy_goal_center, ExtendPhysics};
 
 pub struct Shoot;
 
@@ -27,7 +27,7 @@ impl Shoot {
             return false;
         }
 
-        GroundShot::good_angle(ball_loc, car_loc)
+        GroundShot::good_angle(ball_loc, car_loc, enemy_goal_center())
     }
 }
 

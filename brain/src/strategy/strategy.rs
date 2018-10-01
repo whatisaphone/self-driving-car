@@ -55,7 +55,7 @@ fn enemy_can_shoot(ctx: &mut Context) -> bool {
     let angle_car_ball = ctx.enemy().Physics.loc().to_2d().angle_to(ball_loc);
     let angle_ball_goal = ball_loc.angle_to(my_goal_center_2d());
     let angle_diff = (angle_car_ball - angle_ball_goal).normalize_angle().abs();
-    angle_diff < PI / 3.0
+    angle_diff < PI / 2.0
 }
 
 #[cfg(test)]

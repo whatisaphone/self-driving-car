@@ -116,6 +116,7 @@ endeavor.
   - otherwise: weave for pennies, opportunistic demos, etc
 - if inside a goal, never drive in a path that overlaps inner walls of goal
 - fix whiffs when retreating redirects to corner
+- stop panicking if panicking is no longer necessary
 - [half flip](https://discordapp.com/channels/348658686962696195/348661571297214465/489479593632464901)
 - car-ball interacion simulation
 - for unit tests, replay entire recordings instead of just a snapshot (possibly

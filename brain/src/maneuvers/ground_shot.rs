@@ -2,7 +2,7 @@ use behavior::{Action, Behavior};
 use eeg::{color, Drawable};
 use maneuvers::{BounceShot, GetToFlatGround};
 use mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
-use nalgebra::Vector3;
+use nalgebra::{Vector2, Vector3};
 use predict::estimate_intercept_car_ball;
 use std::f32::consts::PI;
 use strategy::Context;
@@ -19,11 +19,18 @@ impl GroundShot {
         GroundShot { min_distance: None }
     }
 
-    pub fn good_angle(ball_loc: Vector3<f32>, car_loc: Vector3<f32>) -> bool {
+    pub fn shot_angle(ball_loc: Vector3<f32>, car_loc: Vector3<f32>, aim_loc: Vector2<f32>) -> f32 {
         let angle_me_ball = car_loc.to_2d().angle_to(ball_loc.to_2d());
-        let angle_ball_goal = ball_loc.to_2d().angle_to(enemy_goal_center());
-        let goodness = (angle_me_ball - angle_ball_goal).normalize_angle().abs();
-        goodness < 30.0_f32.to_radians()
+        let angle_ball_goal = ball_loc.to_2d().angle_to(aim_loc);
+        (angle_me_ball - angle_ball_goal).normalize_angle().abs()
+    }
+
+    pub fn good_angle(
+        ball_loc: Vector3<f32>,
+        car_loc: Vector3<f32>,
+        aim_loc: Vector2<f32>,
+    ) -> bool {
+        Self::shot_angle(ball_loc, car_loc, aim_loc) < PI / 6.0
     }
 }
 
@@ -40,7 +47,7 @@ impl Behavior for GroundShot {
 
         let me = ctx.me();
         let intercept = estimate_intercept_car_ball(ctx, me, |_t, &loc, _vel| {
-            loc.z < Self::MAX_BALL_Z && Self::good_angle(loc, me.Physics.loc())
+            loc.z < Self::MAX_BALL_Z && Self::good_angle(loc, me.Physics.loc(), enemy_goal_center())
         });
 
         let intercept = some_or_else!(intercept, {

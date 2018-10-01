@@ -176,6 +176,7 @@ fn test_thread(
     match_settings.PlayerConfiguration[1].Bot = true;
     match_settings.PlayerConfiguration[1].RLBotControlled = true;
     match_settings.PlayerConfiguration[1].set_name("Mushroom");
+    match_settings.PlayerConfiguration[1].Team = 1;
 
     rlbot.start_match(match_settings).unwrap();
 
