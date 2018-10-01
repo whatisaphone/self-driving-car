@@ -117,6 +117,8 @@ impl Behavior for TimeLimit {
 pub struct Chain {
     priority: Priority,
     children: VecDeque<Box<Behavior>>,
+    /// Cache the full name of the Behavior, including names of `children`. This
+    /// must be kept up to date whenever `children` is modified.
     name: String,
 }
 
@@ -169,20 +171,21 @@ impl Behavior for Chain {
         match action {
             Action::Yield(x) => Action::Yield(x),
             Action::Call(b) => {
-                ctx.eeg
-                    .log(format!("[Chain] replacing head with {}", b.name()));
                 self.children[0] = b;
                 self.name = Self::name(self.children.iter());
+                ctx.eeg
+                    .log(format!("[Chain] child Call; becoming {}", self.name));
                 self.execute2(ctx)
             }
             Action::Return => {
-                ctx.eeg.log("[Chain] advancing");
                 self.children.pop_front();
                 self.name = Self::name(self.children.iter());
+                ctx.eeg
+                    .log(format!("[Chain] child Return; becoming {}", self.name));
                 self.execute2(ctx)
             }
             Action::Abort => {
-                ctx.eeg.log("[Chain] aborting");
+                ctx.eeg.log("[Chain] child Abort");
                 Action::Abort
             }
         }
