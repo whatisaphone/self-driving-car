@@ -1,6 +1,6 @@
-use behavior::{Action, Behavior, Chain, Priority};
+use behavior::{tepid_hit::TepidHit, Action, Behavior, Chain, Priority};
 use eeg::{color, Drawable};
-use maneuvers::{BounceShot, GroundShot, JumpShot, PanicDefense};
+use maneuvers::{BounceShot, FiftyFifty, GroundShot, JumpShot, PanicDefense};
 use nalgebra::{Rotation2, Vector2};
 use predict::{estimate_intercept_car_ball, is_sane_ball_loc, Intercept};
 use std::f32::consts::PI;
@@ -26,23 +26,32 @@ impl Behavior for Defense {
             loc.z < PushToOwnCorner::MAX_BALL_Z
         });
 
-        let can_intercept = match intercept {
-            None => false,
-            Some(int) => is_sane_ball_loc(int.ball_loc),
+        let intercept = match intercept {
+            Some(ref int) if is_sane_ball_loc(int.ball_loc) => int,
+            _ => {
+                ctx.eeg.log("[Defense] no good intercept; panicking");
+                return Action::call(PanicDefense::new());
+            }
         };
 
-        if !can_intercept {
-            ctx.eeg.log("[Defense] no good intercept; panicking");
-            return Action::call(PanicDefense::new());
+        // Don't panic if we're already in goal
+        let distance_to_goal =
+            (my_goal_center_2d().y - me.Physics.loc().y) * my_goal_center_2d().y.signum();
+        if distance_to_goal >= 250.0 {
+            return Action::call(Chain::new(
+                Priority::Save,
+                vec![
+                    Box::new(PushToOwnCorner::new()),
+                    Box::new(PanicDefense::new().use_boost(false)),
+                ],
+            ));
         }
 
-        Action::call(Chain::new(
-            Priority::Save,
-            vec![
-                Box::new(PushToOwnCorner::new()),
-                Box::new(PanicDefense::new().use_boost(false)),
-            ],
-        ))
+        if ctx.scenario.possession() < Scenario::POSSESSION_CONTESTABLE {
+            Action::call(FiftyFifty::new())
+        } else {
+            Action::call(TepidHit::new(intercept.ball_loc))
+        }
     }
 }
 

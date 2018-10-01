@@ -21,3 +21,4 @@ mod retreating_save;
 pub mod runner;
 mod shoot;
 mod side_wall_self_pass;
+mod tepid_hit;
