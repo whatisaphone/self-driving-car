@@ -16,6 +16,17 @@ pub fn baseline(ctx: &mut Context) -> Box<Behavior> {
 }
 
 pub fn override_(ctx: &mut Context, current: &Behavior) -> Option<Box<Behavior>> {
+    // Force kickoff behavior
+    if current.priority() < Priority::Force
+        && ctx.packet.GameBall.Physics.loc().norm() < 1.0
+        && ctx.packet.GameBall.Physics.vel().norm() < 1.0
+    {
+        return Some(Box::new(Chain::new(
+            Priority::Force,
+            vec![Box::new(FiftyFifty::new())],
+        )));
+    }
+
     if current.priority() < Priority::Save && enemy_can_shoot(ctx) {
         if ctx.scenario.possession().abs() < Scenario::POSSESSION_CONTESTABLE {
             ctx.eeg.log(format!(
