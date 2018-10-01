@@ -18,7 +18,7 @@ impl Fuse {
 }
 
 impl Behavior for Fuse {
-    fn name(&self) -> &'static str {
+    fn name(&self) -> &str {
         stringify!(Fuse)
     }
 
@@ -59,7 +59,7 @@ where
     B: Behavior,
     F: Fn() -> B + Send,
 {
-    fn name(&self) -> &'static str {
+    fn name(&self) -> &str {
         stringify!(Repeat)
     }
 
@@ -96,7 +96,7 @@ impl TimeLimit {
 }
 
 impl Behavior for TimeLimit {
-    fn name(&self) -> &'static str {
+    fn name(&self) -> &str {
         stringify!(TimeLimit)
     }
 
@@ -128,7 +128,7 @@ impl Chain {
 }
 
 impl Behavior for Chain {
-    fn name(&self) -> &'static str {
+    fn name(&self) -> &str {
         stringify!(Chain)
     }
 

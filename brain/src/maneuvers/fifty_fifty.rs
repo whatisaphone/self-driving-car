@@ -23,7 +23,7 @@ impl FiftyFifty {
 }
 
 impl Behavior for FiftyFifty {
-    fn name(&self) -> &'static str {
+    fn name(&self) -> &str {
         stringify!(FiftyFifty)
     }
 

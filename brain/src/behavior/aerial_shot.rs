@@ -17,7 +17,7 @@ impl AerialShot {
 }
 
 impl Behavior for AerialShot {
-    fn name(&self) -> &'static str {
+    fn name(&self) -> &str {
         stringify!(AerialShot)
     }
 

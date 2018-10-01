@@ -18,7 +18,7 @@ impl Offense {
 }
 
 impl Behavior for Offense {
-    fn name(&self) -> &'static str {
+    fn name(&self) -> &str {
         stringify!(Offense)
     }
 

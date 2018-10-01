@@ -16,7 +16,7 @@ impl Defense {
 }
 
 impl Behavior for Defense {
-    fn name(&self) -> &'static str {
+    fn name(&self) -> &str {
         stringify!(Defense)
     }
 
@@ -57,7 +57,7 @@ impl PushToOwnCorner {
 }
 
 impl Behavior for PushToOwnCorner {
-    fn name(&self) -> &'static str {
+    fn name(&self) -> &str {
         stringify!(PushToOwnCorner)
     }
 
@@ -131,7 +131,7 @@ impl HitToOwnCorner {
 }
 
 impl Behavior for HitToOwnCorner {
-    fn name(&self) -> &'static str {
+    fn name(&self) -> &str {
         stringify!(HitToOwnCorner)
     }
 

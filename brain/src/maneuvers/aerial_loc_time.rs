@@ -35,7 +35,7 @@ impl AerialLocTime {
 }
 
 impl Behavior for AerialLocTime {
-    fn name(&self) -> &'static str {
+    fn name(&self) -> &str {
         stringify!(AerialLocTime)
     }
 

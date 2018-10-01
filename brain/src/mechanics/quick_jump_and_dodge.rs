@@ -54,7 +54,7 @@ impl QuickJumpAndDodge {
 }
 
 impl Behavior for QuickJumpAndDodge {
-    fn name(&self) -> &'static str {
+    fn name(&self) -> &str {
         stringify!(QuickJumpAndDodge)
     }
 

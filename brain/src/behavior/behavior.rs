@@ -3,7 +3,7 @@ use rlbot;
 use strategy::Context;
 
 pub trait Behavior: Send {
-    fn name(&self) -> &'static str;
+    fn name(&self) -> &str;
 
     fn priority(&self) -> Priority {
         Priority::Idle

@@ -19,7 +19,7 @@ impl BlitzToLocation {
 }
 
 impl Behavior for BlitzToLocation {
-    fn name(&self) -> &'static str {
+    fn name(&self) -> &str {
         stringify!(BlitzToLocation)
     }
 

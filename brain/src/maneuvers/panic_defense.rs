@@ -46,7 +46,7 @@ impl PanicDefense {
 }
 
 impl Behavior for PanicDefense {
-    fn name(&self) -> &'static str {
+    fn name(&self) -> &str {
         stringify!(PanicDefense)
     }
 

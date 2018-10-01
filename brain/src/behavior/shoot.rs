@@ -32,7 +32,7 @@ impl Shoot {
 }
 
 impl Behavior for Shoot {
-    fn name(&self) -> &'static str {
+    fn name(&self) -> &str {
         stringify!(Shoot)
     }
 

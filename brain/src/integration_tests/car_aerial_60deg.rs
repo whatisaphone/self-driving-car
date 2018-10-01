@@ -17,7 +17,7 @@ impl CarAerial60DegBehavior {
 }
 
 impl Behavior for CarAerial60DegBehavior {
-    fn name(&self) -> &'static str {
+    fn name(&self) -> &str {
         stringify!(CarAerial60DegBehavior)
     }
 

@@ -13,7 +13,7 @@ impl NullBehavior {
 }
 
 impl Behavior for NullBehavior {
-    fn name(&self) -> &'static str {
+    fn name(&self) -> &str {
         stringify!(NullBehavior)
     }
 

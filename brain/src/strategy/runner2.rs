@@ -23,7 +23,7 @@ impl Runner2 {
 }
 
 impl Behavior for Runner2 {
-    fn name(&self) -> &'static str {
+    fn name(&self) -> &str {
         stringify!(Runner2)
     }
 

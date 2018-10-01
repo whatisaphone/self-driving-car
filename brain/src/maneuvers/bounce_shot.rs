@@ -32,7 +32,7 @@ impl BounceShot {
 }
 
 impl Behavior for BounceShot {
-    fn name(&self) -> &'static str {
+    fn name(&self) -> &str {
         stringify!(BounceShot)
     }
 

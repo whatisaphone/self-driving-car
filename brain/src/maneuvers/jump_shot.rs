@@ -36,7 +36,7 @@ impl JumpShot {
 }
 
 impl Behavior for JumpShot {
-    fn name(&self) -> &'static str {
+    fn name(&self) -> &str {
         stringify!(JumpShot)
     }
 

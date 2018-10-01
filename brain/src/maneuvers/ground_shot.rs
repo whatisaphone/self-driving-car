@@ -28,7 +28,7 @@ impl GroundShot {
 }
 
 impl Behavior for GroundShot {
-    fn name(&self) -> &'static str {
+    fn name(&self) -> &str {
         stringify!(GroundShot)
     }
 

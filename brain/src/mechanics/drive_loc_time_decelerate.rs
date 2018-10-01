@@ -27,7 +27,7 @@ impl DriveLocTimeDecelerate {
 }
 
 impl Behavior for DriveLocTimeDecelerate {
-    fn name(&self) -> &'static str {
+    fn name(&self) -> &str {
         stringify!(DriveLocTimeDecelerate)
     }
 
