@@ -93,6 +93,7 @@ endeavor.
 
 - make it work when orange
 - don't be scared of kickoffs
+- diagonal kickoff
 - add the offense swing-around stuff (when no good shot angle)
 - cache simulations to save on cpu
 - for offense tepid hit, continually adjust aim instead of using stale value

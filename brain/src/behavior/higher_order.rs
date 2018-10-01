@@ -1,6 +1,7 @@
 use behavior::{Action, Behavior, Priority};
 use eeg::{color, Drawable};
-use std::collections::VecDeque;
+use itertools::Itertools;
+use std::{collections::VecDeque, iter};
 use strategy::Context;
 
 /// Run `child` until it returns, then do nothing forever.
@@ -116,20 +117,30 @@ impl Behavior for TimeLimit {
 pub struct Chain {
     priority: Priority,
     children: VecDeque<Box<Behavior>>,
+    name: String,
 }
 
 impl Chain {
     pub fn new(priority: Priority, children: Vec<Box<Behavior>>) -> Self {
         Self {
+            name: Self::name(children.iter()),
             priority,
             children: children.into_iter().collect(),
         }
+    }
+
+    fn name<'a>(children: impl Iterator<Item = &'a Box<Behavior>>) -> String {
+        iter::once(stringify!(Chain))
+            .chain(iter::once(" ("))
+            .chain(children.map(|b| b.name()).intersperse(", "))
+            .chain(iter::once(")"))
+            .join("")
     }
 }
 
 impl Behavior for Chain {
     fn name(&self) -> &str {
-        stringify!(Chain)
+        &self.name
     }
 
     fn priority(&self) -> Priority {
@@ -161,11 +172,13 @@ impl Behavior for Chain {
                 ctx.eeg
                     .log(format!("[Chain] replacing head with {}", b.name()));
                 self.children[0] = b;
+                self.name = Self::name(self.children.iter());
                 self.execute2(ctx)
             }
             Action::Return => {
                 ctx.eeg.log("[Chain] advancing");
                 self.children.pop_front();
+                self.name = Self::name(self.children.iter());
                 self.execute2(ctx)
             }
             Action::Abort => {

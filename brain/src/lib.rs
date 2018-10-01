@@ -10,6 +10,7 @@ extern crate lazy_static;
 extern crate log;
 extern crate arrayvec;
 extern crate chip;
+extern crate itertools;
 extern crate nalgebra;
 extern crate ncollide3d;
 extern crate piston_window;
