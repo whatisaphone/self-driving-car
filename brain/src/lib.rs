@@ -1,18 +1,19 @@
 #![cfg_attr(feature = "strict", deny(warnings))]
 
-extern crate bakkesmod;
+extern crate arrayvec;
+extern crate chip;
 extern crate collect;
 extern crate crossbeam_channel;
 #[cfg(test)]
 extern crate csv;
+#[cfg(test)]
+extern crate flatbuffers;
 extern crate graphics;
+extern crate itertools;
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
 extern crate log;
-extern crate arrayvec;
-extern crate chip;
-extern crate itertools;
 extern crate nalgebra;
 extern crate ncollide3d;
 extern crate piston_window;

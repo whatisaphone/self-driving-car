@@ -7,6 +7,7 @@ authors = ["John Simon <john@whatisaph.one>"]
 arrayvec = "0.4.7"
 crossbeam-channel = "0.2.6"
 csv = "1.0.2"
+flatbuffers = "0.4.0"
 itertools = "0.7.8"
 lazy_static = "1.1.0"
 
@@ -21,7 +22,6 @@ piston2d-graphics = "0.26.0"
 rlbot = "0.0.6"
 chip = { path = "../../chip" }
 
-bakkesmod = { path = "../bakkesmod" }
 collect = { path = "../collect" }
 simulate = { path = "../simulate" }
 

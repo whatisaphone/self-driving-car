@@ -1,14 +1,13 @@
-use bakkesmod::BakkesMod;
 use behavior::{Behavior, Fuse, NullBehavior};
 use brain::Brain;
 use collect::{ExtendRotation3, Snapshot};
 use crossbeam_channel;
 use csv;
 use eeg::EEG;
+use flatbuffers::{FlatBufferBuilder, WIPOffset};
 use nalgebra::{Rotation3, Vector3};
 use rlbot;
 use std::{
-    error::Error,
     f32::consts::PI,
     fs::File,
     path::Path,
@@ -27,21 +26,15 @@ pub struct TestRunner {
 }
 
 impl TestRunner {
-    pub fn start(
-        behavior: impl Behavior + Send + 'static,
-        scenario: impl BakkesModCommand + Send + 'static,
-    ) -> TestRunner {
+    pub fn start(behavior: impl Behavior + Send + 'static, scenario: TestScenario) -> TestRunner {
         TestRunner::start2(scenario, |_| behavior)
     }
 
-    pub fn start0(scenario: impl BakkesModCommand + Send + 'static) -> TestRunner {
+    pub fn start0(scenario: TestScenario) -> TestRunner {
         Self::start2(scenario, |_| NullBehavior::new())
     }
 
-    pub fn start2<B, BF>(
-        scenario: impl BakkesModCommand + Send + 'static,
-        behavior: BF,
-    ) -> TestRunner
+    pub fn start2<B, BF>(scenario: TestScenario, behavior: BF) -> TestRunner
     where
         B: Behavior + 'static,
         BF: FnOnce(&rlbot::ffi::LiveDataPacket) -> B + Send + 'static,
@@ -147,7 +140,7 @@ fn unlock_rlbot_singleton() -> MutexGuard<'static, Option<rlbot::RLBot>> {
 }
 
 fn test_thread(
-    scenario: impl BakkesModCommand,
+    scenario: TestScenario,
     behavior: impl FnOnce(&rlbot::ffi::LiveDataPacket) -> Box<Behavior>,
     ready_wait: Arc<Barrier>,
     sniff_packet: crossbeam_channel::Receiver<
@@ -165,6 +158,7 @@ fn test_thread(
         NumPlayers: 2,
         MutatorSettings: rlbot::ffi::MutatorSettings {
             MatchLength: rlbot::ffi::MatchLength::Unlimited,
+            RespawnTimeOptions: rlbot::ffi::RespawnTimeOption::Disable_Goal_Reset,
             ..Default::default()
         },
         SkipReplays: true,
@@ -191,8 +185,7 @@ fn test_thread(
 
     rlbot.update_player_input(Default::default(), 0).unwrap();
 
-    setup_scenario(scenario);
-    wait_for_bakkesmod_flush(&mut packets).unwrap();
+    setup_scenario(rlbot, &scenario);
 
     let first_packet = packets.next().unwrap();
     brain.set_behavior(Box::new(Fuse::new(behavior(&first_packet))), &mut eeg);
@@ -239,53 +232,118 @@ fn test_thread(
     rlbot.update_player_input(Default::default(), 0).unwrap();
 }
 
-fn setup_scenario(scenario: impl BakkesModCommand) {
-    let bakkesmod = BakkesMod::connect().unwrap();
+fn setup_scenario(rlbot: &rlbot::RLBot, scenario: &TestScenario) {
+    set_state(rlbot, &scenario);
+    // Wait for car suspension to settle to neutral, then set it again.
+    sleep(Duration::from_millis(1000));
+    set_state(rlbot, &scenario);
 
-    let neutral = TestScenario {
-        car_loc: Vector3::new(1000.0, 0.0, 17.01),
-        enemy_loc: Vector3::new(-1000.0, 0.0, 17.01),
-        boost: 0,
-        ..Default::default()
-    }
-    .to_bakkesmod_command();
-
-    for _ in 0..6 {
-        bakkesmod.send(neutral.clone());
-        sleep(Duration::from_millis(250));
-    }
-
-    let command = scenario.to_bakkesmod_command();
-    bakkesmod.send(command);
+    // Wait a few frames for the state to take effect.
+    rlbot.packeteer().next().unwrap();
+    rlbot.packeteer().next().unwrap();
+    rlbot.packeteer().next().unwrap();
+    rlbot.packeteer().next().unwrap();
 }
 
-/// Wait for the scenario to be returned from the game so we don't "leak" the
-/// reset scenario to the tested code.
-fn wait_for_bakkesmod_flush(packets: &mut rlbot::Packeteer) -> Result<(), Box<Error>> {
-    for _ in 0..10 {
-        let packet = packets.next()?;
-        if (packet.GameCars[0].Physics.Location.X - 1000.0).abs() >= 1.0 {
-            return Ok(());
-        }
-    }
+fn set_state(rlbot: &rlbot::RLBot, scenario: &TestScenario) {
+    let mut builder = FlatBufferBuilder::new_with_capacity(1024);
 
-    Err(From::from("BakkesMod command seemed not to work"))
+    let loc = vector3(&mut builder, scenario.ball_loc);
+    let vel = vector3(&mut builder, scenario.ball_vel);
+    let rot = rotator(&mut builder, scenario.ball_rot);
+    let ang_vel = vector3(&mut builder, scenario.ball_ang_vel);
+    let physics = {
+        let mut b = rlbot::flat::DesiredPhysicsBuilder::new(&mut builder);
+        b.add_location(loc);
+        b.add_velocity(vel);
+        b.add_rotation(rot);
+        b.add_angularVelocity(ang_vel);
+        b.finish()
+    };
+    let ball_state = {
+        let mut b = rlbot::flat::DesiredBallStateBuilder::new(&mut builder);
+        b.add_physics(physics);
+        b.finish()
+    };
+
+    let loc = vector3(&mut builder, scenario.car_loc);
+    let vel = vector3(&mut builder, scenario.car_vel);
+    let rot = rotator(&mut builder, scenario.car_rot);
+    let ang_vel = vector3(&mut builder, scenario.car_ang_vel);
+    let physics = {
+        let mut b = rlbot::flat::DesiredPhysicsBuilder::new(&mut builder);
+        b.add_location(loc);
+        b.add_velocity(vel);
+        b.add_rotation(rot);
+        b.add_angularVelocity(ang_vel);
+        b.finish()
+    };
+    let car_state = {
+        let boost_amount = rlbot::flat::Float::new(scenario.boost as f32);
+        let mut b = rlbot::flat::DesiredCarStateBuilder::new(&mut builder);
+        b.add_physics(physics);
+        b.add_boostAmount(&boost_amount);
+        b.finish()
+    };
+
+    let loc = vector3(&mut builder, scenario.enemy_loc);
+    let vel = vector3(&mut builder, scenario.enemy_vel);
+    let rot = rotator(&mut builder, scenario.enemy_rot);
+    let ang_vel = vector3(&mut builder, scenario.enemy_ang_vel);
+    let physics = {
+        let mut b = rlbot::flat::DesiredPhysicsBuilder::new(&mut builder);
+        b.add_location(loc);
+        b.add_velocity(vel);
+        b.add_rotation(rot);
+        b.add_angularVelocity(ang_vel);
+        b.finish()
+    };
+    let enemy_state = {
+        let boost_amount = rlbot::flat::Float::new(scenario.boost as f32);
+        let mut b = rlbot::flat::DesiredCarStateBuilder::new(&mut builder);
+        b.add_physics(physics);
+        b.add_boostAmount(&boost_amount);
+        b.finish()
+    };
+
+    let car_states = builder.create_vector(&[car_state, enemy_state]);
+    let desired_game_state = {
+        let mut b = rlbot::flat::DesiredGameStateBuilder::new(&mut builder);
+        b.add_ballState(ball_state);
+        b.add_carStates(car_states);
+        b.finish()
+    };
+
+    builder.finish(desired_game_state, None);
+    rlbot.set_game_state(builder.finished_data()).unwrap()
 }
 
-pub trait BakkesModCommand {
-    fn to_bakkesmod_command(self) -> String;
+fn vector3<'a, 'b>(
+    builder: &'b mut FlatBufferBuilder<'a>,
+    v: Vector3<f32>,
+) -> WIPOffset<rlbot::flat::Vector3Partial<'a>> {
+    rlbot::flat::Vector3Partial::create(
+        builder,
+        &rlbot::flat::Vector3PartialArgs {
+            x: Some(&rlbot::flat::Float::new(v.x)),
+            y: Some(&rlbot::flat::Float::new(v.y)),
+            z: Some(&rlbot::flat::Float::new(v.z)),
+        },
+    )
 }
 
-impl<'a> BakkesModCommand for &'a str {
-    fn to_bakkesmod_command(self) -> String {
-        self.to_owned()
-    }
-}
-
-impl BakkesModCommand for String {
-    fn to_bakkesmod_command(self) -> String {
-        self
-    }
+fn rotator<'a, 'b>(
+    builder: &'b mut FlatBufferBuilder<'a>,
+    r: Rotation3<f32>,
+) -> WIPOffset<rlbot::flat::RotatorPartial<'a>> {
+    rlbot::flat::RotatorPartial::create(
+        builder,
+        &rlbot::flat::RotatorPartialArgs {
+            pitch: Some(&rlbot::flat::Float::new(r.pitch())),
+            yaw: Some(&rlbot::flat::Float::new(r.yaw())),
+            roll: Some(&rlbot::flat::Float::new(r.roll())),
+        },
+    )
 }
 
 pub struct TestScenario {
@@ -325,8 +383,8 @@ impl Default for TestScenario {
 }
 
 impl TestScenario {
-    /// This is a debug-only convenience function that lets you directly
-    /// copy-paste a row from a collect CSV to visualize it.
+    /// This is a development-only convenience function that lets you load a
+    /// scenario directly from a saved gameplay recording.
     #[allow(dead_code)]
     #[deprecated(note = "Use TestScenario::new() instead when writing actual tests.")]
     pub fn from_collected_row(filename: impl AsRef<Path>, time: f32) -> Self {
@@ -359,32 +417,6 @@ impl TestScenario {
         panic!("Time not found in recording.");
     }
 
-    /// This is a debug-only convenience function that lets you directly
-    /// copy-paste a row from a collect CSV to visualize it.
-    #[allow(dead_code)]
-    #[deprecated(note = "Use TestScenario::new() instead when writing actual tests.")]
-    pub fn from_collect_row(text: &str) -> Self {
-        let row = text.split("\t").map(|x| x.parse().unwrap());
-        let snapshot = Snapshot::from_row(row).unwrap();
-        let car = &snapshot.cars[0];
-        let enemy = &snapshot.cars[1];
-        Self {
-            ball_loc: snapshot.ball.loc,
-            ball_rot: snapshot.ball.rot,
-            ball_vel: snapshot.ball.vel,
-            ball_ang_vel: snapshot.ball.ang_vel,
-            car_loc: car.loc,
-            car_rot: car.rot,
-            car_vel: car.vel,
-            car_ang_vel: car.ang_vel,
-            enemy_loc: enemy.loc,
-            enemy_rot: enemy.rot,
-            enemy_vel: enemy.vel,
-            enemy_ang_vel: enemy.ang_vel,
-            boost: 100,
-        }
-    }
-
     fn to_source(&self) -> String {
         format!(
             "TestScenario {{
@@ -412,42 +444,4 @@ impl TestScenario {
             self.car_vel.z,
         )
     }
-}
-
-impl BakkesModCommand for TestScenario {
-    fn to_bakkesmod_command(self) -> String {
-        let commands = [
-            format!("ball location {}", serialize_vector(self.ball_loc)),
-            // ball rotation is not supported by BakkesMod and is also likely to not matter.
-            format!("ball velocity {}", serialize_vector(self.ball_vel)),
-            // ball angular_velocity is not supported by BakkesMod and is also likely to not
-            // matter.
-            format!("player 0 location {}", serialize_vector(self.car_loc)),
-            format!("player 0 rotation {}", serialize_rotation(self.car_rot)),
-            format!("player 0 velocity {}", serialize_vector(self.car_vel)),
-            // player angular_velocity is not supported by BakkesMod and is also likely to not
-            // matter.
-            format!("player 1 location {}", serialize_vector(self.enemy_loc)),
-            format!("player 1 rotation {}", serialize_rotation(self.enemy_rot)),
-            format!("player 1 velocity {}", serialize_vector(self.enemy_vel)),
-            // player angular_velocity is not supported by BakkesMod and is also likely to not
-            // matter.
-            format!("boost set {}", self.boost.to_string()),
-        ];
-        commands.join(";")
-    }
-}
-
-pub fn serialize_vector(loc: Vector3<f32>) -> String {
-    format!("{} {} {}", loc.x, loc.y, loc.z)
-}
-
-pub fn serialize_rotation(rot: Rotation3<f32>) -> String {
-    /// Convert from radians to URU (Unreal Rotation Units).
-    fn to_uru(theta: f32) -> u16 {
-        (theta / PI * 32768.0) as u16
-    }
-
-    let (pitch, yaw, roll) = rot.to_unreal_angles();
-    format!("{} {} {}", to_uru(pitch), to_uru(yaw), to_uru(roll))
 }

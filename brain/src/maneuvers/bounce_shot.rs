@@ -132,8 +132,8 @@ mod integration_tests {
             TestScenario {
                 ball_loc: Vector3::new(-2000.0, 2000.0, 500.0),
                 ball_vel: Vector3::new(1000.0, 0.0, 0.0),
-                car_loc: Vector3::new(0.0, 0.0, 0.0),
-                car_vel: Vector3::new(0.0, -200.0, 0.0),
+                car_loc: Vector3::new(0.0, 0.0, 17.01),
+                car_vel: Vector3::new(0.0, 0.0, 0.0),
                 ..Default::default()
             },
         );
@@ -150,8 +150,8 @@ mod integration_tests {
             TestScenario {
                 ball_loc: Vector3::new(-2000.0, 2000.0, 1000.0),
                 ball_vel: Vector3::new(500.0, 0.0, 0.0),
-                car_loc: Vector3::new(0.0, 0.0, 0.0),
-                car_vel: Vector3::new(0.0, -200.0, 0.0),
+                car_loc: Vector3::new(0.0, 0.0, 17.01),
+                car_vel: Vector3::new(0.0, 0.0, 0.0),
                 boost: 0,
                 ..Default::default()
             },
