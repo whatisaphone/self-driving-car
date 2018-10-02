@@ -70,7 +70,7 @@ fn enemy_can_shoot(ctx: &mut Context) -> bool {
 }
 
 #[cfg(test)]
-mod tests {
+mod integration_tests {
     use behavior::runner::PUSHED;
     use collect::ExtendRotation3;
     use integration_tests::helpers::{TestRunner, TestScenario};
@@ -80,8 +80,12 @@ mod tests {
     #[test]
     fn dont_panic_when_no_intercept() {
         let test = TestRunner::start0(TestScenario {
-            enemy_loc: Vector3::new(6000.0, 6000.0, 0.0),
-            ..TestScenario::from_collected_row("../logs/play.csv", 717.0)
+            ball_loc: Vector3::new(-1185.1904, 1242.3097, 133.98555),
+            ball_vel: Vector3::new(-1743.6543, 1205.1072, -55.04102),
+            car_loc: Vector3::new(492.75253, 567.8963, 17.01),
+            car_rot: Rotation3::from_unreal_angles(-0.00958738, -3.1036267, 0.0),
+            car_vel: Vector3::new(-1369.871, 12.749782, 8.351),
+            ..Default::default()
         });
         test.set_behavior(Runner2::new());
         test.sleep_millis(100);

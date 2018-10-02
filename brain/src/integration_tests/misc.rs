@@ -22,22 +22,33 @@ fn clear_ball_out_of_goal() {
 #[ignore]
 // We came in too hot, we should be able to smack it to the side.
 fn todo() {
-    let test = TestRunner::start0(
-        TestScenario::from_collect_row("162.00925	-1004.2267	-1863.0571	93.15	1.0648702	-2.6295307	0.66037875	1196.1945	-1186.7386	0	4.445553	3.9708207	-0.68442774	1692.9968	-2508.7695	17.01	-0.009779127	-2.0910075	0	-896.0074	-1726.876	8.375226	-0.002352258	0.0009174193	-1.4248774	-1994.5284	-884.29803	17.01	-0.009491506	-0.56105345	0	1013.4857	-641.1561	8.201742	0.0002	0.00028258064	0.19836259"),
-    );
-    test.set_behavior(Runner2::new());
-    test.sleep_millis(3000);
-}
-
-#[test]
-#[ignore]
-fn template() {
     let test = TestRunner::start0(TestScenario {
-        enemy_loc: Vector3::new(6000.0, 6000.0, 0.0),
-        ..TestScenario::from_collected_row("../logs/play.csv", 100.0)
+        ball_loc: Vector3::new(-1004.2267, -1863.0571, 93.15),
+        ball_vel: Vector3::new(1196.1945, -1186.7386, 0.0),
+        car_loc: Vector3::new(1692.9968, -2508.7695, 17.01),
+        car_rot: Rotation3::from_unreal_angles(-0.009779127, -2.0910075, 0.0),
+        car_vel: Vector3::new(-896.0074, -1726.876, 8.375226),
+        ..Default::default()
     });
     test.set_behavior(Runner2::new());
-
-    test.sleep_millis(5000);
     unimplemented!();
+}
+
+#[allow(deprecated)]
+mod template {
+    use integration_tests::helpers::{TestRunner, TestScenario};
+    use nalgebra::Vector3;
+    use strategy::Runner2;
+
+    #[test]
+    #[ignore]
+    fn template() {
+        let test = TestRunner::start0(TestScenario {
+            enemy_loc: Vector3::new(6000.0, 6000.0, 0.0),
+            ..TestScenario::from_collected_row("../logs/play.csv", 100.0)
+        });
+        test.set_behavior(Runner2::new());
+        test.sleep_millis(5000);
+        unimplemented!();
+    }
 }

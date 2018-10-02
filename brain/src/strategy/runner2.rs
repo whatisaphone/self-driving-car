@@ -13,13 +13,6 @@ impl Runner2 {
     pub fn new() -> Self {
         Self { current: None }
     }
-
-    #[cfg(test)]
-    pub fn with_current(current: impl Behavior + 'static) -> Runner2 {
-        Self {
-            current: Some(Box::new(current)),
-        }
-    }
 }
 
 impl Behavior for Runner2 {

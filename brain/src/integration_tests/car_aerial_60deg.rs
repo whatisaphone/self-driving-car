@@ -1,9 +1,9 @@
 use behavior::{Action, Behavior};
-use eeg::EEG;
 use integration_tests::helpers::{TestRunner, TestScenario};
 use nalgebra::Vector3;
 use rlbot;
 use simulate::CarAerial60Deg;
+use strategy::Context;
 use utils::ExtendPhysics;
 
 struct CarAerial60DegBehavior {
@@ -21,10 +21,10 @@ impl Behavior for CarAerial60DegBehavior {
         stringify!(CarAerial60DegBehavior)
     }
 
-    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-        let elapsed = packet.GameInfo.TimeSeconds - self.start_time;
+    fn execute2(&mut self, ctx: &mut Context) -> Action {
+        let elapsed = ctx.packet.GameInfo.TimeSeconds - self.start_time;
         let target_pitch = 60.0_f32.to_radians();
-        let pitch = (target_pitch - packet.GameCars[0].Physics.Rotation.Pitch) / 2.0;
+        let pitch = (target_pitch - ctx.me().Physics.Rotation.Pitch) / 2.0;
         let input = rlbot::PlayerInput {
             Pitch: pitch.max(-1.0).min(1.0),
             Jump: true,

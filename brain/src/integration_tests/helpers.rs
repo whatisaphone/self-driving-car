@@ -247,7 +247,7 @@ fn setup_scenario(scenario: impl BakkesModCommand) {
         ..Default::default()
     }.to_bakkesmod_command();
 
-    for i in 0..6 {
+    for _ in 0..6 {
         bakkesmod.send(neutral.clone());
         sleep(Duration::from_millis(250));
     }

@@ -16,11 +16,11 @@ pub fn simple_yaw_diff(car: &rlbot::Physics, target_loc: Vector2<f32>) -> f32 {
 mod integration_tests {
     use behavior::{Action, Behavior};
     use collect::ExtendRotation3;
-    use eeg::EEG;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use mechanics::simple_steer_towards;
     use nalgebra::{Rotation3, Vector3};
     use rlbot;
+    use strategy::Context;
     use utils::{ExtendPhysics, ExtendVector3};
 
     struct SimpleSteerTowardsBall;
@@ -30,9 +30,9 @@ mod integration_tests {
             stringify!(SimpleSteerTowardsBall)
         }
 
-        fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
-            let me = packet.GameCars[0];
-            let ball = packet.GameBall;
+        fn execute2(&mut self, ctx: &mut Context) -> Action {
+            let me = ctx.me();
+            let ball = ctx.packet.GameBall;
             Action::Yield(rlbot::PlayerInput {
                 Throttle: 1.0,
                 Steer: simple_steer_towards(&me.Physics, ball.Physics.loc().to_2d()),
