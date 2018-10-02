@@ -7,8 +7,8 @@ authors = ["John Simon <john@whatisaph.one>"]
 chrono = "0.4.6"
 lazy_static = "1.1.0"
 
-log = "0.4.4"
-env_logger = "0.5.12"
+log = "0.4.5"
+env_logger = "0.5.13"
 
 rlbot = "0.0.4"
 

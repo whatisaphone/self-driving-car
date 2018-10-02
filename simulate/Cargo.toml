@@ -7,4 +7,4 @@ authors = ["John Simon <john@whatisaph.one>"]
 nalgebra = "0.16.0"
 
 [build-dependencies]
-csv = "1.0.0"
+csv = "1.0.2"

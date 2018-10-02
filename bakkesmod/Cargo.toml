@@ -4,5 +4,5 @@ version = "0.1.0"
 authors = ["John Simon <john@whatisaph.one>"]
 
 [dependencies]
-crossbeam-channel = "0.2.4"
+crossbeam-channel = "0.2.6"
 websocket = "0.20.3"

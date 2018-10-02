@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["John Simon <john@whatisaph.one>"]
 
 [dependencies]
-csv = "1.0.0"
+csv = "1.0.2"
 nalgebra = "0.16.0"
 
 rlbot = "0.0.4"
