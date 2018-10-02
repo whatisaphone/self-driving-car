@@ -27,7 +27,11 @@ impl Brain {
         self.runner = BehaviorRunner::new(behavior);
     }
 
-    pub fn tick(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> rlbot::PlayerInput {
+    pub fn tick(
+        &mut self,
+        packet: &rlbot::ffi::LiveDataPacket,
+        eeg: &mut EEG,
+    ) -> rlbot::ffi::PlayerInput {
         self.fps_counter.tick(packet.GameInfo.TimeSeconds);
 
         eeg.draw(Drawable::print(

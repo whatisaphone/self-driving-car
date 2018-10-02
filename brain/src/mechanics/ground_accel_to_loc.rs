@@ -86,7 +86,7 @@ impl Behavior for GroundAccelToLoc {
 
 /// Starting at `origin`, if we go pedal to the metal for `time` seconds, will
 /// we have traveled `distance`?
-fn estimate_approach(car: &rlbot::PlayerInfo, distance: f32, time: f32) -> bool {
+fn estimate_approach(car: &rlbot::ffi::PlayerInfo, distance: f32, time: f32) -> bool {
     const DT: f32 = 1.0 / 60.0;
 
     let mut t = 1.5 / 120.0; // Start a few ticks later to compensate for input lag.

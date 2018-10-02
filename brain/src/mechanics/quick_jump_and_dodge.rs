@@ -33,7 +33,7 @@ impl QuickJumpAndDodge {
         }
     }
 
-    pub fn begin(packet: &rlbot::LiveDataPacket) -> Self {
+    pub fn begin(packet: &rlbot::ffi::LiveDataPacket) -> Self {
         Self {
             start_time: Some(packet.GameInfo.TimeSeconds),
             ..Self::new()
@@ -85,7 +85,7 @@ impl Behavior for QuickJumpAndDodge {
             color::GREEN,
         ));
 
-        let mut result = rlbot::PlayerInput {
+        let mut result = rlbot::ffi::PlayerInput {
             Throttle: 1.0,
             ..Default::default()
         };

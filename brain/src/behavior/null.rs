@@ -18,6 +18,6 @@ impl Behavior for NullBehavior {
     }
 
     fn execute2(&mut self, _ctx: &mut Context) -> Action {
-        Action::Yield(rlbot::PlayerInput::default())
+        Action::Yield(rlbot::ffi::PlayerInput::default())
     }
 }

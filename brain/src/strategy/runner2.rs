@@ -20,7 +20,7 @@ impl Behavior for Runner2 {
         stringify!(Runner2)
     }
 
-    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
+    fn execute(&mut self, packet: &rlbot::ffi::LiveDataPacket, eeg: &mut EEG) -> Action {
         let mut ctx = Context::new(packet, eeg);
         self.exec(0, &mut ctx)
     }

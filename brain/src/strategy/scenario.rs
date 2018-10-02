@@ -5,7 +5,7 @@ use simulate::Car1D;
 use utils::{one_v_one, ExtendPhysics, ExtendVector3, Wall, WallRayCalculator};
 
 pub struct Scenario<'a> {
-    packet: &'a rlbot::LiveDataPacket,
+    packet: &'a rlbot::ffi::LiveDataPacket,
     ball_prediction: Option<BallTrajectory>,
     me_intercept: Option<Option<(f32, Vector3<f32>)>>,
     enemy_intercept: Option<Option<(f32, Vector3<f32>)>>,
@@ -17,7 +17,7 @@ impl<'a> Scenario<'a> {
     pub const POSSESSION_CONTESTABLE: f32 = 0.5;
     pub const POSSESSION_SATURATED: f32 = 5.0;
 
-    pub fn new(packet: &'a rlbot::LiveDataPacket) -> Scenario<'a> {
+    pub fn new(packet: &'a rlbot::ffi::LiveDataPacket) -> Scenario<'a> {
         Scenario {
             packet,
             ball_prediction: None,
@@ -86,7 +86,7 @@ impl<'a> Scenario<'a> {
 // "race to the ball" and see if one player gets there much earlier than the
 // other.
 fn simulate_ball_blitz(
-    packet: &rlbot::LiveDataPacket,
+    packet: &rlbot::ffi::LiveDataPacket,
     ball_prediction: &BallTrajectory,
 ) -> (Option<(f32, Vector3<f32>)>, Option<(f32, Vector3<f32>)>) {
     let (me, enemy) = one_v_one(packet);

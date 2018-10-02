@@ -18,7 +18,7 @@ use std::{
 };
 
 pub struct TestRunner {
-    sniff_packet: crossbeam_channel::Sender<crossbeam_channel::Sender<rlbot::LiveDataPacket>>,
+    sniff_packet: crossbeam_channel::Sender<crossbeam_channel::Sender<rlbot::ffi::LiveDataPacket>>,
     set_behavior: crossbeam_channel::Sender<Box<Behavior + Send>>,
     has_scored: crossbeam_channel::Sender<crossbeam_channel::Sender<bool>>,
     messages: crossbeam_channel::Sender<Message>,
@@ -44,7 +44,7 @@ impl TestRunner {
     ) -> TestRunner
     where
         B: Behavior + 'static,
-        BF: FnOnce(&rlbot::LiveDataPacket) -> B + Send + 'static,
+        BF: FnOnce(&rlbot::ffi::LiveDataPacket) -> B + Send + 'static,
     {
         let ready_wait = Arc::new(Barrier::new(2));
         let ready_wait_send = ready_wait.clone();
@@ -98,7 +98,7 @@ impl TestRunner {
         self.set_behavior.send(Box::new(behavior));
     }
 
-    pub fn sniff_packet(&self) -> rlbot::LiveDataPacket {
+    pub fn sniff_packet(&self) -> rlbot::ffi::LiveDataPacket {
         let (tx, rx) = crossbeam_channel::bounded(1);
         self.sniff_packet.send(tx);
         rx.recv().unwrap()
@@ -148,9 +148,11 @@ fn unlock_rlbot_singleton() -> MutexGuard<'static, Option<rlbot::RLBot>> {
 
 fn test_thread(
     scenario: impl BakkesModCommand,
-    behavior: impl FnOnce(&rlbot::LiveDataPacket) -> Box<Behavior>,
+    behavior: impl FnOnce(&rlbot::ffi::LiveDataPacket) -> Box<Behavior>,
     ready_wait: Arc<Barrier>,
-    sniff_packet: crossbeam_channel::Receiver<crossbeam_channel::Sender<rlbot::LiveDataPacket>>,
+    sniff_packet: crossbeam_channel::Receiver<
+        crossbeam_channel::Sender<rlbot::ffi::LiveDataPacket>,
+    >,
     set_behavior: crossbeam_channel::Receiver<Box<Behavior + Send>>,
     has_scored: crossbeam_channel::Receiver<crossbeam_channel::Sender<bool>>,
     messages: crossbeam_channel::Receiver<Message>,
@@ -159,10 +161,10 @@ fn test_thread(
     let rlbot_guard = unlock_rlbot_singleton();
     let rlbot = rlbot_guard.as_ref().unwrap();
 
-    let mut match_settings = rlbot::MatchSettings {
+    let mut match_settings = rlbot::ffi::MatchSettings {
         NumPlayers: 2,
-        MutatorSettings: rlbot::MutatorSettings {
-            MatchLength: rlbot::MatchLength::Unlimited,
+        MutatorSettings: rlbot::ffi::MutatorSettings {
+            MatchLength: rlbot::ffi::MatchLength::Unlimited,
             ..Default::default()
         },
         SkipReplays: true,

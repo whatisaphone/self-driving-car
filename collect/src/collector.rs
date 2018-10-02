@@ -12,7 +12,7 @@ impl Collector {
         Collector { w }
     }
 
-    pub fn write(&mut self, packet: &rlbot::LiveDataPacket) -> csv::Result<()> {
+    pub fn write(&mut self, packet: &rlbot::ffi::LiveDataPacket) -> csv::Result<()> {
         self.w.write_record(
             vec![packet.GameInfo.TimeSeconds.to_string()]
                 .into_iter()
@@ -23,7 +23,7 @@ impl Collector {
     }
 }
 
-fn values(physics: &rlbot::Physics) -> Vec<String> {
+fn values(physics: &rlbot::ffi::Physics) -> Vec<String> {
     vec![
         physics.Location.X.to_string(),
         physics.Location.Y.to_string(),

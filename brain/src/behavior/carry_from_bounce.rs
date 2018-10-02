@@ -19,7 +19,7 @@ impl Behavior for CarryFromBounce {
         stringify!(CarryFromBounce)
     }
 
-    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
+    fn execute(&mut self, packet: &rlbot::ffi::LiveDataPacket, eeg: &mut EEG) -> Action {
         let (me, _enemy) = one_v_one(packet);
         let intercept = estimate_intercept_car_ball_2(&me, &packet.GameBall, |_t, loc, vel| {
             120.0 <= loc.z && loc.z < 140.0 && vel.z < 0.0
@@ -40,7 +40,7 @@ impl Behavior for CarryFromBounce {
 
         if !me.OnGround {
             eeg.draw(Drawable::print("I'm scared", color::RED));
-            return Action::Yield(rlbot::PlayerInput {
+            return Action::Yield(rlbot::ffi::PlayerInput {
                 Throttle: 1.0,
                 Steer: simple_steer_towards(&me.Physics, enemy_goal_center()),
                 ..Default::default()
@@ -56,7 +56,7 @@ impl Behavior for CarryFromBounce {
     }
 }
 
-//fn cut_loc(packet: &rlbot::LiveDataPacket) -> Vector3<f32> {
+//fn cut_loc(packet: &rlbot::ffi::LiveDataPacket) -> Vector3<f32> {
 //}
 
 #[cfg(test)]

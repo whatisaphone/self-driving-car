@@ -23,7 +23,7 @@ impl Behavior for BlitzToLocation {
         stringify!(BlitzToLocation)
     }
 
-    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
+    fn execute(&mut self, packet: &rlbot::ffi::LiveDataPacket, eeg: &mut EEG) -> Action {
         let me = my_car(packet);
         let distance = (me.Physics.loc().to_2d() - self.target_loc).norm();
         let speed = me.Physics.vel().norm();
@@ -49,7 +49,7 @@ impl Behavior for BlitzToLocation {
             && (speed < 1500.0 || (2000.0 <= speed && speed < rl::CAR_ALMOST_MAX_SPEED))
             && me.Boost > 0
         {
-            return Action::Yield(rlbot::PlayerInput {
+            return Action::Yield(rlbot::ffi::PlayerInput {
                 Throttle: 1.0,
                 Steer: steer,
                 Boost: true,
@@ -70,7 +70,7 @@ impl Behavior for BlitzToLocation {
             }
         }
 
-        Action::Yield(rlbot::PlayerInput {
+        Action::Yield(rlbot::ffi::PlayerInput {
             Throttle: 1.0,
             Steer: steer,
             ..Default::default()

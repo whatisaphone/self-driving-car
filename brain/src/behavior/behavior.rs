@@ -10,12 +10,12 @@ pub trait Behavior: Send {
     }
 
     // Soon to be deprecated
-    fn capture(&mut self, _packet: &rlbot::LiveDataPacket, _eeg: &mut EEG) -> Option<Action> {
+    fn capture(&mut self, _packet: &rlbot::ffi::LiveDataPacket, _eeg: &mut EEG) -> Option<Action> {
         None
     }
 
     // Soon to be deprecated
-    fn execute(&mut self, _packet: &rlbot::LiveDataPacket, _eeg: &mut EEG) -> Action {
+    fn execute(&mut self, _packet: &rlbot::ffi::LiveDataPacket, _eeg: &mut EEG) -> Action {
         unimplemented!("deprecated, use execute2 instead");
     }
 
@@ -34,7 +34,7 @@ pub enum Priority {
 }
 
 pub enum Action {
-    Yield(rlbot::PlayerInput),
+    Yield(rlbot::ffi::PlayerInput),
     Call(Box<Behavior>),
     Return,
     Abort,

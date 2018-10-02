@@ -31,7 +31,7 @@ impl Behavior for DriveLocTimeDecelerate {
         stringify!(DriveLocTimeDecelerate)
     }
 
-    fn execute(&mut self, packet: &rlbot::LiveDataPacket, eeg: &mut EEG) -> Action {
+    fn execute(&mut self, packet: &rlbot::ffi::LiveDataPacket, eeg: &mut EEG) -> Action {
         let me = my_car(packet);
         let distance = (me.Physics.loc().to_2d() - self.target_loc).norm();
         let time_remaining = self.target_time - packet.GameInfo.TimeSeconds;
@@ -57,7 +57,7 @@ impl Behavior for DriveLocTimeDecelerate {
             color::GREEN,
         ));
 
-        let mut result = rlbot::PlayerInput::default();
+        let mut result = rlbot::ffi::PlayerInput::default();
         result.Steer = simple_steer_towards(&me.Physics, self.target_loc);
         if estimate_approach(
             &me,
@@ -79,7 +79,12 @@ impl Behavior for DriveLocTimeDecelerate {
 /// also running time backwards from the target location, and choosing an
 /// intersection of the two paths where the distance traveled is close to the
 /// target distance.
-fn estimate_approach(car: &rlbot::PlayerInfo, distance: f32, target_speed: f32, time: f32) -> bool {
+fn estimate_approach(
+    car: &rlbot::ffi::PlayerInfo,
+    distance: f32,
+    target_speed: f32,
+    time: f32,
+) -> bool {
     const DT: f32 = 1.0 / 60.0;
 
     let mut t_accel = 1.5 / 120.0;

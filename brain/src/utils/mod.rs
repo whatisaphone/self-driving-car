@@ -15,12 +15,14 @@ mod iter;
 mod wall_ray_calculator;
 
 /// Assuming I am the first car, return the first car.
-pub fn my_car(packet: &rlbot::LiveDataPacket) -> &rlbot::PlayerInfo {
+pub fn my_car(packet: &rlbot::ffi::LiveDataPacket) -> &rlbot::ffi::PlayerInfo {
     &packet.GameCars[0]
 }
 
 /// Assuming the game is a 1v1, return my car and the enemy's car.
-pub fn one_v_one(packet: &rlbot::LiveDataPacket) -> (&rlbot::PlayerInfo, &rlbot::PlayerInfo) {
+pub fn one_v_one(
+    packet: &rlbot::ffi::LiveDataPacket,
+) -> (&rlbot::ffi::PlayerInfo, &rlbot::ffi::PlayerInfo) {
     (&packet.GameCars[0], &packet.GameCars[1])
 }
 
@@ -43,7 +45,7 @@ pub trait ExtendPhysics {
     fn ang_vel(&self) -> Vector3<f32>;
 }
 
-impl ExtendPhysics for rlbot::Physics {
+impl ExtendPhysics for rlbot::ffi::Physics {
     fn loc(&self) -> Vector3<f32> {
         Vector3::new(self.Location.X, self.Location.Y, self.Location.Z)
     }

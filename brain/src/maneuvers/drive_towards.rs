@@ -7,10 +7,10 @@ use std::f32::consts::PI;
 use utils::{one_v_one, ExtendPhysics};
 
 pub fn drive_towards(
-    packet: &rlbot::LiveDataPacket,
+    packet: &rlbot::ffi::LiveDataPacket,
     eeg: &mut EEG,
     target_loc: Vector2<f32>,
-) -> rlbot::PlayerInput {
+) -> rlbot::ffi::PlayerInput {
     let (me, _enemy) = one_v_one(packet);
 
     let yaw_diff = simple_yaw_diff(&me.Physics, target_loc);
@@ -25,7 +25,7 @@ pub fn drive_towards(
         me.Physics.vel().norm(),
     );
 
-    rlbot::PlayerInput {
+    rlbot::ffi::PlayerInput {
         Throttle: 1.0,
         Steer: steer,
         Handbrake: yaw_diff.abs() >= handbrake_cutoff,

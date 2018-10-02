@@ -9,7 +9,7 @@ const MAX_SIM_TIME: f32 = 5.0;
 
 pub fn estimate_intercept_car_ball(
     ctx: &mut Context,
-    car: &rlbot::PlayerInfo,
+    car: &rlbot::ffi::PlayerInfo,
     predicate: impl Fn(f32, &Vector3<f32>, &Vector3<f32>) -> bool,
 ) -> Option<Intercept> {
     const DT: f32 = 1.0 / 60.0;

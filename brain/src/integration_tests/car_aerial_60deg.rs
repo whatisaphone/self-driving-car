@@ -25,7 +25,7 @@ impl Behavior for CarAerial60DegBehavior {
         let elapsed = ctx.packet.GameInfo.TimeSeconds - self.start_time;
         let target_pitch = 60.0_f32.to_radians();
         let pitch = (target_pitch - ctx.me().Physics.Rotation.Pitch) / 2.0;
-        let input = rlbot::PlayerInput {
+        let input = rlbot::ffi::PlayerInput {
             Pitch: pitch.max(-1.0).min(1.0),
             Jump: true,
             Boost: elapsed >= 0.25,

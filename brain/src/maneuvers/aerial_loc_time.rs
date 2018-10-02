@@ -119,12 +119,12 @@ impl AerialLocTime {
 
     fn drive_ground(
         &self,
-        me: &rlbot::PlayerInfo,
+        me: &rlbot::ffi::PlayerInfo,
         target_dist_2d: f32,
         ground_time: f32,
         total_time: f32,
-    ) -> rlbot::PlayerInput {
-        let mut result = rlbot::PlayerInput::default();
+    ) -> rlbot::ffi::PlayerInput {
+        let mut result = rlbot::ffi::PlayerInput::default();
         result.Steer = simple_steer_towards(&me.Physics, self.target_loc.to_2d());
         if !Self::estimate_approach(
             me.Physics.vel().norm(),
@@ -183,7 +183,7 @@ impl AerialLocTime {
         let me = ctx.me();
         let target_pitch = 60.0_f32.to_radians();
         let pitch = (target_pitch - me.Physics.Rotation.Pitch) / 2.0;
-        let input = rlbot::PlayerInput {
+        let input = rlbot::ffi::PlayerInput {
             Pitch: pitch.max(-1.0).min(1.0),
             Jump: true,
             Boost: elapsed >= 0.25,

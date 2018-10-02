@@ -162,7 +162,7 @@ impl JumpShot {
             return self.execute2(ctx);
         }
 
-        Action::Yield(rlbot::PlayerInput {
+        Action::Yield(rlbot::ffi::PlayerInput {
             Jump: time_remaining > 0.05,
             ..Default::default()
         })
@@ -181,7 +181,7 @@ impl JumpShot {
         let me = ctx.me();
         let angle = simple_yaw_diff(&me.Physics, ctx.packet.GameBall.Physics.loc().to_2d());
 
-        Action::Yield(rlbot::PlayerInput {
+        Action::Yield(rlbot::ffi::PlayerInput {
             Pitch: -angle.cos(),
             Yaw: angle.sin(),
             Jump: true,

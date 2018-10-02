@@ -47,7 +47,7 @@ impl EEG {
         self.draw_list.push(drawable);
     }
 
-    pub fn begin(&mut self, packet: &rlbot::LiveDataPacket) {
+    pub fn begin(&mut self, packet: &rlbot::ffi::LiveDataPacket) {
         self.current_packet_time = packet.GameInfo.TimeSeconds;
     }
 
@@ -64,7 +64,7 @@ impl EEG {
         }
     }
 
-    pub fn show(&mut self, packet: &rlbot::LiveDataPacket) {
+    pub fn show(&mut self, packet: &rlbot::ffi::LiveDataPacket) {
         let draw_list = mem::replace(&mut self.draw_list, Vec::new());
         self.tx.as_ref().unwrap().send(ThreadMessage::Draw(
             packet.clone(),
@@ -107,7 +107,7 @@ pub mod color {
 }
 
 enum ThreadMessage {
-    Draw(rlbot::LiveDataPacket, Box<[Drawable]>),
+    Draw(rlbot::ffi::LiveDataPacket, Box<[Drawable]>),
 }
 
 fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {

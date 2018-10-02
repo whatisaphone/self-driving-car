@@ -22,7 +22,7 @@ impl BallFrame {
 }
 
 impl BallTrajectory {
-    pub fn predict(packet: &rlbot::LiveDataPacket) -> Self {
+    pub fn predict(packet: &rlbot::ffi::LiveDataPacket) -> Self {
         let mut ball = Ball::new(
             packet.GameBall.Physics.loc(),
             packet.GameBall.Physics.vel(),

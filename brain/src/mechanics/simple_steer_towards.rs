@@ -3,11 +3,11 @@ use nalgebra::Vector2;
 use rlbot;
 use utils::{ExtendF32, ExtendPhysics, ExtendVector2, ExtendVector3};
 
-pub fn simple_steer_towards(car: &rlbot::Physics, target_loc: Vector2<f32>) -> f32 {
+pub fn simple_steer_towards(car: &rlbot::ffi::Physics, target_loc: Vector2<f32>) -> f32 {
     simple_yaw_diff(car, target_loc).max(-1.0).min(1.0) * 2.0
 }
 
-pub fn simple_yaw_diff(car: &rlbot::Physics, target_loc: Vector2<f32>) -> f32 {
+pub fn simple_yaw_diff(car: &rlbot::ffi::Physics, target_loc: Vector2<f32>) -> f32 {
     let target_yaw = car.loc().to_2d().angle_to(target_loc);
     (target_yaw - car.rot().yaw()).normalize_angle()
 }
@@ -33,7 +33,7 @@ mod integration_tests {
         fn execute2(&mut self, ctx: &mut Context) -> Action {
             let me = ctx.me();
             let ball = ctx.packet.GameBall;
-            Action::Yield(rlbot::PlayerInput {
+            Action::Yield(rlbot::ffi::PlayerInput {
                 Throttle: 1.0,
                 Steer: simple_steer_towards(&me.Physics, ball.Physics.loc().to_2d()),
                 ..Default::default()

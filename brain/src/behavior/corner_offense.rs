@@ -15,7 +15,7 @@ impl Behavior for CornerOffense {
         stringify!(CornerOffense)
     }
 
-    fn execute(&mut self, _packet: &rlbot::LiveDataPacket, _eeg: &mut EEG) -> Action {
+    fn execute(&mut self, _packet: &rlbot::ffi::LiveDataPacket, _eeg: &mut EEG) -> Action {
         Action::Yield(Default::default())
     }
 }

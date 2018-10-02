@@ -10,7 +10,7 @@ use utils::{ExtendF32, ExtendPhysics, ExtendVector3};
 // I'm keeping this value artificially high until I implement smarter routing.
 const GROUND_DODGE_TIME: f32 = 2.0;
 
-pub fn rough_time_drive_to_loc(car: &rlbot::PlayerInfo, target_loc: Vector2<f32>) -> f32 {
+pub fn rough_time_drive_to_loc(car: &rlbot::ffi::PlayerInfo, target_loc: Vector2<f32>) -> f32 {
     const DT: f32 = 1.0 / 60.0;
 
     let target_dist = (car.Physics.loc().to_2d() - target_loc).norm();
@@ -29,7 +29,7 @@ pub fn rough_time_drive_to_loc(car: &rlbot::PlayerInfo, target_loc: Vector2<f32>
 }
 
 // Very very rough
-fn steer_penalty(car: &rlbot::PlayerInfo, desired_aim: f32) -> f32 {
+fn steer_penalty(car: &rlbot::ffi::PlayerInfo, desired_aim: f32) -> f32 {
     let turn = (car.Physics.rot().yaw() - desired_aim)
         .normalize_angle()
         .abs();
@@ -37,7 +37,10 @@ fn steer_penalty(car: &rlbot::PlayerInfo, desired_aim: f32) -> f32 {
     turn * 3.0 / 4.0
 }
 
-pub fn get_route_dodge(car: &rlbot::PlayerInfo, target_loc: Vector2<f32>) -> Option<Box<Behavior>> {
+pub fn get_route_dodge(
+    car: &rlbot::ffi::PlayerInfo,
+    target_loc: Vector2<f32>,
+) -> Option<Box<Behavior>> {
     const DODGE_SPEED_BOOST: f32 = 500.0; // TODO: Literally just guessed this
 
     if !car.OnGround {

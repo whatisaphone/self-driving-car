@@ -18,7 +18,7 @@ log = "0.4.5"
 piston_window = "0.80.0"
 piston2d-graphics = "0.26.0"
 
-rlbot = "0.0.4"
+rlbot = "0.0.6"
 chip = { path = "../../chip" }
 
 bakkesmod = { path = "../bakkesmod" }

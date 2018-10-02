@@ -11,7 +11,10 @@ mod scenarios;
 
 pub fn main() -> Result<(), Box<Error>> {
     let rlbot = rlbot::init()?;
-    rlbot.start_match(rlbot::MatchSettings::simple_1v1("Collector", "Spectator"))?;
+    rlbot.start_match(rlbot::ffi::MatchSettings::simple_1v1(
+        "Collector",
+        "Spectator",
+    ))?;
 
     let mut packets = rlbot.packeteer();
 

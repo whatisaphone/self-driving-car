@@ -40,12 +40,12 @@ fn main() {
 fn my_run_bot(mut bot: impl rlbot::Bot) {
     let rlbot = rlbot::init().unwrap();
 
-    let match_settings = rlbot::MatchSettings {
-        MutatorSettings: rlbot::MutatorSettings {
-            MatchLength: rlbot::MatchLength::Unlimited,
+    let match_settings = rlbot::ffi::MatchSettings {
+        MutatorSettings: rlbot::ffi::MutatorSettings {
+            MatchLength: rlbot::ffi::MatchLength::Unlimited,
             ..Default::default()
         },
-        ..rlbot::MatchSettings::simple_1v1("Formula None", "All-Star")
+        ..rlbot::ffi::MatchSettings::simple_1v1("Formula None", "All-Star")
     };
     rlbot.start_match(match_settings).unwrap();
 
@@ -101,7 +101,7 @@ impl rlbot::Bot for FormulaNone {
         }
     }
 
-    fn tick(&mut self, packet: &rlbot::LiveDataPacket) -> rlbot::PlayerInput {
+    fn tick(&mut self, packet: &rlbot::ffi::LiveDataPacket) -> rlbot::ffi::PlayerInput {
         if !packet.GameInfo.RoundActive {
             return Default::default();
         }

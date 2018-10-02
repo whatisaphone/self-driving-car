@@ -11,13 +11,13 @@ use std::error::Error;
 pub fn coast(
     rlbot: &rlbot::RLBot,
     time: f32,
-    _packet: &rlbot::LiveDataPacket,
+    _packet: &rlbot::ffi::LiveDataPacket,
 ) -> Result<bool, Box<Error>> {
     if time < 1.0 {
         let input = Default::default();
         rlbot.update_player_input(input, 0)?;
     } else if time < 3.0 {
-        let input = rlbot::PlayerInput {
+        let input = rlbot::ffi::PlayerInput {
             Throttle: 1.0,
             Boost: true,
             ..Default::default()
@@ -36,14 +36,14 @@ pub fn coast(
 pub fn aerial_60deg(
     rlbot: &rlbot::RLBot,
     time: f32,
-    packet: &rlbot::LiveDataPacket,
+    packet: &rlbot::ffi::LiveDataPacket,
 ) -> Result<bool, Box<Error>> {
     if time < 1.0 {
         let input = Default::default();
         rlbot.update_player_input(input, 0)?;
     } else if time < 5.0 {
         let pitch = (60.0_f32.to_radians() - packet.GameCars[0].Physics.Rotation.Pitch) / 2.0;
-        let input = rlbot::PlayerInput {
+        let input = rlbot::ffi::PlayerInput {
             Pitch: pitch.max(-1.0).min(1.0),
             Jump: true,
             Boost: time >= 1.25,
