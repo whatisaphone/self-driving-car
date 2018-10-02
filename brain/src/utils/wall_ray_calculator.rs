@@ -76,7 +76,8 @@ impl WallRayCalculator {
                     return false;
                 }
                 true
-            }).min_by_key(|(_, intersect)| TotalF32(intersect.toi))
+            })
+            .min_by_key(|(_, intersect)| TotalF32(intersect.toi))
             .unwrap();
         ray.origin + ray.dir * intersect.toi
     }

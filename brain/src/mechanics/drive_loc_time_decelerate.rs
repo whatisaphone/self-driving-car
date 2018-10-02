@@ -128,7 +128,8 @@ fn estimate_approach(
             ((a1.speed - c1.speed).abs())
                 .partial_cmp(&(a2.speed - c2.speed).abs())
                 .unwrap()
-        }).unwrap();
+        })
+        .unwrap();
 
     let result = if cross_accel.distance + cross_coast.distance >= distance {
         false

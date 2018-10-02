@@ -1,3 +1,5 @@
+#![cfg_attr(feature = "strict", deny(warnings))]
+
 extern crate nalgebra;
 
 pub use car1d::Car1D;

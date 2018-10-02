@@ -52,7 +52,8 @@ impl Behavior for CarryFromBounce {
             target_loc,
             me.Physics.vel().norm() / 2.0,
             packet.GameInfo.TimeSeconds + intercept.time,
-        ).execute(packet, eeg)
+        )
+        .execute(packet, eeg)
     }
 }
 

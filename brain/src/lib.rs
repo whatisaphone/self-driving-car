@@ -1,3 +1,5 @@
+#![cfg_attr(feature = "strict", deny(warnings))]
+
 extern crate bakkesmod;
 extern crate collect;
 extern crate crossbeam_channel;

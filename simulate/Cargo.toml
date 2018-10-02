@@ -8,3 +8,6 @@ nalgebra = "0.16.0"
 
 [build-dependencies]
 csv = "1.0.2"
+
+[features]
+strict = []

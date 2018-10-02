@@ -247,7 +247,8 @@ fn setup_scenario(scenario: impl BakkesModCommand) {
         enemy_loc: Vector3::new(-1000.0, 0.0, 17.01),
         boost: 0,
         ..Default::default()
-    }.to_bakkesmod_command();
+    }
+    .to_bakkesmod_command();
 
     for _ in 0..6 {
         bakkesmod.send(neutral.clone());

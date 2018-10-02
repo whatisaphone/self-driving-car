@@ -14,3 +14,6 @@ rlbot = "0.0.6"
 
 brain = { path = "../brain" }
 collect = { path = "../collect" }
+
+[features]
+strict = []

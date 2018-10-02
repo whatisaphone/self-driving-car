@@ -24,11 +24,42 @@
       files: '[.]rs$'
       entry: rustup run nightly rustfmt
 
+    # Each package is checked separately because of
+    # https://github.com/rust-lang/cargo/issues/5364
+
+    - id: check-bakkesmod
+      name: check-bakkesmod
+      language: system
+      files: '[.]rs$'
+      entry: sh -c '( cd bakkesmod && cargo check --all-targets --features strict )'
+      pass_filenames: false
+
     - id: check-brain
       name: check-brain
       language: system
       files: '[.]rs$'
-      entry: cargo rustc -p brain -- -D warnings
+      entry: sh -c '( cd brain && cargo check --all-targets --features strict )'
+      pass_filenames: false
+
+    - id: check-collect
+      name: check-collect
+      language: system
+      files: '[.]rs$'
+      entry: sh -c '( cd collect && cargo check --all-targets --features strict )'
+      pass_filenames: false
+
+    - id: check-play
+      name: check-play
+      language: system
+      files: '[.]rs$'
+      entry: sh -c '( cd play && cargo check --all-targets --features strict )'
+      pass_filenames: false
+
+    - id: check-simulate
+      name: check-simulate
+      language: system
+      files: '[.]rs$'
+      entry: sh -c '( cd simulate && cargo check --all-targets --features strict )'
       pass_filenames: false
 
     - id: test

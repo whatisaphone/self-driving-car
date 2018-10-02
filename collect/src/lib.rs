@@ -1,3 +1,5 @@
+#![cfg_attr(feature = "strict", deny(warnings))]
+
 extern crate csv;
 extern crate nalgebra;
 extern crate rlbot;

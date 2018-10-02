@@ -24,3 +24,6 @@ chip = { path = "../../chip" }
 bakkesmod = { path = "../bakkesmod" }
 collect = { path = "../collect" }
 simulate = { path = "../simulate" }
+
+[features]
+strict = []

@@ -1,3 +1,5 @@
+#![cfg_attr(feature = "strict", deny(warnings))]
+
 extern crate brain;
 extern crate chrono;
 extern crate collect;

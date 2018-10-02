@@ -10,3 +10,6 @@ nalgebra = "0.16.0"
 rlbot = "0.0.6"
 
 bakkesmod = { path = "../bakkesmod" }
+
+[features]
+strict = []

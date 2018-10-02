@@ -91,7 +91,8 @@ fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) 
             &mut out_time_rev,
             ",{}",
             time.chars().rev().collect::<String>()
-        ).unwrap();
+        )
+        .unwrap();
         write!(&mut out_car_loc_y, "{},", car_loc_y).unwrap();
         write!(&mut out_car_loc_z, "{},", car_loc_z).unwrap();
         write!(&mut out_car_vel_y, "{},", car_vel_y).unwrap();
@@ -99,7 +100,8 @@ fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) 
             &mut out_car_vel_y_rev,
             ",{}",
             car_vel_y.chars().rev().collect::<String>()
-        ).unwrap();
+        )
+        .unwrap();
     }
 
     write!(&mut out_time, "\n];\n\n").unwrap();
@@ -108,10 +110,12 @@ fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) 
             &format!(
                 "#[allow(dead_code)]\npub const {}_TIME_REV: &[f32] = &[\n",
                 name.to_ascii_uppercase()
-            ).chars()
+            )
+            .chars()
             .rev()
             .collect::<String>(),
-        ).unwrap();
+        )
+        .unwrap();
     write!(&mut out_car_loc_y, "\n];\n\n").unwrap();
     write!(&mut out_car_loc_z, "\n];\n\n").unwrap();
     write!(&mut out_car_vel_y, "\n];\n\n").unwrap();
@@ -120,10 +124,12 @@ fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) 
             &format!(
                 "#[allow(dead_code)]\npub const {}_CAR_VEL_Y_REV: &[f32] = &[\n",
                 name.to_ascii_uppercase()
-            ).chars()
+            )
+            .chars()
             .rev()
             .collect::<String>(),
-        ).unwrap();
+        )
+        .unwrap();
 
     write!(w, "{}", out_time).unwrap();
     write!(w, "{}", out_time_rev.chars().rev().collect::<String>()).unwrap();
