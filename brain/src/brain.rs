@@ -1,30 +1,36 @@
-use behavior::{Behavior, BehaviorRunner};
+#[cfg(test)]
+use behavior::Behavior;
 use eeg::{color, Drawable, EEG};
 use nalgebra::clamp;
 use rlbot;
-use strategy::Runner2;
+use strategy::{Context, Runner2};
 use utils::FPSCounter;
 
 pub struct Brain {
-    runner: BehaviorRunner,
+    runner: Runner2,
     fps_counter: FPSCounter,
 }
 
 impl Brain {
     pub fn with_root_behavior() -> Self {
-        Self::with_behavior(Box::new(Runner2::new()))
-    }
-
-    pub fn with_behavior(behavior: Box<Behavior>) -> Self {
         Self {
-            runner: BehaviorRunner::new(behavior),
+            runner: Runner2::new(),
             fps_counter: FPSCounter::new(),
         }
     }
 
-    pub fn set_behavior(&mut self, behavior: Box<Behavior>, eeg: &mut EEG) {
+    #[cfg(test)]
+    pub fn with_behavior(behavior: impl Behavior + 'static) -> Self {
+        Self {
+            runner: Runner2::with_current(behavior),
+            fps_counter: FPSCounter::new(),
+        }
+    }
+
+    #[cfg(test)]
+    pub fn set_behavior(&mut self, behavior: impl Behavior + 'static, eeg: &mut EEG) {
         eeg.log(format!("! {}", behavior.name()));
-        self.runner = BehaviorRunner::new(behavior);
+        self.runner = Runner2::with_current(behavior);
     }
 
     pub fn tick(
@@ -62,7 +68,10 @@ impl Brain {
         ));
         eeg.draw(Drawable::print("-----------------------", color::GREEN));
 
-        let mut result = self.runner.execute(&packet, eeg);
+        let mut result = {
+            let mut ctx = Context::new(packet, eeg);
+            self.runner.execute(&mut ctx)
+        };
 
         result.Throttle = clamp(result.Throttle, -1.0, 1.0);
         result.Steer = clamp(result.Steer, -1.0, 1.0);

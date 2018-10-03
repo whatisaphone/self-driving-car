@@ -1,5 +1,5 @@
 use behavior::{Action, Behavior};
-use eeg::{color, Drawable, EEG};
+use eeg::{color, Drawable};
 use rlbot;
 use strategy::{strategy, Context};
 
@@ -13,6 +13,17 @@ impl Runner2 {
     pub fn new() -> Self {
         Self { current: None }
     }
+
+    #[cfg(test)]
+    pub fn with_current(current: impl Behavior + 'static) -> Self {
+        Self {
+            current: Some(Box::new(current)),
+        }
+    }
+
+    pub fn execute(&mut self, ctx: &mut Context) -> rlbot::ffi::PlayerInput {
+        self.exec(0, ctx)
+    }
 }
 
 impl Behavior for Runner2 {
@@ -20,17 +31,16 @@ impl Behavior for Runner2 {
         stringify!(Runner2)
     }
 
-    fn execute(&mut self, packet: &rlbot::ffi::LiveDataPacket, eeg: &mut EEG) -> Action {
-        let mut ctx = Context::new(packet, eeg);
-        self.exec(0, &mut ctx)
+    fn execute2(&mut self, ctx: &mut Context) -> Action {
+        Action::Yield(self.exec(0, ctx))
     }
 }
 
 impl Runner2 {
-    fn exec(&mut self, depth: u32, ctx: &mut Context) -> Action {
+    fn exec(&mut self, depth: u32, ctx: &mut Context) -> rlbot::ffi::PlayerInput {
         if depth > 5 {
             ctx.eeg.log("infinite loop?");
-            return Action::Yield(Default::default());
+            return Default::default();
         }
 
         let action = {
@@ -41,7 +51,7 @@ impl Runner2 {
         };
 
         match action {
-            Action::Yield(i) => Action::Yield(i),
+            Action::Yield(i) => i,
             Action::Call(b) => {
                 ctx.eeg.log(format!("> {}", b.name()));
                 self.current = Some(b);

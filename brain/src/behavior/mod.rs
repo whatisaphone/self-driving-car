@@ -4,7 +4,6 @@ pub use behavior::{
     higher_order::{Chain, Fuse, Repeat},
     null::NullBehavior,
     offense::Offense,
-    runner::BehaviorRunner,
 };
 
 mod aerial_shot;

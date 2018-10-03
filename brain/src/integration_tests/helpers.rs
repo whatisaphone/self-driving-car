@@ -177,7 +177,7 @@ fn test_thread(
     rlbot.start_match(match_settings).unwrap();
 
     let mut eeg = EEG::new();
-    let mut brain = Brain::with_behavior(Box::new(NullBehavior::new()));
+    let mut brain = Brain::with_behavior(NullBehavior::new());
 
     let mut packets = rlbot.packeteer();
     // Wait for RoundActive
@@ -188,7 +188,7 @@ fn test_thread(
     setup_scenario(rlbot, &scenario);
 
     let first_packet = packets.next().unwrap();
-    brain.set_behavior(Box::new(Fuse::new(behavior(&first_packet))), &mut eeg);
+    brain.set_behavior(Fuse::new(behavior(&first_packet)), &mut eeg);
     ready_wait.wait();
 
     loop {
@@ -209,7 +209,7 @@ fn test_thread(
         }
 
         if let Some(behavior) = set_behavior.try_recv() {
-            brain.set_behavior(Box::new(Fuse::new(behavior)), &mut eeg);
+            brain.set_behavior(Fuse::new(behavior), &mut eeg);
         }
 
         while let Some(message) = messages.try_recv() {
