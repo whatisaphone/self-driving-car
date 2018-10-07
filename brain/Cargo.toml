@@ -10,6 +10,7 @@ csv = "1.0.2"
 flatbuffers = "0.4.0"
 itertools = "0.7.8"
 lazy_static = "1.1.0"
+lazycell = "1.2.0"
 
 nalgebra = "0.16.0"
 ncollide3d = "0.17.1"

@@ -1,3 +1,4 @@
+use lazycell::LazyCell;
 use nalgebra::Point3;
 use plan::ball::BallTrajectory;
 use rlbot;
@@ -6,11 +7,11 @@ use utils::{one_v_one, ExtendPhysics, ExtendPoint3, ExtendVector3, Wall, WallRay
 
 pub struct Scenario<'a> {
     packet: &'a rlbot::ffi::LiveDataPacket,
-    ball_prediction: Option<BallTrajectory>,
-    me_intercept: Option<Option<(f32, Point3<f32>)>>,
-    enemy_intercept: Option<Option<(f32, Point3<f32>)>>,
-    possession: Option<f32>,
-    push_wall: Option<Wall>,
+    ball_prediction: LazyCell<BallTrajectory>,
+    me_intercept: LazyCell<Option<(f32, Point3<f32>)>>,
+    enemy_intercept: LazyCell<Option<(f32, Point3<f32>)>>,
+    possession: LazyCell<f32>,
+    push_wall: LazyCell<Wall>,
 }
 
 impl<'a> Scenario<'a> {
@@ -20,65 +21,57 @@ impl<'a> Scenario<'a> {
     pub fn new(packet: &'a rlbot::ffi::LiveDataPacket) -> Scenario<'a> {
         Scenario {
             packet,
-            ball_prediction: None,
-            me_intercept: None,
-            enemy_intercept: None,
-            possession: None,
-            push_wall: None,
+            ball_prediction: LazyCell::new(),
+            me_intercept: LazyCell::new(),
+            enemy_intercept: LazyCell::new(),
+            possession: LazyCell::new(),
+            push_wall: LazyCell::new(),
         }
     }
 
-    pub fn ball_prediction(&mut self) -> &BallTrajectory {
-        if let Some(ref x) = self.ball_prediction {
-            return x;
-        }
-
-        self.ball_prediction = Some(BallTrajectory::predict(&self.packet));
-        self.ball_prediction.as_ref().unwrap()
+    pub fn ball_prediction(&self) -> &BallTrajectory {
+        self.ball_prediction
+            .borrow_with(|| BallTrajectory::predict(self.packet))
     }
 
-    pub fn me_intercept(&mut self) -> Option<(f32, Point3<f32>)> {
+    pub fn me_intercept(&self) -> Option<(f32, Point3<f32>)> {
         self.possession();
-        self.me_intercept.unwrap()
+        self.me_intercept.get().unwrap()
     }
 
-    pub fn enemy_intercept(&mut self) -> Option<(f32, Point3<f32>)> {
+    pub fn enemy_intercept(&self) -> Option<(f32, Point3<f32>)> {
         self.possession();
-        self.enemy_intercept.unwrap()
+        self.enemy_intercept.get().unwrap()
     }
 
     /// Number of seconds I can reach the ball before the opponent
-    pub fn possession(&mut self) -> f32 {
-        if self.possession.is_none() {
+    pub fn possession(&self) -> f32 {
+        *self.possession.borrow_with(|| {
             let (blitz_me, blitz_enemy) = simulate_ball_blitz(self.packet, self.ball_prediction());
 
-            self.me_intercept = Some(blitz_me);
-            self.enemy_intercept = Some(blitz_enemy);
-            self.possession = Some(match (blitz_me, blitz_enemy) {
+            self.me_intercept.fill(blitz_me).unwrap();
+            self.enemy_intercept.fill(blitz_enemy).unwrap();
+            match (blitz_me, blitz_enemy) {
                 (Some((me, _)), Some((en, _))) => me - en,
                 _ => {
                     // To avoid mexican standoffs, just pretend we have full possession so we go
                     // for the ball.
                     Self::POSSESSION_SATURATED
                 }
-            });
-        }
-
-        self.possession.unwrap()
+            }
+        })
     }
 
     /// If I blitz to the ball and hit it straight-on, where will it go?
-    pub fn push_wall(&mut self) -> Wall {
-        if self.push_wall.is_none() {
+    pub fn push_wall(&self) -> Wall {
+        *self.push_wall.borrow_with(|| {
             let intercept_loc = match self.me_intercept() {
                 Some((_t, loc)) => loc,
                 None => self.ball_prediction().iter().last().unwrap().loc,
             };
             let (me, _enemy) = one_v_one(self.packet);
-            self.push_wall = Some(eval_push_wall(&me.Physics.locp(), &intercept_loc));
-        }
-
-        self.push_wall.unwrap()
+            eval_push_wall(&me.Physics.locp(), &intercept_loc)
+        })
     }
 }
 

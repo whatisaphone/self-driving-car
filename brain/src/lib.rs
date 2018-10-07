@@ -12,6 +12,7 @@ extern crate graphics;
 extern crate itertools;
 #[macro_use]
 extern crate lazy_static;
+extern crate lazycell;
 #[macro_use]
 extern crate log;
 extern crate nalgebra;
