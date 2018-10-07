@@ -2,7 +2,9 @@ use behavior::{Behavior, Chain, Defense, Offense, Priority};
 use maneuvers::{FiftyFifty, GetToFlatGround};
 use std::f32::consts::PI;
 use strategy::{scenario::Scenario, Context};
-use utils::{my_goal_center_2d, ExtendF32, ExtendPhysics, ExtendVector2, ExtendVector3, Wall};
+use utils::{
+    my_goal_center_2d, ExtendF32, ExtendPhysics, ExtendPoint3, ExtendVector2, ExtendVector3, Wall,
+};
 
 pub fn baseline(ctx: &mut Context) -> Box<Behavior> {
     if !GetToFlatGround::on_flat_ground(ctx.packet) {
@@ -59,7 +61,7 @@ fn enemy_can_shoot(ctx: &mut Context) -> bool {
         Some(i) => i,
         None => return false,
     };
-    let ball_loc = enemy_intercept.1.to_2d();
+    let ball_loc = enemy_intercept.1.to_2d().coords;
     if (ball_loc - my_goal_center_2d()).norm() >= 3000.0 {
         return false;
     }

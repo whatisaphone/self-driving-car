@@ -21,7 +21,7 @@ pub fn estimate_intercept_car_ball(
     let mut t = 0.0;
     let mut sim_car = Car1D::new(car.Physics.vel().norm()).with_boost(car.Boost);
     let mut sim_ball = Ball::new();
-    sim_ball.set_pos(ctx.packet.GameBall.Physics.loc());
+    sim_ball.set_pos(ctx.packet.GameBall.Physics.locp());
     sim_ball.set_vel(ctx.packet.GameBall.Physics.vel());
     sim_ball.set_omega(ctx.packet.GameBall.Physics.ang_vel());
 
@@ -30,9 +30,9 @@ pub fn estimate_intercept_car_ball(
         sim_ball.step(DT);
         sim_car.step(DT, 1.0, true);
 
-        let target_traveled = (sim_ball.pos() - car.Physics.loc()).to_2d().norm() - RADII;
+        let target_traveled = (sim_ball.pos() - car.Physics.locp()).to_2d().norm() - RADII;
         if sim_car.distance_traveled() >= target_traveled {
-            if predicate(t, &sim_ball.pos(), &sim_ball.vel()) {
+            if predicate(t, &sim_ball.pos().coords, &sim_ball.vel()) {
                 break;
             }
         }
@@ -42,12 +42,12 @@ pub fn estimate_intercept_car_ball(
         }
     }
 
-    let intercept_loc = sim_ball.pos() - (sim_ball.pos() - car.Physics.loc()).normalize() * RADII;
+    let intercept_loc = sim_ball.pos() - (sim_ball.pos() - car.Physics.locp()).normalize() * RADII;
     let intercept = Intercept {
         time: t,
-        ball_loc: sim_ball.pos(),
+        ball_loc: sim_ball.pos().coords,
         ball_vel: sim_ball.vel(),
-        car_loc: intercept_loc,
+        car_loc: intercept_loc.coords,
         car_speed: sim_car.speed(),
     };
     Some(intercept)

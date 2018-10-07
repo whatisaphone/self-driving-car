@@ -1,14 +1,14 @@
-use nalgebra::Vector3;
+use nalgebra::Point3;
 use plan::ball::BallTrajectory;
 use rlbot;
 use simulate::Car1D;
-use utils::{one_v_one, ExtendPhysics, ExtendVector3, Wall, WallRayCalculator};
+use utils::{one_v_one, ExtendPhysics, ExtendPoint3, ExtendVector3, Wall, WallRayCalculator};
 
 pub struct Scenario<'a> {
     packet: &'a rlbot::ffi::LiveDataPacket,
     ball_prediction: Option<BallTrajectory>,
-    me_intercept: Option<Option<(f32, Vector3<f32>)>>,
-    enemy_intercept: Option<Option<(f32, Vector3<f32>)>>,
+    me_intercept: Option<Option<(f32, Point3<f32>)>>,
+    enemy_intercept: Option<Option<(f32, Point3<f32>)>>,
     possession: Option<f32>,
     push_wall: Option<Wall>,
 }
@@ -37,12 +37,12 @@ impl<'a> Scenario<'a> {
         self.ball_prediction.as_ref().unwrap()
     }
 
-    pub fn me_intercept(&mut self) -> Option<(f32, Vector3<f32>)> {
+    pub fn me_intercept(&mut self) -> Option<(f32, Point3<f32>)> {
         self.possession();
         self.me_intercept.unwrap()
     }
 
-    pub fn enemy_intercept(&mut self) -> Option<(f32, Vector3<f32>)> {
+    pub fn enemy_intercept(&mut self) -> Option<(f32, Point3<f32>)> {
         self.possession();
         self.enemy_intercept.unwrap()
     }
@@ -75,7 +75,7 @@ impl<'a> Scenario<'a> {
                 None => self.ball_prediction().iter().last().unwrap().loc,
             };
             let (me, _enemy) = one_v_one(self.packet);
-            self.push_wall = Some(eval_push_wall(&me.Physics.loc(), &intercept_loc));
+            self.push_wall = Some(eval_push_wall(&me.Physics.locp(), &intercept_loc));
         }
 
         self.push_wall.unwrap()
@@ -88,7 +88,7 @@ impl<'a> Scenario<'a> {
 fn simulate_ball_blitz(
     packet: &rlbot::ffi::LiveDataPacket,
     ball_prediction: &BallTrajectory,
-) -> (Option<(f32, Vector3<f32>)>, Option<(f32, Vector3<f32>)>) {
+) -> (Option<(f32, Point3<f32>)>, Option<(f32, Point3<f32>)>) {
     let (me, enemy) = one_v_one(packet);
     let mut t = 0.0;
     let mut sim_me = Car1D::new(me.Physics.vel().norm()).with_boost(me.Boost);
@@ -102,7 +102,7 @@ fn simulate_ball_blitz(
 
         if me_time.is_none() {
             sim_me.step(ball.dt(), 1.0, true);
-            let me_dist_to_ball = (me.Physics.loc() - ball.loc).to_2d().norm();
+            let me_dist_to_ball = (me.Physics.locp() - ball.loc).to_2d().norm();
             if sim_me.distance_traveled() >= me_dist_to_ball {
                 me_time = Some((t, ball.loc));
             }
@@ -110,7 +110,7 @@ fn simulate_ball_blitz(
 
         if enemy_time.is_none() {
             sim_enemy.step(ball.dt(), 1.0, true);
-            let enemy_dist_to_ball = (enemy.Physics.loc() - ball.loc).to_2d().norm();
+            let enemy_dist_to_ball = (enemy.Physics.locp() - ball.loc).to_2d().norm();
             if sim_enemy.distance_traveled() >= enemy_dist_to_ball {
                 enemy_time = Some((t, ball.loc));
             }
@@ -124,7 +124,7 @@ fn simulate_ball_blitz(
     (me_time, enemy_time)
 }
 
-fn eval_push_wall(car: &Vector3<f32>, ball: &Vector3<f32>) -> Wall {
+fn eval_push_wall(car: &Point3<f32>, ball: &Point3<f32>) -> Wall {
     let point = WallRayCalculator::calculate(car.to_2d(), ball.to_2d());
     WallRayCalculator::wall_for_point(point)
 }

@@ -98,7 +98,7 @@ name = "brain"
 version = "0.1.0"
 dependencies = [
  "arrayvec 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "chip 0.0.1",
+ "chip 0.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "collect 0.1.0",
  "crossbeam-channel 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "csv 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -110,7 +110,7 @@ dependencies = [
  "ncollide3d 0.17.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "piston2d-graphics 0.26.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "piston_window 0.80.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "rlbot 0.0.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rlbot 0.0.7",
  "simulate 0.1.0",
 ]
 
@@ -149,7 +149,8 @@ dependencies = [
 
 [[package]]
 name = "chip"
-version = "0.0.1"
+version = "0.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "nalgebra 0.16.4 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -191,7 +192,7 @@ dependencies = [
  "bakkesmod 0.1.0",
  "csv 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "nalgebra 0.16.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "rlbot 0.0.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rlbot 0.0.7",
 ]
 
 [[package]]
@@ -1172,7 +1173,7 @@ dependencies = [
  "env_logger 0.5.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "rlbot 0.0.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rlbot 0.0.7",
 ]
 
 [[package]]
@@ -1328,8 +1329,7 @@ dependencies = [
 
 [[package]]
 name = "rlbot"
-version = "0.0.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
+version = "0.0.7"
 dependencies = [
  "flatbuffers 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "libloading 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1991,6 +1991,7 @@ dependencies = [
 "checksum cc 1.0.18 (registry+https://github.com/rust-lang/crates.io-index)" = "2119ea4867bd2b8ed3aecab467709720b2d55b1bcfe09f772fd68066eaf15275"
 "checksum cfg-if 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "0c4e7bb64a8ebb0d856483e1e682ea3422f883c5f5615a90d51a2c82fe87fdd3"
 "checksum cgl 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "55e7ec0b74fe5897894cbc207092c577e87c52f8a59e8ca8d97ef37551f60a49"
+"checksum chip 0.0.3 (registry+https://github.com/rust-lang/crates.io-index)" = "d2658af85a42573adc17ef182fbc7a9d0248f31846cd1f8a3b13ddc36d3db2cc"
 "checksum chrono 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)" = "45912881121cb26fad7c38c17ba7daa18764771836b34fab7d3fbd93ed633878"
 "checksum cloudabi 0.0.3 (registry+https://github.com/rust-lang/crates.io-index)" = "ddfc5b9aa5d4507acaf872de71051dfd0e309860e88966e1051e462a077aac4f"
 "checksum cocoa 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)" = "b0c23085dde1ef4429df6e5896b89356d35cdd321fb43afe3e378d010bb5adc6"
@@ -2122,7 +2123,6 @@ dependencies = [
 "checksum regex 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)" = "3d8c9f33201f46669484bacc312b00e7541bed6aaf296dffe2bb4e0ac6b8ce2a"
 "checksum regex-syntax 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)" = "747ba3b235651f6e2f67dfa8bcdcd073ddb7c243cb21c442fc12395dfcac212d"
 "checksum remove_dir_all 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "3488ba1b9a2084d38645c4c08276a1752dcbf2c7130d74f1569681ad5d2799c5"
-"checksum rlbot 0.0.6 (registry+https://github.com/rust-lang/crates.io-index)" = "798ec321a60fbd89ad4f455d6d0fd74336c13d2f001f8e17ede813f4b56feda6"
 "checksum rusttype 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)" = "11ff03da02f6d340bbee5ec55eed03ff9abd6ea013b93bc7c35973cc28f65999"
 "checksum safemem 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "e27a8b19b835f7aea908818e871f5cc3a5a186550c30773be987e155e8163d8f"
 "checksum schannel 0.1.13 (registry+https://github.com/rust-lang/crates.io-index)" = "dc1fabf2a7b6483a141426e1afd09ad543520a77ac49bd03c286e7696ccfd77f"

@@ -2,7 +2,7 @@ use behavior::{higher_order::TimeLimit, shoot::Shoot, tepid_hit::TepidHit, Actio
 use maneuvers::{BlitzToLocation, BounceShot};
 use predict::estimate_intercept_car_ball;
 use strategy::{Context, Scenario};
-use utils::{ExtendPhysics, ExtendVector3};
+use utils::{ExtendPhysics, ExtendPoint3};
 
 pub struct Offense;
 
@@ -53,7 +53,10 @@ impl Behavior for Offense {
             ctx.eeg
                 .log("[Offense] blindly wandering towards hypothetical intercept");
             let loc = ctx.scenario.ball_prediction().iter().last().unwrap().loc;
-            return Action::call(TimeLimit::new(1.0, BlitzToLocation::new(loc.to_2d())));
+            return Action::call(TimeLimit::new(
+                1.0,
+                BlitzToLocation::new(loc.to_2d().coords),
+            ));
         }
 
         ctx.eeg.log("[Offense] unknown intercept");

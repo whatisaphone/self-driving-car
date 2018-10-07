@@ -155,7 +155,7 @@ fn calc_aim_hint(ctx: &mut Context) -> Vector2<f32> {
     let time = rough_time_drive_to_loc(ctx.me(), my_goal_center_2d());
     let sim_ball = ctx.scenario.ball_prediction().at_time(time);
     let sim_ball_loc = match sim_ball {
-        Some(b) => b.loc,
+        Some(b) => b.loc.coords,
         None => ctx.packet.GameBall.Physics.loc(),
     };
     Vector2::new(

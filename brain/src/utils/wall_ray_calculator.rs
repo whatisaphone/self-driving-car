@@ -1,4 +1,4 @@
-use nalgebra::{Isometry3, Point3, Vector2, Vector3};
+use nalgebra::{Isometry3, Point2, Vector2, Vector3};
 use ncollide3d::{
     query::Ray,
     shape::{Plane, ShapeHandle},
@@ -6,7 +6,7 @@ use ncollide3d::{
 };
 use simulate::rl;
 use std::f32::consts::PI;
-use utils::{geometry::ExtendF32, ExtendVector2, ExtendVector3, TotalF32};
+use utils::{geometry::ExtendF32, ExtendPoint2, ExtendPoint3, ExtendVector2, TotalF32};
 
 lazy_static! {
     static ref WALL_RAY_CALCULATOR: WallRayCalculator = WallRayCalculator::new();
@@ -55,11 +55,8 @@ impl WallRayCalculator {
         Self { world }
     }
 
-    pub fn calculate(from: Vector2<f32>, to: Vector2<f32>) -> Point3<f32> {
-        let ray = Ray::new(
-            Point3::from_coordinates(from.to_3d(0.0)),
-            (to - from).to_3d(0.0),
-        );
+    pub fn calculate(from: Point2<f32>, to: Point2<f32>) -> Point2<f32> {
+        let ray = Ray::new(from.to_3d(0.0), (to - from).to_3d(0.0));
         let (_, intersect) = WALL_RAY_CALCULATOR
             .world
             .interferences_with_ray(&ray, &CollisionGroups::new())
@@ -79,18 +76,15 @@ impl WallRayCalculator {
             })
             .min_by_key(|(_, intersect)| TotalF32(intersect.toi))
             .unwrap();
-        ray.origin + ray.dir * intersect.toi
-    }
-
-    pub fn calc_segment(from: Vector2<f32>, to: Vector2<f32>) -> Vector2<f32> {
-        Self::calculate(from, to).coords.to_2d()
+        (ray.origin + ray.dir * intersect.toi).to_2d()
     }
 
     pub fn calc_ray(from: Vector2<f32>, angle: f32) -> Vector2<f32> {
-        Self::calc_segment(from, from + Vector2::unit(angle))
+        let from = Point2::from_coordinates(from);
+        Self::calculate(from, from + Vector2::unit(angle)).coords
     }
 
-    pub fn wall_for_point(point: Point3<f32>) -> Wall {
+    pub fn wall_for_point(point: Point2<f32>) -> Wall {
         let theta = f32::atan2(point.y, point.x);
 
         // For ease of math, center 0° on the enemy goal, 180° on own goal.

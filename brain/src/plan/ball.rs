@@ -1,4 +1,4 @@
-use nalgebra::Vector3;
+use nalgebra::{Point3, Vector3};
 use rlbot;
 use simulate::chip::Ball;
 use utils::{ExtendPhysics, TotalF32};
@@ -12,7 +12,8 @@ pub struct BallTrajectory {
 
 pub struct BallFrame {
     pub t: f32,
-    pub loc: Vector3<f32>,
+    pub loc: Point3<f32>,
+    pub vel: Vector3<f32>,
 }
 
 impl BallFrame {
@@ -31,13 +32,23 @@ impl BallTrajectory {
         let num_frames = (PREDICT_DURATION / DT).ceil() as usize;
         let mut frames = Vec::with_capacity(num_frames);
         let mut t = 0.0;
-        // Include initial frame to allow interpolation when framerate is faster than
-        // `DT`.
-        frames.push(BallFrame { t, loc: ball.loc() });
+
+        // Include the initial frame to allow interpolation when the framerate is
+        // faster than `DT`.
+        frames.push(BallFrame {
+            t,
+            loc: Point3::from_coordinates(ball.loc()),
+            vel: ball.vel(),
+        });
+
         while frames.len() < num_frames {
             t += DT;
             ball.step(DT);
-            frames.push(BallFrame { t, loc: ball.loc() });
+            frames.push(BallFrame {
+                t,
+                loc: Point3::from_coordinates(ball.loc()),
+                vel: ball.vel(),
+            });
         }
 
         Self { frames }

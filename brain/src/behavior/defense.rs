@@ -1,11 +1,13 @@
 use behavior::{tepid_hit::TepidHit, Action, Behavior, Chain, Priority};
 use eeg::{color, Drawable};
 use maneuvers::{BounceShot, FiftyFifty, GroundShot, JumpShot, PanicDefense};
-use nalgebra::{Rotation2, Vector2};
+use nalgebra::{Point2, Rotation2, Vector2};
 use predict::{estimate_intercept_car_ball, is_sane_ball_loc, Intercept};
 use std::f32::consts::PI;
 use strategy::{Context, Scenario};
-use utils::{my_car, my_goal_center_2d, ExtendPhysics, ExtendVector3, Wall, WallRayCalculator};
+use utils::{
+    my_car, my_goal_center_2d, ExtendPhysics, ExtendPoint3, ExtendVector3, Wall, WallRayCalculator,
+};
 
 pub struct Defense;
 
@@ -72,8 +74,8 @@ impl Behavior for PushToOwnCorner {
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {
         let ball_trajectory = WallRayCalculator::calculate(
-            ctx.packet.GameBall.Physics.loc().to_2d(),
-            ctx.packet.GameBall.Physics.loc().to_2d() + ctx.packet.GameBall.Physics.vel().to_2d(),
+            ctx.packet.GameBall.Physics.locp().to_2d(),
+            ctx.packet.GameBall.Physics.locp().to_2d() + ctx.packet.GameBall.Physics.vel().to_2d(),
         );
         let already_cornering = match WallRayCalculator::wall_for_point(ball_trajectory) {
             Wall::OwnGoal => false,
@@ -173,8 +175,8 @@ impl HitToOwnCorner {
         let avoid = my_goal_center_2d();
 
         let me = my_car(ctx.packet);
-        let me_loc = me.Physics.loc().to_2d();
-        let ball_loc = intercept.ball_loc.to_2d();
+        let me_loc = me.Physics.locp().to_2d();
+        let ball_loc = Point2::from_coordinates(intercept.ball_loc.to_2d());
         let me_to_ball = ball_loc - me_loc;
 
         let ltr_dir = Rotation2::new(PI / 6.0) * me_to_ball;
@@ -182,12 +184,12 @@ impl HitToOwnCorner {
         let rtl_dir = Rotation2::new(-PI / 6.0) * me_to_ball;
         let rtl = WallRayCalculator::calculate(ball_loc, ball_loc + rtl_dir);
 
-        if (avoid - ltr.coords.to_2d()).norm() > (avoid - rtl.coords.to_2d()).norm() {
+        if (avoid - ltr.coords).norm() > (avoid - rtl.coords).norm() {
             ctx.eeg.log("push from left to right");
-            ltr.coords.to_2d()
+            ltr.coords
         } else {
             ctx.eeg.log("push from right to left");
-            rtl.coords.to_2d()
+            rtl.coords
         }
     }
 }
