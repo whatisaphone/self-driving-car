@@ -214,7 +214,7 @@ mod integration_tests {
             ..Default::default()
         });
         test.set_behavior(Runner2::new());
-        test.sleep_millis(2500);
+        test.sleep_millis(3000);
 
         test.examine_eeg(|eeg| {
             assert!(eeg.log.iter().any(|x| x == "> GroundShot"));
