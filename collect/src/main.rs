@@ -1,22 +1,24 @@
 #![cfg_attr(feature = "strict", deny(warnings))]
 
-extern crate bakkesmod;
 extern crate csv;
+extern crate flatbuffers;
+extern crate nalgebra;
 extern crate rlbot;
 
-use bakkesmod::BakkesMod;
-use collector::Collector;
-use std::{error::Error, fs::File, thread::sleep, time::Duration};
+use collector2::Collector;
+use game_state::{
+    DesiredBallState, DesiredCarState, DesiredGameState, DesiredPhysics, RotatorPartial,
+    Vector3Partial,
+};
+use std::{error::Error, f32::consts::PI, fs::File, thread::sleep, time::Duration};
 
-mod collector;
+mod collector2;
+mod game_state;
 mod scenarios;
 
 pub fn main() -> Result<(), Box<Error>> {
     let rlbot = rlbot::init()?;
-    rlbot.start_match(rlbot::ffi::MatchSettings::simple_1v1(
-        "Collector",
-        "Spectator",
-    ))?;
+    start_match(&rlbot)?;
 
     let mut packets = rlbot.packeteer();
 
@@ -26,31 +28,48 @@ pub fn main() -> Result<(), Box<Error>> {
     // Zero out our input, just to be safe
     rlbot.update_player_input(Default::default(), 0)?;
 
-    let bakkesmod = BakkesMod::connect()?;
-    let commands = [
-        "ball location 2000 0 0",
-        "ball velocity 0 0 0",
-        "player 0 location 0 0 0",
-        "player 0 rotation 0 16384 0",
-        "player 0 velocity 0 0 0",
-        "player 1 location 6000 6000 0",
-        "player 1 rotation 0 0 0",
-        "player 1 velocity 0 0 0",
-        "boost set 100",
-    ];
-    stabilize_scenario(&bakkesmod, &commands.join(";"));
+    let initial_state = DesiredGameState {
+        ball_state: Some(DesiredBallState {
+            physics: Some(DesiredPhysics {
+                location: Some(Vector3Partial::new(2000.0, 0.0, 0.0)),
+                rotation: Some(RotatorPartial::new(0.0, 0.0, 0.0)),
+                velocity: Some(Vector3Partial::new(0.0, 0.0, 0.0)),
+                angular_velocity: Some(Vector3Partial::new(0.0, 0.0, 0.0)),
+            }),
+        }),
+        car_states: vec![DesiredCarState {
+            physics: Some(DesiredPhysics {
+                location: Some(Vector3Partial::new(0.0, 0.0, 17.01)),
+                rotation: Some(RotatorPartial::new(0.0, PI / 2.0, 0.0)),
+                velocity: Some(Vector3Partial::new(0.0, 0.0, 0.0)),
+                angular_velocity: Some(Vector3Partial::new(0.0, 0.0, 0.0)),
+            }),
+            boost_amount: Some(100.0),
+            jumped: Some(false),
+            double_jumped: Some(false),
+        }],
+    };
+    stabilize_scenario(&rlbot, &initial_state);
 
     let f = File::create("collect.csv")?;
     let mut collector = Collector::new(f);
 
     let start = packets.next()?.GameInfo.TimeSeconds;
 
+    let mut physics = rlbot.physicist();
+
     loop {
-        let packet = packets.next()?;
+        let tick = physics.next_flat().unwrap();
+        let packet = {
+            let mut packet = unsafe { ::std::mem::uninitialized() };
+            rlbot.update_live_data_packet(&mut packet)?;
+            packet
+        };
 
-        collector.write(&packet)?;
+        collector.write(tick)?;
 
-        if !scenarios::aerial_60deg(&rlbot, packet.GameInfo.TimeSeconds - start, &packet)? {
+        let time = packet.GameInfo.TimeSeconds - start;
+        if !scenarios::throttle(&rlbot, time)? {
             break;
         }
     }
@@ -61,10 +80,27 @@ pub fn main() -> Result<(), Box<Error>> {
     Ok(())
 }
 
-fn stabilize_scenario(bakkesmod: &BakkesMod, message: &str) {
-    for _ in 0..10 {
-        bakkesmod.send(message);
-        sleep(Duration::from_millis(100));
-    }
+fn start_match(rlbot: &rlbot::RLBot) -> Result<(), Box<Error>> {
+    let mut match_settings = rlbot::ffi::MatchSettings {
+        NumPlayers: 1,
+        MutatorSettings: rlbot::ffi::MutatorSettings {
+            MatchLength: rlbot::ffi::MatchLength::Unlimited,
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+
+    match_settings.PlayerConfiguration[0].Bot = true;
+    match_settings.PlayerConfiguration[0].RLBotControlled = true;
+    match_settings.PlayerConfiguration[0].set_name("Chell");
+
+    rlbot.start_match(match_settings)?;
+    Ok(())
+}
+
+fn stabilize_scenario(rlbot: &rlbot::RLBot, desired_game_state: &DesiredGameState) {
+    let buffer = desired_game_state.serialize();
+    rlbot.set_game_state(buffer.finished_data()).unwrap();
     sleep(Duration::from_millis(1000));
+    rlbot.set_game_state(buffer.finished_data()).unwrap();
 }

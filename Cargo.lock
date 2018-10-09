@@ -190,8 +190,8 @@ dependencies = [
 name = "collect"
 version = "0.1.0"
 dependencies = [
- "bakkesmod 0.1.0",
  "csv 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "flatbuffers 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "nalgebra 0.16.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "rlbot 0.0.7",
 ]

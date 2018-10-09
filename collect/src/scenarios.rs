@@ -8,6 +8,25 @@ use std::error::Error;
 
 /// Achieve maximum boosting speed, then immediately release the throttle and
 /// boost and coast until stopping.
+pub fn throttle(rlbot: &rlbot::RLBot, time: f32) -> Result<bool, Box<Error>> {
+    if time < 2.0 {
+        let input = Default::default();
+        rlbot.update_player_input(input, 0)?;
+        Ok(true)
+    } else if time < 5.0 {
+        let input = rlbot::ffi::PlayerInput {
+            Throttle: 1.0,
+            ..Default::default()
+        };
+        rlbot.update_player_input(input, 0)?;
+        Ok(true)
+    } else {
+        Ok(false)
+    }
+}
+
+/// Achieve maximum boosting speed, then immediately release the throttle and
+/// boost and coast until stopping.
 pub fn coast(
     rlbot: &rlbot::RLBot,
     time: f32,
