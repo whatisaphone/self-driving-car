@@ -69,8 +69,9 @@ pub fn main() -> Result<(), Box<Error>> {
         collector.write(tick)?;
 
         let time = packet.GameInfo.TimeSeconds - start;
-        if !scenarios::throttle(&rlbot, time)? {
-            break;
+        match scenarios::throttle(time) {
+            Some(i) => rlbot.update_player_input(i, 0)?,
+            None => break,
         }
     }
 
