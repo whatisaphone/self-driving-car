@@ -1,7 +1,6 @@
 extern crate csv;
 
 use std::{
-    borrow::Cow,
     env,
     fmt::Write as FmtWrite,
     fs::File,
@@ -27,16 +26,52 @@ fn main() {
             continue;
         }
 
-        let basename = filename.split_terminator(".").next().unwrap();
         let file = File::open(entry.path()).unwrap();
+
+        let basename = filename.split_terminator(".").next().unwrap();
+        let legacy = ["aerial_60deg", "boost", "coast", "jump", "throttle"]
+            .iter()
+            .any(|&s| s == basename);
         let r = csv::ReaderBuilder::new()
-            .has_headers(false)
+            .has_headers(!legacy)
             .from_reader(file);
-        compile_csv(basename, r, &mut out);
+
+        if legacy {
+            compile_csv_legacy(basename, r, &mut out);
+        } else {
+            compile_csv(basename, r, &mut out);
+        }
     }
 }
 
 fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) {
+    let name = name.to_ascii_uppercase();
+
+    let rows: Vec<_> = csv.records().collect();
+    let headers = csv.headers().unwrap();
+
+    macro_rules! write_array {
+        ($column:expr, $suffix:expr, $value:expr) => {
+            let column = headers.iter().position(|h| h == $column).unwrap();
+
+            write!(w, "#[allow(dead_code)]\n").unwrap();
+            write!(w, "pub const {}{}: &[f32] = &[\n", name, $suffix).unwrap();
+            for row in rows.iter() {
+                let value = &row.as_ref().unwrap()[column];
+                write!(w, "{},\n", $value(value)).unwrap();
+            }
+            write!(w, "\n];\n\n").unwrap();
+        };
+    }
+
+    write_array!("frame", "_TIME", |x| floatify(format!(
+        "{}",
+        str::parse::<f32>(x).unwrap() / 120.0
+    )));
+    write_array!("player0_vel_y", "_CAR_VEL_Y", floatify);
+}
+
+fn compile_csv_legacy(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) {
     let mut out_time = format!(
         "#[allow(dead_code)]\npub const {}_TIME: &[f32] = &[\n",
         name.to_ascii_uppercase(),
@@ -139,10 +174,11 @@ fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) 
     write!(w, "{}", out_car_vel_y_rev.chars().rev().collect::<String>()).unwrap();
 }
 
-fn floatify(s: &str) -> Cow<str> {
+fn floatify(s: impl Into<String>) -> String {
+    let s = s.into();
     if s.contains(".") {
-        Cow::Borrowed(s)
+        s
     } else {
-        Cow::Owned(s.to_owned() + ".0")
+        format!("{}.0", s)
     }
 }
