@@ -69,6 +69,7 @@ endeavor.
 * [BakkesMod commands](http://bakkesmod.wikia.com/wiki/Configuration)
 * [DomNomNom's bot](https://github.com/DomNomNom/RocketBot)
 * [Biarc interpolation](http://www.ryanjuckett.com/programming/biarc-interpolation/)
+* [Rotation converter](https://www.andre-gaschler.com/rotationconverter/)
 
 ## Ideas
 

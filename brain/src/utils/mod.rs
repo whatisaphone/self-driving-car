@@ -8,12 +8,14 @@ pub use utils::{
         ExtendF32, ExtendPoint2, ExtendPoint3, ExtendUnitComplex, ExtendVector2, ExtendVector3,
     },
     iter::TotalF32,
+    rlbot_ext::{get_packet_and_inject_rigid_body_tick, physicsify},
     wall_ray_calculator::{Wall, WallRayCalculator},
 };
 
 mod fps_counter;
 pub mod geometry;
 mod iter;
+mod rlbot_ext;
 mod wall_ray_calculator;
 
 /// Assuming I am the first car, return the first car.

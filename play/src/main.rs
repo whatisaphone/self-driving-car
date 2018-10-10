@@ -9,7 +9,7 @@ extern crate lazy_static;
 extern crate env_logger;
 extern crate rlbot;
 
-use brain::{Brain, EEG};
+use brain::{get_packet_and_inject_rigid_body_tick, Brain, EEG};
 use chrono::Local;
 use collect::Collector;
 use std::{
@@ -56,8 +56,11 @@ fn my_run_bot(mut bot: impl rlbot::Bot) {
 
     bot.set_player_index(0);
 
+    let mut physics = rlbot.physicist();
+
     loop {
-        let packet = packets.next().unwrap();
+        let rigid_body_tick = physics.next_flat().unwrap();
+        let packet = get_packet_and_inject_rigid_body_tick(&rlbot, rigid_body_tick).unwrap();
         let input = bot.tick(&packet);
         rlbot.update_player_input(input, 0).unwrap();
     }

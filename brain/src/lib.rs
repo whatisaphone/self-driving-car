@@ -23,6 +23,7 @@ extern crate simulate;
 
 pub use brain::Brain;
 pub use eeg::EEG;
+pub use utils::get_packet_and_inject_rigid_body_tick;
 
 macro_rules! return_some {
     ($rule:expr) => {

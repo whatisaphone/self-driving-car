@@ -15,6 +15,7 @@ use std::{
     thread::{self, sleep},
     time::Duration,
 };
+use utils::get_packet_and_inject_rigid_body_tick;
 
 pub struct TestRunner {
     sniff_packet: crossbeam_channel::Sender<crossbeam_channel::Sender<rlbot::ffi::LiveDataPacket>>,
@@ -191,8 +192,12 @@ fn test_thread(
     brain.set_behavior(Fuse::new(behavior(&first_packet)), &mut eeg);
     ready_wait.wait();
 
+    let mut physicist = rlbot.physicist();
+
     loop {
-        let packet = packets.next().unwrap();
+        let rigid_body_tick = physicist.next_flat().unwrap();
+        let packet = get_packet_and_inject_rigid_body_tick(rlbot, rigid_body_tick).unwrap();
+
         eeg.begin(&packet);
         let input = brain.tick(&packet, &mut eeg);
         rlbot.update_player_input(input, 0).unwrap();
