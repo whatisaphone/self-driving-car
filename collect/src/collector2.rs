@@ -21,7 +21,7 @@ impl Collector {
         if !self.wrote_header {
             self.wrote_header = true;
             self.w.write_record(
-                once(String::from("frame"))
+                once(String::from("time"))
                     .chain(rigid_body_header("ball"))
                     .chain(
                         (0..tick.players().unwrap().len())
@@ -32,7 +32,7 @@ impl Collector {
         }
 
         self.w.write_record(
-            once(tick.ball().unwrap().state().unwrap().frame().to_string())
+            once((tick.ball().unwrap().state().unwrap().frame() as f32 / 120.0).to_string())
                 .chain(rigid_body(tick.ball().unwrap().state().unwrap()))
                 .chain(flat_vector_iter(tick.players().unwrap()).flat_map(|c| {
                     controller(c.input().unwrap()).chain(rigid_body(c.state().unwrap()))

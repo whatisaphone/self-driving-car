@@ -64,10 +64,14 @@ fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) 
         };
     }
 
-    write_array!("frame", "_TIME", |x| floatify(format!(
-        "{}",
-        str::parse::<f32>(x).unwrap() / 120.0
-    )));
+    if headers.iter().any(|h| h == "time") {
+        write_array!("time", "_TIME", floatify);
+    } else {
+        write_array!("frame", "_TIME", |x| floatify(format!(
+            "{}",
+            str::parse::<f32>(x).unwrap() / 120.0
+        )));
+    }
     write_array!("player0_vel_y", "_CAR_VEL_Y", floatify);
 }
 

@@ -1,6 +1,6 @@
 use behavior::{Behavior, Fuse, NullBehavior};
 use brain::Brain;
-use collect::{ExtendRotation3, Snapshot};
+use collect::{get_packet_and_inject_rigid_body_tick, ExtendRotation3, Snapshot};
 use crossbeam_channel;
 use csv;
 use eeg::EEG;
@@ -15,7 +15,6 @@ use std::{
     thread::{self, sleep},
     time::Duration,
 };
-use utils::get_packet_and_inject_rigid_body_tick;
 
 pub struct TestRunner {
     sniff_packet: crossbeam_channel::Sender<crossbeam_channel::Sender<rlbot::ffi::LiveDataPacket>>,
@@ -181,6 +180,8 @@ fn test_thread(
     let mut brain = Brain::with_behavior(NullBehavior::new());
 
     let mut packets = rlbot.packeteer();
+    let mut physicist = rlbot.physicist();
+
     // Wait for RoundActive
     while !packets.next().unwrap().GameInfo.RoundActive {}
 
@@ -188,11 +189,13 @@ fn test_thread(
 
     setup_scenario(rlbot, &scenario);
 
-    let first_packet = packets.next().unwrap();
+    let first_packet = {
+        let rigid_body_tick = physicist.next_flat().unwrap();
+        get_packet_and_inject_rigid_body_tick(rlbot, rigid_body_tick).unwrap()
+    };
+
     brain.set_behavior(Fuse::new(behavior(&first_packet)), &mut eeg);
     ready_wait.wait();
-
-    let mut physicist = rlbot.physicist();
 
     loop {
         let rigid_body_tick = physicist.next_flat().unwrap();

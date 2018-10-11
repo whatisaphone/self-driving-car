@@ -1,7 +1,7 @@
-use collect::ExtendRotation3;
 use nalgebra::{Quaternion, UnitQuaternion};
 use rlbot;
 use std::error::Error;
+use utils::ExtendRotation3;
 
 const PHYSICS_TPS: f32 = 120.0;
 
@@ -57,10 +57,12 @@ fn convert_quat_to_pyr(quat: &rlbot::flat::Quaternion) -> (f32, f32, f32) {
 #[cfg(test)]
 mod tests {
     use rlbot;
-    use utils::rlbot_ext;
+    use rlbot_ext;
 
     #[test]
     fn rotation() {
+        // These rotations happened a few frames apart so are not equal. But with a
+        // lenient threshold this test still does its job.
         let cases = [
             (
                 rlbot::flat::Quaternion::new(0.18755347, -0.18754272, 0.68180066, 0.6817619),
@@ -71,6 +73,7 @@ mod tests {
                 (-0.8697671, 0.4358423, 0.37342843),
             ),
         ];
+
         for (quat, (approx_pitch, approx_yaw, approx_roll)) in cases.iter() {
             println!("{:?}", quat);
             println!("{:?} {:?} {:?}", approx_pitch, approx_yaw, approx_roll);

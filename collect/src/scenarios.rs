@@ -8,7 +8,10 @@ use std::error::Error;
 
 /// Achieve maximum boosting speed, then immediately release the throttle and
 /// boost and coast until stopping.
-pub fn throttle(time: f32) -> Option<rlbot::ffi::PlayerInput> {
+pub fn throttle(
+    time: f32,
+    _packet: &rlbot::ffi::LiveDataPacket,
+) -> Option<rlbot::ffi::PlayerInput> {
     if time < 2.0 {
         Some(Default::default())
     } else if time < 5.0 {

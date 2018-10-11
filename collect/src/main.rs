@@ -10,11 +10,14 @@ use game_state::{
     DesiredBallState, DesiredCarState, DesiredGameState, DesiredPhysics, RotatorPartial,
     Vector3Partial,
 };
+use rlbot_ext::get_packet_and_inject_rigid_body_tick;
 use std::{error::Error, f32::consts::PI, fs::File, thread::sleep, time::Duration};
 
 mod collector2;
 mod game_state;
+mod rlbot_ext;
 mod scenarios;
+mod utils;
 
 pub fn main() -> Result<(), Box<Error>> {
     let rlbot = rlbot::init()?;
@@ -60,16 +63,12 @@ pub fn main() -> Result<(), Box<Error>> {
 
     loop {
         let tick = physics.next_flat().unwrap();
-        let packet = {
-            let mut packet = unsafe { ::std::mem::uninitialized() };
-            rlbot.update_live_data_packet(&mut packet)?;
-            packet
-        };
+        let packet = get_packet_and_inject_rigid_body_tick(&rlbot, tick)?;
 
         collector.write(tick)?;
 
         let time = packet.GameInfo.TimeSeconds - start;
-        match scenarios::throttle(time) {
+        match scenarios::throttle(time, &packet) {
             Some(i) => rlbot.update_player_input(i, 0)?,
             None => break,
         }
@@ -102,6 +101,6 @@ fn start_match(rlbot: &rlbot::RLBot) -> Result<(), Box<Error>> {
 fn stabilize_scenario(rlbot: &rlbot::RLBot, desired_game_state: &DesiredGameState) {
     let buffer = desired_game_state.serialize();
     rlbot.set_game_state(buffer.finished_data()).unwrap();
-    sleep(Duration::from_millis(1000));
+    sleep(Duration::from_millis(2000));
     rlbot.set_game_state(buffer.finished_data()).unwrap();
 }

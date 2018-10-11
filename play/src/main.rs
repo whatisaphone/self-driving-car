@@ -9,9 +9,9 @@ extern crate lazy_static;
 extern crate env_logger;
 extern crate rlbot;
 
-use brain::{get_packet_and_inject_rigid_body_tick, Brain, EEG};
+use brain::{Brain, EEG};
 use chrono::Local;
-use collect::Collector;
+use collect::{get_packet_and_inject_rigid_body_tick, Collector};
 use std::{
     env,
     fs::{hard_link, remove_file, File},
@@ -33,13 +33,13 @@ fn main() {
 
     let use_framework = env::args().len() != 1;
     if use_framework {
-        rlbot::run_bot(bot).unwrap();
+        unimplemented!();
     } else {
         my_run_bot(bot);
     }
 }
 
-fn my_run_bot(mut bot: impl rlbot::Bot) {
+fn my_run_bot(mut bot: FormulaNone) {
     let rlbot = rlbot::init().unwrap();
 
     let match_settings = rlbot::ffi::MatchSettings {
@@ -61,7 +61,7 @@ fn my_run_bot(mut bot: impl rlbot::Bot) {
     loop {
         let rigid_body_tick = physics.next_flat().unwrap();
         let packet = get_packet_and_inject_rigid_body_tick(&rlbot, rigid_body_tick).unwrap();
-        let input = bot.tick(&packet);
+        let input = bot.tick(rigid_body_tick, &packet);
         rlbot.update_player_input(input, 0).unwrap();
     }
 }
@@ -97,16 +97,18 @@ impl FormulaNone {
             brain,
         }
     }
-}
 
-impl rlbot::Bot for FormulaNone {
     fn set_player_index(&mut self, index: usize) {
         if index != 0 {
             unimplemented!();
         }
     }
 
-    fn tick(&mut self, packet: &rlbot::ffi::LiveDataPacket) -> rlbot::ffi::PlayerInput {
+    fn tick(
+        &mut self,
+        rigid_body_tick: rlbot::flat::RigidBodyTick,
+        packet: &rlbot::ffi::LiveDataPacket,
+    ) -> rlbot::ffi::PlayerInput {
         if !packet.GameInfo.RoundActive {
             return Default::default();
         }
@@ -117,7 +119,7 @@ impl rlbot::Bot for FormulaNone {
 
         let input = self.brain.tick(packet, &mut self.eeg);
 
-        self.collector.write(&packet).unwrap();
+        self.collector.write(rigid_body_tick).unwrap();
         self.eeg.show(&packet);
 
         input
