@@ -27,13 +27,6 @@
     # Each package is checked separately because of
     # https://github.com/rust-lang/cargo/issues/5364
 
-    - id: check-bakkesmod
-      name: check-bakkesmod
-      language: system
-      files: '[.]rs$'
-      entry: sh -c '( cd bakkesmod && cargo check --all-targets --features strict )'
-      pass_filenames: false
-
     - id: check-brain
       name: check-brain
       language: system

@@ -43,22 +43,14 @@ cargo build && python -c "from rlbot import runner; runner.main()"
 
 ### Run integration tests
 
-The integration tests require a copy of Rocket League running (naturally). There
-are a lot of moving parts, so be warned that this is a somewhat finicky
-endeavor.
+The integration tests require a copy of Rocket League running (naturally).
 
-1.  Start BakkesMod.
+```sh
+cargo test -p brain -- --test-threads=1 integration_tests
+```
 
-2.  Start Rocket League. BakkesMod should inject itself successfully.
-
-3.  Run the tests.
-
-    ```sh
-    cargo test -p brain -- --test-threads=1 integration_tests
-    ```
-
-    To run an individual test, you can replace `integration_tests` with a
-    pattern that matches the name of the test.
+To run an individual test, you can replace `integration_tests` with a pattern
+that matches the name of the test.
 
 ## Handy Links
 
@@ -66,7 +58,6 @@ endeavor.
 * [Vehicle specifications](https://www.reddit.com/r/RocketLeague/comments/7fotyx/vehicle_specifications_v139_hitboxes_handling/)
 * [Sam Mish's RL physics notes](https://samuelpmish.github.io/notes/RocketLeague/)
   * [The author's bot](https://github.com/samuelpmish/Lobot)
-* [BakkesMod commands](http://bakkesmod.wikia.com/wiki/Configuration)
 * [DomNomNom's bot](https://github.com/DomNomNom/RocketBot)
 * [Biarc interpolation](http://www.ryanjuckett.com/programming/biarc-interpolation/)
 * [Rotation converter](https://www.andre-gaschler.com/rotationconverter/)
