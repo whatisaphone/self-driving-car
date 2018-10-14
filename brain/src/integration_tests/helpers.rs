@@ -17,20 +17,21 @@ use std::{
 };
 
 pub struct TestRunner {
-    messages: crossbeam_channel::Sender<Message>,
-    join_handle: Option<thread::JoinHandle<()>>,
+    scenario: Option<TestScenario>,
+    behavior: Option<Box<Behavior + Send>>,
 }
 
+/// Static API
 impl TestRunner {
-    pub fn start(behavior: impl Behavior + Send + 'static, scenario: TestScenario) -> TestRunner {
-        TestRunner::start2(scenario, |_| behavior)
+    pub fn start(behavior: impl Behavior + Send + 'static, scenario: TestScenario) -> RunningTest {
+        Self::start2(scenario, |_| behavior)
     }
 
-    pub fn start0(scenario: TestScenario) -> TestRunner {
+    pub fn start0(scenario: TestScenario) -> RunningTest {
         Self::start2(scenario, |_| NullBehavior::new())
     }
 
-    pub fn start2<B, BF>(scenario: TestScenario, behavior: BF) -> TestRunner
+    pub fn start2<B, BF>(scenario: TestScenario, behavior: BF) -> RunningTest
     where
         B: Behavior + 'static,
         BF: FnOnce(&rlbot::ffi::LiveDataPacket) -> B + Send + 'static,
@@ -48,21 +49,54 @@ impl TestRunner {
         });
 
         ready_wait.wait();
-        TestRunner {
+        RunningTest {
             messages: messages_tx,
             join_handle: Some(thread),
         }
     }
 }
 
-impl Drop for TestRunner {
+/// Builder API
+impl TestRunner {
+    pub fn new() -> Self {
+        Self {
+            scenario: None,
+            behavior: None,
+        }
+    }
+
+    pub fn scenario(mut self, scenario: TestScenario) -> Self {
+        self.scenario = Some(scenario);
+        self
+    }
+
+    pub fn behavior(mut self, behavior: impl Behavior + Send + 'static) -> Self {
+        self.behavior = Some(Box::new(behavior));
+        self
+    }
+
+    pub fn run(self) -> RunningTest {
+        let test = Self::start0(self.scenario.unwrap());
+        if let Some(behavior) = self.behavior {
+            test.messages.send(Message::SetBehavior(behavior));
+        }
+        test
+    }
+}
+
+pub struct RunningTest {
+    messages: crossbeam_channel::Sender<Message>,
+    join_handle: Option<thread::JoinHandle<()>>,
+}
+
+impl Drop for RunningTest {
     fn drop(&mut self) {
         self.messages.send(Message::Terminate);
         self.join_handle.take().unwrap().join().unwrap();
     }
 }
 
-impl TestRunner {
+impl RunningTest {
     // Right now this is just for convenience, but there's a possibility one day I
     // might tie it to packet.GameInfo.TimeSeconds so the tests still run properly
     // if sv_soccar_gamespeed is set to values other than 1 (if the stars align, of
