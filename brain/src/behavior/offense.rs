@@ -126,7 +126,6 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore] // TODO
     fn shoot_across_the_goal() {
         let test = TestRunner::start0(TestScenario {
             ball_loc: Vector3::new(-1438.1412, 4697.7017, 92.71),
