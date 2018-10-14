@@ -29,19 +29,18 @@ fn main() {
     let collector = create_collector();
     let eeg = EEG::new();
     let brain = Brain::with_root_behavior();
-    let bot = FormulaNone::new(collector, eeg, brain);
+    let mut bot = FormulaNone::new(collector, eeg, brain);
 
-    let use_framework = env::args().len() != 1;
-    if use_framework {
-        unimplemented!();
-    } else {
-        my_run_bot(bot);
-    }
-}
-
-fn my_run_bot(mut bot: FormulaNone) {
     let rlbot = rlbot::init().unwrap();
 
+    let use_framework = env::args().len() != 1;
+    if !use_framework {
+        start_match(&rlbot);
+    }
+    bot_loop(&rlbot, &mut bot);
+}
+
+fn start_match(rlbot: &rlbot::RLBot) {
     let match_settings = rlbot::ffi::MatchSettings {
         MutatorSettings: rlbot::ffi::MutatorSettings {
             MatchLength: rlbot::ffi::MatchLength::Unlimited,
@@ -53,7 +52,9 @@ fn my_run_bot(mut bot: FormulaNone) {
 
     let mut packets = rlbot.packeteer();
     while !packets.next().unwrap().GameInfo.RoundActive {}
+}
 
+fn bot_loop(rlbot: &rlbot::RLBot, bot: &mut FormulaNone) {
     bot.set_player_index(0);
 
     let mut physics = rlbot.physicist();
