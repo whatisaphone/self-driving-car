@@ -128,9 +128,8 @@ lazy_static! {
     static ref RLBOT_MUTEX: Mutex<Option<rlbot::RLBot>> = Mutex::new(None);
 }
 
-/// RLBot_Core_Interface.dll sometimes crashes if it's unloaded and then
-/// reloaded, so just keep a permanent instance around for the tests (and
-/// leak it, don't worry, everything will be fine!)
+/// RLBot can only be initialized once, so keep a permanent instance around for
+/// the tests (and leak it, don't worry, everything will be fine!)
 fn unlock_rlbot_singleton() -> MutexGuard<'static, Option<rlbot::RLBot>> {
     let mut rlbot_guard = RLBOT_MUTEX.lock().unwrap();
     if rlbot_guard.is_none() {
