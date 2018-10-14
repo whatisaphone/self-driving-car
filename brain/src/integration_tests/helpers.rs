@@ -17,11 +17,7 @@ use std::{
 };
 
 pub struct TestRunner {
-    sniff_packet: crossbeam_channel::Sender<crossbeam_channel::Sender<rlbot::ffi::LiveDataPacket>>,
-    set_behavior: crossbeam_channel::Sender<Box<Behavior + Send>>,
-    has_scored: crossbeam_channel::Sender<crossbeam_channel::Sender<bool>>,
     messages: crossbeam_channel::Sender<Message>,
-    terminate: Option<crossbeam_channel::Sender<()>>,
     join_handle: Option<thread::JoinHandle<()>>,
 }
 
@@ -41,31 +37,19 @@ impl TestRunner {
     {
         let ready_wait = Arc::new(Barrier::new(2));
         let ready_wait_send = ready_wait.clone();
-        let (terminate_tx, terminate_rx) = crossbeam_channel::unbounded();
-        let (sniff_packet_tx, sniff_packet_rx) = crossbeam_channel::unbounded();
-        let (set_behavior_tx, set_behavior_rx) = crossbeam_channel::unbounded();
-        let (has_scored_tx, has_scored_rx) = crossbeam_channel::unbounded();
         let (messages_tx, messages_rx) = crossbeam_channel::unbounded();
         let thread = thread::spawn(|| {
             test_thread(
                 scenario,
                 |p| Box::new(behavior(p)),
                 ready_wait_send,
-                sniff_packet_rx,
-                set_behavior_rx,
-                has_scored_rx,
                 messages_rx,
-                terminate_rx,
             )
         });
 
         ready_wait.wait();
         TestRunner {
-            sniff_packet: sniff_packet_tx,
-            set_behavior: set_behavior_tx,
-            has_scored: has_scored_tx,
             messages: messages_tx,
-            terminate: Some(terminate_tx),
             join_handle: Some(thread),
         }
     }
@@ -73,7 +57,7 @@ impl TestRunner {
 
 impl Drop for TestRunner {
     fn drop(&mut self) {
-        self.terminate.take().unwrap().send(());
+        self.messages.send(Message::Terminate);
         self.join_handle.take().unwrap().join().unwrap();
     }
 }
@@ -88,18 +72,18 @@ impl TestRunner {
     }
 
     pub fn set_behavior(&self, behavior: impl Behavior + Send + 'static) {
-        self.set_behavior.send(Box::new(behavior));
+        self.messages.send(Message::SetBehavior(Box::new(behavior)));
     }
 
     pub fn sniff_packet(&self) -> rlbot::ffi::LiveDataPacket {
         let (tx, rx) = crossbeam_channel::bounded(1);
-        self.sniff_packet.send(tx);
+        self.messages.send(Message::SniffPacket(tx));
         rx.recv().unwrap()
     }
 
     pub fn has_scored(&self) -> bool {
         let (tx, rx) = crossbeam_channel::bounded(1);
-        self.has_scored.send(tx);
+        self.messages.send(Message::HasScored(tx));
         rx.recv().unwrap()
     }
 
@@ -120,8 +104,12 @@ impl TestRunner {
 }
 
 enum Message {
-    ExamineEEG(Box<Fn(&EEG) + Send>),
+    SniffPacket(crossbeam_channel::Sender<rlbot::ffi::LiveDataPacket>),
+    SetBehavior(Box<Behavior + Send>),
+    HasScored(crossbeam_channel::Sender<bool>),
     EnemyHasScored(crossbeam_channel::Sender<bool>),
+    ExamineEEG(Box<Fn(&EEG) + Send>),
+    Terminate,
 }
 
 lazy_static! {
@@ -142,13 +130,7 @@ fn test_thread(
     scenario: TestScenario,
     behavior: impl FnOnce(&rlbot::ffi::LiveDataPacket) -> Box<Behavior>,
     ready_wait: Arc<Barrier>,
-    sniff_packet: crossbeam_channel::Receiver<
-        crossbeam_channel::Sender<rlbot::ffi::LiveDataPacket>,
-    >,
-    set_behavior: crossbeam_channel::Receiver<Box<Behavior + Send>>,
-    has_scored: crossbeam_channel::Receiver<crossbeam_channel::Sender<bool>>,
     messages: crossbeam_channel::Receiver<Message>,
-    terminate: crossbeam_channel::Receiver<()>,
 ) {
     let rlbot_guard = unlock_rlbot_singleton();
     let rlbot = rlbot_guard.as_ref().unwrap();
@@ -196,7 +178,7 @@ fn test_thread(
     brain.set_behavior(Fuse::new(behavior(&first_packet)), &mut eeg);
     ready_wait.wait();
 
-    loop {
+    'test: loop {
         let rigid_body_tick = physicist.next_flat().unwrap();
         let packet = get_packet_and_inject_rigid_body_tick(rlbot, rigid_body_tick).unwrap();
 
@@ -205,33 +187,31 @@ fn test_thread(
         rlbot.update_player_input(input, 0).unwrap();
         eeg.show(&packet);
 
-        if let Some(chan) = has_scored.try_recv() {
-            let first_score = first_packet.match_score();
-            let current_score = packet.match_score();
-            chan.send(current_score[0] > first_score[0]); // Index 0 means blue team
-        }
-
-        if let Some(chan) = sniff_packet.try_recv() {
-            chan.send(packet);
-        }
-
-        if let Some(behavior) = set_behavior.try_recv() {
-            brain.set_behavior(Fuse::new(behavior), &mut eeg);
-        }
-
         while let Some(message) = messages.try_recv() {
             match message {
-                Message::ExamineEEG(f) => f(&eeg),
+                Message::SniffPacket(tx) => {
+                    tx.send(packet);
+                }
+                Message::SetBehavior(behavior) => {
+                    brain.set_behavior(Fuse::new(behavior), &mut eeg);
+                }
+                Message::HasScored(tx) => {
+                    let first_score = first_packet.match_score();
+                    let current_score = packet.match_score();
+                    tx.send(current_score[0] > first_score[0]); // Index 0 means own team
+                }
                 Message::EnemyHasScored(tx) => {
                     let first_score = first_packet.match_score();
                     let current_score = packet.match_score();
                     tx.send(current_score[1] > first_score[1]); // Index 1 means enemy team
                 }
+                Message::ExamineEEG(f) => {
+                    f(&eeg);
+                }
+                Message::Terminate => {
+                    break 'test;
+                }
             }
-        }
-
-        if let Some(()) = terminate.try_recv() {
-            break;
         }
     }
 
