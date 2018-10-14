@@ -51,6 +51,12 @@ impl QuickJumpAndDodge {
         self.yaw = angle.sin();
         self
     }
+
+    pub fn dodge_time(mut self, dodge_time: f32) -> Self {
+        assert!(dodge_time >= Self::MIN_DODGE_TIME);
+        self.dodge_time = dodge_time;
+        self
+    }
 }
 
 impl Behavior for QuickJumpAndDodge {
@@ -85,13 +91,10 @@ impl Behavior for QuickJumpAndDodge {
             color::GREEN,
         ));
 
-        let mut result = rlbot::ffi::PlayerInput {
-            Throttle: 1.0,
-            ..Default::default()
-        };
+        let mut result = rlbot::ffi::PlayerInput::default();
 
         if self.phase == Phase::Jump || elapsed < self.dodge_time - Self::MIN_PHASE_TIME {
-            if !ctx.me().OnGround {
+            if self.phase == Phase::Jump && !ctx.me().OnGround {
                 ctx.eeg.log("[QuickJumpAndDodge] wheels must be on ground");
                 return Action::Abort;
             }

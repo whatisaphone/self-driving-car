@@ -1,11 +1,12 @@
 use behavior::{Action, Behavior};
+use common::ext::ExtendPhysics;
 use maneuvers::BounceShot;
 use nalgebra::Vector3;
 use plan::hit_angle::{feasible_hit_angle_away, feasible_hit_angle_toward};
 use std::f32::consts::PI;
 use strategy::Context;
 use utils::{
-    enemy_goal_center, my_goal_center_2d, ExtendF32, ExtendPhysics, ExtendVector2, ExtendVector3,
+    enemy_goal_center, my_goal_center_2d, ExtendF32, ExtendVector2, ExtendVector3,
     WallRayCalculator,
 };
 

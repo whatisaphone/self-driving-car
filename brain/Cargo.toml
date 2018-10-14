@@ -23,6 +23,7 @@ piston2d-graphics = "0.26.0"
 rlbot = "0.1.0"
 chip = "0.0.3"
 
+common = { path = "../common" }
 collect = { path = "../collect" }
 simulate = { path = "../simulate" }
 

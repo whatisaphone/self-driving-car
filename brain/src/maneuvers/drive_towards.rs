@@ -1,10 +1,11 @@
+use common::ext::ExtendPhysics;
 use eeg::{color, Drawable, EEG};
 use mechanics::simple_yaw_diff;
 use nalgebra::Vector2;
 use rlbot;
 use simulate::{linear_interpolate, rl};
 use std::f32::consts::PI;
-use utils::{one_v_one, ExtendPhysics};
+use utils::one_v_one;
 
 pub fn drive_towards(
     packet: &rlbot::ffi::LiveDataPacket,

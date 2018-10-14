@@ -1,8 +1,9 @@
 use behavior::{higher_order::TimeLimit, shoot::Shoot, tepid_hit::TepidHit, Action, Behavior};
+use common::ext::ExtendPhysics;
 use maneuvers::{BlitzToLocation, BounceShot};
 use predict::estimate_intercept_car_ball;
 use strategy::{Context, Scenario};
-use utils::{ExtendPhysics, ExtendPoint3};
+use utils::ExtendPoint3;
 
 pub struct Offense;
 

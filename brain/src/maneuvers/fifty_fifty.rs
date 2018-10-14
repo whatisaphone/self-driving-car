@@ -1,4 +1,5 @@
 use behavior::{Action, Behavior};
+use common::ext::ExtendPhysics;
 use eeg::{color, Drawable};
 use mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
 use nalgebra::Vector2;
@@ -6,7 +7,7 @@ use predict::intercept::estimate_intercept_car_ball;
 use rules::SameBallTrajectory;
 use std::f32::consts::PI;
 use strategy::Context;
-use utils::{my_goal_center, ExtendF32, ExtendPhysics, ExtendVector2, ExtendVector3};
+use utils::{my_goal_center, ExtendF32, ExtendVector2, ExtendVector3};
 
 pub struct FiftyFifty {
     same_ball_trajectory: SameBallTrajectory,

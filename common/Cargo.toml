@@ -1,16 +1,9 @@
 [package]
-name = "collect"
+name = "common"
 version = "0.1.0"
 authors = ["John Simon <john@whatisaph.one>"]
 
 [dependencies]
-csv = "1.0.2"
-flatbuffers = "0.4.0"
 nalgebra = "0.16.0"
 
 rlbot = "0.1.0"
-
-common = { path = "../common" }
-
-[features]
-strict = []

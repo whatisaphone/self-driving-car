@@ -1,13 +1,12 @@
 use behavior::{tepid_hit::TepidHit, Action, Behavior, Chain, Priority};
+use common::ext::ExtendPhysics;
 use eeg::{color, Drawable};
 use maneuvers::{BounceShot, FiftyFifty, GroundShot, JumpShot, PanicDefense};
 use nalgebra::{Point2, Rotation2, Vector2};
 use predict::{estimate_intercept_car_ball, is_sane_ball_loc, Intercept};
 use std::f32::consts::PI;
 use strategy::{Context, Scenario};
-use utils::{
-    my_car, my_goal_center_2d, ExtendPhysics, ExtendPoint3, ExtendVector3, Wall, WallRayCalculator,
-};
+use utils::{my_car, my_goal_center_2d, ExtendPoint3, ExtendVector3, Wall, WallRayCalculator};
 
 pub struct Defense;
 

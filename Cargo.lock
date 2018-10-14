@@ -70,6 +70,7 @@ dependencies = [
  "arrayvec 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "chip 0.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "collect 0.1.0",
+ "common 0.1.0",
  "crossbeam-channel 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "csv 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "flatbuffers 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -151,6 +152,7 @@ dependencies = [
 name = "collect"
 version = "0.1.0"
 dependencies = [
+ "common 0.1.0",
  "csv 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "flatbuffers 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "nalgebra 0.16.4 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -161,6 +163,14 @@ dependencies = [
 name = "color_quant"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "common"
+version = "0.1.0"
+dependencies = [
+ "nalgebra 0.16.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rlbot 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "core-foundation"
@@ -1132,8 +1142,11 @@ dependencies = [
 name = "simulate"
 version = "0.1.0"
 dependencies = [
+ "common 0.1.0",
  "csv 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "nalgebra 0.16.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ncollide3d 0.17.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rlbot 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

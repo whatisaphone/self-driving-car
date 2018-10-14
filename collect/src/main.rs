@@ -1,5 +1,6 @@
 #![cfg_attr(feature = "strict", deny(warnings))]
 
+extern crate common;
 extern crate csv;
 extern crate flatbuffers;
 extern crate nalgebra;
@@ -17,7 +18,6 @@ mod collector2;
 mod game_state;
 mod rlbot_ext;
 mod scenarios;
-mod utils;
 
 pub fn main() -> Result<(), Box<Error>> {
     let rlbot = rlbot::init()?;

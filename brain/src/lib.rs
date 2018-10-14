@@ -3,6 +3,7 @@
 extern crate arrayvec;
 extern crate chip;
 extern crate collect;
+extern crate common;
 extern crate crossbeam_channel;
 #[cfg(test)]
 extern crate csv;

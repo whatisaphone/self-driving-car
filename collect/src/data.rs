@@ -1,5 +1,5 @@
+use common::ext::ExtendRotation3;
 use nalgebra::{Rotation3, Vector3};
-use utils::ExtendRotation3;
 
 pub struct Snapshot {
     pub time: f32,

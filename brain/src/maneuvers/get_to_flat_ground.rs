@@ -1,12 +1,13 @@
 use behavior::{Action, Behavior};
 use collect::ExtendRotation3;
+use common::ext::ExtendPhysics;
 use eeg::Drawable;
 use maneuvers::drive_towards;
 use nalgebra::Vector3;
 use rlbot;
 use std::f32::consts::PI;
 use strategy::Context;
-use utils::{my_car, ExtendPhysics, ExtendVector3};
+use utils::{my_car, ExtendVector3};
 
 pub struct GetToFlatGround;
 

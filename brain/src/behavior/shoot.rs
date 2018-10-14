@@ -1,10 +1,11 @@
 use behavior::{aerial_shot::AerialShot, Action, Behavior};
+use common::ext::ExtendPhysics;
 use maneuvers::{GroundShot, JumpShot};
 use nalgebra::Vector3;
 use predict::estimate_intercept_car_ball;
 use simulate::rl;
 use strategy::Context;
-use utils::{enemy_goal_center, ExtendPhysics};
+use utils::enemy_goal_center;
 
 pub struct Shoot;
 

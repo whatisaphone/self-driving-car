@@ -2,6 +2,7 @@
 members = [
     "brain",
     "collect",
+    "common",
     "play",
     "simulate",
 ]

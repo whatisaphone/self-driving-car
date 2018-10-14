@@ -1,4 +1,5 @@
 use behavior::{Action, Behavior};
+use common::ext::ExtendPhysics;
 use eeg::{color, Drawable};
 use mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
 use nalgebra::Vector2;
@@ -7,9 +8,7 @@ use rules::SameBallTrajectory;
 use simulate::rl;
 use std::f32::consts::PI;
 use strategy::Context;
-use utils::{
-    enemy_goal_center, ExtendF32, ExtendPhysics, ExtendVector2, ExtendVector3, WallRayCalculator,
-};
+use utils::{enemy_goal_center, ExtendF32, ExtendVector2, ExtendVector3, WallRayCalculator};
 
 pub struct BounceShot {
     aim_loc: Vector2<f32>,
@@ -179,5 +178,24 @@ mod integration_tests {
         test.sleep_millis(3000);
         let packet = test.sniff_packet();
         assert!(packet.GameBall.Physics.vel().norm() >= 1000.0);
+    }
+
+    #[test]
+    #[ignore] // TODO
+    fn long_high_bouncing_save() {
+        let test = TestRunner::start0(TestScenario {
+            ball_loc: Vector3::new(90.25211, -340.07803, 1487.03),
+            ball_vel: Vector3::new(27.551777, -1300.1466, -571.16125),
+            car_loc: Vector3::new(-636.6111, 538.8031, 16.544558),
+            car_rot: Rotation3::from_unreal_angles(-0.01236772, -1.6032016, 0.0000958738),
+            car_vel: Vector3::new(-60.050007, -1915.0122, 15.930969),
+            ..Default::default()
+        });
+        test.set_behavior(Repeat::new(|| {
+            BounceShot::new().with_target_loc(Vector2::new(rl::FIELD_MAX_X, -rl::FIELD_MAX_Y))
+        }));
+
+        test.sleep_millis(3000);
+        unimplemented!()
     }
 }

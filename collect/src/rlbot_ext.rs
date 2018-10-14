@@ -1,7 +1,7 @@
+use common::ext::ExtendRotation3;
 use nalgebra::{Quaternion, UnitQuaternion};
 use rlbot;
 use std::error::Error;
-use utils::ExtendRotation3;
 
 const PHYSICS_TPS: f32 = 120.0;
 

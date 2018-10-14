@@ -1,4 +1,5 @@
 use behavior::{Action, Behavior};
+use common::ext::ExtendPhysics;
 use eeg::{color, Drawable};
 use maneuvers::GetToFlatGround;
 use mechanics::{simple_steer_towards, simple_yaw_diff};
@@ -7,7 +8,7 @@ use rlbot;
 use simulate::{rl, Car1D, CarAerial60Deg};
 use std::f32::consts::PI;
 use strategy::Context;
-use utils::{ExtendPhysics, ExtendVector3};
+use utils::ExtendVector3;
 
 pub struct AerialLocTime {
     target_loc: Vector3<f32>,

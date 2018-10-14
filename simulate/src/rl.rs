@@ -30,6 +30,12 @@ pub const BALL_RADIUS: f32 = 91.24;
 /// This value was observed in data from `collect`.
 pub const OCTANE_NEUTRAL_Z: f32 = 17.01;
 
+/// The constant frequency of RL's physics engine.
+pub const PHYSICS_TICK_FREQ: f32 = 120.0;
+
+/// The number of seconds between physics ticks.
+pub const PHYSICS_DT: f32 = 1.0 / PHYSICS_TICK_FREQ;
+
 /// The max speed a car can reach using only the throttle.
 ///
 /// This value was observed in data from `collect`.

@@ -24,6 +24,11 @@ impl Car1D {
         self
     }
 
+    pub fn with_boost_frac(mut self, boost: f32) -> Self {
+        self.boost = boost * 100.0;
+        self
+    }
+
     pub fn time(&self) -> f32 {
         self.time
     }
