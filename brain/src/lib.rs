@@ -18,6 +18,7 @@ extern crate lazycell;
 extern crate log;
 extern crate nalgebra;
 extern crate ncollide3d;
+extern crate ordered_float;
 extern crate piston_window;
 extern crate rlbot;
 extern crate simulate;
@@ -34,7 +35,7 @@ macro_rules! return_some {
 }
 
 macro_rules! some_or_else {
-    ($e:tt, $b:block) => {
+    ($e:expr, $b:block) => {
         match $e {
             Some(x) => x,
             None => $b,

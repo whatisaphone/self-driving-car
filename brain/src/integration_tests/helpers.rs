@@ -1,11 +1,16 @@
 use behavior::{Behavior, Fuse, NullBehavior};
 use brain::Brain;
-use collect::{get_packet_and_inject_rigid_body_tick, ExtendRotation3, Snapshot};
+use collect::{
+    get_packet_and_inject_rigid_body_tick, ExtendRotation3, RecordingPlayerTick,
+    RecordingRigidBodyState, RecordingTick, Snapshot,
+};
+use common::ext::ExtendPhysics;
 use crossbeam_channel;
 use csv;
 use eeg::EEG;
 use flatbuffers::{FlatBufferBuilder, WIPOffset};
-use nalgebra::{Rotation3, Vector3};
+use nalgebra::{Point3, Rotation3, UnitQuaternion, Vector3};
+use ordered_float::NotNan;
 use rlbot;
 use std::{
     f32::consts::PI,
@@ -16,9 +21,15 @@ use std::{
     time::Duration,
 };
 
+const RECORDING_DISTANCE_THRESHOLD: f32 = 25.0;
+const STATE_SET_DEBOUNCE: i32 = 10;
+
 pub struct TestRunner {
     scenario: Option<TestScenario>,
-    behavior: Option<Box<Behavior + Send>>,
+    behavior: Option<Box<FnMut(&rlbot::ffi::LiveDataPacket) -> Box<Behavior> + Send>>,
+    ball_recording: Option<(Vec<f32>, Vec<RecordingRigidBodyState>)>,
+    car_inital_state: Option<RecordingRigidBodyState>,
+    enemy_recording: Option<(Vec<f32>, Vec<RecordingPlayerTick>)>,
 }
 
 /// Static API
@@ -36,23 +47,7 @@ impl TestRunner {
         B: Behavior + 'static,
         BF: FnOnce(&rlbot::ffi::LiveDataPacket) -> B + Send + 'static,
     {
-        let ready_wait = Arc::new(Barrier::new(2));
-        let ready_wait_send = ready_wait.clone();
-        let (messages_tx, messages_rx) = crossbeam_channel::unbounded();
-        let thread = thread::spawn(|| {
-            test_thread(
-                scenario,
-                |p| Box::new(behavior(p)),
-                ready_wait_send,
-                messages_rx,
-            )
-        });
-
-        ready_wait.wait();
-        RunningTest {
-            messages: messages_tx,
-            join_handle: Some(thread),
-        }
+        Self::new().scenario(scenario).behavior_fn(behavior).run()
     }
 }
 
@@ -62,6 +57,9 @@ impl TestRunner {
         Self {
             scenario: None,
             behavior: None,
+            ball_recording: None,
+            car_inital_state: None,
+            enemy_recording: None,
         }
     }
 
@@ -71,16 +69,85 @@ impl TestRunner {
     }
 
     pub fn behavior(mut self, behavior: impl Behavior + Send + 'static) -> Self {
-        self.behavior = Some(Box::new(behavior));
+        // Use an option as a workaround for FnOnce being uncallable
+        // https://github.com/rust-lang/rust/issues/28796
+        let mut behavior = Some(Box::new(behavior));
+        self.behavior = Some(Box::new(move |_| behavior.take().unwrap()));
+        self
+    }
+
+    pub fn behavior_fn<B, BF>(mut self, behavior: BF) -> Self
+    where
+        B: Behavior + 'static,
+        BF: FnOnce(&rlbot::ffi::LiveDataPacket) -> B + Send + 'static,
+    {
+        // Use an option as a workaround for FnOnce being uncallable
+        // https://github.com/rust-lang/rust/issues/28796
+        let mut behavior = Some(behavior);
+        self.behavior = Some(Box::new(move |p| Box::new(behavior.take().unwrap()(p))));
+        self
+    }
+
+    #[deprecated(note = "TODO")]
+    pub fn preview_recording(
+        mut self,
+        path: impl AsRef<Path>,
+        start_time: f32,
+        stop_time: f32,
+    ) -> Self {
+        let ticks: Vec<_> = RecordingTick::parse(File::open(path).unwrap())
+            .skip_while(|r| r.time < start_time)
+            .take_while(|r| r.time < stop_time)
+            .collect();
+        let times: Vec<_> = ticks.iter().map(|t| t.time).collect();
+        let ball: Vec<_> = ticks.iter().map(|t| t.ball.clone()).collect();
+        let enemy_ticks: Vec<_> = ticks.iter().map(|t| t.players[1].clone()).collect();
+
+        self.ball_recording = Some((times.clone(), ball));
+        self.car_inital_state = Some(ticks[0].players[0].state.clone());
+        self.enemy_recording = Some((times, enemy_ticks));
         self
     }
 
     pub fn run(self) -> RunningTest {
-        let test = Self::start0(self.scenario.unwrap());
-        if let Some(behavior) = self.behavior {
-            test.messages.send(Message::SetBehavior(behavior));
+        let ball = match self.ball_recording {
+            Some((times, states)) => BallScenario::new(times, states),
+            None => BallScenario::single_tick(self.scenario.as_ref().unwrap().ball().clone()),
+        };
+
+        let car = match self.car_inital_state {
+            Some(state) => CarScenario::single_tick(state),
+            None => CarScenario::single_tick(self.scenario.as_ref().unwrap().car().clone()),
+        };
+
+        let enemy = match self.enemy_recording {
+            Some((times, ticks)) => CarScenario::new(times, ticks),
+            None => CarScenario::single_tick(self.scenario.as_ref().unwrap().enemy().clone()),
+        };
+
+        let mut behavior = self
+            .behavior
+            .unwrap_or_else(|| Box::new(|_| Box::new(NullBehavior::new())));
+
+        let ready_wait = Arc::new(Barrier::new(2));
+        let ready_wait_send = ready_wait.clone();
+        let (messages_tx, messages_rx) = crossbeam_channel::unbounded();
+        let thread = thread::spawn(move || {
+            test_thread(
+                ball,
+                car,
+                enemy,
+                |p| behavior(p),
+                ready_wait_send,
+                messages_rx,
+            )
+        });
+        ready_wait.wait();
+
+        RunningTest {
+            messages: messages_tx,
+            join_handle: Some(thread),
         }
-        test
     }
 }
 
@@ -161,7 +228,9 @@ fn unlock_rlbot_singleton() -> MutexGuard<'static, Option<rlbot::RLBot>> {
 }
 
 fn test_thread(
-    scenario: TestScenario,
+    ball_scenario: BallScenario,
+    car_scenario: CarScenario,
+    enemy_scenario: CarScenario,
     behavior: impl FnOnce(&rlbot::ffi::LiveDataPacket) -> Box<Behavior>,
     ready_wait: Arc<Barrier>,
     messages: crossbeam_channel::Receiver<Message>,
@@ -202,7 +271,12 @@ fn test_thread(
 
     rlbot.update_player_input(Default::default(), 0).unwrap();
 
-    setup_scenario(rlbot, &scenario);
+    setup_scenario(
+        rlbot,
+        ball_scenario.initial_state(),
+        car_scenario.initial_state(),
+        enemy_scenario.initial_state(),
+    );
 
     let first_packet = {
         let rigid_body_tick = physicist.next_flat().unwrap();
@@ -212,14 +286,15 @@ fn test_thread(
     brain.set_behavior(Fuse::new(behavior(&first_packet)), &mut eeg);
     ready_wait.wait();
 
-    'test: loop {
+    let mut ball = BallDirector::new(ball_scenario, first_packet.GameInfo.TimeSeconds);
+    let mut enemy = CarDirector::new(enemy_scenario, 1, first_packet.GameInfo.TimeSeconds);
+
+    'tick_loop: loop {
         let rigid_body_tick = physicist.next_flat().unwrap();
         let packet = get_packet_and_inject_rigid_body_tick(rlbot, rigid_body_tick).unwrap();
 
-        eeg.begin(&packet);
-        let input = brain.tick(&packet, &mut eeg);
-        rlbot.update_player_input(input, 0).unwrap();
-        eeg.show(&packet);
+        ball.tick(rlbot, &packet);
+        enemy.tick(rlbot, &packet);
 
         while let Some(message) = messages.try_recv() {
             match message {
@@ -243,21 +318,31 @@ fn test_thread(
                     f(&eeg);
                 }
                 Message::Terminate => {
-                    break 'test;
+                    break 'tick_loop;
                 }
             }
         }
+
+        eeg.begin(&packet);
+        let input = brain.tick(&packet, &mut eeg);
+        rlbot.update_player_input(input, 0).unwrap();
+        eeg.show(&packet);
     }
 
     // For tidiness, make the car stop moving when the test is finished.
     rlbot.update_player_input(Default::default(), 0).unwrap();
 }
 
-fn setup_scenario(rlbot: &rlbot::RLBot, scenario: &TestScenario) {
-    set_state(rlbot, &scenario);
+fn setup_scenario(
+    rlbot: &rlbot::RLBot,
+    ball: &RecordingRigidBodyState,
+    car: &RecordingRigidBodyState,
+    enemy: &RecordingRigidBodyState,
+) {
+    set_state(rlbot, ball, car, enemy);
     // Wait for car suspension to settle to neutral, then set it again.
     sleep(Duration::from_millis(1000));
-    set_state(rlbot, &scenario);
+    set_state(rlbot, ball, car, enemy);
 
     // Wait a few frames for the state to take effect.
     rlbot.packeteer().next().unwrap();
@@ -266,61 +351,33 @@ fn setup_scenario(rlbot: &rlbot::RLBot, scenario: &TestScenario) {
     rlbot.packeteer().next().unwrap();
 }
 
-fn set_state(rlbot: &rlbot::RLBot, scenario: &TestScenario) {
+fn set_state(
+    rlbot: &rlbot::RLBot,
+    ball: &RecordingRigidBodyState,
+    car: &RecordingRigidBodyState,
+    enemy: &RecordingRigidBodyState,
+) {
     let mut builder = FlatBufferBuilder::new_with_capacity(1024);
 
-    let loc = vector3(&mut builder, scenario.ball_loc);
-    let vel = vector3(&mut builder, scenario.ball_vel);
-    let rot = rotator(&mut builder, scenario.ball_rot);
-    let ang_vel = vector3(&mut builder, scenario.ball_ang_vel);
-    let physics = {
-        let mut b = rlbot::flat::DesiredPhysicsBuilder::new(&mut builder);
-        b.add_location(loc);
-        b.add_velocity(vel);
-        b.add_rotation(rot);
-        b.add_angularVelocity(ang_vel);
-        b.finish()
-    };
+    let physics = desired_physics(&mut builder, ball.loc, ball.rot, ball.vel, ball.ang_vel);
     let ball_state = {
         let mut b = rlbot::flat::DesiredBallStateBuilder::new(&mut builder);
         b.add_physics(physics);
         b.finish()
     };
 
-    let loc = vector3(&mut builder, scenario.car_loc);
-    let vel = vector3(&mut builder, scenario.car_vel);
-    let rot = rotator(&mut builder, scenario.car_rot);
-    let ang_vel = vector3(&mut builder, scenario.car_ang_vel);
-    let physics = {
-        let mut b = rlbot::flat::DesiredPhysicsBuilder::new(&mut builder);
-        b.add_location(loc);
-        b.add_velocity(vel);
-        b.add_rotation(rot);
-        b.add_angularVelocity(ang_vel);
-        b.finish()
-    };
+    let physics = desired_physics(&mut builder, car.loc, car.rot, car.vel, car.ang_vel);
     let car_state = {
-        let boost_amount = rlbot::flat::Float::new(scenario.boost as f32);
+        let boost_amount = rlbot::flat::Float::new(100.0);
         let mut b = rlbot::flat::DesiredCarStateBuilder::new(&mut builder);
         b.add_physics(physics);
         b.add_boostAmount(&boost_amount);
         b.finish()
     };
 
-    let loc = vector3(&mut builder, scenario.enemy_loc);
-    let vel = vector3(&mut builder, scenario.enemy_vel);
-    let rot = rotator(&mut builder, scenario.enemy_rot);
-    let ang_vel = vector3(&mut builder, scenario.enemy_ang_vel);
-    let physics = {
-        let mut b = rlbot::flat::DesiredPhysicsBuilder::new(&mut builder);
-        b.add_location(loc);
-        b.add_velocity(vel);
-        b.add_rotation(rot);
-        b.add_angularVelocity(ang_vel);
-        b.finish()
-    };
+    let physics = desired_physics(&mut builder, enemy.loc, enemy.rot, enemy.vel, enemy.ang_vel);
     let enemy_state = {
-        let boost_amount = rlbot::flat::Float::new(scenario.boost as f32);
+        let boost_amount = rlbot::flat::Float::new(100.0);
         let mut b = rlbot::flat::DesiredCarStateBuilder::new(&mut builder);
         b.add_physics(physics);
         b.add_boostAmount(&boost_amount);
@@ -339,6 +396,25 @@ fn set_state(rlbot: &rlbot::RLBot, scenario: &TestScenario) {
     rlbot.set_game_state(builder.finished_data()).unwrap()
 }
 
+fn desired_physics<'a, 'b>(
+    builder: &'b mut FlatBufferBuilder<'a>,
+    loc: Point3<f32>,
+    rot: UnitQuaternion<f32>,
+    vel: Vector3<f32>,
+    ang_vel: Vector3<f32>,
+) -> WIPOffset<rlbot::flat::DesiredPhysics<'a>> {
+    let loc = vector3(builder, loc.coords);
+    let rot = rotator(builder, rot);
+    let vel = vector3(builder, vel);
+    let ang_vel = vector3(builder, ang_vel);
+    let mut b = rlbot::flat::DesiredPhysicsBuilder::new(builder);
+    b.add_location(loc);
+    b.add_rotation(rot);
+    b.add_velocity(vel);
+    b.add_angularVelocity(ang_vel);
+    b.finish()
+}
+
 fn vector3<'a, 'b>(
     builder: &'b mut FlatBufferBuilder<'a>,
     v: Vector3<f32>,
@@ -355,14 +431,15 @@ fn vector3<'a, 'b>(
 
 fn rotator<'a, 'b>(
     builder: &'b mut FlatBufferBuilder<'a>,
-    r: Rotation3<f32>,
+    r: UnitQuaternion<f32>,
 ) -> WIPOffset<rlbot::flat::RotatorPartial<'a>> {
+    let rotation = r.to_rotation_matrix();
     rlbot::flat::RotatorPartial::create(
         builder,
         &rlbot::flat::RotatorPartialArgs {
-            pitch: Some(&rlbot::flat::Float::new(r.pitch())),
-            yaw: Some(&rlbot::flat::Float::new(r.yaw())),
-            roll: Some(&rlbot::flat::Float::new(r.roll())),
+            pitch: Some(&rlbot::flat::Float::new(rotation.pitch())),
+            yaw: Some(&rlbot::flat::Float::new(rotation.yaw())),
+            roll: Some(&rlbot::flat::Float::new(rotation.roll())),
         },
     )
 }
@@ -438,6 +515,33 @@ impl TestScenario {
         panic!("Time not found in recording.");
     }
 
+    fn ball(&self) -> RecordingRigidBodyState {
+        RecordingRigidBodyState {
+            loc: Point3::from_coordinates(self.ball_loc),
+            rot: UnitQuaternion::from_rotation_matrix(&self.ball_rot),
+            vel: self.ball_vel,
+            ang_vel: self.ball_ang_vel,
+        }
+    }
+
+    fn car(&self) -> RecordingRigidBodyState {
+        RecordingRigidBodyState {
+            loc: Point3::from_coordinates(self.car_loc),
+            rot: UnitQuaternion::from_rotation_matrix(&self.car_rot),
+            vel: self.car_vel,
+            ang_vel: self.car_ang_vel,
+        }
+    }
+
+    fn enemy(&self) -> RecordingRigidBodyState {
+        RecordingRigidBodyState {
+            loc: Point3::from_coordinates(self.enemy_loc),
+            rot: UnitQuaternion::from_rotation_matrix(&self.enemy_rot),
+            vel: self.enemy_vel,
+            ang_vel: self.enemy_ang_vel,
+        }
+    }
+
     fn to_source(&self) -> String {
         format!(
             "TestScenario {{
@@ -464,5 +568,187 @@ impl TestScenario {
             self.car_vel.y,
             self.car_vel.z,
         )
+    }
+}
+
+struct BallScenario {
+    times: Vec<NotNan<f32>>,
+    states: Vec<RecordingRigidBodyState>,
+}
+
+impl BallScenario {
+    fn new(times: Vec<impl Into<NotNan<f32>>>, states: Vec<RecordingRigidBodyState>) -> Self {
+        Self {
+            times: times.into_iter().map(Into::into).collect(),
+            states,
+        }
+    }
+
+    fn single_tick(state: RecordingRigidBodyState) -> Self {
+        Self {
+            times: vec![NotNan::new(0.0).unwrap()],
+            states: vec![state],
+        }
+    }
+
+    fn initial_state(&self) -> &RecordingRigidBodyState {
+        &self.states[0]
+    }
+}
+
+struct BallDirector {
+    scenario: BallScenario,
+    start_time: f32,
+    frames_since_state_set: i32,
+}
+
+impl BallDirector {
+    fn new(scenario: BallScenario, start_time: f32) -> Self {
+        Self {
+            scenario,
+            start_time,
+            frames_since_state_set: 0,
+        }
+    }
+
+    fn tick(&mut self, rlbot: &rlbot::RLBot, packet: &rlbot::ffi::LiveDataPacket) {
+        self.frames_since_state_set += 1;
+        if self.frames_since_state_set < STATE_SET_DEBOUNCE {
+            return;
+        }
+
+        let elapsed = packet.GameInfo.TimeSeconds - self.start_time;
+        let data_time = self.scenario.times[0] + elapsed;
+        let index = match self.scenario.times.binary_search(&data_time) {
+            Ok(i) => i,
+            Err(0) => 0,
+            Err(i) if i == self.scenario.times.len() => return,
+            Err(i) => i - 1,
+        };
+
+        let state = &self.scenario.states[index];
+        let current_loc = packet.GameBall.Physics.locp();
+        if (state.loc - current_loc).norm() >= RECORDING_DISTANCE_THRESHOLD {
+            let mut builder = FlatBufferBuilder::new_with_capacity(1024);
+
+            let physics =
+                desired_physics(&mut builder, state.loc, state.rot, state.vel, state.ang_vel);
+            let desired_ball_state = {
+                let mut b = rlbot::flat::DesiredBallStateBuilder::new(&mut builder);
+                b.add_physics(physics);
+                b.finish()
+            };
+            let desired_game_state = {
+                let mut b = rlbot::flat::DesiredGameStateBuilder::new(&mut builder);
+                b.add_ballState(desired_ball_state);
+                b.finish()
+            };
+
+            builder.finish(desired_game_state, None);
+            rlbot.set_game_state(builder.finished_data()).unwrap();
+        }
+    }
+}
+
+struct CarScenario {
+    times: Vec<NotNan<f32>>,
+    ticks: Vec<RecordingPlayerTick>,
+}
+
+impl CarScenario {
+    fn new(times: Vec<impl Into<NotNan<f32>>>, ticks: Vec<RecordingPlayerTick>) -> Self {
+        Self {
+            times: times.into_iter().map(Into::into).collect(),
+            ticks,
+        }
+    }
+
+    fn single_tick(state: RecordingRigidBodyState) -> Self {
+        Self {
+            times: vec![NotNan::new(0.0).unwrap()],
+            ticks: vec![RecordingPlayerTick {
+                input: Default::default(),
+                state,
+            }],
+        }
+    }
+
+    fn initial_state(&self) -> &RecordingRigidBodyState {
+        &self.ticks[0].state
+    }
+}
+
+struct CarDirector {
+    scenario: CarScenario,
+    player_index: i32,
+    start_time: f32,
+    frames_since_state_set: i32,
+}
+
+impl CarDirector {
+    fn new(scenario: CarScenario, player_index: i32, start_time: f32) -> Self {
+        Self {
+            scenario,
+            player_index,
+            start_time,
+            frames_since_state_set: 0,
+        }
+    }
+
+    fn tick(&mut self, rlbot: &rlbot::RLBot, packet: &rlbot::ffi::LiveDataPacket) {
+        let elapsed = packet.GameInfo.TimeSeconds - self.start_time;
+        let data_time = self.scenario.times[0] + elapsed;
+        let index = match self.scenario.times.binary_search(&data_time) {
+            Ok(i) => i,
+            Err(0) => 0,
+            Err(i) if i == self.scenario.times.len() => return,
+            Err(i) => i - 1,
+        };
+        let tick = &self.scenario.ticks[index];
+
+        rlbot
+            .update_player_input(tick.input, self.player_index)
+            .unwrap();
+
+        self.frames_since_state_set += 1;
+        if self.frames_since_state_set < STATE_SET_DEBOUNCE {
+            return;
+        }
+
+        let current_loc = packet.GameCars[self.player_index as usize].Physics.locp();
+        if (tick.state.loc - current_loc).norm() >= RECORDING_DISTANCE_THRESHOLD {
+            let mut builder = FlatBufferBuilder::new_with_capacity(1024);
+
+            let mut car_states = Vec::new();
+
+            // Push empty states to pad out the array so we target the right index
+            for _ in 0..self.player_index {
+                car_states.push(rlbot::flat::DesiredCarStateBuilder::new(&mut builder).finish());
+            }
+
+            let physics = desired_physics(
+                &mut builder,
+                tick.state.loc,
+                tick.state.rot,
+                tick.state.vel,
+                tick.state.ang_vel,
+            );
+            {
+                let boost_amount = rlbot::flat::Float::new(100.0);
+                let mut b = rlbot::flat::DesiredCarStateBuilder::new(&mut builder);
+                b.add_physics(physics);
+                b.add_boostAmount(&boost_amount);
+                car_states.push(b.finish());
+            };
+            let car_states = builder.create_vector(&car_states);
+            let desired_game_state = {
+                let mut b = rlbot::flat::DesiredGameStateBuilder::new(&mut builder);
+                b.add_carStates(car_states);
+                b.finish()
+            };
+
+            builder.finish(desired_game_state, None);
+            rlbot.set_game_state(builder.finished_data()).unwrap();
+        }
     }
 }

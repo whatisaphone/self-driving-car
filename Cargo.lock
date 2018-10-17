@@ -80,6 +80,7 @@ dependencies = [
  "log 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "nalgebra 0.16.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "ncollide3d 0.17.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ordered-float 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "piston2d-graphics 0.26.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "piston_window 0.80.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rlbot 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -156,6 +157,7 @@ dependencies = [
  "csv 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "flatbuffers 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "nalgebra 0.16.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ordered-float 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rlbot 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -750,6 +752,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "num-traits 0.1.43 (registry+https://github.com/rust-lang/crates.io-index)",
  "unreachable 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "ordered-float"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "num-traits 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -1530,6 +1540,7 @@ dependencies = [
 "checksum num_cpus 1.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "c51a3322e4bca9d212ad9a158a02abc6934d005490c054a2778df73a70aa0a30"
 "checksum objc 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)" = "9833ab0efe5361b1e2122a0544a5d3359576911a42cb098c2e59be8650807367"
 "checksum ordered-float 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "58d25b6c0e47b20d05226d288ff434940296e7e2f8b877975da32f862152241f"
+"checksum ordered-float 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "2f0015e9e8e28ee20c581cfbfe47c650cedeb9ed0721090e0b7ebb10b9cdbcc2"
 "checksum osmesa-sys 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "88cfece6e95d2e717e0872a7f53a8684712ad13822a7979bc760b9c77ec0013b"
 "checksum owning_ref 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)" = "cdf84f41639e037b484f93433aa3897863b561ed65c6e59c7073d7c561710f37"
 "checksum parking_lot 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)" = "69376b761943787ebd5cc85a5bc95958651a22609c5c1c2b65de21786baec72b"
