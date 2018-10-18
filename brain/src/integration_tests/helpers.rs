@@ -68,7 +68,7 @@ impl TestRunner {
         self
     }
 
-    pub fn ball(
+    fn ball(
         mut self,
         times: impl Into<Vec<f32>>,
         states: impl Into<Vec<RecordingRigidBodyState>>,
@@ -77,12 +77,12 @@ impl TestRunner {
         self
     }
 
-    pub fn car(mut self, state: RecordingRigidBodyState) -> Self {
+    fn car(mut self, state: RecordingRigidBodyState) -> Self {
         self.car_inital_state = Some(state);
         self
     }
 
-    pub fn enemy(
+    fn enemy(
         mut self,
         times: impl Into<Vec<f32>>,
         inputs: impl Into<Vec<rlbot::ffi::PlayerInput>>,
@@ -104,15 +104,15 @@ impl TestRunner {
     /// Replay the ball and enemy from a 1v1 recording. Lock the ball to the
     /// recording until the timestamp given by `ball_stop`, and afterwards let
     /// it behave naturally.
-    pub fn one_v_one(mut self, scenario: &OneVOneScenario, ball_stop: f32) -> Self {
-        let ball_max = scenario
+    pub fn one_v_one(mut self, scenario: &OneVOneScenario, ball_release: f32) -> Self {
+        let ball_release_index = scenario
             .times
             .iter()
-            .position(|&t| t >= ball_stop)
+            .position(|&t| t >= ball_release)
             .unwrap_or(scenario.times.len());
         self = self.ball(
-            &scenario.times[..ball_max],
-            &scenario.ball_states[..ball_max],
+            &scenario.times[..ball_release_index],
+            &scenario.ball_states[..ball_release_index],
         );
         self = self.car(scenario.car_initial_state.clone());
         self = self.enemy(scenario.times, scenario.enemy_inputs, scenario.enemy_states);
@@ -144,6 +144,7 @@ impl TestRunner {
         mut self,
         path: impl AsRef<Path>,
         start_time: f32,
+        ball_release: f32,
         stop_time: f32,
     ) -> Self {
         let ticks: Vec<_> = RecordingTick::parse(File::open(path).unwrap())
@@ -154,7 +155,12 @@ impl TestRunner {
         let ball: Vec<_> = ticks.iter().map(|t| t.ball.clone()).collect();
         let enemy_ticks: Vec<_> = ticks.iter().map(|t| t.players[1].clone()).collect();
 
-        self.ball_recording = Some((times.clone(), ball));
+        let ball_release_index = times
+            .iter()
+            .position(|&t| t >= ball_release)
+            .unwrap_or(times.len());
+
+        self = self.ball(&times[..ball_release_index], &ball[..ball_release_index]);
         self.car_inital_state = Some(ticks[0].players[0].state.clone());
         self.enemy_recording = Some((times, enemy_ticks));
         self

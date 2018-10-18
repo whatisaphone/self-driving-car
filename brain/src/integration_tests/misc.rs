@@ -56,10 +56,10 @@ mod template {
     #[ignore]
     fn recording_template() {
         let test = TestRunner::new()
-            .preview_recording("../logs/play.csv", 100.0, 110.0)
+            .preview_recording("../logs/play.csv", 100.0, 105.0, 110.0)
             .behavior(Runner2::new())
             .run();
-        test.sleep_millis(5000);
+        test.sleep_millis(10_000);
         unimplemented!();
     }
 }
