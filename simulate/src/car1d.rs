@@ -41,6 +41,10 @@ impl Car1D {
         self.vel
     }
 
+    pub fn boost(&self) -> f32 {
+        self.boost
+    }
+
     pub fn step(&mut self, dt: f32, throttle: f32, mut boost: bool) {
         if boost {
             boost = self.boost > 0.0;

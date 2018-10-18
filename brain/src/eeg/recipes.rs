@@ -12,8 +12,10 @@ pub fn draw_ball_prediction(rlbot: &rlbot::RLBot, packet: &rlbot::ffi::LiveDataP
     let mut prev = ball.pos();
     let mut rg = rlbot.begin_render_group(0);
     let green = rg.color_rgb(0, 255, 0);
-    for _ in 0..360 {
-        ball.step(1.0 / 120.0);
+    for _ in 0..(5 * 120 / 4) {
+        for _ in 0..4 {
+            ball.step(1.0 / 120.0);
+        }
         let cur = ball.pos();
         rg.draw_line_3d(
             (prev.coords.x, prev.coords.y, prev.coords.z),

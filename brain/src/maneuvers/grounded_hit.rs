@@ -39,6 +39,7 @@ where
 
 impl GroundedHit<fn(&rlbot::ffi::PlayerInfo, Point3<f32>) -> Point2<f32>> {
     /// A preset for `Aim` that hits the ball straight ahead.
+    #[allow(dead_code)] // This is a good behavior, just gotta slip it in somewhere.
     pub fn opposite_of_self(car: &rlbot::ffi::PlayerInfo, ball: Point3<f32>) -> Point2<f32> {
         ball.to_2d() + (ball.to_2d() - car.Physics.locp().to_2d())
     }

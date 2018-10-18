@@ -17,7 +17,7 @@ impl Car {
             loc: Point3::origin(),
             rot: UnitQuaternion::identity(),
             vel: Vector3::zeros(),
-            boost: 100.0,
+            boost: 1.0,
             on_ground: true,
         }
     }
@@ -57,6 +57,7 @@ impl Car {
 
         self.loc += self.forward() * car1d.distance_traveled();
         self.vel = self.forward() * car1d.speed();
+        self.boost = car1d.boost() / 100.0;
     }
 
     /// A unit vector in the forward direction.
