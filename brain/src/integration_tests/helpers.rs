@@ -68,6 +68,57 @@ impl TestRunner {
         self
     }
 
+    pub fn ball(
+        mut self,
+        times: impl Into<Vec<f32>>,
+        states: impl Into<Vec<RecordingRigidBodyState>>,
+    ) -> Self {
+        self.ball_recording = Some((times.into(), states.into()));
+        self
+    }
+
+    pub fn car(mut self, state: RecordingRigidBodyState) -> Self {
+        self.car_inital_state = Some(state);
+        self
+    }
+
+    pub fn enemy(
+        mut self,
+        times: impl Into<Vec<f32>>,
+        inputs: impl Into<Vec<rlbot::ffi::PlayerInput>>,
+        states: impl Into<Vec<RecordingRigidBodyState>>,
+    ) -> Self {
+        let ticks = inputs
+            .into()
+            .iter()
+            .zip(states.into())
+            .map(|(input, state)| RecordingPlayerTick {
+                input: input.clone(),
+                state: state.clone(),
+            })
+            .collect();
+        self.enemy_recording = Some((times.into(), ticks));
+        self
+    }
+
+    /// Replay the ball and enemy from a 1v1 recording. Lock the ball to the
+    /// recording until the timestamp given by `ball_stop`, and afterwards let
+    /// it behave naturally.
+    pub fn one_v_one(mut self, scenario: &OneVOneScenario, ball_stop: f32) -> Self {
+        let ball_max = scenario
+            .times
+            .iter()
+            .position(|&t| t >= ball_stop)
+            .unwrap_or(scenario.times.len());
+        self = self.ball(
+            &scenario.times[..ball_max],
+            &scenario.ball_states[..ball_max],
+        );
+        self = self.car(scenario.car_initial_state.clone());
+        self = self.enemy(scenario.times, scenario.enemy_inputs, scenario.enemy_states);
+        self
+    }
+
     pub fn behavior(mut self, behavior: impl Behavior + Send + 'static) -> Self {
         // Use an option as a workaround for FnOnce being uncallable
         // https://github.com/rust-lang/rust/issues/28796
@@ -569,6 +620,14 @@ impl TestScenario {
             self.car_vel.z,
         )
     }
+}
+
+pub struct OneVOneScenario<'a> {
+    pub times: &'a [f32],
+    pub ball_states: &'a [RecordingRigidBodyState],
+    pub car_initial_state: RecordingRigidBodyState,
+    pub enemy_inputs: &'a [rlbot::ffi::PlayerInput],
+    pub enemy_states: &'a [RecordingRigidBodyState],
 }
 
 struct BallScenario {

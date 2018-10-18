@@ -1,5 +1,5 @@
 use behavior::{Behavior, Chain, Defense, Offense, Priority};
-use maneuvers::{FiftyFifty, GetToFlatGround};
+use maneuvers::{FiftyFifty, GetToFlatGround, GroundedHit};
 use std::f32::consts::PI;
 use strategy::{scenario::Scenario, Context};
 use utils::{
@@ -37,7 +37,9 @@ pub fn override_(ctx: &mut Context, current: &Behavior) -> Option<Box<Behavior>>
             ));
             return Some(Box::new(Chain::new(
                 Priority::Save,
-                vec![Box::new(FiftyFifty::new())],
+                vec![Box::new(GroundedHit::hit_towards(
+                    GroundedHit::opposite_of_self,
+                ))],
             )));
         }
 

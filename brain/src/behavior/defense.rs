@@ -197,7 +197,10 @@ impl HitToOwnCorner {
 mod integration_tests {
     use behavior::{defense::Defense, runner::PUSHED, HitToOwnCorner};
     use collect::ExtendRotation3;
-    use integration_tests::helpers::{TestRunner, TestScenario};
+    use integration_tests::{
+        helpers::{TestRunner, TestScenario},
+        recordings,
+    };
     use nalgebra::{Rotation3, Vector3};
     use strategy::Runner2;
     use utils::ExtendPhysics;
@@ -549,5 +552,14 @@ mod integration_tests {
         let packet = test.sniff_packet();
         assert!(packet.GameBall.Physics.loc().x < 1000.0);
         assert!(packet.GameBall.Physics.vel().x < 500.0);
+    }
+
+    #[test]
+    fn jump_save_from_inside_goal() {
+        let test = TestRunner::new()
+            .one_v_one(&*recordings::JUMP_SAVE_FROM_INSIDE_GOAL, 106.0)
+            .run();
+        test.sleep_millis(3000);
+        assert!(!test.enemy_has_scored());
     }
 }
