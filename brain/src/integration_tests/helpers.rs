@@ -28,7 +28,7 @@ pub struct TestRunner {
     scenario: Option<TestScenario>,
     behavior: Option<Box<FnMut(&rlbot::ffi::LiveDataPacket) -> Box<Behavior> + Send>>,
     ball_recording: Option<(Vec<f32>, Vec<RecordingRigidBodyState>)>,
-    car_inital_state: Option<RecordingRigidBodyState>,
+    car_inital_state: Option<(RecordingRigidBodyState, f32)>,
     enemy_recording: Option<(Vec<f32>, Vec<RecordingPlayerTick>)>,
 }
 
@@ -78,7 +78,12 @@ impl TestRunner {
     }
 
     fn car(mut self, state: RecordingRigidBodyState) -> Self {
-        self.car_inital_state = Some(state);
+        self.car_inital_state = Some((state, 1.0));
+        self
+    }
+
+    pub fn starting_boost(mut self, boost: f32) -> Self {
+        self.car_inital_state.as_mut().unwrap().1 = boost;
         self
     }
 
@@ -102,8 +107,8 @@ impl TestRunner {
     }
 
     /// Replay the ball and enemy from a 1v1 recording. Lock the ball to the
-    /// recording until the timestamp given by `ball_stop`, and afterwards let
-    /// it behave naturally.
+    /// recording until the timestamp given by `ball_release`, and afterwards
+    /// let it behave naturally.
     pub fn one_v_one(mut self, scenario: &OneVOneScenario, ball_release: f32) -> Self {
         let ball_release_index = scenario
             .times
@@ -161,7 +166,7 @@ impl TestRunner {
             .unwrap_or(times.len());
 
         self = self.ball(&times[..ball_release_index], &ball[..ball_release_index]);
-        self.car_inital_state = Some(ticks[0].players[0].state.clone());
+        self.car_inital_state = Some((ticks[0].players[0].state.clone(), 1.0));
         self.enemy_recording = Some((times, enemy_ticks));
         self
     }
@@ -173,13 +178,13 @@ impl TestRunner {
         };
 
         let car = match self.car_inital_state {
-            Some(state) => CarScenario::single_tick(state),
-            None => CarScenario::single_tick(self.scenario.as_ref().unwrap().car().clone()),
+            Some(state) => CarScenario::single_tick(state.0, state.1),
+            None => CarScenario::single_tick(self.scenario.as_ref().unwrap().car().clone(), 1.0),
         };
 
         let enemy = match self.enemy_recording {
-            Some((times, ticks)) => CarScenario::new(times, ticks),
-            None => CarScenario::single_tick(self.scenario.as_ref().unwrap().enemy().clone()),
+            Some((times, ticks)) => CarScenario::new(times, ticks, 1.0),
+            None => CarScenario::single_tick(self.scenario.as_ref().unwrap().enemy().clone(), 1.0),
         };
 
         let mut behavior = self
@@ -332,6 +337,7 @@ fn test_thread(
         rlbot,
         ball_scenario.initial_state(),
         car_scenario.initial_state(),
+        car_scenario.starting_boost,
         enemy_scenario.initial_state(),
     );
 
@@ -394,12 +400,13 @@ fn setup_scenario(
     rlbot: &rlbot::RLBot,
     ball: &RecordingRigidBodyState,
     car: &RecordingRigidBodyState,
+    car_boost_amount: f32,
     enemy: &RecordingRigidBodyState,
 ) {
-    set_state(rlbot, ball, car, enemy);
+    set_state(rlbot, ball, car, car_boost_amount, enemy);
     // Wait for car suspension to settle to neutral, then set it again.
     sleep(Duration::from_millis(1000));
-    set_state(rlbot, ball, car, enemy);
+    set_state(rlbot, ball, car, car_boost_amount, enemy);
 
     // Wait a few frames for the state to take effect.
     rlbot.packeteer().next().unwrap();
@@ -412,6 +419,7 @@ fn set_state(
     rlbot: &rlbot::RLBot,
     ball: &RecordingRigidBodyState,
     car: &RecordingRigidBodyState,
+    car_boost_amount: f32,
     enemy: &RecordingRigidBodyState,
 ) {
     let mut builder = FlatBufferBuilder::new_with_capacity(1024);
@@ -425,7 +433,7 @@ fn set_state(
 
     let physics = desired_physics(&mut builder, car.loc, car.rot, car.vel, car.ang_vel);
     let car_state = {
-        let boost_amount = rlbot::flat::Float::new(100.0);
+        let boost_amount = rlbot::flat::Float::new(car_boost_amount);
         let mut b = rlbot::flat::DesiredCarStateBuilder::new(&mut builder);
         b.add_physics(physics);
         b.add_boostAmount(&boost_amount);
@@ -718,23 +726,30 @@ impl BallDirector {
 struct CarScenario {
     times: Vec<NotNan<f32>>,
     ticks: Vec<RecordingPlayerTick>,
+    starting_boost: f32,
 }
 
 impl CarScenario {
-    fn new(times: Vec<impl Into<NotNan<f32>>>, ticks: Vec<RecordingPlayerTick>) -> Self {
+    fn new(
+        times: Vec<impl Into<NotNan<f32>>>,
+        ticks: Vec<RecordingPlayerTick>,
+        starting_boost: f32,
+    ) -> Self {
         Self {
             times: times.into_iter().map(Into::into).collect(),
             ticks,
+            starting_boost,
         }
     }
 
-    fn single_tick(state: RecordingRigidBodyState) -> Self {
+    fn single_tick(state: RecordingRigidBodyState, starting_boost: f32) -> Self {
         Self {
             times: vec![NotNan::new(0.0).unwrap()],
             ticks: vec![RecordingPlayerTick {
                 input: Default::default(),
                 state,
             }],
+            starting_boost,
         }
     }
 

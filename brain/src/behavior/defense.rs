@@ -558,6 +558,7 @@ mod integration_tests {
     fn jump_save_from_inside_goal() {
         let test = TestRunner::new()
             .one_v_one(&*recordings::JUMP_SAVE_FROM_INSIDE_GOAL, 106.0)
+            .starting_boost(0.0)
             .run();
         test.sleep_millis(3000);
         assert!(!test.enemy_has_scored());
