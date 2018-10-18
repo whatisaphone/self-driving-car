@@ -42,10 +42,10 @@ mod template {
 
     #[test]
     #[ignore]
-    fn template() {
+    fn scenario_template() {
         let test = TestRunner::start0(TestScenario {
             enemy_loc: Vector3::new(6000.0, 6000.0, 0.0),
-            ..TestScenario::from_collected_row("../logs/play.csv", 100.0)
+            ..TestScenario::from_recorded_row("../logs/play.csv", 100.0)
         });
         test.set_behavior(Runner2::new());
         test.sleep_millis(5000);

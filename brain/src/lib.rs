@@ -6,8 +6,6 @@ extern crate collect;
 extern crate common;
 extern crate crossbeam_channel;
 #[cfg(test)]
-extern crate csv;
-#[cfg(test)]
 extern crate flatbuffers;
 extern crate graphics;
 extern crate itertools;

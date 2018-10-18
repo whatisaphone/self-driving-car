@@ -2,11 +2,10 @@ use behavior::{Behavior, Fuse, NullBehavior};
 use brain::Brain;
 use collect::{
     get_packet_and_inject_rigid_body_tick, ExtendRotation3, RecordingPlayerTick,
-    RecordingRigidBodyState, RecordingTick, Snapshot,
+    RecordingRigidBodyState, RecordingTick,
 };
 use common::ext::ExtendPhysics;
 use crossbeam_channel;
-use csv;
 use eeg::EEG;
 use flatbuffers::{FlatBufferBuilder, WIPOffset};
 use nalgebra::{Point3, Rotation3, UnitQuaternion, Vector3};
@@ -550,34 +549,26 @@ impl TestScenario {
     /// scenario directly from a saved gameplay recording.
     #[allow(dead_code)]
     #[deprecated(note = "Use TestScenario::new() instead when writing actual tests.")]
-    pub fn from_collected_row(filename: impl AsRef<Path>, time: f32) -> Self {
+    pub fn from_recorded_row(filename: impl AsRef<Path>, time: f32) -> Self {
         let file = File::open(filename).unwrap();
-        let mut reader = csv::Reader::from_reader(file);
-        for row in reader.records() {
-            let row = row.unwrap();
-            let row_time: f32 = row[0].parse().unwrap();
-            if row_time >= time {
-                let snapshot = Snapshot::from_row(row.iter().map(|x| x.parse().unwrap())).unwrap();
-                let result = Self {
-                    ball_loc: snapshot.ball.loc,
-                    ball_rot: snapshot.ball.rot,
-                    ball_vel: snapshot.ball.vel,
-                    ball_ang_vel: snapshot.ball.ang_vel,
-                    car_loc: snapshot.cars[0].loc,
-                    car_rot: snapshot.cars[0].rot,
-                    car_vel: snapshot.cars[0].vel,
-                    car_ang_vel: snapshot.cars[0].ang_vel,
-                    enemy_loc: snapshot.cars[1].loc,
-                    enemy_rot: snapshot.cars[1].rot,
-                    enemy_vel: snapshot.cars[1].vel,
-                    enemy_ang_vel: snapshot.cars[1].ang_vel,
-                    ..Default::default()
-                };
-                println!("{}", result.to_source());
-                return result;
-            }
-        }
-        panic!("Time not found in recording.");
+        let tick = RecordingTick::parse(file).find(|r| r.time >= time).unwrap();
+        let result = Self {
+            ball_loc: tick.ball.loc.coords,
+            ball_rot: tick.ball.rot.to_rotation_matrix(),
+            ball_vel: tick.ball.vel,
+            ball_ang_vel: tick.ball.ang_vel,
+            car_loc: tick.players[0].state.loc.coords,
+            car_rot: tick.players[0].state.rot.to_rotation_matrix(),
+            car_vel: tick.players[0].state.vel,
+            car_ang_vel: tick.players[0].state.ang_vel,
+            enemy_loc: tick.players[1].state.loc.coords,
+            enemy_rot: tick.players[1].state.rot.to_rotation_matrix(),
+            enemy_vel: tick.players[1].state.vel,
+            enemy_ang_vel: tick.players[1].state.ang_vel,
+            ..Default::default()
+        };
+        println!("{}", result.to_source());
+        return result;
     }
 
     fn ball(&self) -> RecordingRigidBodyState {
