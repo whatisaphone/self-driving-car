@@ -1,9 +1,7 @@
-use behavior::{higher_order::TimeLimit, shoot::Shoot, tepid_hit::TepidHit, Action, Behavior};
+use behavior::{shoot::Shoot, tepid_hit::TepidHit, Action, Behavior};
 use common::ext::ExtendPhysics;
-use maneuvers::{BlitzToLocation, BounceShot};
 use predict::estimate_intercept_car_ball;
-use strategy::{Context, Scenario};
-use utils::ExtendPoint3;
+use strategy::Context;
 
 pub struct Offense;
 
@@ -26,16 +24,8 @@ impl Behavior for Offense {
         });
 
         if intercept.is_some() {
-            ctx.eeg.log("[Offense] good angle found");
+            ctx.eeg.log("[Offense] Taking the shot!");
             return Action::call(Shoot::new());
-        }
-
-        let intercept =
-            estimate_intercept_car_ball(ctx, me, |_t, &loc, _vel| loc.z < BounceShot::MAX_BALL_Z);
-
-        if let Some(intercept) = intercept {
-            ctx.eeg.log("[Offense] no good hit; going for a tepid hit");
-            return Action::call(TepidHit::new(intercept.ball_loc));
         }
 
         // TODO: if angle is almost good, slightly adjust path such that good_angle
@@ -45,23 +35,11 @@ impl Behavior for Offense {
         // sideways
 
         // also for the above, do something sane about possession e.g. if we clearly do
-        // not have possession, probably just run back to defense for now?
+        // not have possession, probably just run back to defense for now? if we do
+        // have it, maybe we have time to get boost or swing around for a better angle
 
-        // For now, just fall back to a stupid behavior
-        // TODO: possession! if have it, can wait. otherwise, 50/50
-
-        if ctx.scenario.possession() >= -Scenario::POSSESSION_CONTESTABLE {
-            ctx.eeg
-                .log("[Offense] blindly wandering towards hypothetical intercept");
-            let loc = ctx.scenario.ball_prediction().iter().last().unwrap().loc;
-            return Action::call(TimeLimit::new(
-                1.0,
-                BlitzToLocation::new(loc.to_2d().coords),
-            ));
-        }
-
-        ctx.eeg.log("[Offense] unknown intercept");
-        Action::Abort
+        ctx.eeg.log("[Offense] no good hit; going for a tepid hit");
+        return Action::call(TepidHit::new());
     }
 }
 

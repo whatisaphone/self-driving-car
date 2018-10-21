@@ -3,7 +3,7 @@ use common::ext::ExtendPhysics;
 use eeg::{color, Drawable};
 use maneuvers::{BounceShot, FiftyFifty, GroundShot, JumpShot, PanicDefense};
 use nalgebra::{Point2, Rotation2, Vector2};
-use predict::{estimate_intercept_car_ball, is_sane_ball_loc, Intercept};
+use predict::{estimate_intercept_car_ball, Intercept};
 use std::f32::consts::PI;
 use strategy::{Context, Scenario};
 use utils::{my_car, my_goal_center_2d, ExtendPoint3, ExtendVector3, Wall, WallRayCalculator};
@@ -23,17 +23,6 @@ impl Behavior for Defense {
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {
         let me = ctx.me();
-        let intercept = estimate_intercept_car_ball(ctx, me, |_t, loc, _vel| {
-            loc.z < PushToOwnCorner::MAX_BALL_Z
-        });
-
-        let intercept = match intercept {
-            Some(ref int) if is_sane_ball_loc(int.ball_loc) => int,
-            _ => {
-                ctx.eeg.log("[Defense] no good intercept; panicking");
-                return Action::call(PanicDefense::new());
-            }
-        };
 
         // Don't panic if we're already in goal
         let distance_to_goal =
@@ -51,7 +40,7 @@ impl Behavior for Defense {
         if ctx.scenario.possession() < Scenario::POSSESSION_CONTESTABLE {
             Action::call(FiftyFifty::new())
         } else {
-            Action::call(TepidHit::new(intercept.ball_loc))
+            Action::call(TepidHit::new())
         }
     }
 }

@@ -50,6 +50,7 @@ mod maneuvers;
 mod mechanics;
 mod plan;
 mod predict;
+mod routing;
 mod rules;
 mod strategy;
 mod utils;

@@ -116,3 +116,35 @@ impl ExtendUnitQuaternion for UnitQuaternion<f32> {
         UnitComplex::new(self.scaled_axis().z)
     }
 }
+
+/// Returns the two points on a circle that form a tangent with the given point.
+///
+/// If the point is inside the circle, returns `None`.
+pub fn circle_point_tangents(
+    center: Point2<f32>,
+    radius: f32,
+    point: Point2<f32>,
+) -> Option<[Point2<f32>; 2]> {
+    // I'm so glad the internet exists
+    // http://www.ambrsoft.com/TrigoCalc/Circles2/CirclePoint/CirclePointDistance.htm
+
+    let a = center.x;
+    let b = center.y;
+    let r = radius;
+    let xp = point.x;
+    let yp = point.y;
+
+    let xpm = r * (yp - b) * ((xp - a).powi(2) + (yp - b).powi(2) - r.powi(2)).sqrt();
+    let x1 = (r.powi(2) * (xp - a) + xpm) / ((xp - a).powi(2) + (yp - b).powi(2)) + a;
+    let x2 = (r.powi(2) * (xp - a) - xpm) / ((xp - a).powi(2) + (yp - b).powi(2)) + a;
+
+    let ymp = r * (xp - a) * ((xp - a).powi(2) + (yp - b).powi(2) - r.powi(2)).sqrt();
+    let y1 = (r.powi(2) * (yp - b) - ymp) / ((xp - a).powi(2) + (yp - b).powi(2)) + b;
+    let y2 = (r.powi(2) * (yp - b) + ymp) / ((xp - a).powi(2) + (yp - b).powi(2)) + b;
+
+    if x1.is_nan() {
+        None
+    } else {
+        Some([Point2::new(x1, y1), Point2::new(x2, y2)])
+    }
+}

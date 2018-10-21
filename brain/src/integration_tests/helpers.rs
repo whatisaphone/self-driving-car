@@ -24,7 +24,6 @@ const RECORDING_DISTANCE_THRESHOLD: f32 = 25.0;
 const STATE_SET_DEBOUNCE: i32 = 10;
 
 pub struct TestRunner {
-    scenario: Option<TestScenario>,
     behavior: Option<Box<FnMut(&rlbot::ffi::LiveDataPacket) -> Box<Behavior> + Send>>,
     ball_recording: Option<(Vec<f32>, Vec<RecordingRigidBodyState>)>,
     car_inital_state: Option<(RecordingRigidBodyState, f32)>,
@@ -54,7 +53,6 @@ impl TestRunner {
 impl TestRunner {
     pub fn new() -> Self {
         Self {
-            scenario: None,
             behavior: None,
             ball_recording: None,
             car_inital_state: None,
@@ -63,7 +61,9 @@ impl TestRunner {
     }
 
     pub fn scenario(mut self, scenario: TestScenario) -> Self {
-        self.scenario = Some(scenario);
+        self = self.ball(vec![0.0], vec![scenario.ball()]);
+        self = self.car(scenario.car());
+        self = self.enemy(vec![0.0], vec![Default::default()], vec![scenario.enemy()]);
         self
     }
 
@@ -143,7 +143,7 @@ impl TestRunner {
         self
     }
 
-    #[deprecated(note = "TODO")]
+    #[deprecated(note = "Do not commit references to ephemeral files.")]
     pub fn preview_recording(
         mut self,
         path: impl AsRef<Path>,
@@ -173,17 +173,17 @@ impl TestRunner {
     pub fn run(self) -> RunningTest {
         let ball = match self.ball_recording {
             Some((times, states)) => BallScenario::new(times, states),
-            None => BallScenario::single_tick(self.scenario.as_ref().unwrap().ball().clone()),
+            None => panic!(),
         };
 
         let car = match self.car_inital_state {
             Some(state) => CarScenario::single_tick(state.0, state.1),
-            None => CarScenario::single_tick(self.scenario.as_ref().unwrap().car().clone(), 1.0),
+            None => panic!(),
         };
 
         let enemy = match self.enemy_recording {
             Some((times, ticks)) => CarScenario::new(times, ticks, 1.0),
-            None => CarScenario::single_tick(self.scenario.as_ref().unwrap().enemy().clone(), 1.0),
+            None => panic!(),
         };
 
         let mut behavior = self
@@ -551,7 +551,9 @@ impl TestScenario {
     #[deprecated(note = "Use TestScenario::new() instead when writing actual tests.")]
     pub fn from_recorded_row(filename: impl AsRef<Path>, time: f32) -> Self {
         let file = File::open(filename).unwrap();
-        let tick = RecordingTick::parse(file).find(|r| r.time >= time).unwrap();
+        let tick = RecordingTick::parse(file)
+            .find(|r| time <= r.time && r.time < time + 1.0)
+            .unwrap();
         let result = Self {
             ball_loc: tick.ball.loc.coords,
             ball_rot: tick.ball.rot.to_rotation_matrix(),
@@ -645,13 +647,6 @@ impl BallScenario {
         Self {
             times: times.into_iter().map(Into::into).collect(),
             states,
-        }
-    }
-
-    fn single_tick(state: RecordingRigidBodyState) -> Self {
-        Self {
-            times: vec![NotNan::new(0.0).unwrap()],
-            states: vec![state],
         }
     }
 

@@ -70,6 +70,12 @@ impl Brain {
 
         let mut result = {
             let mut ctx = Context::new(packet, eeg);
+
+            ctx.eeg.draw(Drawable::print(
+                format!("possession: {:.2}", ctx.scenario.possession()),
+                color::GREEN,
+            ));
+
             self.runner.execute(&mut ctx)
         };
 

@@ -1,7 +1,6 @@
 use chip::Ball;
 use nalgebra::{Point3, Vector3};
-use rlbot;
-use utils::{ExtendPhysics, TotalF32};
+use utils::TotalF32;
 
 const DT: f32 = 1.0 / 120.0;
 const PREDICT_DURATION: f32 = 5.0;
@@ -23,11 +22,11 @@ impl BallFrame {
 }
 
 impl BallTrajectory {
-    pub fn predict(packet: &rlbot::ffi::LiveDataPacket) -> Self {
+    pub fn predict(loc: Point3<f32>, vel: Vector3<f32>, ang_vel: Vector3<f32>) -> Self {
         let mut ball = Ball::new();
-        ball.set_pos(packet.GameBall.Physics.locp());
-        ball.set_vel(packet.GameBall.Physics.vel());
-        ball.set_omega(packet.GameBall.Physics.ang_vel());
+        ball.set_pos(loc);
+        ball.set_vel(vel);
+        ball.set_omega(ang_vel);
 
         let num_frames = (PREDICT_DURATION / DT).ceil() as usize;
         let mut frames = Vec::with_capacity(num_frames);

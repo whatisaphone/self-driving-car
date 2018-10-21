@@ -30,8 +30,9 @@ impl<'a> Scenario<'a> {
     }
 
     pub fn ball_prediction(&self) -> &BallTrajectory {
+        let ball = self.packet.GameBall.Physics;
         self.ball_prediction
-            .borrow_with(|| BallTrajectory::predict(self.packet))
+            .borrow_with(|| BallTrajectory::predict(ball.locp(), ball.vel(), ball.ang_vel()))
     }
 
     pub fn me_intercept(&self) -> Option<(f32, Point3<f32>)> {
@@ -52,7 +53,7 @@ impl<'a> Scenario<'a> {
             self.me_intercept.fill(blitz_me).unwrap();
             self.enemy_intercept.fill(blitz_enemy).unwrap();
             match (blitz_me, blitz_enemy) {
-                (Some((me, _)), Some((en, _))) => me - en,
+                (Some((me, _)), Some((en, _))) => en - me,
                 _ => {
                     // To avoid mexican standoffs, just pretend we have full possession so we go
                     // for the ball.

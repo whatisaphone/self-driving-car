@@ -37,7 +37,10 @@ pub fn override_(ctx: &mut Context, current: &Behavior) -> Option<Box<Behavior>>
             ));
             return Some(Box::new(Chain::new(
                 Priority::Save,
-                vec![Box::new(FiftyFifty::new())],
+                vec![
+                    Box::new(GetToFlatGround::new()),
+                    Box::new(FiftyFifty::new()),
+                ],
             )));
         }
 

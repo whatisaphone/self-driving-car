@@ -11,6 +11,12 @@ pub struct Car {
     on_ground: bool,
 }
 
+#[derive(Debug)]
+pub enum CarSimulateError {
+    NotOnGround,
+    Skidding,
+}
+
 impl Car {
     pub fn new() -> Self {
         Self {
@@ -44,13 +50,22 @@ impl Car {
         self.rot
     }
 
-    pub fn step_throttle_boost(&mut self, dt: f32, throttle: f32, boost: bool) {
-        assert!(self.on_ground);
+    pub fn step_throttle_boost(
+        &mut self,
+        dt: f32,
+        throttle: f32,
+        boost: bool,
+    ) -> Result<(), CarSimulateError> {
+        if !self.on_ground {
+            return Err(CarSimulateError::NotOnGround);
+        }
 
-        // If we are skidding, this method will give incorrect results. Once
-        // this simulation is more complete, consider raising the 0.95 to 0.98
-        // or 0.99 and cutting over sooner.
-        assert!(self.vel.norm() < 10.0 || self.vel.normalize().dot(&self.forward()) >= 0.95);
+        // If we are skidding, this method will give incorrect results. Once chip's
+        // simulate is integrated, consider raising the 0.95 to 0.98 or 0.99 and
+        // cutting over sooner.
+        if !(self.vel.norm() <= 10.0 || self.vel.normalize().dot(&self.forward()) >= 0.95) {
+            return Err(CarSimulateError::Skidding);
+        }
 
         let mut car1d = Car1D::new(self.vel.norm()).with_boost_frac(self.boost);
         car1d.step(dt, throttle, boost);
@@ -58,6 +73,7 @@ impl Car {
         self.loc += self.forward() * car1d.distance_traveled();
         self.vel = self.forward() * car1d.speed();
         self.boost = car1d.boost() / 100.0;
+        Ok(())
     }
 
     /// A unit vector in the forward direction.

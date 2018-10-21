@@ -1,4 +1,5 @@
-use nalgebra::{Point3, Rotation3, Unit, UnitQuaternion, Vector3};
+use nalgebra::{Point3, Real, Rotation3, Unit, UnitComplex, UnitQuaternion, Vector2, Vector3};
+use physics;
 use rlbot;
 
 pub trait ExtendRotation3 {
@@ -50,8 +51,10 @@ pub trait ExtendPhysics {
     fn quat(&self) -> UnitQuaternion<f32>;
     fn vel(&self) -> Vector3<f32>;
     fn ang_vel(&self) -> Vector3<f32>;
-    /// A unit vector in the forward direction.
+    /// A unit vector in the car's forward direction.
     fn forward_axis(&self) -> Unit<Vector3<f32>>;
+    /// A unit vector in the car's right direction.
+    fn right_axis(&self) -> Unit<Vector3<f32>>;
 }
 
 impl ExtendPhysics for rlbot::ffi::Physics {
@@ -84,6 +87,35 @@ impl ExtendPhysics for rlbot::ffi::Physics {
     }
 
     fn forward_axis(&self) -> Unit<Vector3<f32>> {
-        self.quat() * Vector3::x_axis()
+        physics::car_forward_axis(self.quat())
+    }
+
+    fn right_axis(&self) -> Unit<Vector3<f32>> {
+        physics::car_right_axis(self.quat())
+    }
+}
+
+pub trait ExtendUnitVector3<N: Real> {
+    fn to_2d(&self) -> Unit<Vector2<N>>;
+    fn rotation_to(&self, other: &Self) -> UnitQuaternion<N>;
+}
+
+impl<N: Real> ExtendUnitVector3<N> for Unit<Vector3<N>> {
+    fn to_2d(&self) -> Unit<Vector2<N>> {
+        Unit::new_normalize(Vector2::new(self.x, self.y))
+    }
+
+    fn rotation_to(&self, other: &Self) -> UnitQuaternion<N> {
+        UnitQuaternion::rotation_between_axis(self, other).unwrap()
+    }
+}
+
+pub trait ExtendUnitVector2<N: Real> {
+    fn rotation_to(&self, other: &Self) -> UnitComplex<N>;
+}
+
+impl<N: Real> ExtendUnitVector2<N> for Unit<Vector2<N>> {
+    fn rotation_to(&self, other: &Self) -> UnitComplex<N> {
+        UnitComplex::rotation_between_axis(self, other)
     }
 }

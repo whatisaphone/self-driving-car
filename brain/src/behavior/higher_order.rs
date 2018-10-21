@@ -32,7 +32,7 @@ impl Behavior for Fuse {
     }
 }
 
-/// Do `behavior` forever
+/// Run `behavior` forever
 #[allow(dead_code)]
 pub struct Repeat<B, F>
 where
@@ -80,12 +80,14 @@ where
 }
 
 /// Execute `child` for at most `limit` seconds, then return.
+#[allow(dead_code)]
 pub struct TimeLimit {
     limit: f32,
     child: Box<Behavior>,
     start: Option<f32>,
 }
 
+#[allow(dead_code)]
 impl TimeLimit {
     pub fn new(limit: f32, child: impl Behavior + 'static) -> Self {
         Self {
@@ -189,5 +191,127 @@ impl Behavior for Chain {
                 Action::Abort
             }
         }
+    }
+}
+
+/// Run the first `child` that does not immediately return or abort.
+#[allow(dead_code)]
+pub struct TryChoose {
+    priority: Priority,
+    choices: Vec<Box<Behavior>>,
+    chosen_index: Option<usize>,
+    name: String,
+}
+
+#[allow(dead_code)]
+impl TryChoose {
+    pub fn new(priority: Priority, choices: Vec<Box<Behavior>>) -> Self {
+        let name = Self::name(choices.iter());
+        Self {
+            priority,
+            choices,
+            chosen_index: None,
+            name,
+        }
+    }
+
+    fn name<'a>(children: impl Iterator<Item = &'a Box<Behavior>>) -> String {
+        iter::once(stringify!(TryChoose))
+            .chain(iter::once(" ("))
+            .chain(children.map(|b| b.name()).intersperse(", "))
+            .chain(iter::once(")"))
+            .join("")
+    }
+}
+
+impl Behavior for TryChoose {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    fn priority(&self) -> Priority {
+        self.priority
+    }
+
+    fn execute2(&mut self, ctx: &mut Context) -> Action {
+        ctx.eeg.draw(Drawable::print(
+            self.choices
+                .iter()
+                .map(|b| b.name())
+                .collect::<Vec<_>>()
+                .join(", "),
+            color::GREEN,
+        ));
+
+        if let Some(chosen_index) = self.chosen_index {
+            return self.choices[chosen_index].execute2(ctx);
+        }
+
+        // We need to choose a child behavior. This will happen on the first frame.
+
+        for (index, behavior) in self.choices.iter_mut().enumerate() {
+            match behavior.execute2(ctx) {
+                Action::Abort => continue,
+                action @ _ => {
+                    self.chosen_index = Some(index);
+                    ctx.eeg.log(format!("[TryChoose] Chose index {}", index));
+                    return action;
+                }
+            }
+        }
+
+        ctx.eeg.log("[TryChoose] None suitable");
+        return Action::Abort;
+    }
+}
+
+/// Run `child` while `predicate` holds true.
+pub struct While<P, B>
+where
+    P: Predicate,
+    B: Behavior,
+{
+    predicate: P,
+    child: B,
+}
+
+pub trait Predicate: Send {
+    fn name(&self) -> &str;
+    fn evaluate(&mut self, ctx: &mut Context) -> bool;
+}
+
+impl<P, B> While<P, B>
+where
+    P: Predicate,
+    B: Behavior,
+{
+    pub fn new(predicate: P, child: B) -> Self {
+        Self { predicate, child }
+    }
+}
+
+impl<P, B> Behavior for While<P, B>
+where
+    P: Predicate,
+    B: Behavior,
+{
+    fn name(&self) -> &str {
+        stringify!(While)
+    }
+
+    fn priority(&self) -> Priority {
+        self.child.priority()
+    }
+
+    fn execute2(&mut self, ctx: &mut Context) -> Action {
+        if !self.predicate.evaluate(ctx) {
+            ctx.eeg.log("[While] Terminating");
+            return Action::Return;
+        }
+
+        ctx.eeg
+            .draw(Drawable::print(self.child.name(), color::YELLOW));
+
+        self.child.execute2(ctx)
     }
 }
