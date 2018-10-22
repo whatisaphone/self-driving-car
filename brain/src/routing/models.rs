@@ -54,6 +54,7 @@ pub trait SegmentPlan: Send {
     fn duration(&self) -> f32;
     fn truncate_to_duration(&self, duration: f32) -> Box<SegmentPlan>;
     fn run(&self) -> Box<SegmentRunner>;
+    fn draw(&self, ctx: &mut Context);
 }
 
 pub trait SegmentRunner: Send {
@@ -77,6 +78,12 @@ impl RoutePlan {
 
     pub fn duration(&self) -> f32 {
         self.segments.iter().map(|s| s.duration()).sum()
+    }
+
+    pub fn draw(&self, ctx: &mut Context) {
+        for segment in self.segments.iter() {
+            segment.draw(ctx);
+        }
     }
 
     /// Modify this plan so it finishes in a shorter time.

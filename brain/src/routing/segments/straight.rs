@@ -2,7 +2,7 @@ use common::{
     ext::{ExtendPhysics, ExtendUnitVector2},
     physics::CAR_LOCAL_FORWARD_AXIS_2D,
 };
-use eeg::Drawable;
+use eeg::{color, Drawable};
 use mechanics::simple_steer_towards;
 use nalgebra::{Point2, Unit, UnitComplex, Vector2};
 use rlbot;
@@ -95,6 +95,11 @@ impl SegmentPlan for Straight {
 
     fn run(&self) -> Box<SegmentRunner> {
         Box::new(StraightRunner::new(self.clone()))
+    }
+
+    fn draw(&self, ctx: &mut Context) {
+        ctx.eeg
+            .draw(Drawable::Line(self.start_loc, self.end_loc, color::YELLOW));
     }
 }
 

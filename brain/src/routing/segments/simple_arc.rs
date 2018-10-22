@@ -2,7 +2,7 @@ use common::{
     ext::{ExtendPhysics, ExtendUnitVector2, ExtendUnitVector3},
     physics::CAR_LOCAL_FORWARD_AXIS_2D,
 };
-use eeg::Drawable;
+use eeg::{color, Drawable};
 use maneuvers::GetToFlatGround;
 use nalgebra::{Point2, Unit, UnitComplex, Vector2};
 use rlbot;
@@ -130,6 +130,20 @@ impl SegmentPlan for SimpleArc {
 
     fn run(&self) -> Box<SegmentRunner> {
         Box::new(SimpleArcRunner::new(self.clone()))
+    }
+
+    fn draw(&self, ctx: &mut Context) {
+        let theta1 = Vector2::x()
+            .rotation_to(self.start_loc - self.center)
+            .angle();
+        let theta2 = Vector2::x().rotation_to(self.end_loc - self.center).angle();
+        ctx.eeg.draw(Drawable::Arc(
+            self.center,
+            self.radius,
+            theta1.min(theta2),
+            theta1.max(theta2),
+            color::YELLOW,
+        ));
     }
 }
 

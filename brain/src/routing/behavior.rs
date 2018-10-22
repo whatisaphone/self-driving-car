@@ -25,6 +25,13 @@ impl Behavior for FollowRoute {
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {
+        self.plan.draw(ctx);
+        self.go(ctx)
+    }
+}
+
+impl FollowRoute {
+    fn go(&mut self, ctx: &mut Context) -> Action {
         let success = match self.cur_segment.execute(ctx) {
             SegmentRunAction::Yield(i) => return Action::Yield(i),
             SegmentRunAction::Success => true,

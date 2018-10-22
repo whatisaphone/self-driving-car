@@ -3,10 +3,10 @@
 use collect::ExtendRotation3;
 use crossbeam_channel;
 use graphics::{types::Color, Transformed};
-use nalgebra::{Rotation3, Vector2, Vector3};
+use nalgebra::{Point2, Rotation3, Vector2, Vector3};
 use piston_window::{
-    clear, ellipse, line, rectangle, text, AdvancedWindow, Ellipse, Glyphs, OpenGL, PistonWindow,
-    Position, Rectangle, TextureSettings, WindowSettings,
+    circle_arc, clear, ellipse, line, rectangle, text, AdvancedWindow, Ellipse, Glyphs, OpenGL,
+    PistonWindow, Position, Rectangle, TextureSettings, WindowSettings,
 };
 use rlbot;
 use simulate::rl;
@@ -95,6 +95,8 @@ pub enum Drawable {
     GhostBall2(Vector3<f32>, Color),
     GhostCar(Vector3<f32>, Rotation3<f32>),
     Crosshair(Vector2<f32>),
+    Line(Point2<f32>, Point2<f32>, Color),
+    Arc(Point2<f32>, f32, f32, f32, Color),
     Print(String, Color),
 }
 
@@ -276,6 +278,26 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
                                         loc.x as f64 + 100.0,
                                         loc.y as f64 - 100.0,
                                     ],
+                                    transform,
+                                    g,
+                                );
+                            }
+                            Drawable::Line(start, end, color) => {
+                                let pts =
+                                    [start.x as f64, start.y as f64, end.x as f64, end.y as f64];
+                                line(color, OUTLINE_RADIUS, pts, transform, g);
+                            }
+                            Drawable::Arc(center, radius, start, end, color) => {
+                                circle_arc(
+                                    color,
+                                    OUTLINE_RADIUS,
+                                    start as f64,
+                                    end as f64,
+                                    rectangle::centered_square(
+                                        center.x as f64,
+                                        center.y as f64,
+                                        radius as f64,
+                                    ),
                                     transform,
                                     g,
                                 );
