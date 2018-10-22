@@ -17,7 +17,7 @@ pub struct EEG {
     tx: Option<crossbeam_channel::Sender<ThreadMessage>>,
     join_handle: Option<thread::JoinHandle<()>>,
     current_packet_time: f32,
-    draw_list: Vec<Drawable>,
+    draw_list: DrawList,
     pub log: VecDeque<String>,
 }
 
@@ -29,7 +29,7 @@ impl EEG {
             tx: Some(tx),
             join_handle: Some(join_handle),
             current_packet_time: 0.0,
-            draw_list: Vec::new(),
+            draw_list: DrawList::new(),
             log: VecDeque::new(),
         }
     }
@@ -44,7 +44,7 @@ impl Drop for EEG {
 
 impl EEG {
     pub fn draw(&mut self, drawable: Drawable) {
-        self.draw_list.push(drawable);
+        self.draw_list.draw(drawable);
     }
 
     pub fn begin(&mut self, packet: &rlbot::ffi::LiveDataPacket) {
@@ -65,14 +65,31 @@ impl EEG {
     }
 
     pub fn show(&mut self, packet: &rlbot::ffi::LiveDataPacket) {
-        let draw_list = mem::replace(&mut self.draw_list, Vec::new());
-        self.tx.as_ref().unwrap().send(ThreadMessage::Draw(
-            packet.clone(),
-            draw_list.into_boxed_slice(),
-        ));
+        let drawables = mem::replace(&mut self.draw_list.drawables, Vec::new());
+        self.tx
+            .as_ref()
+            .unwrap()
+            .send(ThreadMessage::Draw(packet.clone(), drawables));
     }
 }
 
+pub struct DrawList {
+    pub drawables: Vec<Drawable>,
+}
+
+impl DrawList {
+    pub fn new() -> Self {
+        Self {
+            drawables: Vec::new(),
+        }
+    }
+
+    fn draw(&mut self, drawable: Drawable) {
+        self.drawables.push(drawable);
+    }
+}
+
+#[derive(Clone)]
 pub enum Drawable {
     GhostBall(Vector3<f32>),
     GhostBall2(Vector3<f32>, Color),
@@ -107,7 +124,7 @@ pub mod color {
 }
 
 enum ThreadMessage {
-    Draw(rlbot::ffi::LiveDataPacket, Box<[Drawable]>),
+    Draw(rlbot::ffi::LiveDataPacket, Vec<Drawable>),
 }
 
 fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
@@ -220,7 +237,7 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
                                 );
                             }
                             Drawable::GhostBall2(loc, color) => {
-                                Ellipse::new_border(*color, OUTLINE_RADIUS).draw(
+                                Ellipse::new_border(color, OUTLINE_RADIUS).draw(
                                     ball_rect,
                                     &Default::default(),
                                     transform.trans(loc.x as f64, loc.y as f64),
@@ -264,7 +281,7 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
                                 );
                             }
                             Drawable::Print(txt, color) => {
-                                prints.push((txt, *color));
+                                prints.push((txt, color));
                             }
                         }
                     }

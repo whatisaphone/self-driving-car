@@ -1,10 +1,12 @@
+use behavior::{Action, Behavior};
 use common::ext::ExtendPhysics;
 use eeg::{color, Drawable, EEG};
 use mechanics::simple_yaw_diff;
-use nalgebra::Vector2;
+use nalgebra::{Point2, Vector2};
 use rlbot;
 use simulate::{linear_interpolate, rl};
 use std::f32::consts::PI;
+use strategy::Context;
 use utils::one_v_one;
 
 pub fn drive_towards(
@@ -31,5 +33,27 @@ pub fn drive_towards(
         Steer: steer,
         Handbrake: yaw_diff.abs() >= handbrake_cutoff,
         ..Default::default()
+    }
+}
+
+/// A naive driving behavior that doesn't even know when it's arrived. Must be
+/// combined with `TimeLimit` or something else to bring back sanity.
+pub struct DriveTowards {
+    target_loc: Point2<f32>,
+}
+
+impl DriveTowards {
+    pub fn new(target_loc: Point2<f32>) -> Self {
+        Self { target_loc }
+    }
+}
+
+impl Behavior for DriveTowards {
+    fn name(&self) -> &str {
+        stringify!(DriveTowards)
+    }
+
+    fn execute2(&mut self, ctx: &mut Context) -> Action {
+        Action::Yield(drive_towards(ctx.packet, ctx.eeg, self.target_loc.coords))
     }
 }

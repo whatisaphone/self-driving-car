@@ -2,7 +2,7 @@ use behavior::Predicate;
 use chip::max_curvature;
 use maneuvers::GroundedHit;
 use nalgebra::Point2;
-use predict::estimate_intercept_car_ball_2;
+use predict::{estimate_intercept_car_ball_2, intercept::NaiveIntercept};
 use routing::{
     models::{CarState, RoutePlan, SegmentPlan},
     recover::{IsSkidding, NotOnFlatGround},
@@ -10,6 +10,11 @@ use routing::{
 };
 use strategy::Context;
 use utils::geometry::{circle_point_tangents, ExtendPoint3, ExtendVector2, ExtendVector3};
+
+pub struct RoutePlanInfo {
+    pub plan: RoutePlan,
+    pub intercept: NaiveIntercept,
+}
 
 #[derive(Debug)]
 pub enum RoutePlanError {
@@ -19,7 +24,7 @@ pub enum RoutePlanError {
     OtherError(&'static str),
 }
 
-pub fn ground_intercept(ctx: &mut Context) -> Result<RoutePlan, RoutePlanError> {
+pub fn ground_intercept(ctx: &mut Context) -> Result<RoutePlanInfo, RoutePlanError> {
     if NotOnFlatGround.evaluate(ctx) {
         return Err(RoutePlanError::MustBeOnFlatGround);
     }
@@ -36,7 +41,11 @@ pub fn ground_intercept(ctx: &mut Context) -> Result<RoutePlan, RoutePlanError> 
         return Err(RoutePlanError::UnknownIntercept);
     });
 
-    simple_drive_towards(&me.into(), guess.ball_loc.to_2d())
+    let plan = simple_drive_towards(&me.into(), guess.ball_loc.to_2d())?;
+    Ok(RoutePlanInfo {
+        plan,
+        intercept: guess,
+    })
 }
 
 fn simple_drive_towards(

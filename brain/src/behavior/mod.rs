@@ -1,7 +1,7 @@
 pub use behavior::{
     behavior::{Action, Behavior, Priority},
     defense::{Defense, HitToOwnCorner},
-    higher_order::{Chain, Fuse, Predicate, Repeat, While},
+    higher_order::{Chain, Fuse, Predicate, Repeat, TimeLimit, While},
     null::NullBehavior,
     offense::Offense,
 };

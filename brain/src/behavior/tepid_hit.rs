@@ -1,10 +1,10 @@
-use behavior::{Action, Behavior, Chain, Priority};
+use behavior::{higher_order::WithDraw, Action, Behavior, Chain, Priority, While};
 use common::ext::ExtendPhysics;
 use eeg::{color, Drawable};
 use maneuvers::GroundedHit;
 use nalgebra::{Point2, Point3};
 use plan::hit_angle::{feasible_hit_angle_away, feasible_hit_angle_toward};
-use routing::{behavior::FollowRoute, plan};
+use routing::{behavior::FollowRoute, plan, recover::FutureBallLoc};
 use std::f32::consts::PI;
 use strategy::Context;
 use utils::{
@@ -26,11 +26,11 @@ impl Behavior for TepidHit {
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {
-        let plan = match plan::ground_intercept(ctx) {
-            Ok(plan) => plan,
+        let info = match plan::ground_intercept(ctx) {
+            Ok(info) => info,
             Err(err) => {
                 ctx.eeg.log(format!("[TepidHit] Plan error: {:?}", err));
-                if let Some(recover) = err.recover() {
+                if let Some(recover) = err.recover(ctx) {
                     return Action::Call(recover);
                 }
                 return Action::Abort;
@@ -39,14 +39,23 @@ impl Behavior for TepidHit {
 
         let mut chain = Vec::<Box<Behavior>>::new();
 
-        let new_duration = plan.duration() - 1.0;
-        if let Some(plan) = plan.truncate_to_duration(new_duration) {
-            chain.push(Box::new(FollowRoute::new(plan)));
+        let new_duration = info.plan.duration() - 1.0;
+        if let Some(plan) = info.plan.truncate_to_duration(new_duration) {
+            chain.push(Box::new(While::new(
+                FutureBallLoc::new(
+                    ctx.packet.GameInfo.TimeSeconds + info.intercept.time,
+                    info.intercept.ball_loc,
+                ),
+                WithDraw::new(
+                    vec![Drawable::GhostBall(info.intercept.ball_loc.coords)],
+                    FollowRoute::new(plan),
+                ),
+            )));
         }
 
         chain.push(Box::new(GroundedHit::hit_towards(time_wasting_hit)));
 
-        return Action::call(Chain::new(Priority::Idle, chain));
+        Action::call(Chain::new(Priority::Idle, chain))
     }
 }
 

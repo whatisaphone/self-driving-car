@@ -80,14 +80,12 @@ where
 }
 
 /// Execute `child` for at most `limit` seconds, then return.
-#[allow(dead_code)]
 pub struct TimeLimit {
     limit: f32,
     child: Box<Behavior>,
     start: Option<f32>,
 }
 
-#[allow(dead_code)]
 impl TimeLimit {
     pub fn new(limit: f32, child: impl Behavior + 'static) -> Self {
         Self {
@@ -306,12 +304,44 @@ where
     fn execute2(&mut self, ctx: &mut Context) -> Action {
         if !self.predicate.evaluate(ctx) {
             ctx.eeg.log("[While] Terminating");
-            return Action::Return;
+            return Action::Abort;
         }
 
         ctx.eeg
             .draw(Drawable::print(self.child.name(), color::YELLOW));
 
         self.child.execute2(ctx)
+    }
+}
+
+pub struct WithDraw<B: Behavior> {
+    draw: Vec<Drawable>,
+    behavior: B,
+}
+
+impl<B: Behavior> WithDraw<B> {
+    pub fn new(draw: Vec<Drawable>, behavior: B) -> Self {
+        Self { draw, behavior }
+    }
+}
+
+impl<B: Behavior> Behavior for WithDraw<B> {
+    fn name(&self) -> &str {
+        stringify!(WithDraw)
+    }
+
+    fn priority(&self) -> Priority {
+        self.behavior.priority()
+    }
+
+    fn execute2(&mut self, ctx: &mut Context) -> Action {
+        for d in self.draw.iter() {
+            ctx.eeg.draw(d.clone());
+        }
+
+        ctx.eeg
+            .draw(Drawable::print(self.behavior.name(), color::YELLOW));
+
+        self.behavior.execute2(ctx)
     }
 }
