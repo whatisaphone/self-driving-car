@@ -1,5 +1,6 @@
 use behavior::Predicate;
 use chip::max_curvature;
+use common::ext::ExtendUnitVector3;
 use maneuvers::GroundedHit;
 use nalgebra::Point2;
 use predict::{estimate_intercept_car_ball_2, intercept::NaiveIntercept};
@@ -78,8 +79,8 @@ fn turn_towards(
 ) -> Result<Option<Box<SegmentPlan>>, RoutePlanError> {
     let start_loc = start.loc.to_2d();
     let start_vel = start.vel.to_2d();
-    let start_forward_axis = start.forward_axis().unwrap().to_2d();
-    let start_right_axis = start.right_axis().unwrap().to_2d();
+    let start_forward_axis = start.forward_axis().to_2d();
+    let start_right_axis = start.right_axis().to_2d();
 
     // Check if we're already facing the target
     let turn_rot = start_forward_axis.rotation_to(target_loc - start_loc);
@@ -89,9 +90,10 @@ fn turn_towards(
 
     // Define a circle where our current location/rotation form a tangent.
     let speed = f32::max(500.0, start_vel.norm());
-    let start_vel = start_forward_axis * speed;
+    let start_vel = start_forward_axis.as_ref() * speed;
     let turn_radius = 1.0 / max_curvature(speed);
-    let turn_center = start_loc + start_right_axis * turn_rot.angle().signum() * turn_radius;
+    let turn_center =
+        start_loc + start_right_axis.as_ref() * turn_rot.angle().signum() * turn_radius;
 
     // Figure out which tangent point is relevant for this route.
     let [tangent1, tangent2] = match circle_point_tangents(turn_center, turn_radius, target_loc) {
