@@ -85,7 +85,7 @@ impl Car1D {
     }
 
     fn compute_new_vel(&self, dt: f32, throttle: f32, boost: bool) -> f32 {
-        if self.vel >= rl::CAR_NORMAL_SPEED && throttle == 1.0 {
+        if !boost && self.vel >= rl::CAR_NORMAL_SPEED && throttle == 1.0 {
             return self.vel;
         }
 
@@ -133,9 +133,9 @@ mod tests {
 
     #[test]
     fn supersonic_throttle() {
-        let mut car = Car1D::new(9999.0);
+        let mut car = Car1D::new(2000.0);
         car.step(DT, 1.0, false);
-        assert_eq!(car.vel, 9999.0);
+        assert_eq!(car.vel, 2000.0);
         assert_eq!(car.boost, 100.0);
     }
 
@@ -149,9 +149,17 @@ mod tests {
 
     #[test]
     fn supersonic_boost() {
-        let mut car = Car1D::new(9999.0);
+        let mut car = Car1D::new(2000.0);
         car.step(DT, 1.0, true);
-        assert_eq!(car.vel, 9999.0);
+        assert!(2010.0 <= car.vel && car.vel < 2020.0);
+        assert!(99.4 <= car.boost && car.boost < 99.5);
+    }
+
+    #[test]
+    fn max_speed_boost() {
+        let mut car = Car1D::new(2299.98);
+        car.step(DT, 1.0, true);
+        assert_eq!(car.vel, 2299.98);
         assert!(99.4 <= car.boost && car.boost < 99.5);
     }
 
@@ -174,9 +182,9 @@ mod tests {
 
     #[test]
     fn supersonic_coast() {
-        let mut car = Car1D::new(9999.0);
+        let mut car = Car1D::new(2000.0);
         car.step(DT, 0.0, false);
-        assert!(2280.0 <= car.vel && car.vel < 2295.0);
+        assert!(1980.0 <= car.vel && car.vel < 1995.0);
     }
 
     #[test]
