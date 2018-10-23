@@ -152,6 +152,9 @@ impl TestRunner {
         stop_time: f32,
     ) -> Self {
         let ticks: Vec<_> = RecordingTick::parse(File::open(path).unwrap())
+            // Sometimes there are bogus rows at the start of the file from
+            // before the game was restarted and the time was reset. Skip them.
+            .skip_while(|r| r.time > stop_time)
             .skip_while(|r| r.time < start_time)
             .take_while(|r| r.time < stop_time)
             .collect();
