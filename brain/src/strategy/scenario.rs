@@ -88,34 +88,34 @@ fn simulate_ball_blitz(
     let mut sim_me = Car1D::new(me.Physics.vel().norm()).with_boost(me.Boost);
     let mut sim_enemy = Car1D::new(enemy.Physics.vel().norm()).with_boost(enemy.Boost);
 
-    let mut me_time = None;
-    let mut enemy_time = None;
+    let mut me_result = None;
+    let mut enemy_result = None;
 
     for ball in ball_prediction.iter() {
         t += ball.dt();
 
-        if me_time.is_none() {
+        if me_result.is_none() {
             sim_me.step(ball.dt(), 1.0, true);
             let me_dist_to_ball = (me.Physics.locp() - ball.loc).to_2d().norm();
             if sim_me.distance_traveled() >= me_dist_to_ball {
-                me_time = Some((t, ball.loc));
+                me_result = Some((t, ball.loc));
             }
         }
 
-        if enemy_time.is_none() {
+        if enemy_result.is_none() {
             sim_enemy.step(ball.dt(), 1.0, true);
             let enemy_dist_to_ball = (enemy.Physics.locp() - ball.loc).to_2d().norm();
             if sim_enemy.distance_traveled() >= enemy_dist_to_ball {
-                enemy_time = Some((t, ball.loc));
+                enemy_result = Some((t + 3.0, ball.loc));
             }
         }
 
-        if me_time.is_some() && enemy_time.is_some() {
+        if me_result.is_some() && enemy_result.is_some() {
             break;
         }
     }
 
-    (me_time, enemy_time)
+    (me_result, enemy_result)
 }
 
 fn eval_push_wall(car: &Point3<f32>, ball: &Point3<f32>) -> Wall {

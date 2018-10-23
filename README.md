@@ -84,11 +84,7 @@ that matches the name of the test.
 ### Next
 
 - make it work when orange
-- try changing the max handbrake threshold to 0.5?
-- diagonal kickoff
 - add the offense swing-around stuff (when no good shot angle)
-- cache simulations to save on cpu
-- for offense tepid hit, continually adjust aim instead of using stale value
 - backwards tepid hits should not dodge? (maybe all tepid hits)
 - BounceShot (and related) should verify the hit happened, and Action::Abort if
   not
@@ -106,10 +102,9 @@ that matches the name of the test.
     sitting still
   - if in TIME CRUNCH MODE, just blitz to destination
   - otherwise: weave for pennies, opportunistic demos, etc
+- diagonal kickoff
 - if inside a goal, never drive in a path that overlaps inner walls of goal
 - fix whiffs when retreating redirects to corner
 - stop panicking if panicking is no longer necessary
 - [half flip](https://discordapp.com/channels/348658686962696195/348661571297214465/489479593632464901)
 - car-ball interacion simulation
-- for unit tests, replay entire recordings instead of just a snapshot (possibly
-  without a RL instance running at all!)

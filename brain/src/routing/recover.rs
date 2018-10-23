@@ -80,6 +80,6 @@ impl Predicate for FutureBallLoc {
             return false;
         });
         let error = (self.loc - expected.loc).norm();
-        error < 10.0
+        error < 100.0
     }
 }

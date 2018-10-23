@@ -47,6 +47,7 @@ impl SimpleArc {
             return Err(SimpleArcError::VelocityTooLow);
         }
 
+        // Assert that both radii are the same length.
         if ((start_loc - center).norm() - (end_loc - center).norm()).abs() >= 1.0 {
             return Err(SimpleArcError::WrongGeometry);
         }
