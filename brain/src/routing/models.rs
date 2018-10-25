@@ -10,6 +10,7 @@ pub struct CarState {
     pub loc: Point3<f32>,
     pub rot: UnitQuaternion<f32>,
     pub vel: Vector3<f32>,
+    pub boost: f32,
 }
 
 impl CarState {
@@ -28,6 +29,7 @@ impl<'a> From<&'a rlbot::ffi::PlayerInfo> for CarState {
             loc: info.Physics.locp(),
             rot: info.Physics.quat(),
             vel: info.Physics.vel(),
+            boost: info.Boost as f32,
         }
     }
 }
@@ -36,6 +38,7 @@ pub struct CarState2D {
     pub loc: Point2<f32>,
     pub rot: UnitComplex<f32>,
     pub vel: Vector2<f32>,
+    pub boost: f32,
 }
 
 impl CarState2D {
@@ -44,6 +47,7 @@ impl CarState2D {
             loc: self.loc.to_3d(rl::OCTANE_NEUTRAL_Z),
             rot: self.rot.around_z_axis(),
             vel: self.vel.to_3d(0.0),
+            boost: self.boost,
         }
     }
 }
@@ -68,12 +72,16 @@ pub enum SegmentRunAction {
 }
 
 pub struct RoutePlan {
-    pub segments: Vec<Box<SegmentPlan>>,
+    pub(in routing) segments: Vec<Box<SegmentPlan>>,
 }
 
 impl RoutePlan {
-    pub fn new(segments: Vec<Box<SegmentPlan>>) -> Self {
+    pub(in routing) fn new(segments: Vec<Box<SegmentPlan>>) -> Self {
         Self { segments }
+    }
+
+    pub fn end(&self) -> CarState {
+        self.segments.last().unwrap().end()
     }
 
     pub fn duration(&self) -> f32 {

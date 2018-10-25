@@ -9,6 +9,7 @@ use routing::{
     recover::{IsSkidding, NotOnFlatGround},
     segments::{SimpleArc, Straight},
 };
+use std::iter;
 use strategy::Context;
 use utils::geometry::{circle_point_tangents, ExtendPoint3, ExtendVector2, ExtendVector3};
 
@@ -62,13 +63,14 @@ fn simple_drive_towards(
     let straight = Box::new(Straight::new(
         turn_end.loc.to_2d(),
         turn_end.vel.to_2d(),
+        start.boost,
         target_loc,
     ));
 
     Ok(RoutePlan::new(
-        vec![turn, Some(straight)]
-            .into_iter()
-            .filter_map(|x| x)
+        turn.into_iter()
+            .flat_map(|p| p.segments.into_iter())
+            .chain(iter::once::<Box<SegmentPlan>>(straight))
             .collect(),
     ))
 }
@@ -76,7 +78,7 @@ fn simple_drive_towards(
 fn turn_towards(
     start: &CarState,
     target_loc: Point2<f32>,
-) -> Result<Option<Box<SegmentPlan>>, RoutePlanError> {
+) -> Result<Option<RoutePlan>, RoutePlanError> {
     let start_loc = start.loc.to_2d();
     let start_vel = start.vel.to_2d();
     let start_forward_axis = start.forward_axis().to_2d();
@@ -116,7 +118,14 @@ fn turn_towards(
         _ => return Err(RoutePlanError::OtherError("!= 1 tangent?")),
     };
 
-    let segment = SimpleArc::new(turn_center, turn_radius, start_loc, start_vel, tangent)
-        .map_err(|err| RoutePlanError::OtherError(err.to_str()))?;
-    Ok(Some(Box::new(segment)))
+    let segment = SimpleArc::new(
+        turn_center,
+        turn_radius,
+        start_loc,
+        start_vel,
+        start.boost,
+        tangent,
+    )
+    .map_err(|err| RoutePlanError::OtherError(err.to_str()))?;
+    Ok(Some(RoutePlan::new(vec![Box::new(segment)])))
 }

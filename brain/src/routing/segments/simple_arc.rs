@@ -7,6 +7,7 @@ use maneuvers::GetToFlatGround;
 use nalgebra::{Point2, Unit, UnitComplex, Vector2};
 use rlbot;
 use routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner};
+use std::f32::consts::PI;
 use strategy::Context;
 use utils::geometry::{ExtendPoint3, ExtendVector2};
 
@@ -16,7 +17,8 @@ pub struct SimpleArc {
     radius: f32,
     start_loc: Point2<f32>,
     start_vel: Vector2<f32>,
-    end_loc: Point2<f32>,
+    start_boost: f32,
+    sweep: f32,
 }
 
 pub enum SimpleArcError {
@@ -39,11 +41,12 @@ impl SimpleArc {
         radius: f32,
         start_loc: Point2<f32>,
         start_vel: Vector2<f32>,
+        start_boost: f32,
         end_loc: Point2<f32>,
     ) -> Result<Self, SimpleArcError> {
+        // This assumes a constant speed and will estimate a ridiculous duration if the
+        // velocity is too low.
         if start_vel.norm() < 100.0 {
-            // This assumes a constant speed and will estimate a ridiculous duration if the
-            // velocity is too low.
             return Err(SimpleArcError::VelocityTooLow);
         }
 
@@ -52,36 +55,58 @@ impl SimpleArc {
             return Err(SimpleArcError::WrongGeometry);
         }
 
+        // Compare the velocity vector to the circle's radius. Since we're starting
+        // along a tangent, the angle to the center will be either -90° or 90°.
+        let clockwise = start_vel.rotation_to(start_loc - center).angle() < 0.0;
+
+        // Go the long way around the circle (more than 180°) if necessary. This avoids
+        // an impossible route with discontinuous reversals at each tangent.
+        let sweep = (start_loc - center).rotation_to(end_loc - center).angle();
+        let sweep = if clockwise && sweep < 0.0 {
+            sweep + 2.0 * PI
+        } else if !clockwise && sweep >= 0.0 {
+            sweep - 2.0 * PI
+        } else {
+            sweep
+        };
+
         Ok(Self {
             center,
             radius,
             start_loc,
             start_vel,
-            end_loc,
+            start_boost,
+            sweep,
         })
     }
 
-    fn sweep(&self) -> UnitComplex<f32> {
-        let start = self.start_loc - self.center;
-        let end = self.end_loc - self.center;
-        start.rotation_to(end)
-    }
-
     /// Calculate a rotation of the given angle in this plan's direction.
-    fn sweep_by_angle(&self, angle: f32) -> UnitComplex<f32> {
-        let sweep_direction = self.sweep().angle().signum();
-        UnitComplex::new(angle * sweep_direction)
+    fn sweep_by_angle(&self, angle: f32) -> f32 {
+        angle * self.sweep.signum()
     }
 
-    fn sweep_between(&self, start_loc: Point2<f32>, end_loc: Point2<f32>) -> UnitComplex<f32> {
-        let start = start_loc - self.center;
-        let end = end_loc - self.center;
-        start.rotation_to(end)
+    /// Calculate the angle between the two points, traveling in this plan's
+    /// direction.
+    fn sweep_between(&self, start_loc: Point2<f32>, end_loc: Point2<f32>) -> f32 {
+        let result = (start_loc - self.center)
+            .rotation_to(end_loc - self.center)
+            .angle();
+        if result < 0.0 && self.sweep >= 0.0 {
+            result + 2.0 * PI
+        } else if result > 0.0 && self.sweep < 0.0 {
+            result - 2.0 * PI
+        } else {
+            result
+        }
     }
 
     fn start_rot(&self) -> UnitComplex<f32> {
         let dir = Unit::new_normalize(self.start_vel);
         CAR_LOCAL_FORWARD_AXIS_2D.rotation_to(&dir)
+    }
+
+    fn end_loc(&self) -> Point2<f32> {
+        self.center + UnitComplex::new(self.sweep) * (self.start_loc - self.center)
     }
 
     fn end_rot(&self) -> UnitComplex<f32> {
@@ -90,7 +115,7 @@ impl SimpleArc {
     }
 
     fn end_vel(&self) -> Vector2<f32> {
-        self.sweep() * self.start_vel
+        UnitComplex::new(self.sweep) * self.start_vel
     }
 }
 
@@ -100,32 +125,33 @@ impl SegmentPlan for SimpleArc {
             loc: self.start_loc,
             rot: self.start_rot(),
             vel: self.start_vel,
+            boost: self.start_boost,
         }
         .to_3d()
     }
 
     fn end(&self) -> CarState {
         CarState2D {
-            loc: self.end_loc,
+            loc: self.end_loc(),
             rot: self.end_rot(),
             vel: self.end_vel(),
+            boost: self.start_boost,
         }
         .to_3d()
     }
 
     fn duration(&self) -> f32 {
-        self.radius * self.sweep().angle().abs() / self.start_vel.norm()
+        self.radius * self.sweep.abs() / self.start_vel.norm()
     }
 
     fn truncate_to_duration(&self, duration: f32) -> Box<SegmentPlan> {
-        let trunc_sweep = self.sweep().powf(duration / self.duration());
-        let trunc_end_loc = self.start_loc + trunc_sweep * (self.start_loc - self.center);
         Box::new(Self {
             center: self.center,
             radius: self.radius,
             start_loc: self.start_loc,
             start_vel: self.start_vel,
-            end_loc: trunc_end_loc,
+            start_boost: self.start_boost,
+            sweep: self.sweep * (duration / self.duration()),
         })
     }
 
@@ -137,7 +163,7 @@ impl SegmentPlan for SimpleArc {
         let theta1 = Vector2::x()
             .rotation_to(self.start_loc - self.center)
             .angle();
-        let theta2 = Vector2::x().rotation_to(self.end_loc - self.center).angle();
+        let theta2 = theta1 + self.sweep;
         ctx.eeg.draw(Drawable::Arc(
             self.center,
             self.radius,
@@ -177,7 +203,7 @@ impl SegmentRunner for SimpleArcRunner {
 
         // Check if we're finished.
         let swept = self.plan.sweep_between(self.plan.start_loc, car_loc);
-        if swept.angle().abs() >= self.plan.sweep().angle().abs() {
+        if swept.abs() >= self.plan.sweep.abs() {
             return SegmentRunAction::Success;
         }
 
@@ -218,6 +244,7 @@ mod integration_tests {
                     1000.0,
                     Point2::new(1000.0, 0.0),
                     Vector2::new(0.0, 100.0),
+                    0.0,
                     Point2::new(0.0, 1000.0),
                 )
                 .ok()

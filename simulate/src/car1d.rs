@@ -24,8 +24,8 @@ impl Car1D {
         self
     }
 
-    pub fn with_boost_frac(mut self, boost: f32) -> Self {
-        self.boost = boost * 100.0;
+    pub fn with_boost_float(mut self, boost: f32) -> Self {
+        self.boost = boost;
         self
     }
 

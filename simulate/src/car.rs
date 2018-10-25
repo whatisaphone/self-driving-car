@@ -23,7 +23,7 @@ impl Car {
             loc: Point3::origin(),
             rot: UnitQuaternion::identity(),
             vel: Vector3::zeros(),
-            boost: 1.0,
+            boost: 100.0,
             on_ground: true,
         }
     }
@@ -33,7 +33,7 @@ impl Car {
             loc: player.Physics.locp(),
             rot: player.Physics.quat(),
             vel: player.Physics.vel(),
-            boost: player.Boost as f32 / 100.0,
+            boost: player.Boost as f32,
             on_ground: player.OnGround,
         }
     }
@@ -67,12 +67,12 @@ impl Car {
             return Err(CarSimulateError::Skidding);
         }
 
-        let mut car1d = Car1D::new(self.vel.norm()).with_boost_frac(self.boost);
+        let mut car1d = Car1D::new(self.vel.norm()).with_boost_float(self.boost);
         car1d.step(dt, throttle, boost);
 
         self.loc += self.forward() * car1d.distance_traveled();
         self.vel = self.forward() * car1d.speed();
-        self.boost = car1d.boost() / 100.0;
+        self.boost = car1d.boost();
         Ok(())
     }
 
