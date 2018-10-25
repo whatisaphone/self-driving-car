@@ -37,7 +37,7 @@ impl Behavior for GetToFlatGround {
         let me = ctx.me();
 
         if me.OnGround
-            && me.Physics.rot().pitch() < PI / 6.0
+            && me.Physics.rot().pitch() < -PI / 6.0
             && me.Physics.rot().roll().abs() >= PI / 2.0
         {
             // We're probably upside down under the ceiling of a goal
