@@ -96,16 +96,14 @@ mod integration_tests {
         test.sleep_millis(100);
 
         test.examine_eeg(|eeg| {
-            assert!(
-                !eeg.log
-                    .iter()
-                    .any(|x| *x == format!("{} PanicDefense", PUSHED))
-            );
-            assert!(
-                eeg.log
-                    .iter()
-                    .any(|x| *x == format!("{} Offense", BASELINE))
-            );
+            assert!(!eeg
+                .log
+                .iter()
+                .any(|x| *x == format!("{} PanicDefense", PUSHED)));
+            assert!(eeg
+                .log
+                .iter()
+                .any(|x| *x == format!("{} Offense", BASELINE)));
         });
     }
 }

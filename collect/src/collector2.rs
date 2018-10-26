@@ -55,8 +55,8 @@ fn rigid_body_header(prefix: impl AsRef<str>) -> impl Iterator<Item = String> {
         "_loc_x", "_loc_y", "_loc_z", "_rot_x", "_rot_y", "_rot_z", "_rot_w", "_vel_x", "_vel_y",
         "_vel_z", "_ang_x", "_ang_y", "_ang_z",
     ]
-        .iter()
-        .map(move |s| format!("{}{}", prefix.as_ref(), s))
+    .iter()
+    .map(move |s| format!("{}{}", prefix.as_ref(), s))
 }
 
 fn rigid_body(state: rlbot::flat::RigidBodyState) -> impl Iterator<Item = String> {
@@ -89,8 +89,8 @@ fn controller_header(prefix: impl AsRef<str>) -> impl Iterator<Item = String> {
         "_boost",
         "_handbrake",
     ]
-        .iter()
-        .map(move |s| format!("{}{}", prefix.as_ref(), s))
+    .iter()
+    .map(move |s| format!("{}{}", prefix.as_ref(), s))
 }
 
 fn controller(state: rlbot::flat::ControllerState) -> impl Iterator<Item = String> {

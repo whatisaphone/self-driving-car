@@ -167,11 +167,10 @@ mod integration_tests {
         test.set_behavior(Runner2::new());
         test.sleep_millis(100);
         test.examine_eeg(|eeg| {
-            assert!(
-                eeg.log
-                    .iter()
-                    .any(|x| x == "[Offense] no good hit; going for a tepid hit")
-            );
+            assert!(eeg
+                .log
+                .iter()
+                .any(|x| x == "[Offense] no good hit; going for a tepid hit"));
             assert!(eeg.log.iter().any(|x| x == "hitting toward enemy goal"));
         });
     }

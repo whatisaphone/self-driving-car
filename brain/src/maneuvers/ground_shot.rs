@@ -121,11 +121,10 @@ mod integration_tests {
         test.set_behavior(Runner2::new());
         test.sleep_millis(4000);
         test.examine_eeg(|eeg| {
-            assert!(
-                eeg.log
-                    .iter()
-                    .any(|x| *x == format!("{} GroundShot", PUSHED))
-            );
+            assert!(eeg
+                .log
+                .iter()
+                .any(|x| *x == format!("{} GroundShot", PUSHED)));
         });
         assert!(test.has_scored());
     }
@@ -144,11 +143,10 @@ mod integration_tests {
         test.set_behavior(Runner2::new());
         test.sleep_millis(3000);
         test.examine_eeg(|eeg| {
-            assert!(
-                eeg.log
-                    .iter()
-                    .any(|x| *x == format!("{} GroundShot", PUSHED))
-            );
+            assert!(eeg
+                .log
+                .iter()
+                .any(|x| *x == format!("{} GroundShot", PUSHED)));
         });
         assert!(test.has_scored());
     }
