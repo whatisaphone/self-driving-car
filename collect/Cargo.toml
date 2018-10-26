@@ -6,6 +6,7 @@ authors = ["John Simon <john@whatisaph.one>"]
 [dependencies]
 csv = "1.0.2"
 flatbuffers = "0.4.0"
+itertools = "0.7.8"
 ordered-float = "1.0.1"
 
 nalgebra = "0.16.0"

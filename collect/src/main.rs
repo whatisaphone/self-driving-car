@@ -3,60 +3,52 @@
 extern crate common;
 extern crate csv;
 extern crate flatbuffers;
+extern crate itertools;
 extern crate nalgebra;
 extern crate rlbot;
 
 use collector2::Collector;
-use game_state::{
-    DesiredBallState, DesiredCarState, DesiredGameState, DesiredPhysics, RotatorPartial,
-    Vector3Partial,
-};
+use common::rl;
+use game_state::DesiredGameState;
+use itertools::Itertools;
 use rlbot_ext::get_packet_and_inject_rigid_body_tick;
-use std::{error::Error, f32::consts::PI, fs::File, thread::sleep, time::Duration};
+use scenarios2::{Scenario, ScenarioStepResult};
+use std::{error::Error, fs::File, iter, thread::sleep, time::Duration};
 
 mod collector2;
 mod game_state;
 mod rlbot_ext;
 mod scenarios;
+mod scenarios2;
 
 pub fn main() -> Result<(), Box<Error>> {
     let rlbot = rlbot::init()?;
-    start_match(&rlbot)?;
-
-    let mut packets = rlbot.packeteer();
-
-    // Wait for RoundActive
-    while !packets.next()?.GameInfo.RoundActive {}
 
     // Zero out our input, just to be safe
     rlbot.update_player_input(Default::default(), 0)?;
 
-    let initial_state = DesiredGameState {
-        ball_state: Some(DesiredBallState {
-            physics: Some(DesiredPhysics {
-                location: Some(Vector3Partial::new(2000.0, 0.0, 0.0)),
-                rotation: Some(RotatorPartial::new(0.0, 0.0, 0.0)),
-                velocity: Some(Vector3Partial::new(0.0, 0.0, 0.0)),
-                angular_velocity: Some(Vector3Partial::new(0.0, 0.0, 0.0)),
-            }),
-        }),
-        car_states: vec![DesiredCarState {
-            physics: Some(DesiredPhysics {
-                location: Some(Vector3Partial::new(0.0, 0.0, 17.01)),
-                rotation: Some(RotatorPartial::new(0.0, PI / 2.0, 0.0)),
-                velocity: Some(Vector3Partial::new(0.0, 0.0, 0.0)),
-                angular_velocity: Some(Vector3Partial::new(0.0, 0.0, 0.0)),
-            }),
-            boost_amount: Some(100.0),
-            jumped: Some(false),
-            double_jumped: Some(false),
-        }],
-    };
-    stabilize_scenario(&rlbot, &initial_state);
+    start_match(&rlbot)?;
+    wait_for_match_start(&rlbot)?;
 
-    let f = File::create("collect.csv")?;
+    let speeds = (0..=22)
+        .map(|x| x as f32 * 100.0)
+        .chain(iter::once(rl::CAR_MAX_SPEED));
+    let throttles = vec![0.0, 1.0].into_iter();
+
+    for (speed, throttle) in speeds.cartesian_product(throttles) {
+        run_scenario(&rlbot, scenarios2::PowerslideTurn::new(speed, throttle))?;
+    }
+
+    Ok(())
+}
+
+fn run_scenario(rlbot: &rlbot::RLBot, mut scenario: impl Scenario) -> Result<(), Box<Error>> {
+    stabilize_scenario(&rlbot, &scenario.initial_state());
+
+    let f = File::create(format!("simulate/data/{}.csv", scenario.name()))?;
     let mut collector = Collector::new(f);
 
+    let mut packets = rlbot.packeteer();
     let start = packets.next()?.GameInfo.TimeSeconds;
 
     let mut physics = rlbot.physicist();
@@ -68,9 +60,9 @@ pub fn main() -> Result<(), Box<Error>> {
         collector.write(tick)?;
 
         let time = packet.GameInfo.TimeSeconds - start;
-        match scenarios::throttle(time, &packet) {
-            Some(i) => rlbot.update_player_input(i, 0)?,
-            None => break,
+        match scenario.step(&rlbot, time, &packet)? {
+            ScenarioStepResult::Continue => {}
+            ScenarioStepResult::Break => break,
         }
     }
 
@@ -95,6 +87,20 @@ fn start_match(rlbot: &rlbot::RLBot) -> Result<(), Box<Error>> {
     match_settings.PlayerConfiguration[0].set_name("Chell");
 
     rlbot.start_match(match_settings)?;
+    Ok(())
+}
+
+fn wait_for_match_start(rlbot: &rlbot::RLBot) -> Result<(), Box<Error>> {
+    let mut packets = rlbot.packeteer();
+    let mut pings = 0;
+
+    while pings < 5 {
+        if packets.next()?.GameInfo.RoundActive {
+            pings += 1;
+        } else {
+            pings = 0;
+        }
+    }
     Ok(())
 }
 

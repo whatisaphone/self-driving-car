@@ -20,15 +20,19 @@ fn main() {
     let mut out = File::create(out_dir.join("tables.rs")).unwrap();
 
     for entry in csv_dir.read_dir().unwrap() {
-        let entry = entry.unwrap();
-        let filename = entry.file_name().into_string().unwrap();
-        if !filename.ends_with(".csv") {
+        let path = entry.unwrap().path();
+        if path.extension().unwrap().to_str() != Some("csv") {
             continue;
         }
 
-        let file = File::open(entry.path()).unwrap();
+        let file = File::open(&path).unwrap();
 
-        let basename = filename.split_terminator(".").next().unwrap();
+        let basename = path
+            .file_stem()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .replace(".", "_");
         let legacy = ["aerial_60deg", "boost", "coast", "jump", "throttle"]
             .iter()
             .any(|&s| s == basename);
@@ -37,9 +41,9 @@ fn main() {
             .from_reader(file);
 
         if legacy {
-            compile_csv_legacy(basename, r, &mut out);
+            compile_csv_legacy(&basename, r, &mut out);
         } else {
-            compile_csv(basename, r, &mut out);
+            compile_csv(&basename, r, &mut out);
         }
     }
 }
