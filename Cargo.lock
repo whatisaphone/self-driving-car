@@ -1156,6 +1156,7 @@ version = "0.1.0"
 dependencies = [
  "common 0.1.0",
  "csv 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "lazy_static 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "nalgebra 0.16.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "ncollide3d 0.17.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rlbot 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",

@@ -1,5 +1,9 @@
+extern crate common;
 extern crate csv;
+extern crate nalgebra;
 
+use common::ext::{ExtendPoint3, ExtendUnitQuaternion};
+use nalgebra::{Point2, Point3, Real, UnitComplex, UnitQuaternion, Vector3};
 use std::{
     env,
     fmt::Write as FmtWrite,
@@ -18,6 +22,8 @@ fn main() {
 
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
     let mut out = File::create(out_dir.join("tables.rs")).unwrap();
+
+    writeln!(&mut out, "use nalgebra::Point2;\n",).unwrap();
 
     for entry in csv_dir.read_dir().unwrap() {
         let path = entry.unwrap().path();
@@ -51,32 +57,99 @@ fn main() {
 fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) {
     let name = name.to_ascii_uppercase();
 
-    let rows: Vec<_> = csv.records().collect();
+    let rows: Vec<_> = csv.records().map(Result::unwrap).collect();
     let headers = csv.headers().unwrap();
 
-    macro_rules! write_array {
-        ($column:expr, $suffix:expr, $value:expr) => {
+    macro_rules! col {
+        ($column:expr) => {{
             let column = headers.iter().position(|h| h == $column).unwrap();
+            rows.iter().map(move |ref row| &row[column])
+        }};
+    }
 
-            write!(w, "#[allow(dead_code)]\n").unwrap();
-            write!(w, "pub const {}{}: &[f32] = &[\n", name, $suffix).unwrap();
-            for row in rows.iter() {
-                let value = &row.as_ref().unwrap()[column];
-                write!(w, "{},\n", $value(value)).unwrap();
+    macro_rules! write_array {
+        ($suffix:expr, $type:expr, $items:expr) => {
+            writeln!(w, "#[allow(dead_code)]").unwrap();
+            writeln!(w, "pub const {}{}: &[f32] = &[", name, $suffix).unwrap();
+            for x in $items {
+                writeln!(w, "    {},", x).unwrap();
             }
-            write!(w, "\n];\n\n").unwrap();
+            writeln!(w, "];\n").unwrap();
         };
     }
 
-    if headers.iter().any(|h| h == "time") {
-        write_array!("time", "_TIME", floatify);
-    } else {
-        write_array!("frame", "_TIME", |x| floatify(format!(
-            "{}",
-            str::parse::<f32>(x).unwrap() / 120.0
-        )));
+    macro_rules! write_lazy_static_array {
+        ($suffix:expr, $type:expr, $items:expr) => {
+            let items = $items;
+            writeln!(w, "#[allow(dead_code)]").unwrap();
+            writeln!(w, "lazy_static! {{").unwrap();
+            writeln!(
+                w,
+                "    pub static ref {}{}: [{}; {}] = [",
+                name,
+                $suffix,
+                $type,
+                items.len(),
+            )
+            .unwrap();
+            for x in items {
+                writeln!(w, "        {},", x).unwrap();
+            }
+            writeln!(w, "    ];").unwrap();
+            writeln!(w, "}}\n").unwrap();
+        };
     }
-    write_array!("player0_vel_y", "_CAR_VEL_Y", floatify);
+
+    let time = if headers.iter().any(|h| h == "time") {
+        col!("time")
+            .map(|x| x.parse::<f32>().unwrap())
+            .collect::<Vec<_>>()
+    } else {
+        col!("frame")
+            .map(|x| x.parse::<f32>().unwrap() / 120.0)
+            .collect::<Vec<_>>()
+    };
+
+    let player0_loc = col!("player0_loc_x")
+        .zip(col!("player0_loc_y"))
+        .zip(col!("player0_loc_z"))
+        .map(|((x, y), z)| {
+            Point3::<f32>::new(x.parse().unwrap(), y.parse().unwrap(), z.parse().unwrap())
+        });
+    let player0_loc_2d = player0_loc.map(|x| x.to_2d());
+
+    let player0_rot = col!("player0_rot_x")
+        .zip(col!("player0_rot_y"))
+        .zip(col!("player0_rot_z"))
+        .zip(col!("player0_rot_w"))
+        .map(|(((x, y), z), w)| {
+            UnitQuaternion::<f32>::xyzw(
+                x.parse().unwrap(),
+                y.parse().unwrap(),
+                z.parse().unwrap(),
+                w.parse().unwrap(),
+            )
+        });
+    let player0_rot_2d = player0_rot.map(|x| x.to_2d()).collect::<Vec<_>>();
+
+    write_array!("_TIME", "f32", time.iter().map(|x| x.to_source()));
+
+    write_lazy_static_array!(
+        "_CAR_LOC_2D",
+        "Point2<f32>",
+        player0_loc_2d.map(|x| x.to_source())
+    );
+
+    write_array!("_CAR_VEL_Y", "f32", col!("player0_vel_y").map(floatify));
+
+    write_array!(
+        "_CAR_ROT_2D_ANGLE_CUM", // CUM = cumulative
+        "f32",
+        player0_rot_2d.iter().scan(0.0, |state, rot| {
+            *state += UnitComplex::new(*state).rotation_to(rot).angle();
+            Some(state.to_source())
+        })
+    );
 }
 
 fn compile_csv_legacy(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) {
@@ -129,19 +202,19 @@ fn compile_csv_legacy(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl 
         let _car_ang_vel_y = floatify(&row[23]);
         let _car_ang_vel_z = floatify(&row[24]);
 
-        write!(&mut out_time, "{},", time).unwrap();
+        write!(&mut out_time, "    {},\n", time).unwrap();
         write!(
             &mut out_time_rev,
-            ",{}",
+            "\n,{}    ",
             time.chars().rev().collect::<String>()
         )
         .unwrap();
-        write!(&mut out_car_loc_y, "{},", car_loc_y).unwrap();
-        write!(&mut out_car_loc_z, "{},", car_loc_z).unwrap();
-        write!(&mut out_car_vel_y, "{},", car_vel_y).unwrap();
+        write!(&mut out_car_loc_y, "    {},\n", car_loc_y).unwrap();
+        write!(&mut out_car_loc_z, "    {},\n", car_loc_z).unwrap();
+        write!(&mut out_car_vel_y, "    {},\n", car_vel_y).unwrap();
         write!(
             &mut out_car_vel_y_rev,
-            ",{}",
+            "\n,{}    ",
             car_vel_y.chars().rev().collect::<String>()
         )
         .unwrap();
@@ -180,6 +253,60 @@ fn compile_csv_legacy(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl 
     write!(w, "{}", out_car_loc_z).unwrap();
     write!(w, "{}", out_car_vel_y).unwrap();
     write!(w, "{}", out_car_vel_y_rev.chars().rev().collect::<String>()).unwrap();
+}
+
+trait ToSource {
+    fn to_source(&self) -> String;
+}
+
+impl ToSource for f32 {
+    fn to_source(&self) -> String {
+        floatify(self.to_string())
+    }
+}
+
+impl<N: Real + ToSource> ToSource for Vector3<N> {
+    fn to_source(&self) -> String {
+        format!(
+            "Vector3::new({x}, {y}, {z})",
+            x = self.x.to_source(),
+            y = self.y.to_source(),
+            z = self.z.to_source(),
+        )
+    }
+}
+
+impl<N: Real + ToSource> ToSource for Point2<N> {
+    fn to_source(&self) -> String {
+        format!(
+            "Point2::new({x}, {y})",
+            x = self.x.to_source(),
+            y = self.y.to_source(),
+        )
+    }
+}
+
+impl<N: Real + ToSource> ToSource for Point3<N> {
+    fn to_source(&self) -> String {
+        format!(
+            "Point3::new({x}, {y}, {z})",
+            x = self.x.to_source(),
+            y = self.y.to_source(),
+            z = self.z.to_source(),
+        )
+    }
+}
+
+impl<N: Real + ToSource> ToSource for UnitQuaternion<N> {
+    fn to_source(&self) -> String {
+        format!(
+            "UnitQuaternion::from_quaternion(Quaternion::new({w}, {x}, {y}, {z}))",
+            w = self.as_ref().coords.w.to_source(),
+            x = self.as_ref().coords.x.to_source(),
+            y = self.as_ref().coords.y.to_source(),
+            z = self.as_ref().coords.z.to_source(),
+        )
+    }
 }
 
 fn floatify(s: impl Into<String>) -> String {

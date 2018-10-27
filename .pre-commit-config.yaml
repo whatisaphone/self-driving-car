@@ -41,6 +41,13 @@
       entry: sh -c '( cd collect && cargo check --all-targets --features strict )'
       pass_filenames: false
 
+    - id: check-common
+      name: check-common
+      language: system
+      files: '[.]rs$'
+      entry: sh -c '( cd common && cargo check --all-targets --features strict )'
+      pass_filenames: false
+
     - id: check-play
       name: check-play
       language: system

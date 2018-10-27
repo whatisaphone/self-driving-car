@@ -4,6 +4,8 @@ version = "0.1.0"
 authors = ["John Simon <john@whatisaph.one>"]
 
 [dependencies]
+lazy_static = "1.1.0"
+
 nalgebra = "0.16.0"
 ncollide3d = "0.17.1"
 
@@ -13,6 +15,10 @@ common = { path = "../common" }
 
 [build-dependencies]
 csv = "1.0.2"
+
+nalgebra = "0.16.0"
+
+common = { path = "../common" }
 
 [features]
 strict = []

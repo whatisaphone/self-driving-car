@@ -1,6 +1,63 @@
-use nalgebra::{Point3, Real, Rotation3, Unit, UnitComplex, UnitQuaternion, Vector2, Vector3};
+use nalgebra::{
+    Point2, Point3, Quaternion, Real, Rotation3, Unit, UnitComplex, UnitQuaternion, Vector2,
+    Vector3,
+};
 use physics;
 use rlbot;
+
+pub trait ExtendVector2 {
+    /// Creates a unit vector in the direction of the given `angle`.
+    fn unit(angle: f32) -> Self;
+    /// Shorthand for `Unit::new_normalize`.
+    fn to_axis(&self) -> Unit<Self>
+    where
+        Self: Sized;
+    fn to_3d(&self, z: f32) -> Vector3<f32>;
+    fn uc_angle_to(&self, other: Self) -> UnitComplex<f32>;
+    fn angle_to(&self, other: Self) -> f32;
+    fn rotation_to(&self, other: Self) -> UnitComplex<f32>;
+}
+
+impl ExtendVector2 for Vector2<f32> {
+    fn unit(angle: f32) -> Self {
+        let (sin, cos) = angle.sin_cos();
+        Vector2::new(cos, sin)
+    }
+
+    fn to_axis(&self) -> Unit<Self> {
+        Unit::new_normalize(*self)
+    }
+
+    fn to_3d(&self, z: f32) -> Vector3<f32> {
+        Vector3::new(self.x, self.y, z)
+    }
+
+    // This treats `Vector`s as `Point`s. It should be deprecated.
+    fn uc_angle_to(&self, other: Self) -> UnitComplex<f32> {
+        let diff = other - self;
+        UnitComplex::new(f32::atan2(diff.y, diff.x))
+    }
+
+    // This treats `Vector`s as `Point`s. It should be deprecated.
+    fn angle_to(&self, other: Self) -> f32 {
+        let diff = other - self;
+        f32::atan2(diff.y, diff.x)
+    }
+
+    fn rotation_to(&self, other: Self) -> UnitComplex<f32> {
+        UnitComplex::rotation_between(self, &other)
+    }
+}
+
+pub trait ExtendPoint3<N: Real> {
+    fn to_2d(&self) -> Point2<N>;
+}
+
+impl<N: Real> ExtendPoint3<N> for Point3<N> {
+    fn to_2d(&self) -> Point2<N> {
+        Point2::new(self.x, self.y)
+    }
+}
 
 pub trait ExtendRotation3 {
     fn from_unreal_angles(pitch: f32, yaw: f32, roll: f32) -> Rotation3<f32>;
@@ -92,6 +149,21 @@ impl ExtendPhysics for rlbot::ffi::Physics {
 
     fn right_axis(&self) -> Unit<Vector3<f32>> {
         physics::car_right_axis(self.quat())
+    }
+}
+
+pub trait ExtendUnitQuaternion<N: Real> {
+    fn xyzw(x: N, y: N, z: N, w: N) -> Self;
+    fn to_2d(&self) -> UnitComplex<N>;
+}
+
+impl<N: Real> ExtendUnitQuaternion<N> for UnitQuaternion<N> {
+    fn xyzw(x: N, y: N, z: N, w: N) -> Self {
+        UnitQuaternion::from_quaternion(Quaternion::new(w, x, y, z))
+    }
+
+    fn to_2d(&self) -> UnitComplex<N> {
+        UnitComplex::new(self.scaled_axis().z)
     }
 }
 
