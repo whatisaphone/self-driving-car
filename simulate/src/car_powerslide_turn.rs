@@ -2,19 +2,30 @@ use common::{
     ext::{ExtendUnitVector2, ExtendVector2},
     physics::{car_forward_axis_2d, CAR_LOCAL_FORWARD_AXIS_2D},
 };
-use nalgebra::{Point2, Unit, Vector2};
+use nalgebra::{Point2, Unit, UnitComplex, Vector2};
 use tables;
 
 pub struct CarPowerslideTurn;
 
+#[derive(Clone)]
+pub struct CarPowerslideTurnPlan {
+    pub start_loc: Point2<f32>,
+    pub start_vel: Vector2<f32>,
+    pub steer: f32,
+    pub throttle: f32,
+    pub end_loc: Point2<f32>,
+    pub end_rot: UnitComplex<f32>,
+    pub end_vel: Vector2<f32>,
+    pub duration: f32,
+}
+
 impl CarPowerslideTurn {
-    #[used]
-    fn evaluate(
+    pub fn evaluate(
         start_loc: Point2<f32>,
         start_vel: Vector2<f32>,
         throttle: f32,
         target_dir: Unit<Vector2<f32>>,
-    ) -> Option<(f32, Point2<f32>)> {
+    ) -> Option<CarPowerslideTurnPlan> {
         // Transform the input scenario to match the reference scenario. Then
         // afterwards, do the inverse transform to convert reference results back to the
         // input coordinate system.
@@ -28,16 +39,25 @@ impl CarPowerslideTurn {
         let steer = target_rot_by.signum();
 
         let reference = Self::reference_evaluate(start_vel.norm(), throttle, target_rot_by.abs());
-        let (reference_time, mut reference_offset) = some_or_else!(reference, {
+        let reference = some_or_else!(reference, {
             return None;
         });
-        reference_offset.x *= steer;
-        let reference_offset = reference_offset;
 
         // Transform the reference units back into input units.
+        let mut reference_offset = reference.end_loc - reference.start_loc;
+        reference_offset.x *= steer;
         let offset = transform.inverse() * reference_offset;
-        let loc = start_loc + offset;
-        Some((reference_time, loc))
+
+        Some(CarPowerslideTurnPlan {
+            start_loc,
+            start_vel,
+            steer,
+            throttle,
+            end_loc: start_loc + offset,
+            end_rot: CAR_LOCAL_FORWARD_AXIS_2D.rotation_to(&target_dir),
+            end_vel: reference.end_vel,
+            duration: reference.duration,
+        })
     }
 
     /// Assume a car traveling at `start_speed`, which immediately hits the
@@ -48,8 +68,11 @@ impl CarPowerslideTurn {
         start_speed: f32,
         throttle: f32,
         target_rot_by: f32,
-    ) -> Option<(f32, Vector2<f32>)> {
+    ) -> Option<CarPowerslideTurnPlan> {
+        println!("start_speed: {:?}", start_speed);
         let speed_index = start_speed as usize / 100;
+        println!("speed_index: {:?}", speed_index);
+        println!("target_rot_by: {:?}", target_rot_by);
         // let lower_speed = speed_index as f32 * 100.0;
         let lower = TableSet::get(throttle, speed_index);
         // let upper_speed = ((speed_index + 1) as f32 * 100.0).min(rl::CAR_MAX_SPEED);
@@ -65,11 +88,27 @@ impl CarPowerslideTurn {
         let index = some_or_else!(index, {
             return None;
         });
+        let index = ((index as f32) * 0.5) as usize;
 
         // TODO: interpolate between `lower` and `upper`
-        let time = lower.time[index] - lower.time[0];
-        let loc = lower.loc_2d[index] - lower.loc_2d[0];
-        Some((time, loc))
+        let start_time = lower.time[0];
+        let end_time = lower.time[index];
+        let start_loc = lower.loc_2d[0];
+        let end_loc = lower.loc_2d[index];
+        let start_rot = CAR_LOCAL_FORWARD_AXIS_2D.rotation_to(&Vector2::y_axis());
+        let end_rot = UnitComplex::new(target_rot_by) * start_rot;
+        let start_vel = lower.vel_2d[0];
+        let end_vel = lower.vel_2d[index];
+        Some(CarPowerslideTurnPlan {
+            start_loc,
+            start_vel,
+            steer: 1.0,
+            throttle,
+            end_loc,
+            end_rot,
+            end_vel,
+            duration: end_time - start_time,
+        })
     }
 }
 
@@ -77,6 +116,7 @@ struct TableSet<'a> {
     time: &'a [f32],
     loc_2d: &'a [Point2<f32>],
     rot_2d_angle_cum: &'a [f32],
+    vel_2d: &'a [Vector2<f32>],
 }
 
 impl<'a> TableSet<'a> {
@@ -86,12 +126,14 @@ impl<'a> TableSet<'a> {
                 time: POWERSLIDE_TURN_THROTTLE_0_TIME[speed_index],
                 loc_2d: POWERSLIDE_TURN_THROTTLE_0_CAR_LOC_2D[speed_index],
                 rot_2d_angle_cum: POWERSLIDE_TURN_THROTTLE_0_CAR_ROT_2D_ANGLE_CUM[speed_index],
+                vel_2d: POWERSLIDE_TURN_THROTTLE_0_CAR_VEL_2D[speed_index],
             }
         } else if throttle == 1.0 {
             Self {
                 time: POWERSLIDE_TURN_THROTTLE_1_TIME[speed_index],
                 loc_2d: POWERSLIDE_TURN_THROTTLE_1_CAR_LOC_2D[speed_index],
                 rot_2d_angle_cum: POWERSLIDE_TURN_THROTTLE_1_CAR_ROT_2D_ANGLE_CUM[speed_index],
+                vel_2d: POWERSLIDE_TURN_THROTTLE_1_CAR_VEL_2D[speed_index],
             }
         } else {
             panic!("throttle not quantized")
@@ -153,6 +195,61 @@ const POWERSLIDE_TURN_THROTTLE_1_TIME: &[&[f32]] = &[
     tables::POWERSLIDE_TURN_SPEED_2299_98_THROTTLE_1_TIME,
 ];
 
+lazy_static! {
+    static ref POWERSLIDE_TURN_THROTTLE_0_CAR_LOC_2D: [&'static [Point2<f32>]; 24] = [
+        &*tables::POWERSLIDE_TURN_SPEED_0_THROTTLE_0_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_100_THROTTLE_0_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_200_THROTTLE_0_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_300_THROTTLE_0_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_400_THROTTLE_0_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_500_THROTTLE_0_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_600_THROTTLE_0_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_700_THROTTLE_0_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_800_THROTTLE_0_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_900_THROTTLE_0_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1000_THROTTLE_0_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1100_THROTTLE_0_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1200_THROTTLE_0_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1300_THROTTLE_0_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1400_THROTTLE_0_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1500_THROTTLE_0_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1600_THROTTLE_0_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1700_THROTTLE_0_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1800_THROTTLE_0_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1900_THROTTLE_0_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_2000_THROTTLE_0_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_2100_THROTTLE_0_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_2200_THROTTLE_0_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_2299_98_THROTTLE_0_CAR_LOC_2D,
+    ];
+    static ref POWERSLIDE_TURN_THROTTLE_1_CAR_LOC_2D: [&'static [Point2<f32>]; 24] = [
+        &*tables::POWERSLIDE_TURN_SPEED_0_THROTTLE_1_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_100_THROTTLE_1_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_200_THROTTLE_1_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_300_THROTTLE_1_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_400_THROTTLE_1_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_500_THROTTLE_1_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_600_THROTTLE_1_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_700_THROTTLE_1_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_800_THROTTLE_1_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_900_THROTTLE_1_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1000_THROTTLE_1_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1100_THROTTLE_1_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1200_THROTTLE_1_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1300_THROTTLE_1_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1400_THROTTLE_1_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1500_THROTTLE_1_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1600_THROTTLE_1_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1700_THROTTLE_1_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1800_THROTTLE_1_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1900_THROTTLE_1_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_2000_THROTTLE_1_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_2100_THROTTLE_1_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_2200_THROTTLE_1_CAR_LOC_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_2299_98_THROTTLE_1_CAR_LOC_2D,
+    ];
+}
+
 const POWERSLIDE_TURN_THROTTLE_0_CAR_ROT_2D_ANGLE_CUM: &[&[f32]] = &[
     tables::POWERSLIDE_TURN_SPEED_0_THROTTLE_0_CAR_ROT_2D_ANGLE_CUM,
     tables::POWERSLIDE_TURN_SPEED_100_THROTTLE_0_CAR_ROT_2D_ANGLE_CUM,
@@ -208,56 +305,56 @@ const POWERSLIDE_TURN_THROTTLE_1_CAR_ROT_2D_ANGLE_CUM: &[&[f32]] = &[
 ];
 
 lazy_static! {
-    static ref POWERSLIDE_TURN_THROTTLE_0_CAR_LOC_2D: [&'static [Point2<f32>]; 24] = [
-        &*tables::POWERSLIDE_TURN_SPEED_0_THROTTLE_0_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_100_THROTTLE_0_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_200_THROTTLE_0_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_300_THROTTLE_0_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_400_THROTTLE_0_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_500_THROTTLE_0_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_600_THROTTLE_0_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_700_THROTTLE_0_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_800_THROTTLE_0_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_900_THROTTLE_0_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_1000_THROTTLE_0_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_1100_THROTTLE_0_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_1200_THROTTLE_0_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_1300_THROTTLE_0_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_1400_THROTTLE_0_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_1500_THROTTLE_0_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_1600_THROTTLE_0_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_1700_THROTTLE_0_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_1800_THROTTLE_0_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_1900_THROTTLE_0_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_2000_THROTTLE_0_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_2100_THROTTLE_0_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_2200_THROTTLE_0_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_2299_98_THROTTLE_0_CAR_LOC_2D,
+    static ref POWERSLIDE_TURN_THROTTLE_0_CAR_VEL_2D: [&'static [Vector2<f32>]; 24] = [
+        &*tables::POWERSLIDE_TURN_SPEED_0_THROTTLE_0_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_100_THROTTLE_0_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_200_THROTTLE_0_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_300_THROTTLE_0_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_400_THROTTLE_0_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_500_THROTTLE_0_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_600_THROTTLE_0_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_700_THROTTLE_0_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_800_THROTTLE_0_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_900_THROTTLE_0_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1000_THROTTLE_0_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1100_THROTTLE_0_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1200_THROTTLE_0_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1300_THROTTLE_0_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1400_THROTTLE_0_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1500_THROTTLE_0_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1600_THROTTLE_0_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1700_THROTTLE_0_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1800_THROTTLE_0_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1900_THROTTLE_0_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_2000_THROTTLE_0_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_2100_THROTTLE_0_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_2200_THROTTLE_0_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_2299_98_THROTTLE_0_CAR_VEL_2D,
     ];
-    static ref POWERSLIDE_TURN_THROTTLE_1_CAR_LOC_2D: [&'static [Point2<f32>]; 24] = [
-        &*tables::POWERSLIDE_TURN_SPEED_0_THROTTLE_1_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_100_THROTTLE_1_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_200_THROTTLE_1_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_300_THROTTLE_1_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_400_THROTTLE_1_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_500_THROTTLE_1_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_600_THROTTLE_1_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_700_THROTTLE_1_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_800_THROTTLE_1_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_900_THROTTLE_1_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_1000_THROTTLE_1_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_1100_THROTTLE_1_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_1200_THROTTLE_1_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_1300_THROTTLE_1_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_1400_THROTTLE_1_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_1500_THROTTLE_1_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_1600_THROTTLE_1_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_1700_THROTTLE_1_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_1800_THROTTLE_1_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_1900_THROTTLE_1_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_2000_THROTTLE_1_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_2100_THROTTLE_1_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_2200_THROTTLE_1_CAR_LOC_2D,
-        &*tables::POWERSLIDE_TURN_SPEED_2299_98_THROTTLE_1_CAR_LOC_2D,
+    static ref POWERSLIDE_TURN_THROTTLE_1_CAR_VEL_2D: [&'static [Vector2<f32>]; 24] = [
+        &*tables::POWERSLIDE_TURN_SPEED_0_THROTTLE_1_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_100_THROTTLE_1_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_200_THROTTLE_1_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_300_THROTTLE_1_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_400_THROTTLE_1_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_500_THROTTLE_1_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_600_THROTTLE_1_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_700_THROTTLE_1_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_800_THROTTLE_1_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_900_THROTTLE_1_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1000_THROTTLE_1_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1100_THROTTLE_1_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1200_THROTTLE_1_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1300_THROTTLE_1_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1400_THROTTLE_1_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1500_THROTTLE_1_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1600_THROTTLE_1_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1700_THROTTLE_1_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1800_THROTTLE_1_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_1900_THROTTLE_1_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_2000_THROTTLE_1_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_2100_THROTTLE_1_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_2200_THROTTLE_1_CAR_VEL_2D,
+        &*tables::POWERSLIDE_TURN_SPEED_2299_98_THROTTLE_1_CAR_VEL_2D,
     ];
 }

@@ -49,6 +49,16 @@ impl ExtendVector2 for Vector2<f32> {
     }
 }
 
+pub trait ExtendVector3 {
+    fn to_2d(&self) -> Vector2<f32>;
+}
+
+impl ExtendVector3 for Vector3<f32> {
+    fn to_2d(&self) -> Vector2<f32> {
+        Vector2::new(self.x, self.y)
+    }
+}
+
 pub trait ExtendPoint3<N: Real> {
     fn to_2d(&self) -> Point2<N>;
 }

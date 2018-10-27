@@ -2,8 +2,8 @@ extern crate common;
 extern crate csv;
 extern crate nalgebra;
 
-use common::ext::{ExtendPoint3, ExtendUnitQuaternion};
-use nalgebra::{Point2, Point3, Real, UnitComplex, UnitQuaternion, Vector3};
+use common::ext::{ExtendPoint3, ExtendUnitQuaternion, ExtendVector3};
+use nalgebra::{Point2, Point3, Real, UnitComplex, UnitQuaternion, Vector2, Vector3};
 use std::{
     env,
     fmt::Write as FmtWrite,
@@ -23,7 +23,7 @@ fn main() {
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
     let mut out = File::create(out_dir.join("tables.rs")).unwrap();
 
-    writeln!(&mut out, "use nalgebra::Point2;\n",).unwrap();
+    writeln!(&mut out, "use nalgebra::{{Point2, Vector2}};\n",).unwrap();
 
     for entry in csv_dir.read_dir().unwrap() {
         let path = entry.unwrap().path();
@@ -116,7 +116,6 @@ fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) 
         .map(|((x, y), z)| {
             Point3::<f32>::new(x.parse().unwrap(), y.parse().unwrap(), z.parse().unwrap())
         });
-    let player0_loc_2d = player0_loc.map(|x| x.to_2d());
 
     let player0_rot = col!("player0_rot_x")
         .zip(col!("player0_rot_y"))
@@ -130,20 +129,33 @@ fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) 
                 w.parse().unwrap(),
             )
         });
+
+    let player0_vel = col!("player0_vel_x")
+        .zip(col!("player0_vel_y"))
+        .zip(col!("player0_vel_z"))
+        .map(|((x, y), z)| {
+            Vector3::<f32>::new(x.parse().unwrap(), y.parse().unwrap(), z.parse().unwrap())
+        });
+
+    let player0_loc_2d = player0_loc.map(|x| x.to_2d());
     let player0_rot_2d = player0_rot.map(|x| x.to_2d()).collect::<Vec<_>>();
+    let player0_vel_2d = player0_vel.map(|x| x.to_2d());
 
     write_array!("_TIME", "f32", time.iter().map(|x| x.to_source()));
-
     write_lazy_static_array!(
         "_CAR_LOC_2D",
         "Point2<f32>",
         player0_loc_2d.map(|x| x.to_source())
     );
-
     write_array!("_CAR_VEL_Y", "f32", col!("player0_vel_y").map(floatify));
-
+    write_lazy_static_array!(
+        "_CAR_VEL_2D",
+        "Vector2<f32>",
+        player0_vel_2d.map(|x| x.to_source())
+    );
     write_array!(
-        "_CAR_ROT_2D_ANGLE_CUM", // CUM = cumulative
+        // CUM = cumulative, e.g. don't wrap from -180° to 180°.
+        "_CAR_ROT_2D_ANGLE_CUM",
         "f32",
         player0_rot_2d.iter().scan(0.0, |state, rot| {
             *state += UnitComplex::new(*state).rotation_to(rot).angle();
@@ -262,6 +274,16 @@ trait ToSource {
 impl ToSource for f32 {
     fn to_source(&self) -> String {
         floatify(self.to_string())
+    }
+}
+
+impl<N: Real + ToSource> ToSource for Vector2<N> {
+    fn to_source(&self) -> String {
+        format!(
+            "Vector2::new({x}, {y})",
+            x = self.x.to_source(),
+            y = self.y.to_source(),
+        )
     }
 }
 

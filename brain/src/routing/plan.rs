@@ -1,14 +1,18 @@
 use behavior::Predicate;
 use chip::max_curvature;
-use common::ext::ExtendUnitVector3;
+use common::{
+    ext::ExtendUnitVector3,
+    physics::{car_forward_axis_2d, CAR_LOCAL_FORWARD_AXIS_2D},
+};
 use maneuvers::GroundedHit;
 use nalgebra::Point2;
-use predict::{estimate_intercept_car_ball_2, intercept::NaiveIntercept};
+use predict::{estimate_intercept_car_ball_2, intercept::NaiveIntercept, naive_ground_intercept};
 use routing::{
     models::{CarState, RoutePlan, SegmentPlan},
     recover::{IsSkidding, NotOnFlatGround},
-    segments::{SimpleArc, Straight},
+    segments::{PowerslideTurn, SimpleArc, Straight},
 };
+use simulate::CarPowerslideTurn;
 use std::iter;
 use strategy::Context;
 use utils::geometry::{circle_point_tangents, ExtendPoint3, ExtendVector2, ExtendVector3};
@@ -37,8 +41,9 @@ pub fn ground_intercept(ctx: &mut Context) -> Result<RoutePlanInfo, RoutePlanErr
     let me = ctx.me();
 
     // Naive first pass to get a rough location.
-    let guess =
-        estimate_intercept_car_ball_2(ctx, me, |ball| ball.loc.z < GroundedHit::max_ball_z());
+    let guess = estimate_intercept_car_ball_2(ctx, me, |ball| {
+        ball.loc.z < GroundedHit::max_ball_z() && ball.vel.z < 25.0
+    });
     let guess = some_or_else!(guess, {
         return Err(RoutePlanError::UnknownIntercept);
     });
@@ -48,6 +53,81 @@ pub fn ground_intercept(ctx: &mut Context) -> Result<RoutePlanInfo, RoutePlanErr
         plan,
         intercept: guess,
     })
+}
+
+#[allow(dead_code)] // Doesn't yet work properly. Suppress warning for now.
+pub fn touch_loc_and_then_intercept(
+    ctx: &mut Context,
+    touch_loc: Point2<f32>,
+) -> Result<RoutePlanInfo, RoutePlanError> {
+    if NotOnFlatGround.evaluate(ctx) {
+        return Err(RoutePlanError::MustBeOnFlatGround);
+    }
+    if IsSkidding.evaluate(ctx) {
+        return Err(RoutePlanError::MustNotBeSkidding);
+    }
+
+    let me = ctx.me();
+
+    // Naively guess the intercept location by driving to the corner and then
+    // trying to intercept.
+    let naive_touch = simple_drive_towards(&me.into(), touch_loc)?;
+    let guess = naive_ground_intercept(
+        ctx.scenario
+            .ball_prediction()
+            .iter()
+            .skip_while(|f| f.t < naive_touch.duration()),
+        naive_touch.end().loc,
+        naive_touch.end().vel,
+        naive_touch.end().boost,
+        |ball| ball.loc.z < GroundedHit::max_ball_z() && ball.vel.z < 25.0,
+    );
+    let guess = some_or_else!(guess, {
+        return Err(RoutePlanError::UnknownIntercept);
+    });
+
+    let a: RoutePlan = powerslide_turn(&me.into(), touch_loc, guess.ball_loc.to_2d())?;
+    let b: RoutePlan = simple_drive_towards(&a.end(), guess.ball_loc.to_2d())?;
+    Ok(RoutePlanInfo {
+        plan: RoutePlan::new(
+            a.segments
+                .into_iter()
+                .chain(b.segments.into_iter())
+                .collect(),
+        ),
+        intercept: guess,
+    })
+}
+
+fn powerslide_turn(
+    start: &CarState,
+    touch_loc: Point2<f32>,
+    turn_point_loc: Point2<f32>,
+) -> Result<RoutePlan, RoutePlanError> {
+    let approach = simple_drive_towards(start, touch_loc)?;
+    let approach_duration = approach.duration() - 1.0;
+    let approach = approach.truncate_to_duration(approach_duration).unwrap();
+
+    let turn_target_rot = CAR_LOCAL_FORWARD_AXIS_2D
+        .as_ref()
+        .rotation_to(turn_point_loc - touch_loc);
+    let turn_plan = CarPowerslideTurn::evaluate(
+        approach.end().loc.to_2d(),
+        approach.end().vel.to_2d(),
+        1.0,
+        car_forward_axis_2d(turn_target_rot),
+    )
+    .ok_or_else(|| RoutePlanError::OtherError("CarPowerslideTurn returned None"))?;
+
+    let turn = PowerslideTurn::new(turn_plan, start.boost);
+    println!("slide duration: {:?}", turn.duration());
+    Ok(RoutePlan::new(
+        approach
+            .segments
+            .into_iter()
+            .chain(iter::once::<Box<SegmentPlan>>(Box::new(turn)))
+            .collect(),
+    ))
 }
 
 fn simple_drive_towards(

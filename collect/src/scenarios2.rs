@@ -22,8 +22,9 @@ pub trait Scenario {
 }
 
 pub enum ScenarioStepResult {
-    Continue,
-    Break,
+    Ignore,
+    Write,
+    Finish,
 }
 
 fn game_state_default() -> DesiredGameState {
@@ -74,6 +75,13 @@ impl Scenario for PowerslideTurn {
         )
     }
 
+    fn initial_state(&self) -> DesiredGameState {
+        let mut state = game_state_default();
+        state.car_states[0].physics.as_mut().unwrap().location =
+            Some(Vector3Partial::new(0.0, -5000.0, 0.0));
+        state
+    }
+
     fn step(
         &mut self,
         rlbot: &rlbot::RLBot,
@@ -95,6 +103,7 @@ impl Scenario for PowerslideTurn {
                     ..Default::default()
                 };
                 rlbot.update_player_input(input, 0)?;
+                Ok(ScenarioStepResult::Ignore)
             }
             Some(start_time) => {
                 let input = rlbot::ffi::PlayerInput {
@@ -105,12 +114,12 @@ impl Scenario for PowerslideTurn {
                 };
                 rlbot.update_player_input(input, 0)?;
 
-                if time >= start_time + 3.0 {
-                    return Ok(ScenarioStepResult::Break);
+                if time < start_time + 3.0 {
+                    Ok(ScenarioStepResult::Write)
+                } else {
+                    Ok(ScenarioStepResult::Finish)
                 }
             }
         }
-
-        Ok(ScenarioStepResult::Continue)
     }
 }

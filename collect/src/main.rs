@@ -57,12 +57,11 @@ fn run_scenario(rlbot: &rlbot::RLBot, mut scenario: impl Scenario) -> Result<(),
         let tick = physics.next_flat().unwrap();
         let packet = get_packet_and_inject_rigid_body_tick(&rlbot, tick)?;
 
-        collector.write(tick)?;
-
         let time = packet.GameInfo.TimeSeconds - start;
         match scenario.step(&rlbot, time, &packet)? {
-            ScenarioStepResult::Continue => {}
-            ScenarioStepResult::Break => break,
+            ScenarioStepResult::Ignore => {}
+            ScenarioStepResult::Write => collector.write(tick)?,
+            ScenarioStepResult::Finish => break,
         }
     }
 

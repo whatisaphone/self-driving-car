@@ -10,7 +10,7 @@ extern crate rlbot;
 pub use car::{Car, CarSimulateError};
 pub use car1d::Car1D;
 pub use car_aerial_60deg::CarAerial60Deg;
-pub use car_powerslide_turn::CarPowerslideTurn;
+pub use car_powerslide_turn::{CarPowerslideTurn, CarPowerslideTurnPlan};
 pub use collision::ball_car_distance;
 pub use common::rl;
 pub use math::linear_interpolate;
