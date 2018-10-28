@@ -1,3 +1,8 @@
+//! This module contains an archive of (some of) the code that has been used to
+//! generate the data used for simulation.
+
+#![allow(dead_code)]
+
 use common::{ext::ExtendPhysics, rl};
 use game_state::{
     DesiredBallState, DesiredCarState, DesiredGameState, DesiredPhysics, RotatorPartial,
@@ -119,6 +124,110 @@ impl Scenario for PowerslideTurn {
                 } else {
                     Ok(ScenarioStepResult::Finish)
                 }
+            }
+        }
+    }
+}
+
+/// I didn't bother saving a CSV of this because I don't need the detailed data.
+/// Here are the high-level numbers:
+///
+/// * The forward dodge impulse is exactly 500 uu/s.
+/// * The time from dodge to landing always ends up between 1.2 and 1.25
+///   seconds. (In game I will round this up to 1.333333 to be safe.)
+pub struct Dodge {
+    start_speed: f32,
+    phase: DodgePhase,
+}
+
+enum DodgePhase {
+    Accelerate,
+    Jump(f32),
+    Wait(f32),
+    Dodge(f32),
+    Land(f32),
+}
+
+impl Dodge {
+    pub fn new(start_speed: f32) -> Self {
+        Self {
+            start_speed,
+            phase: DodgePhase::Accelerate,
+        }
+    }
+}
+
+impl Scenario for Dodge {
+    fn name(&self) -> String {
+        format!("dodge_speed_{}", self.start_speed)
+    }
+
+    fn step(
+        &mut self,
+        rlbot: &rlbot::RLBot,
+        time: f32,
+        packet: &rlbot::ffi::LiveDataPacket,
+    ) -> Result<ScenarioStepResult, Box<Error>> {
+        match self.phase {
+            DodgePhase::Accelerate => {
+                if packet.GameCars[0].Physics.vel().norm() >= self.start_speed {
+                    self.phase = DodgePhase::Jump(time);
+                    return self.step(rlbot, time, packet);
+                }
+
+                let input = rlbot::ffi::PlayerInput {
+                    Throttle: (self.start_speed / 1000.0).min(1.0),
+                    Boost: self.start_speed > rl::CAR_MAX_SPEED,
+                    ..Default::default()
+                };
+                rlbot.update_player_input(input, 0)?;
+                return Ok(ScenarioStepResult::Write);
+            }
+            DodgePhase::Jump(start) => {
+                if time - start >= 0.05 {
+                    self.phase = DodgePhase::Wait(time);
+                    return self.step(rlbot, time, packet);
+                }
+
+                let input = rlbot::ffi::PlayerInput {
+                    Jump: true,
+                    ..Default::default()
+                };
+                rlbot.update_player_input(input, 0)?;
+                return Ok(ScenarioStepResult::Write);
+            }
+            DodgePhase::Wait(start) => {
+                if time - start >= 0.05 {
+                    self.phase = DodgePhase::Dodge(time);
+                    return self.step(rlbot, time, packet);
+                }
+
+                let input = Default::default();
+                rlbot.update_player_input(input, 0)?;
+                return Ok(ScenarioStepResult::Write);
+            }
+            DodgePhase::Dodge(start) => {
+                if time - start >= 0.05 {
+                    self.phase = DodgePhase::Land(time);
+                    return self.step(rlbot, time, packet);
+                }
+
+                let input = rlbot::ffi::PlayerInput {
+                    Pitch: -1.0,
+                    Jump: true,
+                    ..Default::default()
+                };
+                rlbot.update_player_input(input, 0)?;
+                return Ok(ScenarioStepResult::Write);
+            }
+            DodgePhase::Land(start) => {
+                if time - start >= 2.0 {
+                    return Ok(ScenarioStepResult::Finish);
+                }
+
+                let input = Default::default();
+                rlbot.update_player_input(input, 0)?;
+                return Ok(ScenarioStepResult::Write);
             }
         }
     }
