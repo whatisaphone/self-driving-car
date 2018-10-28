@@ -3,8 +3,8 @@
 
 use math::linear_interpolate;
 use nalgebra::Vector3;
+use oven::data;
 use rl;
-use tables;
 
 pub struct CarAerial60Deg {
     time: f32,
@@ -14,14 +14,14 @@ pub struct CarAerial60Deg {
 
 impl CarAerial60Deg {
     fn start_loc() -> Vector3<f32> {
-        Vector3::new(0.0, 0.0, tables::AERIAL_60DEG_CAR_LOC_Z[0])
+        Vector3::new(0.0, 0.0, data::aerial_60deg::CAR_LOC_Z[0])
     }
 
     /// Using a jump plus 60° aerial, what will it take to climb to the given
     /// height?
     pub fn cost(z: f32) -> Cost {
-        let time = linear_interpolate(tables::AERIAL_60DEG_CAR_LOC_Z, tables::AERIAL_60DEG_TIME, z);
-        let time = time - tables::AERIAL_60DEG_TIME[0];
+        let time = linear_interpolate(data::aerial_60deg::CAR_LOC_Z, data::aerial_60deg::TIME, z);
+        let time = time - data::aerial_60deg::TIME[0];
         let boost = time * rl::BOOST_DEPLETION;
         return Cost { time, boost };
     }
@@ -45,24 +45,24 @@ impl CarAerial60Deg {
     pub fn step(&mut self, dt: f32) {
         let old_loc_z = self.loc.z;
         let old_time = linear_interpolate(
-            tables::AERIAL_60DEG_CAR_LOC_Z,
-            tables::AERIAL_60DEG_TIME,
+            &data::aerial_60deg::CAR_LOC_Z,
+            &data::aerial_60deg::TIME,
             old_loc_z,
         );
         let new_time = old_time + dt;
         let old_loc_y = linear_interpolate(
-            tables::AERIAL_60DEG_TIME,
-            tables::AERIAL_60DEG_CAR_LOC_Y,
+            &data::aerial_60deg::TIME,
+            &data::aerial_60deg::CAR_LOC_Y,
             old_time,
         );
         let new_loc_y = linear_interpolate(
-            tables::AERIAL_60DEG_TIME,
-            tables::AERIAL_60DEG_CAR_LOC_Y,
+            &data::aerial_60deg::TIME,
+            &data::aerial_60deg::CAR_LOC_Y,
             new_time,
         );
         let new_loc_z = linear_interpolate(
-            tables::AERIAL_60DEG_TIME,
-            tables::AERIAL_60DEG_CAR_LOC_Z,
+            &data::aerial_60deg::TIME,
+            &data::aerial_60deg::CAR_LOC_Z,
             new_time,
         );
 

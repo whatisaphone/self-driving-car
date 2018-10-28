@@ -21,9 +21,7 @@ fn main() {
     let csv_dir = crate_dir.join("data");
 
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
-    let mut out = File::create(out_dir.join("tables.rs")).unwrap();
-
-    writeln!(&mut out, "use nalgebra::{{Point2, Vector2}};\n",).unwrap();
+    let mut out = File::create(out_dir.join("data.rs")).unwrap();
 
     for entry in csv_dir.read_dir().unwrap() {
         let path = entry.unwrap().path();
@@ -55,8 +53,6 @@ fn main() {
 }
 
 fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) {
-    let name = name.to_ascii_uppercase();
-
     let rows: Vec<_> = csv.records().map(Result::unwrap).collect();
     let headers = csv.headers().unwrap();
 
@@ -68,35 +64,42 @@ fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) 
     }
 
     macro_rules! write_array {
-        ($suffix:expr, $type:expr, $items:expr) => {
-            writeln!(w, "#[allow(dead_code)]").unwrap();
-            writeln!(w, "pub const {}{}: &[f32] = &[", name, $suffix).unwrap();
-            for x in $items {
-                writeln!(w, "    {},", x).unwrap();
+        ($name:expr, $type:expr, $items:expr) => {
+            let items = $items;
+            writeln!(w, "    pub const {}: &[{}] = &[", $name, $type).unwrap();
+            for x in items {
+                writeln!(w, "        {},", x).unwrap();
             }
-            writeln!(w, "];\n").unwrap();
+            writeln!(w, "    ];\n").unwrap();
         };
     }
 
     macro_rules! write_lazy_static_array {
-        ($suffix:expr, $type:expr, $items:expr) => {
+        ($name:expr, $type:expr, $items:expr) => {
+            let name = $name;
+            let type_ = $type;
             let items = $items;
-            writeln!(w, "#[allow(dead_code)]").unwrap();
-            writeln!(w, "lazy_static! {{").unwrap();
+            writeln!(w, "    lazy_static! {{").unwrap();
             writeln!(
                 w,
-                "    pub static ref {}{}: [{}; {}] = [",
-                name,
-                $suffix,
-                $type,
-                items.len(),
+                "        static ref {name}_BUF: [{type}; {len}] = [",
+                name = name,
+                type = type_,
+                len = items.len(),
             )
             .unwrap();
             for x in items {
-                writeln!(w, "        {},", x).unwrap();
+                writeln!(w, "            {},", x).unwrap();
             }
-            writeln!(w, "    ];").unwrap();
-            writeln!(w, "}}\n").unwrap();
+            writeln!(w, "        ];").unwrap();
+            writeln!(
+                w,
+                "        pub static ref {name}: &'static [{type}] = &*{name}_BUF;",
+                name = name,
+                type = type_,
+            )
+            .unwrap();
+            writeln!(w, "    }}\n").unwrap();
         };
     }
 
@@ -139,52 +142,42 @@ fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) 
 
     let player0_loc_2d = player0_loc.map(|x| x.to_2d());
     let player0_rot_2d = player0_rot.map(|x| x.to_2d()).collect::<Vec<_>>();
-    let player0_vel_2d = player0_vel.map(|x| x.to_2d());
-
-    write_array!("_TIME", "f32", time.iter().map(|x| x.to_source()));
-    write_lazy_static_array!(
-        "_CAR_LOC_2D",
-        "Point2<f32>",
-        player0_loc_2d.map(|x| x.to_source())
-    );
-    write_array!("_CAR_VEL_Y", "f32", col!("player0_vel_y").map(floatify));
-    write_lazy_static_array!(
-        "_CAR_VEL_2D",
-        "Vector2<f32>",
-        player0_vel_2d.map(|x| x.to_source())
-    );
-    write_array!(
-        // CUM = cumulative, e.g. don't wrap from -180° to 180°.
-        "_CAR_ROT_2D_ANGLE_CUM",
-        "f32",
-        player0_rot_2d.iter().scan(0.0, |state, rot| {
+    let player0_rot_2d_angle_cum = player0_rot_2d
+        .iter()
+        .scan(0.0, |state, rot| {
             *state += UnitComplex::new(*state).rotation_to(rot).angle();
             Some(state.to_source())
         })
+        .collect::<Vec<_>>();
+    let player0_vel_2d = player0_vel.map(|x| x.to_2d());
+
+    writeln!(w, "pub mod {} {{", name).unwrap();
+    writeln!(w, "    use nalgebra::{{Point2, Vector2}};\n").unwrap();
+    write_array!("TIME", "f32", time.iter().map(|x| x.to_source()));
+    write_lazy_static_array!(
+        "CAR_LOC_2D",
+        "Point2<f32>",
+        player0_loc_2d.map(|x| x.to_source())
     );
+    write_lazy_static_array!(
+        "CAR_VEL_2D",
+        "Vector2<f32>",
+        player0_vel_2d.map(|x| x.to_source())
+    );
+    write_array!("CAR_VEL_Y", "f32", col!("player0_vel_y").map(floatify));
+    write_array!("CAR_ROT_2D_ANGLE_CUM", "f32", player0_rot_2d_angle_cum);
+    writeln!(w, "}}\n").unwrap();
 }
 
 fn compile_csv_legacy(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) {
-    let mut out_time = format!(
-        "#[allow(dead_code)]\npub const {}_TIME: &[f32] = &[\n",
-        name.to_ascii_uppercase(),
-    );
-    let mut out_time_rev = "\n];\n\n".chars().rev().collect::<String>();
-    let mut out_car_loc_y = format!(
-        "#[allow(dead_code)]\npub const {}_CAR_LOC_Y: &[f32] = &[\n",
-        name.to_ascii_uppercase(),
-    );
-    let mut out_car_loc_z = format!(
-        "#[allow(dead_code)]\npub const {}_CAR_LOC_Z: &[f32] = &[\n",
-        name.to_ascii_uppercase(),
-    );
-    let mut out_car_vel_y = format!(
-        "#[allow(dead_code)]\npub const {}_CAR_VEL_Y: &[f32] = &[\n",
-        name.to_ascii_uppercase(),
-    );
+    let mut out_time = "    pub const TIME: &[f32] = &[\n".to_string();
+    let mut out_time_rev = "\n    ];\n\n".chars().rev().collect::<String>();
+    let mut out_car_loc_y = "    pub const CAR_LOC_Y: &[f32] = &[\n".to_string();
+    let mut out_car_loc_z = "    pub const CAR_LOC_Z: &[f32] = &[\n".to_string();
+    let mut out_car_vel_y = "    pub const CAR_VEL_Y: &[f32] = &[\n".to_string();
     // Write some things backwards to avoid loading the entire CSV in memory.
     // I have 32GB of RAM and I'm aware this is pretty ridiculous.
-    let mut out_car_vel_y_rev = "\n];\n\n".chars().rev().collect::<String>();
+    let mut out_car_vel_y_rev = "\n    ];\n\n".chars().rev().collect::<String>();
 
     for row in csv.records() {
         let row = row.unwrap();
@@ -214,57 +207,53 @@ fn compile_csv_legacy(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl 
         let _car_ang_vel_y = floatify(&row[23]);
         let _car_ang_vel_z = floatify(&row[24]);
 
-        write!(&mut out_time, "    {},\n", time).unwrap();
+        write!(&mut out_time, "        {},\n", time).unwrap();
         write!(
             &mut out_time_rev,
-            "\n,{}    ",
+            "\n,{}        ",
             time.chars().rev().collect::<String>()
         )
         .unwrap();
-        write!(&mut out_car_loc_y, "    {},\n", car_loc_y).unwrap();
-        write!(&mut out_car_loc_z, "    {},\n", car_loc_z).unwrap();
-        write!(&mut out_car_vel_y, "    {},\n", car_vel_y).unwrap();
+        write!(&mut out_car_loc_y, "        {},\n", car_loc_y).unwrap();
+        write!(&mut out_car_loc_z, "        {},\n", car_loc_z).unwrap();
+        write!(&mut out_car_vel_y, "        {},\n", car_vel_y).unwrap();
         write!(
             &mut out_car_vel_y_rev,
-            "\n,{}    ",
+            "\n,{}        ",
             car_vel_y.chars().rev().collect::<String>()
         )
         .unwrap();
     }
 
-    write!(&mut out_time, "\n];\n\n").unwrap();
+    write!(&mut out_time, "\n    ];\n\n").unwrap();
     out_time_rev
         .write_str(
-            &format!(
-                "#[allow(dead_code)]\npub const {}_TIME_REV: &[f32] = &[\n",
-                name.to_ascii_uppercase()
-            )
-            .chars()
-            .rev()
-            .collect::<String>(),
+            &"    pub const TIME_REV: &[f32] = &[\n"
+                .chars()
+                .rev()
+                .collect::<String>(),
         )
         .unwrap();
-    write!(&mut out_car_loc_y, "\n];\n\n").unwrap();
-    write!(&mut out_car_loc_z, "\n];\n\n").unwrap();
-    write!(&mut out_car_vel_y, "\n];\n\n").unwrap();
+    write!(&mut out_car_loc_y, "\n    ];\n\n").unwrap();
+    write!(&mut out_car_loc_z, "\n    ];\n\n").unwrap();
+    write!(&mut out_car_vel_y, "\n    ];\n\n").unwrap();
     out_car_vel_y_rev
         .write_str(
-            &format!(
-                "#[allow(dead_code)]\npub const {}_CAR_VEL_Y_REV: &[f32] = &[\n",
-                name.to_ascii_uppercase()
-            )
-            .chars()
-            .rev()
-            .collect::<String>(),
+            &"    pub const CAR_VEL_Y_REV: &[f32] = &[\n"
+                .chars()
+                .rev()
+                .collect::<String>(),
         )
         .unwrap();
 
+    write!(w, "pub mod {} {{\n", name).unwrap();
     write!(w, "{}", out_time).unwrap();
     write!(w, "{}", out_time_rev.chars().rev().collect::<String>()).unwrap();
     write!(w, "{}", out_car_loc_y).unwrap();
     write!(w, "{}", out_car_loc_z).unwrap();
     write!(w, "{}", out_car_vel_y).unwrap();
     write!(w, "{}", out_car_vel_y_rev.chars().rev().collect::<String>()).unwrap();
+    write!(w, "}}\n").unwrap();
 }
 
 trait ToSource {

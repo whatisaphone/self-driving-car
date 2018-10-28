@@ -3,6 +3,7 @@ members = [
     "brain",
     "collect",
     "common",
+    "oven",
     "play",
     "simulate",
 ]

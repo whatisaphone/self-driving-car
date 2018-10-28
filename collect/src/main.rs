@@ -45,7 +45,7 @@ pub fn main() -> Result<(), Box<Error>> {
 fn run_scenario(rlbot: &rlbot::RLBot, mut scenario: impl Scenario) -> Result<(), Box<Error>> {
     stabilize_scenario(&rlbot, &scenario.initial_state());
 
-    let f = File::create(format!("simulate/data/{}.csv", scenario.name()))?;
+    let f = File::create(format!("oven/data/{}.csv", scenario.name()))?;
     let mut collector = Collector::new(f);
 
     let mut packets = rlbot.packeteer();

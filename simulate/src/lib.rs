@@ -5,6 +5,7 @@ extern crate common;
 extern crate lazy_static;
 extern crate nalgebra;
 extern crate ncollide3d;
+extern crate oven;
 extern crate rlbot;
 
 pub use car::{Car, CarSimulateError};
@@ -31,4 +32,3 @@ mod car_powerslide_turn;
 pub mod car_single_jump;
 mod collision;
 mod math;
-mod tables;

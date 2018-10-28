@@ -1,6 +1,6 @@
 use math::linear_interpolate;
+use oven::data;
 use rl;
-use tables;
 
 pub struct Car1D {
     time: f32,
@@ -91,22 +91,22 @@ impl Car1D {
 
         let (src_vel_table, src_time_table, time_table, vel_table) = match boost {
             false if throttle == 0.0 => (
-                tables::COAST_CAR_VEL_Y_REV,
-                tables::COAST_TIME_REV,
-                tables::COAST_TIME,
-                tables::COAST_CAR_VEL_Y,
+                &data::coast::CAR_VEL_Y_REV,
+                &data::coast::TIME_REV,
+                &data::coast::TIME,
+                &data::coast::CAR_VEL_Y,
             ),
             false if throttle == 1.0 => (
-                tables::THROTTLE_CAR_VEL_Y,
-                tables::THROTTLE_TIME,
-                tables::THROTTLE_TIME,
-                tables::THROTTLE_CAR_VEL_Y,
+                &data::throttle::CAR_VEL_Y,
+                &data::throttle::TIME,
+                &data::throttle::TIME,
+                &data::throttle::CAR_VEL_Y,
             ),
             true if throttle == 1.0 => (
-                tables::BOOST_CAR_VEL_Y,
-                tables::BOOST_TIME,
-                tables::BOOST_TIME,
-                tables::BOOST_CAR_VEL_Y,
+                &data::boost::CAR_VEL_Y,
+                &data::boost::TIME,
+                &data::boost::TIME,
+                &data::boost::CAR_VEL_Y,
             ),
             _ => panic!("Unsupported inputs"),
         };
