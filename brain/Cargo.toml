@@ -7,7 +7,7 @@ authors = ["John Simon <john@whatisaph.one>"]
 arrayvec = "0.4.7"
 crossbeam-channel = "0.2.6"
 derive-new = "0.5.5"
-flatbuffers = "0.4.0"
+flatbuffers = "0.5.0"
 itertools = "0.7.8"
 lazycell = "1.2.0"
 
@@ -22,7 +22,7 @@ log = "0.4.5"
 piston_window = "0.80.0"
 piston2d-graphics = "0.26.0"
 
-rlbot = "0.1.0"
+rlbot = "0.1.1"
 chip = "0.0.4"
 
 common = { path = "../common" }
