@@ -1,8 +1,10 @@
 use behavior::{Behavior, NullBehavior, Predicate, TimeLimit, While};
-use common::ext::ExtendPhysics;
+use common::{
+    ext::{ExtendPhysics, ExtendUnitVector2, ExtendUnitVector3},
+    physics::car_forward_axis,
+};
 use maneuvers::{DriveTowards, GetToFlatGround};
-use nalgebra::Point3;
-use routing::plan::RoutePlanError;
+use routing::models::{CarState, RoutePlanError};
 use strategy::Context;
 use utils::geometry::ExtendPoint3;
 
@@ -30,6 +32,14 @@ impl RoutePlanError {
 
 pub struct NotOnFlatGround;
 
+impl NotOnFlatGround {
+    pub fn evaluate(&mut self, state: &CarState) -> bool {
+        let rot = state.forward_axis();
+        let rot_flat = state.forward_axis().to_2d().to_3d();
+        rot.angle(&rot_flat) >= 15.0_f32.to_radians()
+    }
+}
+
 impl Predicate for NotOnFlatGround {
     fn name(&self) -> &str {
         stringify!(NotOnFlatGround)
@@ -41,6 +51,17 @@ impl Predicate for NotOnFlatGround {
 }
 
 pub struct IsSkidding;
+
+impl IsSkidding {
+    pub fn evaluate(&mut self, state: &CarState) -> bool {
+        if state.vel.norm() >= 100.0 {
+            if state.vel.normalize().dot(&car_forward_axis(state.rot)) < SKIDDING_THRESHOLD {
+                return true;
+            }
+        }
+        false
+    }
+}
 
 impl Predicate for IsSkidding {
     fn name(&self) -> &str {
@@ -55,31 +76,5 @@ impl Predicate for IsSkidding {
             }
         }
         false
-    }
-}
-
-pub struct FutureBallLoc {
-    time: f32,
-    loc: Point3<f32>,
-}
-
-impl FutureBallLoc {
-    pub fn new(time: f32, loc: Point3<f32>) -> Self {
-        Self { time, loc }
-    }
-}
-
-impl Predicate for FutureBallLoc {
-    fn name(&self) -> &str {
-        stringify!(FutureBallLoc)
-    }
-
-    fn evaluate(&mut self, ctx: &mut Context) -> bool {
-        let t = self.time - ctx.packet.GameInfo.TimeSeconds;
-        let expected = some_or_else!(ctx.scenario.ball_prediction().at_time(t), {
-            return false;
-        });
-        let error = (self.loc - expected.loc).norm();
-        error < 100.0
     }
 }

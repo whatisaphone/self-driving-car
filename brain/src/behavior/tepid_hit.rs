@@ -1,10 +1,10 @@
-use behavior::{higher_order::WithDraw, Action, Behavior, Chain, Priority, While};
+use behavior::{Action, Behavior, Priority};
 use common::ext::ExtendPhysics;
 use eeg::{color, Drawable};
 use maneuvers::GroundedHit;
 use nalgebra::{Point2, Point3};
 use plan::hit_angle::{feasible_hit_angle_away, feasible_hit_angle_toward};
-use routing::{behavior::FollowRoute, plan, recover::FutureBallLoc};
+use routing::{behavior::FollowRoute, plan::GroundIntercept};
 use std::f32::consts::PI;
 use strategy::Context;
 use utils::{
@@ -25,37 +25,14 @@ impl Behavior for TepidHit {
         stringify!(TepidHit)
     }
 
-    fn execute2(&mut self, ctx: &mut Context) -> Action {
-        let info = match plan::ground_intercept(ctx) {
-            Ok(info) => info,
-            Err(err) => {
-                ctx.eeg.log(format!("[TepidHit] Plan error: {:?}", err));
-                if let Some(recover) = err.recover(ctx) {
-                    return Action::Call(recover);
-                }
-                return Action::Abort;
-            }
-        };
-
-        let mut chain = Vec::<Box<Behavior>>::new();
-
-        let new_duration = info.plan.duration() - 1.0;
-        if let Some(plan) = info.plan.truncate_to_duration(new_duration) {
-            chain.push(Box::new(While::new(
-                FutureBallLoc::new(
-                    ctx.packet.GameInfo.TimeSeconds + info.intercept.time,
-                    info.intercept.ball_loc,
-                ),
-                WithDraw::new(
-                    vec![Drawable::GhostBall(info.intercept.ball_loc.coords)],
-                    FollowRoute::new(plan),
-                ),
-            )));
-        }
-
-        chain.push(Box::new(GroundedHit::hit_towards(time_wasting_hit)));
-
-        Action::call(Chain::new(Priority::Idle, chain))
+    fn execute2(&mut self, _ctx: &mut Context) -> Action {
+        return Action::call(chain!(
+            Priority::Idle,
+            [
+                FollowRoute::new(GroundIntercept::new()),
+                GroundedHit::hit_towards(time_wasting_hit),
+            ],
+        ));
     }
 }
 

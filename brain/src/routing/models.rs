@@ -2,7 +2,7 @@ use common::{ext::ExtendPhysics, physics};
 use nalgebra::{Point2, Point3, Unit, UnitComplex, UnitQuaternion, Vector2, Vector3};
 use rlbot;
 use simulate::rl;
-use strategy::Context;
+use strategy::{Context, Scenario};
 use utils::geometry::{ExtendPoint2, ExtendUnitComplex, ExtendVector2};
 
 #[derive(Clone)]
@@ -52,11 +52,37 @@ impl CarState2D {
     }
 }
 
+pub trait RoutePlanner: RoutePlannerCloneBox + Send {
+    fn plan(&self, start: &CarState, scenario: &Scenario) -> Result<RouteStep, RoutePlanError>;
+}
+
+pub trait RoutePlannerCloneBox {
+    fn clone_box(&self) -> Box<RoutePlanner>;
+}
+
+impl<T: RoutePlanner + Clone + 'static> RoutePlannerCloneBox for T {
+    fn clone_box(&self) -> Box<RoutePlanner> {
+        Box::new(self.clone())
+    }
+}
+
+#[derive(Debug)]
+pub enum RoutePlanError {
+    MustBeOnFlatGround,
+    MustNotBeSkidding,
+    UnknownIntercept,
+    OtherError(&'static str),
+}
+
+pub struct RouteStep {
+    pub segment: Box<SegmentPlan>,
+    pub next: Option<Box<RoutePlanner>>,
+}
+
 pub trait SegmentPlan: Send {
     fn start(&self) -> CarState;
     fn end(&self) -> CarState;
     fn duration(&self) -> f32;
-    fn truncate_to_duration(&self, duration: f32) -> Box<SegmentPlan>;
     fn run(&self) -> Box<SegmentRunner>;
     fn draw(&self, ctx: &mut Context);
 }
@@ -69,64 +95,4 @@ pub enum SegmentRunAction {
     Yield(rlbot::ffi::PlayerInput),
     Success,
     Failure,
-}
-
-pub struct RoutePlan {
-    pub(in routing) segments: Vec<Box<SegmentPlan>>,
-}
-
-impl RoutePlan {
-    pub(in routing) fn new(segments: Vec<Box<SegmentPlan>>) -> Self {
-        Self { segments }
-    }
-
-    pub fn end(&self) -> CarState {
-        self.segments.last().unwrap().end()
-    }
-
-    pub fn duration(&self) -> f32 {
-        self.segments.iter().map(|s| s.duration()).sum()
-    }
-
-    pub fn draw(&self, ctx: &mut Context) {
-        for segment in self.segments.iter() {
-            segment.draw(ctx);
-        }
-    }
-
-    /// Modify this plan so it finishes in a shorter time.
-    ///
-    /// The shortened plan will of course not accomplish everything the
-    /// original plan does, because there is no longer enough time.
-    pub fn truncate_to_duration(self, target_duration: f32) -> Option<Self> {
-        let cur_duration = self.duration();
-        if target_duration <= 0.0 {
-            return None;
-        } else if target_duration >= cur_duration {
-            return Some(self);
-        }
-
-        let split = Self::calc_split(self.segments.iter().map(|s| s.duration()), target_duration);
-        let (index, cut_duration) = some_or_else!(split, {
-            return None;
-        });
-
-        let cut = self.segments[index].truncate_to_duration(cut_duration);
-
-        let mut segments = self.segments;
-        segments.truncate(index);
-        segments.push(cut);
-        Some(Self { segments })
-    }
-
-    fn calc_split(xs: impl Iterator<Item = f32>, target: f32) -> Option<(usize, f32)> {
-        let mut total = 0.0;
-        for (i, x) in xs.enumerate() {
-            if total + x >= target {
-                return Some((i, target - total));
-            }
-            total += x;
-        }
-        return None;
-    }
 }

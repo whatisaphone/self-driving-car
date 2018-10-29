@@ -144,17 +144,6 @@ impl SegmentPlan for SimpleArc {
         self.radius * self.sweep.abs() / self.start_vel.norm()
     }
 
-    fn truncate_to_duration(&self, duration: f32) -> Box<SegmentPlan> {
-        Box::new(Self {
-            center: self.center,
-            radius: self.radius,
-            start_loc: self.start_loc,
-            start_vel: self.start_vel,
-            start_boost: self.start_boost,
-            sweep: self.sweep * (duration / self.duration()),
-        })
-    }
-
     fn run(&self) -> Box<SegmentRunner> {
         Box::new(SimpleArcRunner::new(self.clone()))
     }

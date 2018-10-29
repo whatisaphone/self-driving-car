@@ -6,13 +6,11 @@ use strategy::Context;
 
 /// Run `child` until it returns, then do nothing forever.
 
-#[allow(dead_code)]
 pub struct Fuse {
     child: Option<Box<Behavior>>,
 }
 
 impl Fuse {
-    #[allow(dead_code)]
     pub fn new(child: Box<Behavior>) -> Self {
         Self { child: Some(child) }
     }
@@ -33,7 +31,6 @@ impl Behavior for Fuse {
 }
 
 /// Run `behavior` forever
-#[allow(dead_code)]
 pub struct Repeat<B, F>
 where
     B: Behavior,
@@ -48,7 +45,6 @@ where
     B: Behavior,
     F: Fn() -> B + Send,
 {
-    #[allow(dead_code)]
     pub fn new(factory: F) -> Self {
         let current = factory();
         Self { factory, current }
@@ -122,6 +118,13 @@ pub struct Chain {
     name: String,
 }
 
+macro_rules! chain {
+    ($priority:expr, [$($child:expr),+ $(,)*] $(,)*) => {{
+        use behavior::Chain;
+        Chain::new($priority, vec![$(Box::new($child)),+])
+    }}
+}
+
 impl Chain {
     pub fn new(priority: Priority, children: Vec<Box<Behavior>>) -> Self {
         Self {
@@ -193,7 +196,6 @@ impl Behavior for Chain {
 }
 
 /// Run the first `child` that does not immediately return or abort.
-#[allow(dead_code)]
 pub struct TryChoose {
     priority: Priority,
     choices: Vec<Box<Behavior>>,
@@ -201,7 +203,6 @@ pub struct TryChoose {
     name: String,
 }
 
-#[allow(dead_code)]
 impl TryChoose {
     pub fn new(priority: Priority, choices: Vec<Box<Behavior>>) -> Self {
         let name = Self::name(choices.iter());

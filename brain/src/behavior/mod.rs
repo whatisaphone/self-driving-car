@@ -12,6 +12,8 @@ mod bounce_dribble;
 // mod carry_from_bounce;
 // mod corner_offense;
 mod defense;
+#[allow(dead_code)]
+#[macro_use]
 mod higher_order;
 mod null;
 mod offense;

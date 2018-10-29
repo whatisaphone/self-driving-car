@@ -20,20 +20,6 @@ pub fn estimate_intercept_car_ball(
     intercept.map(Into::into)
 }
 
-pub fn estimate_intercept_car_ball_2(
-    ctx: &mut Context,
-    car: &rlbot::ffi::PlayerInfo,
-    predicate: impl Fn(&BallFrame) -> bool,
-) -> Option<NaiveIntercept> {
-    naive_ground_intercept(
-        ctx.scenario.ball_prediction().iter(),
-        car.Physics.locp(),
-        car.Physics.vel(),
-        car.Boost as f32,
-        predicate,
-    )
-}
-
 pub fn naive_ground_intercept<'a>(
     mut ball: impl Iterator<Item = &'a BallFrame>,
     start_loc: Point3<f32>,

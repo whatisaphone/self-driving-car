@@ -81,31 +81,6 @@ impl SegmentPlan for Straight {
         self.duration
     }
 
-    fn truncate_to_duration(&self, duration: f32) -> Box<SegmentPlan> {
-        let mut car = Car1D::new(self.start_vel.norm()).with_boost_float(self.start_boost);
-        let total_dist = (self.end_loc - self.start_loc).norm();
-        loop {
-            car.step(1.0 / 120.0, 1.0, true);
-            if car.distance_traveled() >= total_dist {
-                break;
-            }
-            if car.time() >= duration {
-                break;
-            }
-        }
-
-        Box::new(Self {
-            start_loc: self.start_loc,
-            start_vel: self.start_vel,
-            start_boost: self.start_boost,
-            end_loc: self.start_loc
-                + (self.end_loc - self.start_loc).normalize() * car.distance_traveled(),
-            end_vel: (self.end_loc - self.start_loc).normalize() * car.speed(),
-            end_boost: car.boost(),
-            duration: car.time(),
-        })
-    }
-
     fn run(&self) -> Box<SegmentRunner> {
         Box::new(StraightRunner::new(self.clone()))
     }

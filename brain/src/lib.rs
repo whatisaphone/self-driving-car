@@ -5,6 +5,8 @@ extern crate chip;
 extern crate collect;
 extern crate common;
 extern crate crossbeam_channel;
+#[macro_use]
+extern crate derive_new;
 #[cfg(test)]
 extern crate flatbuffers;
 extern crate graphics;

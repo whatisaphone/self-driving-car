@@ -194,10 +194,15 @@ impl<N: Real> ExtendUnitVector3<N> for Unit<Vector3<N>> {
 
 pub trait ExtendUnitVector2<N: Real> {
     fn rotation_to(&self, other: &Self) -> UnitComplex<N>;
+    fn to_3d(&self) -> Unit<Vector3<N>>;
 }
 
 impl<N: Real> ExtendUnitVector2<N> for Unit<Vector2<N>> {
     fn rotation_to(&self, other: &Self) -> UnitComplex<N> {
         UnitComplex::rotation_between_axis(self, other)
+    }
+
+    fn to_3d(&self) -> Unit<Vector3<N>> {
+        Unit::new_unchecked(Vector3::new(self.x, self.y, nalgebra::zero()))
     }
 }

@@ -45,10 +45,6 @@ impl SegmentPlan for PowerslideTurn {
         self.plan.duration
     }
 
-    fn truncate_to_duration(&self, _duration: f32) -> Box<SegmentPlan> {
-        unimplemented!();
-    }
-
     fn run(&self) -> Box<SegmentRunner> {
         Box::new(PowerslideTurnRunner::new(self.clone()))
     }
