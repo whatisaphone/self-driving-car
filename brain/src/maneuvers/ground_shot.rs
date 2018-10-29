@@ -1,9 +1,10 @@
 use behavior::{Action, Behavior};
+use common::ext::ExtendPoint3;
 use eeg::{color, Drawable};
 use maneuvers::{BounceShot, GetToFlatGround};
 use mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
 use nalgebra::{Vector2, Vector3};
-use predict::estimate_intercept_car_ball;
+use predict::naive_ground_intercept;
 use std::f32::consts::PI;
 use strategy::Context;
 use utils::{enemy_goal_center, ExtendF32, ExtendPhysics, ExtendVector2, ExtendVector3};
@@ -46,18 +47,29 @@ impl Behavior for GroundShot {
         }
 
         let me = ctx.me();
-        let intercept = estimate_intercept_car_ball(ctx, me, |_t, &loc, _vel| {
-            loc.z < Self::MAX_BALL_Z && Self::good_angle(loc, me.Physics.loc(), enemy_goal_center())
-        });
+        let intercept = naive_ground_intercept(
+            ctx.scenario.ball_prediction().iter(),
+            me.Physics.locp(),
+            me.Physics.vel(),
+            me.Boost as f32,
+            |ball| {
+                ball.loc.z < Self::MAX_BALL_Z
+                    && Self::good_angle(
+                        ball.loc.coords,
+                        me.Physics.locp().coords,
+                        enemy_goal_center(),
+                    )
+            },
+        );
 
         let intercept = some_or_else!(intercept, {
             ctx.eeg.log("[GroundShot] no good intercept");
             return Action::Abort;
         });
 
-        let aim_loc = BounceShot::aim_loc(me.Physics.loc().to_2d(), intercept.ball_loc.to_2d());
+        let aim_loc = BounceShot::aim_loc(me.Physics.locp().to_2d(), intercept.ball_loc.to_2d());
         let target_loc = BounceShot::rough_shooting_spot(&intercept, aim_loc);
-        let target_dist = (target_loc - me.Physics.loc().to_2d()).norm();
+        let target_dist = (target_loc - me.Physics.locp().to_2d()).norm();
 
         // If the ball has moved further away, assume we hit it and we're done.
         match self.min_distance {
@@ -65,8 +77,8 @@ impl Behavior for GroundShot {
             _ => self.min_distance = Some(target_dist),
         }
 
-        ctx.eeg.draw(Drawable::GhostBall(intercept.ball_loc));
-        ctx.eeg.draw(Drawable::Crosshair(aim_loc));
+        ctx.eeg.draw(Drawable::GhostBall(intercept.ball_loc.coords));
+        ctx.eeg.draw(Drawable::Crosshair(aim_loc.coords));
         ctx.eeg.draw(Drawable::print(
             format!("intercept_time: {:.2}", intercept.time),
             color::GREEN,
@@ -81,8 +93,10 @@ impl Behavior for GroundShot {
         }
 
         // TODO: this is not how this works…
-        let mut child =
-            GroundAccelToLoc::new(target_loc, ctx.packet.GameInfo.TimeSeconds + intercept.time);
+        let mut child = GroundAccelToLoc::new(
+            target_loc.coords,
+            ctx.packet.GameInfo.TimeSeconds + intercept.time,
+        );
         child.execute2(ctx)
     }
 }

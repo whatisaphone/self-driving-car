@@ -1,17 +1,20 @@
 use behavior::{Action, Behavior};
-use common::ext::ExtendPhysics;
+use common::ext::{ExtendPhysics, ExtendPoint3};
 use eeg::{color, Drawable};
 use mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
-use nalgebra::Vector2;
-use predict::{estimate_intercept_car_ball, Intercept};
+use nalgebra::{Point2, Vector2};
+use predict::{intercept::NaiveIntercept, naive_ground_intercept};
 use rules::SameBallTrajectory;
 use simulate::rl;
 use std::f32::consts::PI;
 use strategy::Context;
-use utils::{enemy_goal_center, ExtendF32, ExtendVector2, ExtendVector3, WallRayCalculator};
+use utils::{
+    enemy_goal_center, enemy_goal_center_point, ExtendF32, ExtendVector2, ExtendVector3,
+    WallRayCalculator,
+};
 
 pub struct BounceShot {
-    aim_loc: Vector2<f32>,
+    aim_loc: Point2<f32>,
     same_ball_trajectory: SameBallTrajectory,
 }
 
@@ -20,13 +23,16 @@ impl BounceShot {
 
     pub fn new() -> Self {
         Self {
-            aim_loc: enemy_goal_center(),
+            aim_loc: enemy_goal_center_point(),
             same_ball_trajectory: SameBallTrajectory::new(),
         }
     }
 
     pub fn with_target_loc(self, aim_loc: Vector2<f32>) -> Self {
-        Self { aim_loc, ..self }
+        Self {
+            aim_loc: Point2::from_coordinates(aim_loc),
+            ..self
+        }
     }
 }
 
@@ -39,12 +45,18 @@ impl Behavior for BounceShot {
         return_some!(self.same_ball_trajectory.execute(ctx));
 
         let me = ctx.me();
-        let intercept = estimate_intercept_car_ball(ctx, me, |_t, loc, vel| {
-            // What we actually want is vel.z >= 0, e.g. the upward half of a bounce. But
-            // velocity will be approx. -6.8 when the ball is stationary, due to gravity
-            // being applied after collision handling.
-            loc.z < Self::MAX_BALL_Z && vel.z >= -10.0
-        });
+        let intercept = naive_ground_intercept(
+            ctx.scenario.ball_prediction().iter(),
+            me.Physics.locp(),
+            me.Physics.vel(),
+            me.Boost as f32,
+            |ball| {
+                // What we actually want is vel.z >= 0, e.g. the upward half of a bounce. But
+                // velocity will be approx. -6.8 when the ball is stationary, due to gravity
+                // being applied after collision handling.
+                ball.loc.z < Self::MAX_BALL_Z && ball.vel.z >= -10.0
+            },
+        );
 
         let intercept = some_or_else!(intercept, {
             ctx.eeg.log("[BounceShot] unknown intercept");
@@ -52,10 +64,10 @@ impl Behavior for BounceShot {
         });
 
         let intercept_car_loc = Self::rough_shooting_spot(&intercept, self.aim_loc);
-        let distance = (ctx.me().Physics.loc().to_2d() - intercept_car_loc).norm();
+        let distance = (ctx.me().Physics.locp().to_2d() - intercept_car_loc).norm();
 
-        ctx.eeg.draw(Drawable::Crosshair(self.aim_loc));
-        ctx.eeg.draw(Drawable::GhostBall(intercept.ball_loc));
+        ctx.eeg.draw(Drawable::Crosshair(self.aim_loc.coords));
+        ctx.eeg.draw(Drawable::GhostBall(intercept.ball_loc.coords));
         ctx.eeg.draw(Drawable::print(
             format!("intercept_time: {:.2}", intercept.time),
             color::GREEN,
@@ -71,7 +83,7 @@ impl Behavior for BounceShot {
 
         // TODO: this is not how this works…
         let mut child = GroundAccelToLoc::new(
-            intercept_car_loc,
+            intercept_car_loc.coords,
             ctx.packet.GameInfo.TimeSeconds + intercept.time,
         );
         child.execute2(ctx)
@@ -80,22 +92,22 @@ impl Behavior for BounceShot {
 
 impl BounceShot {
     /// Given a ball location, where should we aim the shot?
-    pub fn aim_loc(car_loc: Vector2<f32>, ball_loc: Vector2<f32>) -> Vector2<f32> {
+    pub fn aim_loc(car_loc: Point2<f32>, ball_loc: Point2<f32>) -> Point2<f32> {
         // If the ball is very close to goal, aim for a point in goal opposite from the
         // ball for an easy shot. If there's some distance, aim at the middle of goal
         // so we're less likely to miss.
         let y_dist = (enemy_goal_center().y - ball_loc.y).abs();
         let allow_angle_diff = ((1000.0 - y_dist) / 1000.0).max(0.0) * PI / 12.0;
-        let naive_angle = car_loc.angle_to(ball_loc);
-        let goal_angle = ball_loc.angle_to(enemy_goal_center());
+        let naive_angle = car_loc.coords.angle_to(ball_loc.coords);
+        let goal_angle = ball_loc.coords.angle_to(enemy_goal_center());
         let adjust = (naive_angle - goal_angle).normalize_angle();
         let aim_angle = goal_angle + adjust.max(-allow_angle_diff).min(allow_angle_diff);
-        WallRayCalculator::calc_ray(ball_loc, aim_angle)
+        Point2::from_coordinates(WallRayCalculator::calc_ray(ball_loc.coords, aim_angle))
     }
 
     /// Roughly where should the car be when it makes contact with the ball, in
     /// order to shoot at `aim_loc`?
-    pub fn rough_shooting_spot(intercept: &Intercept, aim_loc: Vector2<f32>) -> Vector2<f32> {
+    pub fn rough_shooting_spot(intercept: &NaiveIntercept, aim_loc: Point2<f32>) -> Point2<f32> {
         // This is not the greatest guess
         let guess_final_ball_speed = f32::min(intercept.car_speed * 1.25, rl::CAR_MAX_SPEED);
         let desired_vel =

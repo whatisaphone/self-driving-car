@@ -1,14 +1,15 @@
 use behavior::{Action, Behavior};
+use common::ext::ExtendPoint3;
 use eeg::{color, Drawable};
 use maneuvers::{drive_towards, BounceShot, GetToFlatGround};
 use mechanics::simple_yaw_diff;
-use predict::estimate_intercept_car_ball;
+use predict::naive_ground_intercept;
 use rlbot;
 use rules::SameBallTrajectory;
 use simulate::{rl, Car1D, CarAerial60Deg};
 use std::f32::consts::PI;
 use strategy::Context;
-use utils::{ExtendPhysics, ExtendVector2, ExtendVector3};
+use utils::{geometry::ExtendPoint2, ExtendPhysics, ExtendVector3};
 
 const Z_FUDGE: f32 = 75.0;
 
@@ -64,33 +65,39 @@ impl JumpShot {
 
         let me = ctx.me();
 
-        let intercept = estimate_intercept_car_ball(ctx, me, |t, &loc, _vel| {
-            let air_time = CarAerial60Deg::cost(loc.z - Z_FUDGE).time;
-            if t < air_time {
-                return false;
-            }
+        let intercept = naive_ground_intercept(
+            ctx.scenario.ball_prediction().iter(),
+            me.Physics.locp(),
+            me.Physics.vel(),
+            me.Boost as f32,
+            |ball| {
+                let air_time = CarAerial60Deg::cost(ball.loc.z - Z_FUDGE).time;
+                if ball.t < air_time {
+                    return false;
+                }
 
-            loc.z < Self::MAX_BALL_Z
-        });
+                ball.loc.z < Self::MAX_BALL_Z
+            },
+        );
 
         let intercept = some_or_else!(intercept, {
             ctx.eeg.log("[JumpShot] no good intercept");
             return Action::Abort;
         });
 
-        let aim_loc = BounceShot::aim_loc(me.Physics.loc().to_2d(), intercept.ball_loc.to_2d());
+        let aim_loc = BounceShot::aim_loc(me.Physics.locp().to_2d(), intercept.ball_loc.to_2d());
         let target_loc = BounceShot::rough_shooting_spot(&intercept, aim_loc);
-        let yaw_diff = simple_yaw_diff(&me.Physics, target_loc);
-        let distance = (me.Physics.loc().to_2d() - target_loc).norm();
+        let yaw_diff = simple_yaw_diff(&me.Physics, target_loc.coords);
+        let distance = (me.Physics.locp().to_2d() - target_loc).norm();
         let air_time = CarAerial60Deg::cost(intercept.ball_loc.z - Z_FUDGE).time;
         let available_ground_time = intercept.time - air_time;
 
         ctx.eeg
             .draw(Drawable::print(stringify!(Phase::Ground), color::GREEN));
-        ctx.eeg.draw(Drawable::GhostBall(intercept.ball_loc));
-        ctx.eeg.draw(Drawable::Crosshair(aim_loc));
+        ctx.eeg.draw(Drawable::GhostBall(intercept.ball_loc.coords));
+        ctx.eeg.draw(Drawable::Crosshair(aim_loc.coords));
         ctx.eeg.draw(Drawable::GhostCar(
-            target_loc.to_3d(intercept.ball_loc.z),
+            target_loc.to_3d(intercept.ball_loc.z).coords,
             me.Physics.rot(),
         ));
         ctx.eeg.draw(Drawable::print(
@@ -119,7 +126,7 @@ impl JumpShot {
             return self.execute2(ctx);
         }
 
-        let yaw_diff = simple_yaw_diff(&me.Physics, target_loc);
+        let yaw_diff = simple_yaw_diff(&me.Physics, target_loc.coords);
         let too_fast = estimate_approach(
             me.Physics.vel().norm(),
             distance,
@@ -127,7 +134,7 @@ impl JumpShot {
             air_time,
         );
 
-        let mut result = drive_towards(ctx.packet, ctx.eeg, target_loc);
+        let mut result = drive_towards(ctx.packet, ctx.eeg, target_loc.coords);
         if too_fast {
             result.Throttle = 0.0;
         } else {

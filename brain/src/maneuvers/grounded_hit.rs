@@ -4,7 +4,7 @@ use eeg::{color, Drawable};
 use maneuvers::BounceShot;
 use mechanics::{simple_steer_towards, QuickJumpAndDodge};
 use nalgebra::{Point2, Point3};
-use predict::{estimate_intercept_car_ball, Intercept};
+use predict::{intercept::NaiveIntercept, naive_ground_intercept};
 use rlbot;
 use simulate::{ball_car_distance, car_single_jump::time_to_z, rl, Car, CarSimulateError};
 use strategy::Context;
@@ -16,7 +16,7 @@ where
 {
     aim: Aim,
     aim_loc: Option<Point2<f32>>,
-    intercept: Option<Intercept>,
+    intercept: Option<NaiveIntercept>,
     intercept_time: Option<f32>,
 }
 
@@ -61,8 +61,13 @@ where
         let me = ctx.me();
 
         // TODO: replace intercept finding with route planning
-        let intercept =
-            estimate_intercept_car_ball(ctx, me, |_t, loc, _vel| loc.z < Self::MAX_BALL_Z);
+        let intercept = naive_ground_intercept(
+            ctx.scenario.ball_prediction().iter(),
+            me.Physics.locp(),
+            me.Physics.vel(),
+            me.Boost as f32,
+            |ball| ball.loc.z < Self::MAX_BALL_Z,
+        );
 
         let intercept = some_or_else!(intercept, {
             ctx.eeg.log("[GroundedHit] can't find intercept");
@@ -101,19 +106,16 @@ where
     fn target_loc(&mut self, ctx: &mut Context) -> Result<Point3<f32>, ()> {
         let intercept = self.intercept.as_ref().unwrap();
         let intercept_time = self.intercept_time.unwrap();
-        let intercept_ball_loc = Point3::from_coordinates(intercept.ball_loc);
 
         let me = ctx.me();
-        let aim_loc = (self.aim)(ctx, intercept_ball_loc)?;
+        let aim_loc = (self.aim)(ctx, intercept.ball_loc)?;
         self.aim_loc = Some(aim_loc);
-        let target_loc_xy = BounceShot::rough_shooting_spot(intercept, aim_loc.coords);
-        let target_loc_xy = Point2::from_coordinates(target_loc_xy);
+        let target_loc_xy = BounceShot::rough_shooting_spot(intercept, aim_loc);
         let target_loc = target_loc_xy.to_3d(intercept.ball_loc.z);
 
         // Calculate the precise location where we get as close to the ball as possible.
-        let intercept_ball_loc = Point3::from_coordinates(intercept.ball_loc);
-        let distance = ball_car_distance(intercept_ball_loc, target_loc, me.Physics.quat());
-        let target_loc = target_loc + (intercept_ball_loc - target_loc).normalize() * distance;
+        let distance = ball_car_distance(intercept.ball_loc, target_loc, me.Physics.quat());
+        let target_loc = target_loc + (intercept.ball_loc - target_loc).normalize() * distance;
 
         ctx.eeg.draw(Drawable::print(
             format!("intercept_time: {:.2}", intercept_time),
@@ -124,7 +126,7 @@ where
             color::GREEN,
         ));
         ctx.eeg.draw(Drawable::Crosshair(aim_loc.coords));
-        ctx.eeg.draw(Drawable::GhostBall(intercept_ball_loc.coords));
+        ctx.eeg.draw(Drawable::GhostBall(intercept.ball_loc.coords));
         ctx.eeg
             .draw(Drawable::GhostCar(target_loc.coords, me.Physics.rot()));
 
@@ -210,11 +212,10 @@ where
     fn jump(&self, ctx: &mut Context, target_loc: Point3<f32>) -> Action {
         let aim_loc = self.aim_loc.as_ref().unwrap();
         let intercept = self.intercept.as_ref().unwrap();
-        let intercept_ball_loc = Point3::from_coordinates(intercept.ball_loc);
 
         let me = ctx.me();
         let forward = me.Physics.forward_axis().to_2d();
-        let flip_dir = forward.rotation_to(aim_loc - intercept_ball_loc.to_2d());
+        let flip_dir = forward.rotation_to(aim_loc - intercept.ball_loc.to_2d());
         let dodge_time = time_to_z(target_loc.z).unwrap();
         Action::call(
             QuickJumpAndDodge::new()
