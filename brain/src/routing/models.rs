@@ -34,6 +34,7 @@ impl<'a> From<&'a rlbot::ffi::PlayerInfo> for CarState {
     }
 }
 
+#[derive(Clone)]
 pub struct CarState2D {
     pub loc: Point2<f32>,
     pub rot: UnitComplex<f32>,
@@ -42,6 +43,10 @@ pub struct CarState2D {
 }
 
 impl CarState2D {
+    pub fn right_axis(&self) -> Unit<Vector2<f32>> {
+        physics::car_right_axis_2d(self.rot)
+    }
+
     pub fn to_3d(&self) -> CarState {
         CarState {
             loc: self.loc.to_3d(rl::OCTANE_NEUTRAL_Z),
