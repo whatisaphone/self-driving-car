@@ -59,10 +59,19 @@ impl Brain {
         ));
         eeg.draw(Drawable::print(
             format!(
-                "p1: ({:.0}, {:.0}, {:.0})",
+                "p1 loc: ({:.0}, {:.0}, {:.0})",
                 packet.GameCars[0].Physics.Location.X,
                 packet.GameCars[0].Physics.Location.Y,
                 packet.GameCars[0].Physics.Location.Z,
+            ),
+            color::GREEN,
+        ));
+        eeg.draw(Drawable::print(
+            format!(
+                "p1 vel: ({:.0}, {:.0}, {:.0})",
+                packet.GameCars[0].Physics.Velocity.X,
+                packet.GameCars[0].Physics.Velocity.Y,
+                packet.GameCars[0].Physics.Velocity.Z,
             ),
             color::GREEN,
         ));
