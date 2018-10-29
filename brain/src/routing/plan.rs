@@ -6,7 +6,7 @@ use predict::naive_ground_intercept;
 use routing::{
     models::{CarState, RoutePlanError, RoutePlanner, RoutePlannerCloneBox, RouteStep},
     recover::{IsSkidding, NotOnFlatGround},
-    segments::{NullSegment, SimpleArc, Straight, Turn},
+    segments::{SimpleArc, Straight, Turn},
 };
 use strategy::Scenario;
 use utils::geometry::circle_point_tangents;
@@ -91,23 +91,17 @@ impl RoutePlannerCloneBox for TurnPlanner {
 }
 
 impl RoutePlanner for TurnPlanner {
-    fn plan(&self, start: &CarState, _scenario: &Scenario) -> Result<RouteStep, RoutePlanError> {
-        let (turn_center, turn_radius, tangent) =
-            match calculate_circle_turn(start, self.target_loc)? {
-                Some(x) => x,
-                None => {
-                    return Ok(RouteStep {
-                        segment: Box::new(NullSegment::new(start.clone())),
-                        next: Some(self.next.clone_box()),
-                    })
-                }
-            };
+    fn plan(&self, start: &CarState, scenario: &Scenario) -> Result<RouteStep, RoutePlanError> {
+        let turn = match calculate_circle_turn(start, self.target_loc)? {
+            Some(x) => x,
+            None => return self.next.plan(start, scenario),
+        };
         let segment = Turn::new(
             start.clone(),
             self.target_loc,
-            turn_center,
-            turn_radius,
-            tangent,
+            turn.center,
+            turn.radius,
+            turn.tangent,
         );
         Ok(RouteStep {
             segment: Box::new(segment),
@@ -133,28 +127,22 @@ impl RoutePlannerCloneBox for ArcTowards {
 }
 
 impl RoutePlanner for ArcTowards {
-    fn plan(&self, start: &CarState, _scenario: &Scenario) -> Result<RouteStep, RoutePlanError> {
+    fn plan(&self, start: &CarState, scenario: &Scenario) -> Result<RouteStep, RoutePlanError> {
         guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
         guard!(start, IsSkidding, RoutePlanError::MustNotBeSkidding);
 
-        let (turn_center, turn_radius, tangent) =
-            match calculate_circle_turn(start, self.target_loc)? {
-                Some(x) => x,
-                None => {
-                    return Ok(RouteStep {
-                        segment: Box::new(NullSegment::new(start.clone())),
-                        next: Some(self.next.clone_box()),
-                    })
-                }
-            };
+        let turn = match calculate_circle_turn(start, self.target_loc)? {
+            Some(x) => x,
+            None => return self.next.plan(start, scenario),
+        };
 
         let segment = SimpleArc::new(
-            turn_center,
-            turn_radius,
+            turn.center,
+            turn.radius,
             start.loc.to_2d(),
             start.vel.to_2d(),
             start.boost,
-            tangent,
+            turn.tangent,
         )
         .map_err(|err| RoutePlanError::OtherError(err.to_str()))?;
         Ok(RouteStep {
@@ -167,7 +155,7 @@ impl RoutePlanner for ArcTowards {
 fn calculate_circle_turn(
     start: &CarState,
     target_loc: Point2<f32>,
-) -> Result<Option<(Point2<f32>, f32, Point2<f32>)>, RoutePlanError> {
+) -> Result<Option<CircleTurn>, RoutePlanError> {
     let start_loc = start.loc.to_2d();
     let start_vel = start.vel.to_2d();
     let start_forward_axis = start.forward_axis().to_2d();
@@ -206,5 +194,15 @@ fn calculate_circle_turn(
         (false, true) => tangent2,
         _ => return Err(RoutePlanError::OtherError("!= 1 tangent?")),
     };
-    Ok(Some((turn_center, turn_radius, tangent)))
+    Ok(Some(CircleTurn {
+        center: turn_center,
+        radius: turn_radius,
+        tangent,
+    }))
+}
+
+struct CircleTurn {
+    center: Point2<f32>,
+    radius: f32,
+    tangent: Point2<f32>,
 }
