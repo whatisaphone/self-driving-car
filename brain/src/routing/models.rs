@@ -2,6 +2,7 @@ use common::{ext::ExtendPhysics, physics};
 use nalgebra::{Point2, Point3, Unit, UnitComplex, UnitQuaternion, Vector2, Vector3};
 use rlbot;
 use simulate::rl;
+use std::iter;
 use strategy::{Context, Scenario};
 use utils::geometry::{ExtendPoint2, ExtendUnitComplex, ExtendVector2};
 
@@ -55,6 +56,48 @@ impl CarState2D {
 
 pub trait RoutePlanner: RoutePlannerCloneBox + Send {
     fn plan(&self, start: &CarState, scenario: &Scenario) -> Result<RouteStep, RoutePlanError>;
+}
+
+impl RouteStep {
+    pub fn provisional_expand<'a>(
+        &'a self,
+        scenario: &Scenario,
+    ) -> Result<ProvisionalPlanExpansion<'a>, RoutePlanError> {
+        let mut tail = Vec::new();
+        if let Some(ref planner) = self.next {
+            Self::expand_round(&**planner, &self.segment.end(), scenario, |s| tail.push(s))?;
+        }
+        Ok(ProvisionalPlanExpansion {
+            head: &*self.segment,
+            tail,
+        })
+    }
+
+    fn expand_round(
+        planner: &RoutePlanner,
+        state: &CarState,
+        scenario: &Scenario,
+        mut sink: impl FnMut(Box<SegmentPlan>),
+    ) -> Result<(), RoutePlanError> {
+        let step = planner.plan(&state, scenario)?;
+        let state = step.segment.end();
+        sink(step.segment);
+        match step.next {
+            Some(planner) => Self::expand_round(&*planner, &state, scenario, sink),
+            None => Ok(()),
+        }
+    }
+}
+
+pub struct ProvisionalPlanExpansion<'a> {
+    head: &'a SegmentPlan,
+    tail: Vec<Box<SegmentPlan>>,
+}
+
+impl<'a> ProvisionalPlanExpansion<'a> {
+    pub fn iter(&'a self) -> impl Iterator<Item = &'a SegmentPlan> {
+        iter::once(self.head).chain(self.tail.iter().map(|s| &**s))
+    }
 }
 
 pub trait RoutePlannerCloneBox {

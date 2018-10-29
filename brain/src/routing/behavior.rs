@@ -1,9 +1,6 @@
 use behavior::{Action, Behavior};
-use routing::models::{
-    CarState, RoutePlanError, RoutePlanner, RouteStep, SegmentPlan, SegmentRunAction, SegmentRunner,
-};
-use std::iter;
-use strategy::{Context, Scenario};
+use routing::models::{RoutePlanError, RoutePlanner, RouteStep, SegmentRunAction, SegmentRunner};
+use strategy::Context;
 
 pub struct FollowRoute {
     /// Option dance: This only holds a planner before the first tick.
@@ -43,50 +40,15 @@ impl Behavior for FollowRoute {
     }
 }
 
-fn expand_plan(
-    step: &RouteStep,
-    state: &CarState,
-    scenario: &Scenario,
-    sink: impl FnMut(Box<SegmentPlan>),
-) -> Result<(), RoutePlanError> {
-    match step.next {
-        Some(ref planner) => expand_plan_round(&**planner, state, scenario, sink),
-        None => Ok(()),
-    }
-}
-
-fn expand_plan_round(
-    planner: &RoutePlanner,
-    state: &CarState,
-    scenario: &Scenario,
-    mut sink: impl FnMut(Box<SegmentPlan>),
-) -> Result<(), RoutePlanError> {
-    let step = planner.plan(&state, scenario)?;
-    let state = step.segment.end();
-    sink(step.segment);
-    match step.next {
-        Some(planner) => expand_plan_round(&*planner, &state, scenario, sink),
-        None => Ok(()),
-    }
-}
-
 impl FollowRoute {
     fn draw(&mut self, ctx: &mut Context) -> Result<(), RoutePlanError> {
         // This provisional expansion serves two purposes:
         // 1. Make sure each segment thinks it can complete successfully.
         // 2. Predict far enough ahead that we can draw the whole plan to the screen.
+        let cur_step = self.cur_step.as_ref().unwrap();
+        let expansion = cur_step.provisional_expand(&ctx.scenario)?;
 
-        let head = &*self.cur_step.as_ref().unwrap().segment;
-        let state = head.end();
-        let mut tail = Vec::new();
-        expand_plan(
-            self.cur_step.as_ref().unwrap(),
-            &state,
-            &ctx.scenario,
-            |s| tail.push(s),
-        )?;
-
-        for segment in iter::once(head).chain(tail.iter().map(|s| &**s)) {
+        for segment in expansion.iter() {
             segment.draw(ctx);
         }
         Ok(())
