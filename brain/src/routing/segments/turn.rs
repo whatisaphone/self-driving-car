@@ -5,7 +5,6 @@ use eeg::{color, Drawable};
 use maneuvers::drive_towards;
 use nalgebra::{Point2, UnitComplex, Vector2};
 use routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner};
-use std::f32::consts::PI;
 use strategy::Context;
 use utils::geometry::ExtendPoint3;
 
@@ -32,20 +31,10 @@ impl Turn {
             vel: start.vel.to_2d(),
             boost: 0.0,
         };
-        let right = start.right_axis().dot(&(start.loc - center)) < 0.0;
 
-        // Go the long way around the circle (more than 180°) if necessary. This avoids
-        // an impossible route with discontinuous reversals at each tangent.
         let sweep = (start.loc - center)
             .rotation_to(projected_end_loc - center)
             .angle();
-        let sweep = if right && sweep < 0.0 {
-            sweep + 2.0 * PI
-        } else if !right && sweep >= 0.0 {
-            sweep - 2.0 * PI
-        } else {
-            sweep
-        };
 
         Self {
             start,
