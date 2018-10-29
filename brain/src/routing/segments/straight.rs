@@ -1,17 +1,10 @@
-use common::{
-    ext::{ExtendPhysics, ExtendUnitVector2},
-    physics::CAR_LOCAL_FORWARD_AXIS_2D,
-};
+use common::{ext::ExtendUnitVector2, physics::CAR_LOCAL_FORWARD_AXIS_2D};
 use eeg::{color, Drawable};
-use mechanics::simple_steer_towards;
 use nalgebra::{Point2, Unit, UnitComplex, Vector2};
-use rlbot;
 use routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner};
 use simulate::Car1D;
 use strategy::Context;
-use utils::geometry::ExtendPoint3;
 
-#[derive(Clone)]
 pub struct Straight {
     start_loc: Point2<f32>,
     start_vel: Vector2<f32>,
@@ -82,7 +75,7 @@ impl SegmentPlan for Straight {
     }
 
     fn run(&self) -> Box<SegmentRunner> {
-        Box::new(StraightRunner::new(self.clone()))
+        Box::new(StraightRunner::new())
     }
 
     fn draw(&self, ctx: &mut Context) {
@@ -91,40 +84,18 @@ impl SegmentPlan for Straight {
     }
 }
 
-struct StraightRunner {
-    plan: Straight,
-}
+struct StraightRunner;
 
 impl StraightRunner {
-    pub fn new(plan: Straight) -> Self {
-        Self { plan }
+    pub fn new() -> Self {
+        StraightRunner
     }
 }
 
 impl SegmentRunner for StraightRunner {
     fn execute(&mut self, ctx: &mut Context) -> SegmentRunAction {
-        let me = ctx.me();
-        let me_loc = me.Physics.locp().to_2d();
-        let cur_dist = (me_loc - self.plan.start_loc)
-            .dot(&(self.plan.end_loc - self.plan.start_loc).normalize());
-
-        if cur_dist >= (self.plan.end_loc - self.plan.start_loc).norm() {
-            return SegmentRunAction::Success;
-        }
-
-        let target_loc = self.plan.start_loc
-            + (self.plan.end_loc - self.plan.start_loc).normalize() * (cur_dist + 250.0);
-
-        ctx.eeg.draw(Drawable::ghost_car_ground(
-            target_loc.coords,
-            me.Physics.rot(),
-        ));
-
-        SegmentRunAction::Yield(rlbot::ffi::PlayerInput {
-            Throttle: 1.0,
-            Steer: simple_steer_towards(&me.Physics, target_loc.coords),
-            Boost: true,
-            ..Default::default()
-        })
+        ctx.eeg
+            .log("[StraightRunner] I assume this will be handled somewhere else");
+        SegmentRunAction::Success
     }
 }
