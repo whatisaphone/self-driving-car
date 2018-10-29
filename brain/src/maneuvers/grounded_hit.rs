@@ -237,9 +237,6 @@ mod integration_tests {
     use nalgebra::Vector3;
     use utils::enemy_goal_center_point;
 
-    // `Repeat` is used in these tests so the shot is not aborted by
-    // `SameBallTrajectory` when the ball bounces.
-
     #[test]
     fn normal_shoot() {
         let test = TestRunner::start0(TestScenario {
