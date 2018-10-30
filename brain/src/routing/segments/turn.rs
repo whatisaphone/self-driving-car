@@ -1,5 +1,5 @@
 use common::ext::{
-    ExtendPhysics, ExtendUnitQuaternion, ExtendUnitVector3, ExtendVector2, ExtendVector3,
+    ExtendPhysics, ExtendUnitQuaternion, ExtendUnitVector2, ExtendVector2, ExtendVector3,
 };
 use eeg::{color, Drawable};
 use maneuvers::drive_towards;
@@ -99,10 +99,8 @@ impl Turner {
 impl SegmentRunner for Turner {
     fn execute(&mut self, ctx: &mut Context) -> SegmentRunAction {
         let me = ctx.me();
-        let me_forward = me.Physics.forward_axis().to_2d();
-        let steer = me_forward
-            .as_ref()
-            .rotation_to(self.plan.target_loc - me.Physics.locp().to_2d());
+        let me_forward = me.Physics.forward_axis_2d();
+        let steer = me_forward.rotation_to(&(self.plan.target_loc - me.Physics.loc_2d()).to_axis());
         if steer.angle() < 5.0_f32.to_radians() {
             return SegmentRunAction::Success;
         }
