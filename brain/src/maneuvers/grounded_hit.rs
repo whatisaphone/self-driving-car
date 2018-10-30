@@ -6,7 +6,9 @@ use mechanics::{simple_steer_towards, QuickJumpAndDodge};
 use nalgebra::{Point2, Point3};
 use predict::{intercept::NaiveIntercept, naive_ground_intercept};
 use rlbot;
+use routing::recover::{IsSkidding, NotOnFlatGround};
 use simulate::{ball_car_distance, car_single_jump::time_to_z, rl, Car, CarSimulateError};
+use std::f32::consts::PI;
 use strategy::Context;
 use utils::{ExtendPoint2, ExtendPoint3, ExtendVector2, ExtendVector3};
 
@@ -60,7 +62,15 @@ where
     fn execute2(&mut self, ctx: &mut Context) -> Action {
         let me = ctx.me();
 
-        // TODO: replace intercept finding with route planning
+        if IsSkidding.evaluate(&me.into()) {
+            ctx.eeg.log("[GroundedHit] IsSkidding");
+            return Action::Abort;
+        }
+        if NotOnFlatGround.evaluate(&me.into()) {
+            ctx.eeg.log("[GroundedHit] NotOnFlatGround");
+            return Action::Abort;
+        }
+
         let intercept = naive_ground_intercept(
             ctx.scenario.ball_prediction().iter(),
             me.Physics.locp(),
@@ -83,6 +93,15 @@ where
                 return Action::Abort;
             }
         };
+
+        let steer = me
+            .Physics
+            .forward_axis_2d()
+            .rotation_to((target_loc - me.Physics.locp()).to_2d());
+        if steer.angle().abs() >= PI / 6.0 {
+            ctx.eeg.log("[GroundedHit] not facing the target");
+            return Action::Abort;
+        }
 
         match self.estimate_approach(ctx, target_loc) {
             Ok(Do::Coast) => self.drive(ctx, target_loc, false),

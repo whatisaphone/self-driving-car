@@ -94,11 +94,11 @@ impl FollowRoute {
             return Action::Abort;
         }
 
-        ctx.eeg.log("[FollowRoute] Next segment");
         let cur_step = self.cur_step.take().unwrap();
         let next = some_or_else!(cur_step.next, {
             return Action::Return;
         });
+        ctx.eeg.log("[FollowRoute] Next segment");
         if let Err(action) = self.advance(&*next, ctx) {
             return action;
         }

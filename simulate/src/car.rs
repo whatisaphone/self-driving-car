@@ -63,7 +63,7 @@ impl Car {
         // If we are skidding, this method will give incorrect results. Once chip's
         // simulate is integrated, consider raising the 0.95 to 0.98 or 0.99 and
         // cutting over sooner.
-        if !(self.vel.norm() <= 10.0 || self.vel.normalize().dot(&self.forward()) >= 0.95) {
+        if !(self.vel.norm() <= 100.0 || self.vel.normalize().dot(&self.forward()) >= 0.95) {
             return Err(CarSimulateError::Skidding);
         }
 
