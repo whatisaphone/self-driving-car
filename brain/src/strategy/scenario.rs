@@ -107,7 +107,7 @@ fn simulate_ball_blitz(
             sim_enemy.step(ball.dt(), 1.0, true);
             let enemy_dist_to_ball = (enemy.Physics.locp() - ball.loc).to_2d().norm();
             if sim_enemy.distance_traveled() >= enemy_dist_to_ball {
-                enemy_result = Some((t + 3.0, ball.loc));
+                enemy_result = Some((t, ball.loc));
             }
         }
 
