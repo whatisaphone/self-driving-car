@@ -1,10 +1,10 @@
 use behavior::{Behavior, Fuse, NullBehavior};
 use brain::Brain;
 use collect::{
-    get_packet_and_inject_rigid_body_tick, ExtendRotation3, RecordingPlayerTick,
-    RecordingRigidBodyState, RecordingTick,
+    get_packet_and_inject_rigid_body_tick, RecordingPlayerTick, RecordingRigidBodyState,
+    RecordingTick,
 };
-use common::ext::ExtendPhysics;
+use common::prelude::*;
 use crossbeam_channel;
 use eeg::EEG;
 use flatbuffers::{FlatBufferBuilder, WIPOffset};

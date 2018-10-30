@@ -1,5 +1,5 @@
 use behavior::{tepid_hit::TepidHit, Action, Behavior, Chain, Priority};
-use common::ext::ExtendPhysics;
+use common::prelude::*;
 use eeg::{color, Drawable};
 use maneuvers::{BounceShot, FiftyFifty, GroundShot, JumpShot, PanicDefense};
 use nalgebra::{Point2, Rotation2, Vector2};
@@ -185,14 +185,13 @@ impl HitToOwnCorner {
 #[cfg(test)]
 mod integration_tests {
     use behavior::{defense::Defense, runner::PUSHED, HitToOwnCorner};
-    use collect::ExtendRotation3;
+    use common::prelude::*;
     use integration_tests::{
         helpers::{TestRunner, TestScenario},
         recordings,
     };
     use nalgebra::{Rotation3, Vector3};
     use strategy::Runner2;
-    use utils::ExtendPhysics;
 
     #[test]
     fn bouncing_save() {

@@ -1,6 +1,6 @@
 use common::{
-    ext::{ExtendUnitVector2, ExtendVector2},
     physics::{car_forward_axis_2d, CAR_LOCAL_FORWARD_AXIS_2D},
+    prelude::*,
 };
 use nalgebra::{Point2, Unit, UnitComplex, Vector2};
 use oven::data;

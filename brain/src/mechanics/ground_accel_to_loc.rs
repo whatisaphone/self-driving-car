@@ -1,4 +1,5 @@
 use behavior::{Action, Behavior, Chain};
+use common::prelude::*;
 use eeg::{color, Drawable};
 use maneuvers::{drive_towards, GetToFlatGround};
 use mechanics::simple_yaw_diff;
@@ -8,7 +9,7 @@ use rlbot;
 use simulate::{rl, Car1D};
 use std::f32::consts::PI;
 use strategy::Context;
-use utils::{ExtendPhysics, ExtendVector3};
+use utils::ExtendVector3;
 
 pub struct GroundAccelToLoc {
     target_loc: Vector2<f32>,
@@ -106,10 +107,11 @@ fn estimate_approach(car: &rlbot::ffi::PlayerInfo, distance: f32, time: f32) -> 
 
 #[cfg(test)]
 mod integration_tests {
+    use common::prelude::*;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use mechanics::GroundAccelToLoc;
     use nalgebra::{Vector2, Vector3};
-    use utils::{ExtendPhysics, ExtendVector3};
+    use utils::ExtendVector3;
 
     // This test is ignored because it's finicky and not quite accurate. The
     // issue seems to be that there is more input lag for throttle than for

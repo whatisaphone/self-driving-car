@@ -1,5 +1,5 @@
 use behavior::{Action, Behavior};
-use collect::ExtendRotation3;
+use common::prelude::*;
 use eeg::{color, Drawable};
 use maneuvers::BlitzToLocation;
 use mechanics::simple_steer_towards;
@@ -9,7 +9,7 @@ use rlbot;
 use rules::SameBallTrajectory;
 use simulate::rl;
 use strategy::Context;
-use utils::{my_goal_center_2d, ExtendF32, ExtendPhysics, ExtendVector2};
+use utils::{my_goal_center_2d, ExtendF32, ExtendVector2};
 
 pub struct PanicDefense {
     use_boost: bool,
@@ -166,12 +166,11 @@ fn calc_aim_hint(ctx: &mut Context) -> Vector2<f32> {
 
 #[cfg(test)]
 mod integration_tests {
-    use collect::ExtendRotation3;
+    use common::prelude::*;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use maneuvers::PanicDefense;
     use nalgebra::{Rotation3, Vector3};
     use std::f32::consts::PI;
-    use utils::ExtendPhysics;
 
     #[test]
     fn panic_defense() {

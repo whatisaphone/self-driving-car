@@ -1,9 +1,9 @@
 use arrayvec::ArrayVec;
 use behavior::Action;
+use common::prelude::*;
 use nalgebra::Vector3;
 use simulate::linear_interpolate;
 use strategy::Context;
-use utils::ExtendPhysics;
 
 const NUM_PREDICTION_FRAMES: usize = 8;
 const ERROR_THRESHOLD: f32 = 5.0;

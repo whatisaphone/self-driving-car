@@ -23,7 +23,7 @@ impl Behavior for CornerOffense {
 #[cfg(test)]
 mod integration_tests {
     use behavior::corner_offense::CornerOffense;
-    use collect::ExtendRotation3;
+    use common::prelude::*;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use nalgebra::{Rotation3, Vector3};
 

@@ -1,7 +1,7 @@
-use collect::ExtendRotation3;
+use common::prelude::*;
 use nalgebra::Vector2;
 use rlbot;
-use utils::{ExtendF32, ExtendPhysics, ExtendVector2, ExtendVector3};
+use utils::{ExtendF32, ExtendVector2, ExtendVector3};
 
 pub fn simple_steer_towards(car: &rlbot::ffi::Physics, target_loc: Vector2<f32>) -> f32 {
     simple_yaw_diff(car, target_loc).max(-1.0).min(1.0) * 2.0
@@ -15,13 +15,13 @@ pub fn simple_yaw_diff(car: &rlbot::ffi::Physics, target_loc: Vector2<f32>) -> f
 #[cfg(test)]
 mod integration_tests {
     use behavior::{Action, Behavior};
-    use collect::ExtendRotation3;
+    use common::prelude::*;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use mechanics::simple_steer_towards;
     use nalgebra::{Rotation3, Vector3};
     use rlbot;
     use strategy::Context;
-    use utils::{ExtendPhysics, ExtendVector3};
+    use utils::ExtendVector3;
 
     struct SimpleSteerTowardsBall;
 

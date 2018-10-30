@@ -1,5 +1,5 @@
 use behavior::{aerial_shot::AerialShot, Action, Behavior};
-use common::ext::ExtendPhysics;
+use common::prelude::*;
 use maneuvers::{GroundShot, JumpShot};
 use nalgebra::Vector3;
 use predict::estimate_intercept_car_ball;
@@ -64,7 +64,7 @@ impl Behavior for Shoot {
 #[cfg(test)]
 mod integration_tests {
     use behavior::shoot::Shoot;
-    use collect::ExtendRotation3;
+    use common::prelude::*;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use nalgebra::{Rotation3, Vector3};
     use strategy::Runner2;

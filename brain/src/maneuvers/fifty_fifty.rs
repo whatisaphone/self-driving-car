@@ -1,5 +1,5 @@
 use behavior::{Action, Behavior};
-use common::ext::ExtendPhysics;
+use common::prelude::*;
 use eeg::{color, Drawable};
 use mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
 use nalgebra::Vector2;

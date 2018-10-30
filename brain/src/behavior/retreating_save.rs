@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod integration_tests {
-    use collect::ExtendRotation3;
+    use common::prelude::*;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use nalgebra::{Rotation3, Vector3};
     use strategy::Runner2;

@@ -1,5 +1,5 @@
 use behavior::{Action, Behavior};
-use common::ext::ExtendPhysics;
+use common::prelude::*;
 use eeg::{color, Drawable};
 use maneuvers::GetToFlatGround;
 use mechanics::{simple_steer_towards, simple_yaw_diff};
@@ -196,10 +196,10 @@ impl AerialLocTime {
 
 #[cfg(test)]
 mod integration_tests {
+    use common::prelude::*;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use maneuvers::AerialLocTime;
     use nalgebra::Vector3;
-    use utils::ExtendPhysics;
 
     #[test]
     #[ignore] // This basically works but is inaccurate. See the comment above `air()`.

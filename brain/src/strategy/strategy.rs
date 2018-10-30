@@ -1,10 +1,9 @@
 use behavior::{Behavior, Chain, Defense, Offense, Priority};
+use common::prelude::*;
 use maneuvers::{FiftyFifty, GetToFlatGround};
 use std::f32::consts::PI;
 use strategy::{scenario::Scenario, Context};
-use utils::{
-    my_goal_center_2d, ExtendF32, ExtendPhysics, ExtendPoint3, ExtendVector2, ExtendVector3, Wall,
-};
+use utils::{my_goal_center_2d, ExtendF32, ExtendPoint3, ExtendVector2, ExtendVector3, Wall};
 
 pub fn baseline(ctx: &mut Context) -> Box<Behavior> {
     if !GetToFlatGround::on_flat_ground(ctx.packet) {
@@ -77,7 +76,7 @@ fn enemy_can_shoot(ctx: &mut Context) -> bool {
 #[cfg(test)]
 mod integration_tests {
     use behavior::runner::PUSHED;
-    use collect::ExtendRotation3;
+    use common::prelude::*;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use nalgebra::{Rotation3, Vector3};
     use strategy::{runner2::BASELINE, Runner2};

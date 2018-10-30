@@ -1,5 +1,5 @@
 use behavior::{Action, Behavior};
-use common::ext::ExtendPhysics;
+use common::prelude::*;
 use eeg::{color, Drawable};
 use maneuvers::BounceShot;
 use mechanics::{simple_steer_towards, QuickJumpAndDodge};
@@ -97,7 +97,7 @@ where
         let steer = me
             .Physics
             .forward_axis_2d()
-            .rotation_to((target_loc - me.Physics.locp()).to_2d());
+            .rotation_to(&(target_loc - me.Physics.locp()).to_2d().to_axis());
         if steer.angle().abs() >= PI / 6.0 {
             ctx.eeg.log("[GroundedHit] not facing the target");
             return Action::Abort;
@@ -233,8 +233,8 @@ where
         let intercept = self.intercept.as_ref().unwrap();
 
         let me = ctx.me();
-        let forward = me.Physics.forward_axis().to_2d();
-        let flip_dir = forward.rotation_to(aim_loc - intercept.ball_loc.to_2d());
+        let forward = me.Physics.forward_axis_2d();
+        let flip_dir = forward.rotation_to(&(aim_loc - intercept.ball_loc.to_2d()).to_axis());
         let dodge_time = time_to_z(target_loc.z).unwrap();
         Action::call(
             QuickJumpAndDodge::new()

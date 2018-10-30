@@ -1,6 +1,6 @@
 // This file is a hot mess, don't look at it please :)
 
-use collect::ExtendRotation3;
+use common::prelude::*;
 use crossbeam_channel;
 use graphics::{types::Color, Transformed};
 use nalgebra::{Point2, Rotation3, Vector2, Vector3};

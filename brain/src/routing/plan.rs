@@ -1,5 +1,5 @@
 use chip::max_curvature;
-use common::ext::{ExtendPoint3, ExtendUnitVector3, ExtendVector2, ExtendVector3};
+use common::prelude::*;
 use maneuvers::GroundedHit;
 use nalgebra::Point2;
 use predict::naive_ground_intercept;
@@ -162,7 +162,7 @@ fn calculate_circle_turn(
     let start_right_axis = start.right_axis().to_2d();
 
     // Check if we're already facing the target
-    let turn_rot = start_forward_axis.rotation_to(target_loc - start_loc);
+    let turn_rot = start_forward_axis.rotation_to(&(target_loc - start_loc).to_axis());
     if turn_rot.angle().abs() < 2.0_f32.to_radians() {
         return Ok(None);
     }

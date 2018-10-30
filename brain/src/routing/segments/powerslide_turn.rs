@@ -1,7 +1,4 @@
-use common::{
-    ext::{ExtendUnitVector2, ExtendVector2},
-    physics::CAR_LOCAL_FORWARD_AXIS_2D,
-};
+use common::{physics::CAR_LOCAL_FORWARD_AXIS_2D, prelude::*};
 use eeg::{color, Drawable};
 use rlbot;
 use routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner};

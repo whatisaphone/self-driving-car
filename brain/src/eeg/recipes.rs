@@ -1,6 +1,6 @@
 //! This is just a dumping ground of marginally-useful visualization stuff.
 
-use common::ext::ExtendPhysics;
+use common::prelude::*;
 use rlbot;
 
 pub fn draw_ball_prediction(rlbot: &rlbot::RLBot, packet: &rlbot::ffi::LiveDataPacket) {

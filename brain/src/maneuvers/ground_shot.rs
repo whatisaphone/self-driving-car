@@ -1,5 +1,5 @@
 use behavior::{Action, Behavior};
-use common::ext::ExtendPoint3;
+use common::prelude::*;
 use eeg::{color, Drawable};
 use maneuvers::{BounceShot, GetToFlatGround};
 use mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
@@ -7,7 +7,7 @@ use nalgebra::{Vector2, Vector3};
 use predict::naive_ground_intercept;
 use std::f32::consts::PI;
 use strategy::Context;
-use utils::{enemy_goal_center, ExtendF32, ExtendPhysics, ExtendVector2, ExtendVector3};
+use utils::{enemy_goal_center, ExtendF32, ExtendVector3};
 
 pub struct GroundShot {
     min_distance: Option<f32>,
@@ -115,7 +115,7 @@ fn shoot(ctx: &mut Context) -> Action {
 #[cfg(test)]
 mod integration_tests {
     use behavior::runner::PUSHED;
-    use collect::ExtendRotation3;
+    use common::prelude::*;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use maneuvers::GroundShot;
     use nalgebra::{Rotation3, Vector3};

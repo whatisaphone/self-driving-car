@@ -1,8 +1,5 @@
 use behavior::{Behavior, NullBehavior, Predicate, TimeLimit, While};
-use common::{
-    ext::{ExtendPhysics, ExtendUnitVector2, ExtendUnitVector3},
-    physics::car_forward_axis,
-};
+use common::{physics::car_forward_axis, prelude::*};
 use maneuvers::{DriveTowards, GetToFlatGround};
 use routing::models::{CarState, RoutePlanError};
 use strategy::Context;

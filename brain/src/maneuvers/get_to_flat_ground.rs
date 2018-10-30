@@ -1,6 +1,5 @@
 use behavior::{Action, Behavior};
-use collect::ExtendRotation3;
-use common::ext::ExtendPhysics;
+use common::prelude::*;
 use eeg::Drawable;
 use maneuvers::drive_towards;
 use nalgebra::Vector3;

@@ -1,9 +1,10 @@
+use common::prelude::*;
 use lazycell::LazyCell;
 use nalgebra::Point3;
 use plan::ball::BallTrajectory;
 use rlbot;
 use simulate::Car1D;
-use utils::{one_v_one, ExtendPhysics, ExtendPoint3, ExtendVector3, Wall, WallRayCalculator};
+use utils::{one_v_one, ExtendPoint3, ExtendVector3, Wall, WallRayCalculator};
 
 pub struct Scenario<'a> {
     packet: &'a rlbot::ffi::LiveDataPacket,

@@ -1,4 +1,4 @@
-use common::{ext::ExtendPhysics, physics};
+use common::{physics, prelude::*};
 use nalgebra::{Point2, Point3, Unit, UnitComplex, UnitQuaternion, Vector2, Vector3};
 use rlbot;
 use simulate::rl;

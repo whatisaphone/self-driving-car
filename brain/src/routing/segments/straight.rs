@@ -1,4 +1,4 @@
-use common::{ext::ExtendUnitVector2, physics::CAR_LOCAL_FORWARD_AXIS_2D};
+use common::{physics::CAR_LOCAL_FORWARD_AXIS_2D, prelude::*};
 use eeg::{color, Drawable};
 use nalgebra::{Point2, Unit, UnitComplex, Vector2};
 use routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner};

@@ -1,10 +1,10 @@
 use behavior::{Action, Behavior};
+use common::prelude::*;
 use integration_tests::helpers::{TestRunner, TestScenario};
 use nalgebra::Vector3;
 use rlbot;
 use simulate::CarAerial60Deg;
 use strategy::Context;
-use utils::ExtendPhysics;
 
 struct CarAerial60DegBehavior {
     start_time: f32,

@@ -62,7 +62,7 @@ impl Behavior for AerialShot {
 #[cfg(test)]
 mod integration_tests {
     use behavior::aerial_shot::AerialShot;
-    use collect::ExtendRotation3;
+    use common::prelude::*;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use nalgebra::{Rotation3, Vector3};
 

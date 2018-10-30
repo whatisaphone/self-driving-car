@@ -1,5 +1,5 @@
 use car1d::Car1D;
-use common::ext::ExtendPhysics;
+use common::prelude::*;
 use nalgebra::{Point3, UnitQuaternion, Vector3};
 use rlbot;
 

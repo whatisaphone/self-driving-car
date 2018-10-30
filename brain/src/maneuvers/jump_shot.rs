@@ -1,5 +1,5 @@
 use behavior::{Action, Behavior};
-use common::ext::ExtendPoint3;
+use common::prelude::*;
 use eeg::{color, Drawable};
 use maneuvers::{drive_towards, BounceShot, GetToFlatGround};
 use mechanics::simple_yaw_diff;
@@ -9,7 +9,7 @@ use rules::SameBallTrajectory;
 use simulate::{rl, Car1D, CarAerial60Deg};
 use std::f32::consts::PI;
 use strategy::Context;
-use utils::{geometry::ExtendPoint2, ExtendPhysics, ExtendVector3};
+use utils::geometry::ExtendPoint2;
 
 const Z_FUDGE: f32 = 75.0;
 
@@ -229,7 +229,7 @@ fn estimate_approach(
 #[cfg(test)]
 mod integration_tests {
     use behavior::Repeat;
-    use collect::ExtendRotation3;
+    use common::prelude::*;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use maneuvers::jump_shot::JumpShot;
     use nalgebra::{Rotation3, Vector3};

@@ -1,6 +1,4 @@
-use common::ext::{
-    ExtendPhysics, ExtendUnitQuaternion, ExtendUnitVector2, ExtendVector2, ExtendVector3,
-};
+use common::prelude::*;
 use eeg::{color, Drawable};
 use maneuvers::drive_towards;
 use nalgebra::{Point2, UnitComplex, Vector2};

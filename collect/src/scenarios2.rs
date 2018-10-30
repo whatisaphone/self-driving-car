@@ -3,7 +3,7 @@
 
 #![allow(dead_code)]
 
-use common::{ext::ExtendPhysics, rl};
+use common::{prelude::*, rl};
 use game_state::{
     DesiredBallState, DesiredCarState, DesiredGameState, DesiredPhysics, RotatorPartial,
     Vector3Partial,

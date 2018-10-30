@@ -1,5 +1,5 @@
 use behavior::{Action, Behavior};
-use common::ext::{ExtendPhysics, ExtendPoint3};
+use common::prelude::*;
 use eeg::{color, Drawable};
 use mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
 use nalgebra::{Point2, Vector2};
@@ -126,12 +126,11 @@ impl BounceShot {
 #[cfg(test)]
 mod integration_tests {
     use behavior::Repeat;
-    use collect::ExtendRotation3;
+    use common::prelude::*;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use maneuvers::bounce_shot::BounceShot;
     use nalgebra::{Rotation3, Vector2, Vector3};
     use simulate::rl;
-    use utils::ExtendPhysics;
 
     // `Repeat` is used in these tests so the shot is not aborted by
     // `SameBallTrajectory` when the ball bounces.

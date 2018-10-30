@@ -1,4 +1,4 @@
-use common::ext::ExtendRotation3;
+use common::prelude::*;
 use nalgebra::{Quaternion, UnitQuaternion};
 use rlbot;
 use std::error::Error;

@@ -1,5 +1,5 @@
 use behavior::{Action, Behavior};
-use common::ext::ExtendPhysics;
+use common::prelude::*;
 use eeg::{color, Drawable, EEG};
 use mechanics::simple_yaw_diff;
 use nalgebra::{Point2, Vector2};

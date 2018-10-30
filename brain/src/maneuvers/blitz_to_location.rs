@@ -1,6 +1,5 @@
 use behavior::{Action, Behavior};
-use collect::ExtendRotation3;
-use common::ext::ExtendPhysics;
+use common::prelude::*;
 use eeg::{color, Drawable, EEG};
 use mechanics::{simple_steer_towards, QuickJumpAndDodge};
 use nalgebra::Vector2;

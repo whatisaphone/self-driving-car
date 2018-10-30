@@ -1,9 +1,10 @@
+use common::prelude::*;
 use nalgebra::{Point3, Vector3};
 use plan::ball::BallFrame;
 use rlbot;
 use simulate::Car1D;
 use strategy::Context;
-use utils::{ExtendPhysics, ExtendVector3};
+use utils::ExtendVector3;
 
 pub fn estimate_intercept_car_ball(
     ctx: &mut Context,

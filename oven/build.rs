@@ -2,7 +2,7 @@ extern crate common;
 extern crate csv;
 extern crate nalgebra;
 
-use common::ext::{ExtendPoint3, ExtendUnitQuaternion, ExtendVector3};
+use common::prelude::*;
 use nalgebra::{Point2, Point3, Real, UnitComplex, UnitQuaternion, Vector2, Vector3};
 use std::{
     env,

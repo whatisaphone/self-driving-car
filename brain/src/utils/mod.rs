@@ -1,4 +1,4 @@
-use nalgebra::{Point2, Point3, UnitQuaternion, Vector2, Vector3};
+use nalgebra::{Point2, Vector2};
 use rlbot;
 use simulate::rl;
 pub use utils::{
@@ -14,8 +14,6 @@ mod fps_counter;
 pub mod geometry;
 mod iter;
 mod wall_ray_calculator;
-
-pub use common::ext::ExtendPhysics;
 
 /// Assuming I am the first car, return the first car.
 pub fn my_car(packet: &rlbot::ffi::LiveDataPacket) -> &rlbot::ffi::PlayerInfo {
@@ -43,24 +41,4 @@ pub fn enemy_goal_center() -> Vector2<f32> {
 
 pub fn enemy_goal_center_point() -> Point2<f32> {
     Point2::new(0.0, rl::FIELD_MAX_Y)
-}
-
-pub trait PhysicsState {
-    fn loc(&self) -> Point3<f32>;
-    fn quat(&self) -> UnitQuaternion<f32>;
-    fn vel(&self) -> Vector3<f32>;
-}
-
-impl PhysicsState for rlbot::ffi::Physics {
-    fn loc(&self) -> Point3<f32> {
-        Point3::from_coordinates(ExtendPhysics::loc(self))
-    }
-
-    fn quat(&self) -> UnitQuaternion<f32> {
-        ExtendPhysics::quat(self)
-    }
-
-    fn vel(&self) -> Vector3<f32> {
-        ExtendPhysics::vel(self)
-    }
 }

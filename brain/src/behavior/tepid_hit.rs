@@ -1,5 +1,5 @@
 use behavior::{Action, Behavior, Priority};
-use common::ext::ExtendPhysics;
+use common::prelude::*;
 use eeg::{color, Drawable};
 use maneuvers::GroundedHit;
 use nalgebra::{Point2, Point3};

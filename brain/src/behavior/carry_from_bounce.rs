@@ -63,7 +63,7 @@ impl Behavior for CarryFromBounce {
 #[cfg(test)]
 mod integration_tests {
     use behavior::carry_from_bounce::CarryFromBounce;
-    use collect::ExtendRotation3;
+    use common::prelude::*;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use nalgebra::{Rotation3, Vector3};
 
