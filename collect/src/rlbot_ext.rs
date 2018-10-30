@@ -1,5 +1,5 @@
 use common::prelude::*;
-use nalgebra::{Quaternion, UnitQuaternion};
+use nalgebra::UnitQuaternion;
 use rlbot;
 use std::error::Error;
 
@@ -46,8 +46,7 @@ fn set_physics(dest: &mut rlbot::ffi::Physics, source: rlbot::flat::RigidBodySta
 }
 
 fn convert_quat_to_pyr(quat: &rlbot::flat::Quaternion) -> (f32, f32, f32) {
-    let quat =
-        UnitQuaternion::from_quaternion(Quaternion::new(quat.w(), quat.x(), quat.y(), quat.z()));
+    let quat = UnitQuaternion::xyzw(quat.x(), quat.y(), quat.z(), quat.w());
     let (pitch, yaw, roll) = quat.to_rotation_matrix().to_unreal_angles();
     // I have no clue why two of these are negated, but it makes the numbers match
     // up…
@@ -61,16 +60,14 @@ mod tests {
 
     #[test]
     fn rotation() {
-        // These rotations happened a few frames apart so are not equal. But with a
-        // lenient threshold this test still does its job.
         let cases = [
             (
-                rlbot::flat::Quaternion::new(0.18755347, -0.18754272, 0.68180066, 0.6817619),
-                (0.52193695, 1.5708922, 0.0),
+                rlbot::flat::Quaternion::new(-0.0015563988, 0.0045613004, 0.32138819, 0.94693524),
+                (-0.009683254, 0.65443456, 0.0),
             ),
             (
-                rlbot::flat::Quaternion::new(-0.25964448, 0.37656632, 0.26754785, 0.84805703),
-                (-0.8697671, 0.4358423, 0.37342843),
+                rlbot::flat::Quaternion::new(0.37422496, 0.6927582, -0.34245488, 0.51260734),
+                (-1.3085815, 2.421868, 2.7907903),
             ),
         ];
 
@@ -78,9 +75,9 @@ mod tests {
             println!("{:?}", quat);
             println!("{:?} {:?} {:?}", approx_pitch, approx_yaw, approx_roll);
             let (pitch, yaw, roll) = rlbot_ext::convert_quat_to_pyr(&quat);
-            assert!((pitch - approx_pitch).abs() < 0.05, "{}", pitch);
-            assert!((yaw - approx_yaw).abs() < 0.05, "{}", yaw);
-            assert!((roll - approx_roll).abs() < 0.05, "{}", roll);
+            assert!((pitch - approx_pitch).abs() < 0.02, "{}", pitch);
+            assert!((yaw - approx_yaw).abs() < 0.02, "{}", yaw);
+            assert!((roll - approx_roll).abs() < 0.02, "{}", roll);
         }
     }
 }
