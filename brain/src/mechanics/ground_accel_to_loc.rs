@@ -91,7 +91,7 @@ fn estimate_approach(car: &rlbot::ffi::PlayerInfo, distance: f32, time: f32) -> 
     const DT: f32 = 1.0 / 60.0;
 
     let mut t = 1.5 / 120.0; // Start a few ticks later to compensate for input lag.
-    let mut sim_car = Car1D::new(car.Physics.vel().norm()).with_boost(car.Boost);
+    let mut sim_car = Car1D::new(car.Physics.vel().norm()).with_boost(car.Boost as f32);
 
     while t < time {
         t += DT;

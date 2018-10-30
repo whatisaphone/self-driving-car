@@ -67,7 +67,7 @@ impl Car {
             return Err(CarSimulateError::Skidding);
         }
 
-        let mut car1d = Car1D::new(self.vel.norm()).with_boost_float(self.boost);
+        let mut car1d = Car1D::new(self.vel.norm()).with_boost(self.boost);
         car1d.step(dt, throttle, boost);
 
         self.loc += self.forward() * car1d.distance_traveled();

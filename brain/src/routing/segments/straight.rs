@@ -22,7 +22,7 @@ impl Straight {
         start_boost: f32,
         end_loc: Point2<f32>,
     ) -> Self {
-        let mut car = Car1D::new(start_vel.norm()).with_boost_float(start_boost);
+        let mut car = Car1D::new(start_vel.norm()).with_boost(start_boost);
         let total_dist = (end_loc - start_loc).norm();
         loop {
             car.step(1.0 / 120.0, 1.0, true);

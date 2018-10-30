@@ -19,12 +19,7 @@ impl Car1D {
         }
     }
 
-    pub fn with_boost(mut self, boost: i32) -> Self {
-        self.boost = boost as f32;
-        self
-    }
-
-    pub fn with_boost_float(mut self, boost: f32) -> Self {
+    pub fn with_boost(mut self, boost: f32) -> Self {
         self.boost = boost;
         self
     }

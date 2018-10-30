@@ -86,8 +86,8 @@ fn simulate_ball_blitz(
 ) -> (Option<(f32, Point3<f32>)>, Option<(f32, Point3<f32>)>) {
     let (me, enemy) = one_v_one(packet);
     let mut t = 0.0;
-    let mut sim_me = Car1D::new(me.Physics.vel().norm()).with_boost(me.Boost);
-    let mut sim_enemy = Car1D::new(enemy.Physics.vel().norm()).with_boost(enemy.Boost);
+    let mut sim_me = Car1D::new(me.Physics.vel().norm()).with_boost(me.Boost as f32);
+    let mut sim_enemy = Car1D::new(enemy.Physics.vel().norm()).with_boost(enemy.Boost as f32);
 
     let mut me_result = None;
     let mut enemy_result = None;

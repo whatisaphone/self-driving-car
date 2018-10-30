@@ -32,7 +32,7 @@ pub fn naive_ground_intercept<'a>(
     // we want their meshes to barely be touching.
     const RADII: f32 = 240.0;
 
-    let mut sim_car = Car1D::new(start_vel.norm()).with_boost_float(start_boost);
+    let mut sim_car = Car1D::new(start_vel.norm()).with_boost(start_boost);
 
     let sim_ball = ball.find(|ball| {
         sim_car.step(ball.dt(), 1.0, true);

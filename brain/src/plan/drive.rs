@@ -16,7 +16,7 @@ pub fn rough_time_drive_to_loc(car: &rlbot::ffi::PlayerInfo, target_loc: Vector2
     let target_dist = (car.Physics.loc().to_2d() - target_loc).norm();
 
     let mut t = 2.0 / 120.0 + steer_penalty(car, simple_yaw_diff(&car.Physics, target_loc));
-    let mut sim_car = Car1D::new(car.Physics.vel().norm()).with_boost(car.Boost);
+    let mut sim_car = Car1D::new(car.Physics.vel().norm()).with_boost(car.Boost as f32);
     loop {
         t += DT;
         sim_car.step(DT, 1.0, true);
