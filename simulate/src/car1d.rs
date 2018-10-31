@@ -55,6 +55,13 @@ impl Car1D {
         }
     }
 
+    pub fn multi_step(&mut self, time: f32, dt: f32, throttle: f32, boost: bool) {
+        let steps = (time / dt).round() as usize;
+        for _ in 0..steps {
+            self.step(dt, throttle, boost);
+        }
+    }
+
     /// Simulate time running backwards, given the *previous* frame's inputs.
     ///
     /// A given [`Car1D`] instance must never change between running forwards

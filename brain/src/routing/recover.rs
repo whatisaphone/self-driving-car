@@ -1,7 +1,9 @@
 use behavior::{Behavior, NullBehavior, Predicate, TimeLimit, While};
 use common::{physics::car_forward_axis, prelude::*};
 use maneuvers::{DriveTowards, GetToFlatGround};
+use nalgebra::Point2;
 use routing::models::{CarState, RoutePlanError};
+use std::f32::consts::PI;
 use strategy::Context;
 use utils::geometry::ExtendPoint3;
 
@@ -22,7 +24,9 @@ impl RoutePlanError {
                 let wander = DriveTowards::new(target_loc.to_2d());
                 Some(Box::new(TimeLimit::new(1.0, wander)))
             }
-            RoutePlanError::OtherError(_) => None,
+            RoutePlanError::MustBeFacingTarget
+            | RoutePlanError::MovingTooFast
+            | RoutePlanError::OtherError(_) => None,
         }
     }
 }
@@ -57,6 +61,19 @@ impl IsSkidding {
             }
         }
         false
+    }
+}
+
+#[derive(new)]
+pub struct NotFacingTarget2D {
+    target_loc: Point2<f32>,
+}
+
+impl NotFacingTarget2D {
+    pub fn evaluate(&self, state: &CarState) -> bool {
+        let forward = state.forward_axis_2d();
+        let to_target = (self.target_loc - state.loc.to_2d()).to_axis();
+        forward.rotation_to(&to_target).angle().abs() >= PI / 6.0
     }
 }
 

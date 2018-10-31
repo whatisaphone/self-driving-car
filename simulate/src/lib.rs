@@ -11,6 +11,7 @@ extern crate rlbot;
 pub use car::{Car, CarSimulateError};
 pub use car1d::Car1D;
 pub use car_aerial_60deg::CarAerial60Deg;
+pub use car_forward_dodge::{CarForwardDodge, CarForwardDodge1D};
 pub use car_powerslide_turn::{CarPowerslideTurn, CarPowerslideTurnPlan};
 pub use collision::ball_car_distance;
 pub use common::rl;
@@ -28,6 +29,7 @@ macro_rules! some_or_else {
 mod car;
 mod car1d;
 mod car_aerial_60deg;
+mod car_forward_dodge;
 mod car_powerslide_turn;
 pub mod car_single_jump;
 mod collision;

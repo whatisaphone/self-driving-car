@@ -19,6 +19,10 @@ impl CarState {
         physics::car_forward_axis(self.rot)
     }
 
+    pub fn forward_axis_2d(&self) -> Unit<Vector2<f32>> {
+        physics::car_forward_axis_2d(self.rot.to_2d())
+    }
+
     pub fn right_axis(&self) -> Unit<Vector3<f32>> {
         physics::car_right_axis(self.rot)
     }
@@ -115,6 +119,8 @@ pub enum RoutePlanError {
     MustBeOnFlatGround,
     MustNotBeSkidding,
     UnknownIntercept,
+    MustBeFacingTarget,
+    MovingTooFast,
     OtherError(&'static str),
 }
 
