@@ -32,7 +32,8 @@ impl Behavior for FollowRoute {
             }
         }
 
-        if self.draw(ctx).is_err() {
+        if let Err(error) = self.draw(ctx) {
+            ctx.eeg.log(format!("[FollowRoute] plan error {:?}", error));
             return Action::Abort;
         }
 
