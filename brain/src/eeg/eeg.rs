@@ -140,6 +140,12 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
     let factory = window.factory.clone();
     let mut glyphs = Glyphs::new(path, factory, TextureSettings::new()).unwrap();
 
+    // Try to make the window start drawing more quickly.
+    for _ in 0..10 {
+        let e = window.next().unwrap();
+        window.draw_2d(&e, |_c, g| clear(color::BLACK, g));
+    }
+
     loop {
         let event = match window.next() {
             Some(e) => e,
