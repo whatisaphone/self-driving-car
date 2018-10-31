@@ -43,12 +43,15 @@ mod template {
     #[test]
     #[ignore]
     fn scenario_template() {
-        let test = TestRunner::start0(TestScenario {
-            enemy_loc: Vector3::new(6000.0, 6000.0, 0.0),
-            ..TestScenario::from_recorded_row("../logs/play.csv", 100.0)
-        });
-        test.set_behavior(Runner2::new());
-        test.sleep_millis(5000);
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                enemy_loc: Vector3::new(6000.0, 6000.0, 0.0),
+                ..TestScenario::from_recorded_row("../logs/play.csv", 10.0)
+            })
+            .starting_boost(25.0)
+            .behavior(Runner2::new())
+            .run();
+        test.sleep_millis(7000);
         unimplemented!();
     }
 
@@ -56,10 +59,11 @@ mod template {
     #[ignore]
     fn recording_template() {
         let test = TestRunner::new()
-            .preview_recording("../logs/play.csv", 100.0, 105.0, 110.0)
+            .preview_recording("../logs/play.csv", 100.0, 102.0, 105.0)
+            .starting_boost(25.0)
             .behavior(Runner2::new())
             .run();
-        test.sleep_millis(10_000);
+        test.sleep_millis(7_000);
         unimplemented!();
     }
 }
