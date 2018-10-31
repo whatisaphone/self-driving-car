@@ -27,13 +27,18 @@ macro_rules! guard {
 pub struct GroundIntercept;
 
 impl RoutePlanner for GroundIntercept {
-    fn plan(&self, start: &CarState, scenario: &Scenario) -> Result<RouteStep, RoutePlanError> {
+    fn plan(
+        &self,
+        start_time: f32,
+        start: &CarState,
+        scenario: &Scenario,
+    ) -> Result<RouteStep, RoutePlanError> {
         guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
         guard!(start, IsSkidding, RoutePlanError::MustNotBeSkidding);
 
         // Naive first pass to get a rough location.
         let guess = naive_ground_intercept(
-            scenario.ball_prediction().iter(),
+            scenario.ball_prediction().iter_delayed(start_time),
             start.loc,
             start.vel,
             start.boost,
@@ -45,7 +50,7 @@ impl RoutePlanner for GroundIntercept {
             guess.ball_loc.to_2d(),
             Some(Box::new(GroundInterceptStraight::new())),
         )
-        .plan(start, scenario)
+        .plan(start_time, start, scenario)
     }
 }
 
@@ -53,12 +58,17 @@ impl RoutePlanner for GroundIntercept {
 pub struct GroundInterceptStraight;
 
 impl RoutePlanner for GroundInterceptStraight {
-    fn plan(&self, start: &CarState, scenario: &Scenario) -> Result<RouteStep, RoutePlanError> {
+    fn plan(
+        &self,
+        start_time: f32,
+        start: &CarState,
+        scenario: &Scenario,
+    ) -> Result<RouteStep, RoutePlanError> {
         guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
         guard!(start, IsSkidding, RoutePlanError::MustNotBeSkidding);
 
         let guess = naive_ground_intercept(
-            scenario.ball_prediction().iter(),
+            scenario.ball_prediction().iter_delayed(start_time),
             start.loc,
             start.vel,
             start.boost,
@@ -71,7 +81,7 @@ impl RoutePlanner for GroundInterceptStraight {
         let with_dodge = StraightWithDodge::new(guess.car_loc.to_2d(), guess.time, end_chop);
 
         let planners = [&simple as &RoutePlanner, &with_dodge];
-        let plans = planners.iter().map(|p| p.plan(start, scenario));
+        let plans = planners.iter().map(|p| p.plan(start_time, start, scenario));
         let plans = at_least_one_ok(plans)?;
         Ok(fastest(plans.into_iter()))
     }
@@ -110,7 +120,12 @@ pub struct StraightSimple {
 }
 
 impl RoutePlanner for StraightSimple {
-    fn plan(&self, start: &CarState, _scenario: &Scenario) -> Result<RouteStep, RoutePlanError> {
+    fn plan(
+        &self,
+        _start_time: f32,
+        start: &CarState,
+        _scenario: &Scenario,
+    ) -> Result<RouteStep, RoutePlanError> {
         guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
         guard!(start, IsSkidding, RoutePlanError::MustNotBeSkidding);
         guard!(
@@ -145,7 +160,12 @@ struct StraightWithDodge {
 }
 
 impl RoutePlanner for StraightWithDodge {
-    fn plan(&self, start: &CarState, _scenario: &Scenario) -> Result<RouteStep, RoutePlanError> {
+    fn plan(
+        &self,
+        _start_time: f32,
+        start: &CarState,
+        _scenario: &Scenario,
+    ) -> Result<RouteStep, RoutePlanError> {
         guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
         guard!(start, IsSkidding, RoutePlanError::MustNotBeSkidding);
         guard!(
@@ -260,14 +280,19 @@ impl RoutePlannerCloneBox for TurnPlanner {
 }
 
 impl RoutePlanner for TurnPlanner {
-    fn plan(&self, start: &CarState, _scenario: &Scenario) -> Result<RouteStep, RoutePlanError> {
+    fn plan(
+        &self,
+        _start_time: f32,
+        start: &CarState,
+        _scenario: &Scenario,
+    ) -> Result<RouteStep, RoutePlanError> {
         let turn = match calculate_circle_turn(start, self.target_loc)? {
             Some(x) => x,
             None => {
                 return Ok(RouteStep {
                     segment: Box::new(NullSegment::new(start.clone())),
                     next: self.next.as_ref().map(|p| p.clone_box()),
-                })
+                });
             }
         };
         let segment = Turn::new(
@@ -288,26 +313,36 @@ impl RoutePlanner for TurnPlanner {
 #[derive(new)]
 struct ArcTowards {
     target_loc: Point2<f32>,
-    next: Box<RoutePlanner>,
+    next: Option<Box<RoutePlanner>>,
 }
 
 impl RoutePlannerCloneBox for ArcTowards {
     fn clone_box(&self) -> Box<RoutePlanner> {
         Box::new(Self {
             target_loc: self.target_loc,
-            next: self.next.clone_box(),
+            next: self.next.as_ref().map(|p| p.clone_box()),
         })
     }
 }
 
 impl RoutePlanner for ArcTowards {
-    fn plan(&self, start: &CarState, scenario: &Scenario) -> Result<RouteStep, RoutePlanError> {
+    fn plan(
+        &self,
+        _start_time: f32,
+        start: &CarState,
+        _scenario: &Scenario,
+    ) -> Result<RouteStep, RoutePlanError> {
         guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
         guard!(start, IsSkidding, RoutePlanError::MustNotBeSkidding);
 
         let turn = match calculate_circle_turn(start, self.target_loc)? {
             Some(x) => x,
-            None => return self.next.plan(start, scenario),
+            None => {
+                return Ok(RouteStep {
+                    segment: Box::new(NullSegment::new(start.clone())),
+                    next: self.next.as_ref().map(|p| p.clone_box()),
+                });
+            }
         };
 
         let segment = SimpleArc::new(
@@ -321,7 +356,7 @@ impl RoutePlanner for ArcTowards {
         .map_err(|err| RoutePlanError::OtherError(err.to_str()))?;
         Ok(RouteStep {
             segment: Box::new(segment),
-            next: Some(self.next.clone_box()),
+            next: self.next.as_ref().map(|p| p.clone_box()),
         })
     }
 }

@@ -21,7 +21,12 @@ impl<P> RoutePlanner for CookedPlanner<P>
 where
     P: SegmentPlan + Clone + 'static,
 {
-    fn plan(&self, _start: &CarState, _scenario: &Scenario) -> Result<RouteStep, RoutePlanError> {
+    fn plan(
+        &self,
+        _start_time: f32,
+        _start: &CarState,
+        _scenario: &Scenario,
+    ) -> Result<RouteStep, RoutePlanError> {
         Ok(RouteStep {
             segment: Box::new(self.plan.clone()),
             next: None,

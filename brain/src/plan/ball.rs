@@ -57,6 +57,13 @@ impl BallTrajectory {
         self.frames.iter()
     }
 
+    /// Iterate over the frames, but skip the given number of seconds at the
+    /// start.
+    pub fn iter_delayed(&self, delay: f32) -> impl DoubleEndedIterator<Item = &BallFrame> {
+        let delay_frames = (delay / DT) as usize;
+        self.frames.iter().skip(delay_frames)
+    }
+
     pub fn at_time(&self, t: f32) -> Option<&BallFrame> {
         let i = match self
             .frames

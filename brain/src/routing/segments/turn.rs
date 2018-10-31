@@ -3,6 +3,7 @@ use eeg::{color, Drawable};
 use maneuvers::drive_towards;
 use nalgebra::{Point2, UnitComplex, Vector2};
 use routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner};
+use std::f32::consts::PI;
 use strategy::Context;
 use utils::geometry::ExtendPoint3;
 
@@ -40,6 +41,21 @@ impl Turn {
             center,
             radius,
             sweep,
+        }
+    }
+
+    /// Calculate the angle between the two points, traveling in this plan's
+    /// direction.
+    fn sweep_to(&self, end_loc: Point2<f32>) -> f32 {
+        let result = (self.start.loc - self.center)
+            .rotation_to(end_loc - self.center)
+            .angle();
+        if result < 0.0 && self.sweep >= 0.0 {
+            result + 2.0 * PI
+        } else if result > 0.0 && self.sweep < 0.0 {
+            result - 2.0 * PI
+        } else {
+            result
         }
     }
 }
@@ -98,8 +114,16 @@ impl SegmentRunner for Turner {
     fn execute(&mut self, ctx: &mut Context) -> SegmentRunAction {
         let me = ctx.me();
         let me_forward = me.Physics.forward_axis_2d();
+
+        // Check two end conditions to decrease the chances that silly things happen.
+
         let steer = me_forward.rotation_to(&(self.plan.target_loc - me.Physics.loc_2d()).to_axis());
-        if steer.angle().abs() < 5.0_f32.to_radians() {
+        if steer.angle().abs() < 3.0_f32.to_radians() {
+            return SegmentRunAction::Success;
+        }
+
+        let swept = self.plan.sweep_to(me.Physics.loc_2d());
+        if swept.abs() >= self.plan.sweep.abs() - 3.0_f32.to_radians() {
             return SegmentRunAction::Success;
         }
 

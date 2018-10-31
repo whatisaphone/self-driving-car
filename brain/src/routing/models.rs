@@ -59,17 +59,25 @@ impl CarState2D {
 }
 
 pub trait RoutePlanner: RoutePlannerCloneBox + Send {
-    fn plan(&self, start: &CarState, scenario: &Scenario) -> Result<RouteStep, RoutePlanError>;
+    fn plan(
+        &self,
+        start_time: f32,
+        start: &CarState,
+        scenario: &Scenario,
+    ) -> Result<RouteStep, RoutePlanError>;
 }
 
 impl RouteStep {
     pub fn provisional_expand<'a>(
         &'a self,
+        start_time: f32,
         scenario: &Scenario,
     ) -> Result<ProvisionalPlanExpansion<'a>, RoutePlanError> {
         let mut tail = Vec::new();
         if let Some(ref planner) = self.next {
-            Self::expand_round(&**planner, &self.segment.end(), scenario, |s| tail.push(s))?;
+            Self::expand_round(&**planner, start_time, &self.segment.end(), scenario, |s| {
+                tail.push(s)
+            })?;
         }
         Ok(ProvisionalPlanExpansion {
             head: &*self.segment,
@@ -79,15 +87,19 @@ impl RouteStep {
 
     fn expand_round(
         planner: &RoutePlanner,
+        start_time: f32,
         state: &CarState,
         scenario: &Scenario,
         mut sink: impl FnMut(Box<SegmentPlan>),
     ) -> Result<(), RoutePlanError> {
-        let step = planner.plan(&state, scenario)?;
+        let step = planner.plan(start_time, &state, scenario)?;
         let state = step.segment.end();
+        let duration = step.segment.duration();
         sink(step.segment);
         match step.next {
-            Some(planner) => Self::expand_round(&*planner, &state, scenario, sink),
+            Some(planner) => {
+                Self::expand_round(&*planner, start_time + duration, &state, scenario, sink)
+            }
             None => Ok(()),
         }
     }
