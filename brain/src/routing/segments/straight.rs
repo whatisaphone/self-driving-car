@@ -1,10 +1,12 @@
 use common::{physics::CAR_LOCAL_FORWARD_AXIS_2D, prelude::*};
 use eeg::{color, Drawable};
+use mechanics::simple_steer_towards;
 use nalgebra::{Point2, Unit, UnitComplex, Vector2};
 use routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner};
 use simulate::Car1D;
 use strategy::Context;
 
+#[derive(Clone)]
 pub struct Straight {
     start_loc: Point2<f32>,
     start_vel: Vector2<f32>,
@@ -13,6 +15,16 @@ pub struct Straight {
     end_vel: Vector2<f32>,
     end_boost: f32,
     duration: f32,
+    mode: StraightMode,
+}
+
+/// This is a workaround for the lack of "arrive-at-time" behavior.
+#[derive(Clone)]
+pub enum StraightMode {
+    /// Run the behavior as fast as possible.
+    Real,
+    /// Return immediately, depending on the subsequent behavior.
+    Fake,
 }
 
 impl Straight {
@@ -21,6 +33,7 @@ impl Straight {
         start_vel: Vector2<f32>,
         start_boost: f32,
         end_loc: Point2<f32>,
+        mode: StraightMode,
     ) -> Self {
         let mut car = Car1D::new(start_vel.norm()).with_boost(start_boost);
         let total_dist = (end_loc - start_loc).norm();
@@ -40,6 +53,7 @@ impl Straight {
             end_vel,
             end_boost: car.boost(),
             duration: car.time(),
+            mode,
         }
     }
 
@@ -75,7 +89,7 @@ impl SegmentPlan for Straight {
     }
 
     fn run(&self) -> Box<SegmentRunner> {
-        Box::new(StraightRunner::new())
+        Box::new(StraightRunner::new(self.clone()))
     }
 
     fn draw(&self, ctx: &mut Context) {
@@ -84,18 +98,50 @@ impl SegmentPlan for Straight {
     }
 }
 
-struct StraightRunner;
+struct StraightRunner {
+    plan: Straight,
+}
 
 impl StraightRunner {
-    pub fn new() -> Self {
-        StraightRunner
+    pub fn new(plan: Straight) -> Self {
+        StraightRunner { plan }
     }
 }
 
 impl SegmentRunner for StraightRunner {
     fn execute(&mut self, ctx: &mut Context) -> SegmentRunAction {
-        ctx.eeg
-            .log("[StraightRunner] I assume this will be handled somewhere else");
-        SegmentRunAction::Success
+        match self.plan.mode {
+            StraightMode::Fake => {
+                ctx.eeg
+                    .log("[StraightRunner] stopping because mode is fake");
+                return SegmentRunAction::Success;
+            }
+            StraightMode::Real => {} // continued below :)
+        }
+
+        let me = ctx.me();
+        let me_loc = me.Physics.locp().to_2d();
+        let start_to_end = self.plan.end_loc - self.plan.start_loc;
+        let cur_dist = (me_loc - self.plan.start_loc).dot(&start_to_end.normalize());
+
+        if cur_dist >= start_to_end.norm() {
+            return SegmentRunAction::Success;
+        }
+
+        // Drive to a point slightly in front of us, so we "hug the line" and get back
+        // on course quicker in case of any inaccuracies.
+        let target_loc = self.plan.start_loc + start_to_end.normalize() * (cur_dist + 250.0);
+
+        ctx.eeg.draw(Drawable::ghost_car_ground(
+            target_loc.coords,
+            me.Physics.rot(),
+        ));
+
+        SegmentRunAction::Yield(rlbot::ffi::PlayerInput {
+            Throttle: 1.0,
+            Steer: simple_steer_towards(&me.Physics, target_loc.coords),
+            Boost: true,
+            ..Default::default()
+        })
     }
 }

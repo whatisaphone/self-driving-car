@@ -8,7 +8,7 @@ use predict::naive_ground_intercept;
 use routing::{
     models::{CarState, RoutePlanError, RoutePlanner, RoutePlannerCloneBox, RouteStep},
     recover::{IsSkidding, NotFacingTarget2D, NotOnFlatGround},
-    segments::{Chain, ForwardDodge, SimpleArc, Straight, Turn},
+    segments::{Chain, ForwardDodge, SimpleArc, Straight, StraightMode, Turn},
 };
 use simulate::{Car1D, CarForwardDodge, CarForwardDodge1D};
 use strategy::Scenario;
@@ -123,6 +123,7 @@ impl RoutePlanner for StraightSimple {
             start.vel.to_2d(),
             start.boost,
             self.target_loc,
+            StraightMode::Fake,
         );
         Ok(RouteStep {
             segment: Box::new(segment),
@@ -168,6 +169,7 @@ impl RoutePlanner for StraightWithDodge {
             start.vel.to_2d(),
             start.boost,
             start.loc.to_2d() + start.vel.to_2d().normalize() * dodge.approach_distance,
+            StraightMode::Real,
         );
         let dodge = ForwardDodge::new(start.clone(), dodge.dodge);
         let segment = Chain::new(vec![Box::new(approach), Box::new(dodge)]);

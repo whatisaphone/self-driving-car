@@ -1,5 +1,8 @@
 pub use routing::segments::{
-    chain::Chain, forward_dodge::ForwardDodge, simple_arc::SimpleArc, straight::Straight,
+    chain::Chain,
+    forward_dodge::ForwardDodge,
+    simple_arc::SimpleArc,
+    straight::{Straight, StraightMode},
     turn::Turn,
 };
 
