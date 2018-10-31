@@ -1,14 +1,13 @@
 use chip::max_curvature;
-use common::prelude::*;
+use common::{prelude::*, rl};
 use maneuvers::GroundedHit;
 use nalgebra::Point2;
 use ordered_float::{NotNan, OrderedFloat};
-use plan::ball::{BallFrame, BallTrajectory};
 use predict::naive_ground_intercept;
 use routing::{
     models::{CarState, RoutePlanError, RoutePlanner, RoutePlannerCloneBox, RouteStep},
     recover::{IsSkidding, NotFacingTarget2D, NotOnFlatGround},
-    segments::{Chain, ForwardDodge, SimpleArc, Straight, StraightMode, Turn},
+    segments::{Chain, ForwardDodge, NullSegment, SimpleArc, Straight, StraightMode, Turn},
 };
 use simulate::{Car1D, CarForwardDodge, CarForwardDodge1D};
 use strategy::Scenario;
@@ -42,7 +41,7 @@ impl RoutePlanner for GroundIntercept {
 
         TurnPlanner::new(
             guess.ball_loc.to_2d(),
-            Box::new(GroundInterceptStraight::new()),
+            Some(Box::new(GroundInterceptStraight::new())),
         )
         .plan(start, scenario)
     }
@@ -144,7 +143,7 @@ struct StraightWithDodge {
 }
 
 impl RoutePlanner for StraightWithDodge {
-    fn plan(&self, start: &CarState, scenario: &Scenario) -> Result<RouteStep, RoutePlanError> {
+    fn plan(&self, start: &CarState, _scenario: &Scenario) -> Result<RouteStep, RoutePlanError> {
         guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
         guard!(start, IsSkidding, RoutePlanError::MustNotBeSkidding);
         guard!(
@@ -153,12 +152,8 @@ impl RoutePlanner for StraightWithDodge {
             RoutePlanError::MustBeFacingTarget,
         );
 
-        let dodges = calc_feasible_straight_dodges(
-            start,
-            scenario.ball_prediction(),
-            self.end_chop,
-            |ball| ball.loc.z < GroundedHit::max_ball_z() && ball.vel.z < 25.0,
-        );
+        let dodges =
+            calc_feasible_straight_dodges(start, self.target_loc, self.target_time, self.end_chop);
         let dodge = dodges
             .into_iter()
             .min_by_key(|d| OrderedFloat(d.time_to_target))
@@ -185,9 +180,9 @@ impl RoutePlanner for StraightWithDodge {
 /// recovery, shooting, etc.
 fn calc_feasible_straight_dodges(
     start: &CarState,
-    ball_prediction: &BallTrajectory,
+    target_loc: Point2<f32>,
+    target_time: f32,
     end_chop: f32,
-    predicate: impl Fn(&BallFrame) -> bool,
 ) -> Vec<StraightDodge> {
     // Performance knob
     const GRANULARITY: f32 = 0.1;
@@ -200,19 +195,17 @@ fn calc_feasible_straight_dodges(
     let mut result = Vec::new();
 
     loop {
-        car.multi_step(GRANULARITY, BallFrame::DT, 1.0, true);
+        car.multi_step(GRANULARITY, rl::PHYSICS_DT, 1.0, true);
         let dodge = CarForwardDodge::calc_1d(car.speed());
         let mut car2 = Car1D::new(dodge.end_speed).with_boost(car.boost());
-        car2.multi_step(end_chop, BallFrame::DT, 1.0, true);
+        car2.multi_step(end_chop, rl::PHYSICS_DT, 1.0, true);
 
         let time = car.time() + dodge.duration() + car2.time();
-        let ball = some_or_else!(ball_prediction.at_time(time), {
-            break; // We've reached the end of the prediction.
-        });
-        if !predicate(ball) {
-            continue;
+        if time > target_time {
+            break; // We would get there too slowly.
         }
-        let target_traveled = (ball.loc - start.loc).to_2d().norm() - RADII;
+
+        let target_traveled = (target_loc - start.loc.to_2d()).norm() - RADII;
         if car.distance_traveled() + dodge.end_dist + car2.distance_traveled() >= target_traveled {
             break; // The dodge would send us too far.
         }
@@ -221,7 +214,7 @@ fn calc_feasible_straight_dodges(
         // The equal term I chose is the time needed to reach the target.
         while car.distance_traveled() + dodge.end_dist + car2.distance_traveled() < target_traveled
         {
-            car2.step(BallFrame::DT, 1.0, true);
+            car2.step(rl::PHYSICS_DT, 1.0, true);
         }
         let time_to_target = car.time() + dodge.duration() + car2.time();
 
@@ -244,23 +237,28 @@ struct StraightDodge {
 #[derive(new)]
 struct TurnPlanner {
     target_loc: Point2<f32>,
-    next: Box<RoutePlanner>,
+    next: Option<Box<RoutePlanner>>,
 }
 
 impl RoutePlannerCloneBox for TurnPlanner {
     fn clone_box(&self) -> Box<RoutePlanner> {
         Box::new(Self {
             target_loc: self.target_loc,
-            next: self.next.clone_box(),
+            next: self.next.as_ref().map(|p| p.clone_box()),
         })
     }
 }
 
 impl RoutePlanner for TurnPlanner {
-    fn plan(&self, start: &CarState, scenario: &Scenario) -> Result<RouteStep, RoutePlanError> {
+    fn plan(&self, start: &CarState, _scenario: &Scenario) -> Result<RouteStep, RoutePlanError> {
         let turn = match calculate_circle_turn(start, self.target_loc)? {
             Some(x) => x,
-            None => return self.next.plan(start, scenario),
+            None => {
+                return Ok(RouteStep {
+                    segment: Box::new(NullSegment::new(start.clone())),
+                    next: self.next.as_ref().map(|p| p.clone_box()),
+                })
+            }
         };
         let segment = Turn::new(
             start.clone(),
@@ -271,7 +269,7 @@ impl RoutePlanner for TurnPlanner {
         );
         Ok(RouteStep {
             segment: Box::new(segment),
-            next: Some(self.next.clone_box()),
+            next: self.next.as_ref().map(|p| p.clone_box()),
         })
     }
 }

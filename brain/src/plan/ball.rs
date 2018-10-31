@@ -16,8 +16,6 @@ pub struct BallFrame {
 }
 
 impl BallFrame {
-    pub const DT: f32 = DT;
-
     pub fn dt(&self) -> f32 {
         DT
     }
