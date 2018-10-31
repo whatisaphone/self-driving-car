@@ -5,7 +5,9 @@ use nalgebra::Point2;
 use ordered_float::{NotNan, OrderedFloat};
 use predict::naive_ground_intercept;
 use routing::{
-    models::{CarState, RoutePlanError, RoutePlanner, RoutePlannerCloneBox, RouteStep},
+    models::{
+        CarState, RoutePlanError, RoutePlanner, RoutePlannerCloneBox, RouteStep, SegmentPlan,
+    },
     recover::{IsSkidding, NotFacingTarget2D, NotOnFlatGround},
     segments::{Chain, ForwardDodge, NullSegment, SimpleArc, Straight, StraightMode, Turn},
 };
@@ -159,7 +161,7 @@ impl RoutePlanner for StraightWithDodge {
             .min_by_key(|d| OrderedFloat(d.time_to_target))
             .ok_or(RoutePlanError::MovingTooFast)?;
 
-        let approach = Straight::new(
+        let before = Straight::new(
             start.loc.to_2d(),
             start.vel.to_2d(),
             start.boost,
@@ -167,8 +169,15 @@ impl RoutePlanner for StraightWithDodge {
                 + (self.target_loc - start.loc.to_2d()).normalize() * dodge.approach_distance,
             StraightMode::Real,
         );
-        let dodge = ForwardDodge::new(start.clone(), dodge.dodge);
-        let segment = Chain::new(vec![Box::new(approach), Box::new(dodge)]);
+        let dodge = ForwardDodge::new(before.end(), dodge.dodge);
+        let after = Straight::new(
+            dodge.end().loc.to_2d(),
+            dodge.end().vel.to_2d(),
+            dodge.end().boost,
+            self.target_loc,
+            StraightMode::Fake,
+        );
+        let segment = Chain::new(vec![Box::new(before), Box::new(dodge), Box::new(after)]);
         Ok(RouteStep {
             segment: Box::new(segment),
             next: None,
