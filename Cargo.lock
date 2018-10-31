@@ -68,11 +68,11 @@ name = "brain"
 version = "0.1.0"
 dependencies = [
  "arrayvec 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "brain-test-data 0.1.0",
  "chip 0.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "collect 0.1.0",
  "common 0.1.0",
  "crossbeam-channel 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "csv 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "derive-new 0.5.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "flatbuffers 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "itertools 0.7.8 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -86,6 +86,17 @@ dependencies = [
  "piston_window 0.80.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rlbot 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "simulate 0.1.0",
+]
+
+[[package]]
+name = "brain-test-data"
+version = "0.1.0"
+dependencies = [
+ "collect 0.1.0",
+ "csv 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "lazy_static 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "nalgebra 0.16.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rlbot 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

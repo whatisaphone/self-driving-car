@@ -1,5 +1,6 @@
 use behavior::{Behavior, Fuse, NullBehavior};
 use brain::Brain;
+use brain_test_data::OneVOneScenario;
 use collect::{
     get_packet_and_inject_rigid_body_tick, RecordingPlayerTick, RecordingRigidBodyState,
     RecordingTick,
@@ -630,14 +631,6 @@ impl TestScenario {
             self.car_vel.z,
         )
     }
-}
-
-pub struct OneVOneScenario<'a> {
-    pub times: &'a [f32],
-    pub ball_states: &'a [RecordingRigidBodyState],
-    pub car_initial_state: RecordingRigidBodyState,
-    pub enemy_inputs: &'a [rlbot::ffi::PlayerInput],
-    pub enemy_states: &'a [RecordingRigidBodyState],
 }
 
 struct BallScenario {

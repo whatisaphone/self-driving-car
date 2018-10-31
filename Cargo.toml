@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "brain",
+    "brain-test-data",
     "collect",
     "common",
     "oven",

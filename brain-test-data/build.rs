@@ -15,7 +15,7 @@ fn main() {
     let mut out = File::create(out_dir.join("recordings.rs")).unwrap();
 
     writeln!(out, "use collect::RecordingRigidBodyState;\n").unwrap();
-    writeln!(out, "use integration_tests::helpers::OneVOneScenario;\n").unwrap();
+    writeln!(out, "use models::OneVOneScenario;\n").unwrap();
     writeln!(
         out,
         "use nalgebra::{{Point3, Quaternion, UnitQuaternion, Vector3}};\n"

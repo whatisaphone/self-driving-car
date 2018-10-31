@@ -185,11 +185,9 @@ impl HitToOwnCorner {
 #[cfg(test)]
 mod integration_tests {
     use behavior::{defense::Defense, runner::PUSHED, HitToOwnCorner};
+    use brain_test_data::recordings;
     use common::prelude::*;
-    use integration_tests::{
-        helpers::{TestRunner, TestScenario},
-        recordings,
-    };
+    use integration_tests::helpers::{TestRunner, TestScenario};
     use nalgebra::{Rotation3, Vector3};
     use strategy::Runner2;
 

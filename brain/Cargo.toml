@@ -29,8 +29,8 @@ common = { path = "../common" }
 collect = { path = "../collect" }
 simulate = { path = "../simulate" }
 
-[build-dependencies]
-csv = "1.0.2"
+[dev-dependencies]
+brain-test-data = { path = "../brain-test-data" }
 
 [features]
 strict = []

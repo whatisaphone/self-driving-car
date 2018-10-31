@@ -16,6 +16,13 @@
       entry: sh -c '( cd brain && cargo check --all-targets --features strict )'
       pass_filenames: false
 
+    - id: check-brain-test-data
+      name: check-brain-test-data
+      language: system
+      files: '[.]rs$'
+      entry: sh -c '( cd brain-test-data && cargo check --all-targets --features strict )'
+      pass_filenames: false
+
     - id: check-collect
       name: check-collect
       language: system

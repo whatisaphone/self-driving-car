@@ -1,6 +1,8 @@
 #![cfg_attr(feature = "strict", deny(warnings))]
 
 extern crate arrayvec;
+#[cfg(test)]
+extern crate brain_test_data;
 extern crate chip;
 extern crate collect;
 extern crate common;
