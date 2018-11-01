@@ -63,7 +63,7 @@ fn enemy_can_shoot(ctx: &mut Context) -> bool {
         Some(i) => i,
         None => return false,
     };
-    let ball_loc = enemy_intercept.1.to_2d().coords;
+    let ball_loc = enemy_intercept.ball_loc.to_2d().coords;
     if (ball_loc - my_goal_center_2d()).norm() >= 3000.0 {
         return false;
     }
