@@ -3,7 +3,7 @@ use maneuvers::GroundedHit;
 use ordered_float::NotNan;
 use predict::naive_ground_intercept;
 use routing::{
-    models::{CarState, RoutePlanError, RoutePlanner, RouteStep},
+    models::{CarState, RoutePlan, RoutePlanError, RoutePlanner},
     plan::{
         ground_straight::{StraightSimple, StraightWithDodge},
         ground_turn::TurnPlanner,
@@ -21,7 +21,7 @@ impl RoutePlanner for GroundIntercept {
         start_time: f32,
         start: &CarState,
         scenario: &Scenario,
-    ) -> Result<RouteStep, RoutePlanError> {
+    ) -> Result<RoutePlan, RoutePlanError> {
         guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
         guard!(start, IsSkidding, RoutePlanError::MustNotBeSkidding);
 
@@ -52,7 +52,7 @@ impl RoutePlanner for GroundInterceptStraight {
         start_time: f32,
         start: &CarState,
         scenario: &Scenario,
-    ) -> Result<RouteStep, RoutePlanError> {
+    ) -> Result<RoutePlan, RoutePlanError> {
         guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
         guard!(start, IsSkidding, RoutePlanError::MustNotBeSkidding);
 
@@ -92,7 +92,7 @@ fn at_least_one_ok<T, E>(results: impl Iterator<Item = Result<T, E>>) -> Result<
     }
 }
 
-fn fastest(steps: impl Iterator<Item = RouteStep>) -> RouteStep {
+fn fastest(steps: impl Iterator<Item = RoutePlan>) -> RoutePlan {
     steps
         .min_by_key(|s| NotNan::new(s.segment.duration()).unwrap())
         .unwrap()

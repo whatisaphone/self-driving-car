@@ -2,7 +2,7 @@ use chip;
 use common::prelude::*;
 use nalgebra::Point2;
 use routing::{
-    models::{CarState, RoutePlanError, RoutePlanner, RoutePlannerCloneBox, RouteStep},
+    models::{CarState, RoutePlan, RoutePlanError, RoutePlanner, RoutePlannerCloneBox},
     recover::{IsSkidding, NotOnFlatGround},
     segments::{NullSegment, SimpleArc, Turn},
 };
@@ -30,11 +30,11 @@ impl RoutePlanner for TurnPlanner {
         _start_time: f32,
         start: &CarState,
         _scenario: &Scenario,
-    ) -> Result<RouteStep, RoutePlanError> {
+    ) -> Result<RoutePlan, RoutePlanError> {
         let turn = match calculate_circle_turn(start, self.target_loc)? {
             Some(x) => x,
             None => {
-                return Ok(RouteStep {
+                return Ok(RoutePlan {
                     segment: Box::new(NullSegment::new(start.clone())),
                     next: self.next.as_ref().map(|p| p.clone_box()),
                 });
@@ -47,7 +47,7 @@ impl RoutePlanner for TurnPlanner {
             turn.radius,
             turn.tangent,
         );
-        Ok(RouteStep {
+        Ok(RoutePlan {
             segment: Box::new(segment),
             next: self.next.as_ref().map(|p| p.clone_box()),
         })
@@ -78,14 +78,14 @@ impl RoutePlanner for ArcTowards {
         _start_time: f32,
         start: &CarState,
         _scenario: &Scenario,
-    ) -> Result<RouteStep, RoutePlanError> {
+    ) -> Result<RoutePlan, RoutePlanError> {
         guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
         guard!(start, IsSkidding, RoutePlanError::MustNotBeSkidding);
 
         let turn = match calculate_circle_turn(start, self.target_loc)? {
             Some(x) => x,
             None => {
-                return Ok(RouteStep {
+                return Ok(RoutePlan {
                     segment: Box::new(NullSegment::new(start.clone())),
                     next: self.next.as_ref().map(|p| p.clone_box()),
                 });
@@ -101,7 +101,7 @@ impl RoutePlanner for ArcTowards {
             turn.tangent,
         )
         .map_err(|err| RoutePlanError::OtherError(err.to_str()))?;
-        Ok(RouteStep {
+        Ok(RoutePlan {
             segment: Box::new(segment),
             next: self.next.as_ref().map(|p| p.clone_box()),
         })

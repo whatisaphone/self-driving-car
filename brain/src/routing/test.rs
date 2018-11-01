@@ -1,7 +1,7 @@
 use behavior::Behavior;
 use routing::{
     behavior::FollowRoute,
-    models::{CarState, RoutePlanError, RoutePlanner, RouteStep, SegmentPlan},
+    models::{CarState, RoutePlan, RoutePlanError, RoutePlanner, SegmentPlan},
 };
 use strategy::Scenario;
 
@@ -26,8 +26,8 @@ where
         _start_time: f32,
         _start: &CarState,
         _scenario: &Scenario,
-    ) -> Result<RouteStep, RoutePlanError> {
-        Ok(RouteStep {
+    ) -> Result<RoutePlan, RoutePlanError> {
+        Ok(RoutePlan {
             segment: Box::new(self.plan.clone()),
             next: None,
         })

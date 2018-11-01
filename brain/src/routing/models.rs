@@ -64,10 +64,10 @@ pub trait RoutePlanner: RoutePlannerCloneBox + Send {
         start_time: f32,
         start: &CarState,
         scenario: &Scenario,
-    ) -> Result<RouteStep, RoutePlanError>;
+    ) -> Result<RoutePlan, RoutePlanError>;
 }
 
-impl RouteStep {
+impl RoutePlan {
     pub fn provisional_expand(
         &self,
         start_time: f32,
@@ -135,7 +135,7 @@ pub enum RoutePlanError {
     OtherError(&'static str),
 }
 
-pub struct RouteStep {
+pub struct RoutePlan {
     pub segment: Box<SegmentPlan>,
     pub next: Option<Box<RoutePlanner>>,
 }

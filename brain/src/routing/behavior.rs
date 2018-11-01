@@ -1,6 +1,6 @@
 use behavior::{Action, Behavior};
 use routing::models::{
-    ProvisionalPlanExpansion, RoutePlanError, RoutePlanner, RouteStep, SegmentRunAction,
+    ProvisionalPlanExpansion, RoutePlan, RoutePlanError, RoutePlanner, SegmentRunAction,
     SegmentRunner,
 };
 use strategy::Context;
@@ -12,7 +12,7 @@ pub struct FollowRoute {
 }
 
 struct Current {
-    step: RouteStep,
+    plan: RoutePlan,
     runner: Box<SegmentRunner>,
     provisional_expansion: ProvisionalPlanExpansion,
 }
@@ -55,7 +55,7 @@ impl FollowRoute {
         // 2. Predict far enough ahead that we can draw the whole plan to the screen.
         let current = self.current.as_ref().unwrap();
         let provisional_expansion = &current.provisional_expansion;
-        for segment in provisional_expansion.iter_starting_with(&*current.step.segment) {
+        for segment in provisional_expansion.iter_starting_with(&*current.plan.segment) {
             segment.draw(ctx);
         }
         Ok(())
@@ -64,7 +64,7 @@ impl FollowRoute {
     fn advance(&mut self, planner: &RoutePlanner, ctx: &mut Context) -> Result<(), Action> {
         assert!(self.current.is_none());
 
-        let step = match planner.plan(0.0, &ctx.me().into(), &ctx.scenario) {
+        let plan = match planner.plan(0.0, &ctx.me().into(), &ctx.scenario) {
             Ok(s) => s,
             Err(err) => match err.recover(ctx) {
                 Some(b) => {
@@ -79,8 +79,8 @@ impl FollowRoute {
                 }
             },
         };
-        let runner = step.segment.run();
-        let provisional_expansion = step.provisional_expand(0.0, &ctx.scenario).map_err(|err| {
+        let runner = plan.segment.run();
+        let provisional_expansion = plan.provisional_expand(0.0, &ctx.scenario).map_err(|err| {
             ctx.eeg.log(format!(
                 "[FollowRoute] Provisional expansion error {:?}",
                 err
@@ -89,7 +89,7 @@ impl FollowRoute {
         })?;
 
         self.current = Some(Current {
-            step,
+            plan,
             runner,
             provisional_expansion,
         });
@@ -110,7 +110,7 @@ impl FollowRoute {
         }
 
         let current = self.current.take().unwrap();
-        let next = some_or_else!(current.step.next, {
+        let next = some_or_else!(current.plan.next, {
             return Action::Return;
         });
         ctx.eeg.log("[FollowRoute] Next segment");

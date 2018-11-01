@@ -2,7 +2,7 @@ use common::{prelude::*, rl};
 use nalgebra::Point2;
 use ordered_float::NotNan;
 use routing::{
-    models::{CarState, RoutePlanError, RoutePlanner, RouteStep, SegmentPlan},
+    models::{CarState, RoutePlan, RoutePlanError, RoutePlanner, SegmentPlan},
     recover::{IsSkidding, NotFacingTarget2D, NotOnFlatGround},
     segments::{Chain, ForwardDodge, Straight, StraightMode},
 };
@@ -25,7 +25,7 @@ impl RoutePlanner for StraightSimple {
         _start_time: f32,
         start: &CarState,
         _scenario: &Scenario,
-    ) -> Result<RouteStep, RoutePlanError> {
+    ) -> Result<RoutePlan, RoutePlanError> {
         guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
         guard!(start, IsSkidding, RoutePlanError::MustNotBeSkidding);
         guard!(
@@ -41,7 +41,7 @@ impl RoutePlanner for StraightSimple {
             self.target_loc,
             StraightMode::Fake,
         );
-        Ok(RouteStep {
+        Ok(RoutePlan {
             segment: Box::new(segment),
             next: None,
         })
@@ -65,7 +65,7 @@ impl RoutePlanner for StraightWithDodge {
         _start_time: f32,
         start: &CarState,
         _scenario: &Scenario,
-    ) -> Result<RouteStep, RoutePlanError> {
+    ) -> Result<RoutePlan, RoutePlanError> {
         guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
         guard!(start, IsSkidding, RoutePlanError::MustNotBeSkidding);
         guard!(
@@ -103,7 +103,7 @@ impl RoutePlanner for StraightWithDodge {
             StraightMode::Fake,
         );
         let segment = Chain::new(vec![Box::new(before), Box::new(dodge), Box::new(after)]);
-        Ok(RouteStep {
+        Ok(RoutePlan {
             segment: Box::new(segment),
             next: None,
         })
