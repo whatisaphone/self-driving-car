@@ -39,7 +39,7 @@ impl SegmentPlan for ForwardDodge {
         ctx.eeg.draw(Drawable::Line(
             self.start.loc.to_2d(),
             self.end().loc.to_2d(),
-            color::WHITE,
+            color::GREEN,
         ));
     }
 }
