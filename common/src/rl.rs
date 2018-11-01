@@ -55,3 +55,6 @@ pub const CAR_ALMOST_MAX_SPEED: f32 = CAR_MAX_SPEED - 10.0;
 ///
 /// This value was determined using data from `collect`.
 pub const BOOST_DEPLETION: f32 = 100.0 / 3.0;
+
+/// The velocity increase when dodging forward.
+pub const DODGE_FORWARD_IMPULSE: f32 = 500.0;
