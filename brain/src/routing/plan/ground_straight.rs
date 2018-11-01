@@ -74,11 +74,16 @@ impl RoutePlanner for StraightWithDodge {
             RoutePlanError::MustBeFacingTarget,
         );
 
-        let dodges =
-            calc_feasible_straight_dodges(start, self.target_loc, self.target_time, self.end_chop);
+        let dodges = StraightDodgeCalculator::new(
+            start.clone(),
+            self.target_loc,
+            self.target_time,
+            self.end_chop,
+        )
+        .collect();
         let dodge = dodges
             .into_iter()
-            .min_by_key(|d| NotNan::new(d.time_to_target).unwrap())
+            .min_by_key(|d| NotNan::new(d.score).unwrap())
             .ok_or(RoutePlanError::MovingTooFast)?;
 
         let before = Straight::new(
@@ -105,61 +110,85 @@ impl RoutePlanner for StraightWithDodge {
     }
 }
 
-///
-/// `end_chop` is the amount of time that should be left after the dodge for
-/// recovery, shooting, etc.
-fn calc_feasible_straight_dodges(
-    start: &CarState,
+/// Calculate motions consisting of straight, then dodge, then straight again.
+#[derive(new)]
+struct StraightDodgeCalculator {
+    start: CarState,
     target_loc: Point2<f32>,
     target_time: f32,
     end_chop: f32,
-) -> Vec<StraightDodge> {
-    // Performance knob
-    const GRANULARITY: f32 = 0.1;
+}
 
-    // We don't want the center of the car to be at the center of the ball –
-    // we want their meshes to barely be touching.
-    const RADII: f32 = 240.0;
+impl StraightDodgeCalculator {
+    pub fn collect(&self) -> Vec<StraightDodge> {
+        // Performance knob
+        const GRANULARITY: f32 = 0.1;
 
-    let mut car = Car1D::new(start.vel.to_2d().norm()).with_boost(start.boost);
-    let mut result = Vec::new();
+        let mut car = Car1D::new(self.start.vel.to_2d().norm()).with_boost(self.start.boost);
+        let mut result = Vec::new();
 
-    loop {
-        car.multi_step(GRANULARITY, rl::PHYSICS_DT, 1.0, true);
-        let dodge = CarForwardDodge::calc_1d(car.speed());
-        let mut car2 = Car1D::new(dodge.end_speed).with_boost(car.boost());
-        car2.multi_step(end_chop, rl::PHYSICS_DT, 1.0, true);
-
-        let time = car.time() + dodge.duration() + car2.time();
-        if time > target_time {
-            break; // We would get there too slowly.
+        while car.time() < self.target_time {
+            car.multi_step(GRANULARITY, rl::PHYSICS_DT, 1.0, true);
+            if let Some(dodge) = self.evaluate(&car) {
+                result.push(dodge);
+            }
         }
 
-        let target_traveled = (target_loc - start.loc.to_2d()).norm() - RADII;
-        if car.distance_traveled() + dodge.end_dist + car2.distance_traveled() >= target_traveled {
-            break; // The dodge would send us too far.
+        result
+    }
+
+    fn evaluate(&self, approach: &Car1D) -> Option<StraightDodge> {
+        let dodge = CarForwardDodge::calc_1d(approach.speed());
+
+        // `end_chop` is "dead time" that the caller requested we leave available for
+        // the subsequent maneuver. Coasting on landing is the most conservative case.
+        let mut dodge_end = Car1D::new(dodge.end_speed).with_boost(approach.boost());
+        dodge_end.multi_step(self.end_chop, rl::PHYSICS_DT, 0.0, false);
+        let dodge_end = dodge_end;
+
+        // Now we know where this dodge would take us. Let's check if it meets the
+        // requirements:
+
+        // Check if we can even complete the dodge by the target time.
+        let total_time = approach.time() + dodge.duration() + dodge_end.time();
+        if total_time > self.target_time {
+            return None;
+        }
+
+        // Check that we don't land past the target.
+        let target_traveled = (self.target_loc - self.start.loc.to_2d()).norm();
+        let total_dist =
+            approach.distance_traveled() + dodge.end_dist + dodge_end.distance_traveled();
+        if total_dist >= target_traveled {
+            return None;
+        }
+
+        // Now simulate coasting after the landing. If we pass the target before the
+        // target time, dodging made us go too fast.
+        let mut coast = Car1D::new(dodge.end_speed).with_boost(approach.boost());
+        coast.multi_step(self.target_time - total_time, rl::PHYSICS_DT, 0.0, false);
+        if total_dist + coast.distance_traveled() > target_traveled {
+            return None;
         }
 
         // To calculate the "best" dodge, they all need to be compared on equal terms.
-        // The equal term I chose is the time needed to reach the target.
-        while car.distance_traveled() + dodge.end_dist + car2.distance_traveled() < target_traveled
-        {
-            car2.step(rl::PHYSICS_DT, 1.0, true);
+        // The equal term I choose is the minimum time needed to reach the target.
+        let mut blitz = Car1D::new(dodge.end_speed).with_boost(approach.boost());
+        while total_dist + blitz.distance_traveled() < target_traveled {
+            blitz.step(rl::PHYSICS_DT, 1.0, true);
         }
-        let time_to_target = car.time() + dodge.duration() + car2.time();
+        let score = total_time + blitz.time();
 
-        result.push(StraightDodge {
-            approach_distance: car.distance_traveled(),
+        Some(StraightDodge {
+            approach_distance: approach.distance_traveled(),
             dodge,
-            time_to_target,
-        });
+            score,
+        })
     }
-
-    result
 }
 
 struct StraightDodge {
     approach_distance: f32,
     dodge: CarForwardDodge1D,
-    time_to_target: f32,
+    score: f32,
 }
