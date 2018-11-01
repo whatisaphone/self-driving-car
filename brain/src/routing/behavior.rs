@@ -5,20 +5,21 @@ use strategy::Context;
 pub struct FollowRoute {
     /// Option dance: This only holds a planner before the first tick.
     planner: Option<Box<RoutePlanner>>,
-    cur_step: Option<RouteStep>,
-    cur_duration: Option<f32>,
-    cur_start: Option<f32>,
-    cur_runner: Option<Box<SegmentRunner>>,
+    current: Option<Current>,
+}
+
+struct Current {
+    step: RouteStep,
+    duration: f32,
+    start: f32,
+    runner: Box<SegmentRunner>,
 }
 
 impl FollowRoute {
     pub fn new(planner: impl RoutePlanner + 'static) -> Self {
         Self {
             planner: Some(Box::new(planner)),
-            cur_step: None,
-            cur_duration: None,
-            cur_start: None,
-            cur_runner: None,
+            current: None,
         }
     }
 }
@@ -29,7 +30,7 @@ impl Behavior for FollowRoute {
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {
-        if self.cur_step.is_none() {
+        if self.current.is_none() {
             let planner = &*self.planner.take().unwrap();
             if let Err(action) = self.advance(planner, ctx) {
                 return action;
@@ -50,10 +51,12 @@ impl FollowRoute {
         // This provisional expansion serves two purposes:
         // 1. Make sure each segment thinks it can complete successfully.
         // 2. Predict far enough ahead that we can draw the whole plan to the screen.
-        let cur_step = self.cur_step.as_ref().unwrap();
-        let cur_end = self.cur_start.unwrap() + self.cur_duration.unwrap();
+        let current = self.current.as_ref().unwrap();
+        let cur_end = current.start + current.duration;
         let expand_start_time = (cur_end - ctx.packet.GameInfo.TimeSeconds).max(0.0);
-        let expansion = cur_step.provisional_expand(expand_start_time, &ctx.scenario)?;
+        let expansion = current
+            .step
+            .provisional_expand(expand_start_time, &ctx.scenario)?;
 
         for segment in expansion.iter() {
             segment.draw(ctx);
@@ -62,6 +65,8 @@ impl FollowRoute {
     }
 
     fn advance(&mut self, planner: &RoutePlanner, ctx: &mut Context) -> Result<(), Action> {
+        assert!(self.current.is_none());
+
         let step = match planner.plan(0.0, &ctx.me().into(), &ctx.scenario) {
             Ok(s) => s,
             Err(err) => match err.recover(ctx) {
@@ -78,20 +83,19 @@ impl FollowRoute {
             },
         };
         let runner = step.segment.run();
+        let duration = step.segment.duration();
 
-        self.cur_step = Some(step);
-        self.cur_duration = Some(self.cur_step.as_ref().unwrap().segment.duration());
-        self.cur_start = Some(ctx.packet.GameInfo.TimeSeconds);
-        self.cur_runner = Some(runner);
+        self.current = Some(Current {
+            step,
+            duration,
+            start: ctx.packet.GameInfo.TimeSeconds,
+            runner,
+        });
         Ok(())
     }
 
     fn go(&mut self, ctx: &mut Context) -> Action {
-        let action = {
-            let cur_runner = self.cur_runner.as_mut().unwrap();
-            cur_runner.execute(ctx)
-        };
-
+        let action = self.current.as_mut().unwrap().runner.execute(ctx);
         let success = match action {
             SegmentRunAction::Yield(i) => return Action::Yield(i),
             SegmentRunAction::Success => true,
@@ -103,8 +107,8 @@ impl FollowRoute {
             return Action::Abort;
         }
 
-        let cur_step = self.cur_step.take().unwrap();
-        let next = some_or_else!(cur_step.next, {
+        let current = self.current.take().unwrap();
+        let next = some_or_else!(current.step.next, {
             return Action::Return;
         });
         ctx.eeg.log("[FollowRoute] Next segment");
