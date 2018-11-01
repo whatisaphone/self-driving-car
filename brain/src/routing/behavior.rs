@@ -1,5 +1,8 @@
 use behavior::{Action, Behavior};
-use routing::models::{RoutePlanError, RoutePlanner, RouteStep, SegmentRunAction, SegmentRunner};
+use routing::models::{
+    ProvisionalPlanExpansion, RoutePlanError, RoutePlanner, RouteStep, SegmentRunAction,
+    SegmentRunner,
+};
 use strategy::Context;
 
 pub struct FollowRoute {
@@ -10,9 +13,8 @@ pub struct FollowRoute {
 
 struct Current {
     step: RouteStep,
-    duration: f32,
-    start: f32,
     runner: Box<SegmentRunner>,
+    provisional_expansion: ProvisionalPlanExpansion,
 }
 
 impl FollowRoute {
@@ -52,13 +54,8 @@ impl FollowRoute {
         // 1. Make sure each segment thinks it can complete successfully.
         // 2. Predict far enough ahead that we can draw the whole plan to the screen.
         let current = self.current.as_ref().unwrap();
-        let cur_end = current.start + current.duration;
-        let expand_start_time = (cur_end - ctx.packet.GameInfo.TimeSeconds).max(0.0);
-        let expansion = current
-            .step
-            .provisional_expand(expand_start_time, &ctx.scenario)?;
-
-        for segment in expansion.iter() {
+        let provisional_expansion = &current.provisional_expansion;
+        for segment in provisional_expansion.iter_starting_with(&*current.step.segment) {
             segment.draw(ctx);
         }
         Ok(())
@@ -83,13 +80,18 @@ impl FollowRoute {
             },
         };
         let runner = step.segment.run();
-        let duration = step.segment.duration();
+        let provisional_expansion = step.provisional_expand(0.0, &ctx.scenario).map_err(|err| {
+            ctx.eeg.log(format!(
+                "[FollowRoute] Provisional expansion error {:?}",
+                err
+            ));
+            Action::Abort
+        })?;
 
         self.current = Some(Current {
             step,
-            duration,
-            start: ctx.packet.GameInfo.TimeSeconds,
             runner,
+            provisional_expansion,
         });
         Ok(())
     }

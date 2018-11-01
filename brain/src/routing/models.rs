@@ -68,21 +68,18 @@ pub trait RoutePlanner: RoutePlannerCloneBox + Send {
 }
 
 impl RouteStep {
-    pub fn provisional_expand<'a>(
-        &'a self,
+    pub fn provisional_expand(
+        &self,
         start_time: f32,
         scenario: &Scenario,
-    ) -> Result<ProvisionalPlanExpansion<'a>, RoutePlanError> {
+    ) -> Result<ProvisionalPlanExpansion, RoutePlanError> {
         let mut tail = Vec::new();
         if let Some(ref planner) = self.next {
             Self::expand_round(&**planner, start_time, &self.segment.end(), scenario, |s| {
                 tail.push(s)
             })?;
         }
-        Ok(ProvisionalPlanExpansion {
-            head: &*self.segment,
-            tail,
-        })
+        Ok(ProvisionalPlanExpansion { tail })
     }
 
     fn expand_round(
@@ -105,14 +102,16 @@ impl RouteStep {
     }
 }
 
-pub struct ProvisionalPlanExpansion<'a> {
-    head: &'a SegmentPlan,
+pub struct ProvisionalPlanExpansion {
     tail: Vec<Box<SegmentPlan>>,
 }
 
-impl<'a> ProvisionalPlanExpansion<'a> {
-    pub fn iter(&'a self) -> impl Iterator<Item = &'a SegmentPlan> {
-        iter::once(self.head).chain(self.tail.iter().map(|s| &**s))
+impl ProvisionalPlanExpansion {
+    pub fn iter_starting_with<'a>(
+        &'a self,
+        head: &'a SegmentPlan,
+    ) -> impl Iterator<Item = &'a (SegmentPlan + 'a)> {
+        iter::once(head).chain(self.tail.iter().map(|s| &**s))
     }
 }
 
