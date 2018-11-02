@@ -67,6 +67,54 @@ pub trait RoutePlanner: RoutePlannerCloneBox + Send {
     ) -> Result<RoutePlan, RoutePlanError>;
 }
 
+pub trait RoutePlannerCloneBox {
+    fn clone_box(&self) -> Box<RoutePlanner>;
+}
+
+impl<T> RoutePlannerCloneBox for T
+where
+    T: RoutePlanner + Clone + 'static,
+{
+    fn clone_box(&self) -> Box<RoutePlanner> {
+        Box::new(self.clone())
+    }
+}
+
+impl Clone for Box<RoutePlanner> {
+    fn clone(&self) -> Self {
+        self.clone_box()
+    }
+}
+
+pub struct ProvisionalPlanExpansion {
+    tail: Vec<Box<SegmentPlan>>,
+}
+
+impl ProvisionalPlanExpansion {
+    pub fn iter_starting_with<'a>(
+        &'a self,
+        head: &'a SegmentPlan,
+    ) -> impl Iterator<Item = &'a (SegmentPlan + 'a)> {
+        iter::once(head).chain(self.tail.iter().map(|s| &**s))
+    }
+}
+
+#[derive(Debug)]
+pub enum RoutePlanError {
+    MustBeOnFlatGround,
+    MustNotBeSkidding,
+    UnknownIntercept,
+    MustBeFacingTarget,
+    MovingTooFast,
+    OtherError(&'static str),
+}
+
+#[derive(Clone)]
+pub struct RoutePlan {
+    pub segment: Box<SegmentPlan>,
+    pub next: Option<Box<RoutePlanner>>,
+}
+
 impl RoutePlan {
     pub fn provisional_expand(
         &self,
@@ -102,50 +150,31 @@ impl RoutePlan {
     }
 }
 
-pub struct ProvisionalPlanExpansion {
-    tail: Vec<Box<SegmentPlan>>,
-}
-
-impl ProvisionalPlanExpansion {
-    pub fn iter_starting_with<'a>(
-        &'a self,
-        head: &'a SegmentPlan,
-    ) -> impl Iterator<Item = &'a (SegmentPlan + 'a)> {
-        iter::once(head).chain(self.tail.iter().map(|s| &**s))
-    }
-}
-
-pub trait RoutePlannerCloneBox {
-    fn clone_box(&self) -> Box<RoutePlanner>;
-}
-
-impl<T: RoutePlanner + Clone + 'static> RoutePlannerCloneBox for T {
-    fn clone_box(&self) -> Box<RoutePlanner> {
-        Box::new(self.clone())
-    }
-}
-
-#[derive(Debug)]
-pub enum RoutePlanError {
-    MustBeOnFlatGround,
-    MustNotBeSkidding,
-    UnknownIntercept,
-    MustBeFacingTarget,
-    MovingTooFast,
-    OtherError(&'static str),
-}
-
-pub struct RoutePlan {
-    pub segment: Box<SegmentPlan>,
-    pub next: Option<Box<RoutePlanner>>,
-}
-
-pub trait SegmentPlan: Send {
+pub trait SegmentPlan: SegmentPlanCloneBox + Send {
     fn start(&self) -> CarState;
     fn end(&self) -> CarState;
     fn duration(&self) -> f32;
     fn run(&self) -> Box<SegmentRunner>;
     fn draw(&self, ctx: &mut Context);
+}
+
+pub trait SegmentPlanCloneBox {
+    fn clone_box(&self) -> Box<SegmentPlan>;
+}
+
+impl<T> SegmentPlanCloneBox for T
+where
+    T: SegmentPlan + Clone + 'static,
+{
+    fn clone_box(&self) -> Box<SegmentPlan> {
+        Box::new(self.clone())
+    }
+}
+
+impl Clone for Box<SegmentPlan> {
+    fn clone(&self) -> Self {
+        self.clone_box()
+    }
 }
 
 pub trait SegmentRunner: Send {

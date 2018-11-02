@@ -84,6 +84,16 @@ impl Brain {
                 format!("possession: {:.2}", ctx.scenario.possession()),
                 color::GREEN,
             ));
+            ctx.eeg.draw(Drawable::print(
+                format!(
+                    "enemy_shot_threat: {}",
+                    ctx.scenario
+                        .enemy_shot_threat()
+                        .map(|x| format!("{:.2}", x))
+                        .unwrap_or_else(|| "<none>".to_string())
+                ),
+                color::GREEN,
+            ));
 
             self.runner.execute(&mut ctx)
         };

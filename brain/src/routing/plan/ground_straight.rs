@@ -10,13 +10,69 @@ use simulate::{Car1D, CarForwardDodge, CarForwardDodge1D};
 use strategy::Scenario;
 
 #[derive(Clone, new)]
-pub struct StraightSimple {
+pub struct GroundStraightPlanner {
     target_loc: Point2<f32>,
     target_time: f32,
     /// How early to return from the SegmentRunner. This can be used to give
     /// control to a subsequent behavior and leave it enough time to jump,
     /// shoot, position itself, etc.
     end_chop: f32,
+    mode: StraightMode,
+}
+
+impl RoutePlanner for GroundStraightPlanner {
+    fn plan(
+        &self,
+        start_time: f32,
+        start: &CarState,
+        scenario: &Scenario,
+    ) -> Result<RoutePlan, RoutePlanError> {
+        guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
+        guard!(start, IsSkidding, RoutePlanError::MustNotBeSkidding);
+
+        let simple =
+            StraightSimple::new(self.target_loc, self.target_time, self.end_chop, self.mode);
+        let with_dodge =
+            StraightWithDodge::new(self.target_loc, self.target_time, self.end_chop, self.mode);
+
+        let planners = [&simple as &RoutePlanner, &with_dodge];
+        let plans = planners.iter().map(|p| p.plan(start_time, start, scenario));
+        let plans = at_least_one_ok(plans)?;
+        Ok(fastest(plans.into_iter()))
+    }
+}
+
+fn at_least_one_ok<T, E>(results: impl Iterator<Item = Result<T, E>>) -> Result<Vec<T>, E> {
+    let mut oks: Vec<T> = Vec::new();
+    let mut error = None;
+    for result in results {
+        match result {
+            Ok(x) => oks.push(x),
+            Err(e) => error = Some(e),
+        }
+    }
+    if oks.is_empty() {
+        Err(error.unwrap())
+    } else {
+        Ok(oks)
+    }
+}
+
+fn fastest(steps: impl Iterator<Item = RoutePlan>) -> RoutePlan {
+    steps
+        .min_by_key(|s| NotNan::new(s.segment.duration()).unwrap())
+        .unwrap()
+}
+
+#[derive(Clone, new)]
+struct StraightSimple {
+    target_loc: Point2<f32>,
+    target_time: f32,
+    /// How early to return from the SegmentRunner. This can be used to give
+    /// control to a subsequent behavior and leave it enough time to jump,
+    /// shoot, position itself, etc.
+    end_chop: f32,
+    mode: StraightMode,
 }
 
 impl RoutePlanner for StraightSimple {
@@ -39,7 +95,7 @@ impl RoutePlanner for StraightSimple {
             start.vel.to_2d(),
             start.boost,
             self.target_loc,
-            StraightMode::Fake,
+            self.mode,
         );
         Ok(RoutePlan {
             segment: Box::new(segment),
@@ -50,13 +106,14 @@ impl RoutePlanner for StraightSimple {
 
 /// Calculate a ground interception of the ball with a single dodge.
 #[derive(Clone, new)]
-pub struct StraightWithDodge {
+struct StraightWithDodge {
     target_loc: Point2<f32>,
     target_time: f32,
     /// How early to return from the SegmentRunner. This can be used to give
     /// control to a subsequent behavior and leave it enough time to jump,
     /// shoot, position itself, etc.
     end_chop: f32,
+    mode: StraightMode,
 }
 
 impl RoutePlanner for StraightWithDodge {
@@ -100,7 +157,7 @@ impl RoutePlanner for StraightWithDodge {
             dodge.end().vel.to_2d(),
             dodge.end().boost,
             self.target_loc,
-            StraightMode::Fake,
+            self.mode,
         );
         let segment = Chain::new(vec![Box::new(before), Box::new(dodge), Box::new(after)]);
         Ok(RoutePlan {

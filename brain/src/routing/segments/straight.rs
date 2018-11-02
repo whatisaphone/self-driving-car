@@ -19,7 +19,11 @@ pub struct Straight {
 }
 
 /// This is a workaround for the lack of "arrive-at-time" behavior.
-#[derive(Clone)]
+///
+/// Most behaviors are able to control approach speed on a straightaway. If a
+/// straight segment is followed by one of those behaviors, it's easier to just
+/// defer to the behavior.
+#[derive(Copy, Clone)]
 pub enum StraightMode {
     /// Run the behavior as fast as possible.
     Real,

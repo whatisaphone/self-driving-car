@@ -1,7 +1,7 @@
 use routing::models::{CarState, SegmentPlan, SegmentRunAction, SegmentRunner};
 use strategy::Context;
 
-#[derive(new)]
+#[derive(Clone, new)]
 pub struct NullSegment {
     start: CarState,
 }

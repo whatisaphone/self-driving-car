@@ -2,7 +2,7 @@ use routing::models::{CarState, SegmentPlan, SegmentRunAction, SegmentRunner};
 use std::collections::VecDeque;
 use strategy::Context;
 
-#[derive(new)]
+#[derive(Clone, new)]
 pub struct Chain {
     segments: Vec<Box<SegmentPlan>>,
 }

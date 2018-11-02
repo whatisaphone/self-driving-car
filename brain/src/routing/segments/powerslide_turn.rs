@@ -2,27 +2,27 @@ use common::{physics::CAR_LOCAL_FORWARD_AXIS_2D, prelude::*};
 use eeg::{color, Drawable};
 use rlbot;
 use routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner};
-use simulate::CarPowerslideTurnPlan;
+use simulate::CarPowerslideTurnBlueprint;
 use strategy::Context;
 
 #[derive(Clone)]
 pub struct PowerslideTurn {
-    plan: CarPowerslideTurnPlan,
+    blueprint: CarPowerslideTurnBlueprint,
     boost: f32,
 }
 
 impl PowerslideTurn {
-    pub fn new(plan: CarPowerslideTurnPlan, boost: f32) -> Self {
-        Self { plan, boost }
+    pub fn new(blueprint: CarPowerslideTurnBlueprint, boost: f32) -> Self {
+        Self { blueprint, boost }
     }
 }
 
 impl SegmentPlan for PowerslideTurn {
     fn start(&self) -> CarState {
         CarState2D {
-            loc: self.plan.start_loc,
-            rot: CAR_LOCAL_FORWARD_AXIS_2D.rotation_to(&self.plan.start_vel.to_axis()),
-            vel: self.plan.start_vel,
+            loc: self.blueprint.start_loc,
+            rot: CAR_LOCAL_FORWARD_AXIS_2D.rotation_to(&self.blueprint.start_vel.to_axis()),
+            vel: self.blueprint.start_vel,
             boost: self.boost,
         }
         .to_3d()
@@ -30,16 +30,16 @@ impl SegmentPlan for PowerslideTurn {
 
     fn end(&self) -> CarState {
         CarState2D {
-            loc: self.plan.end_loc,
-            rot: self.plan.end_rot,
-            vel: self.plan.end_vel,
+            loc: self.blueprint.end_loc,
+            rot: self.blueprint.end_rot,
+            vel: self.blueprint.end_vel,
             boost: self.boost,
         }
         .to_3d()
     }
 
     fn duration(&self) -> f32 {
-        self.plan.duration
+        self.blueprint.duration
     }
 
     fn run(&self) -> Box<SegmentRunner> {
@@ -48,8 +48,8 @@ impl SegmentPlan for PowerslideTurn {
 
     fn draw(&self, ctx: &mut Context) {
         ctx.eeg.draw(Drawable::Line(
-            self.plan.start_loc,
-            self.plan.end_loc,
+            self.blueprint.start_loc,
+            self.blueprint.end_loc,
             color::RED,
         ));
     }
@@ -74,13 +74,13 @@ impl SegmentRunner for PowerslideTurnRunner {
         let now = ctx.packet.GameInfo.TimeSeconds;
         let start_time = *self.start_time.get_or_insert(now);
         let elapsed = now - start_time;
-        if elapsed >= self.plan.plan.duration {
+        if elapsed >= self.plan.blueprint.duration {
             return SegmentRunAction::Success;
         }
 
         SegmentRunAction::Yield(rlbot::ffi::PlayerInput {
-            Throttle: self.plan.plan.throttle,
-            Steer: self.plan.plan.steer,
+            Throttle: self.plan.blueprint.throttle,
+            Steer: self.plan.blueprint.steer,
             Handbrake: true,
             ..Default::default()
         })

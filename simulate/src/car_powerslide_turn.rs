@@ -8,7 +8,7 @@ use oven::data;
 pub struct CarPowerslideTurn;
 
 #[derive(Clone)]
-pub struct CarPowerslideTurnPlan {
+pub struct CarPowerslideTurnBlueprint {
     pub start_loc: Point2<f32>,
     pub start_vel: Vector2<f32>,
     pub steer: f32,
@@ -25,7 +25,7 @@ impl CarPowerslideTurn {
         start_vel: Vector2<f32>,
         throttle: f32,
         target_dir: Unit<Vector2<f32>>,
-    ) -> Option<CarPowerslideTurnPlan> {
+    ) -> Option<CarPowerslideTurnBlueprint> {
         // Transform the input scenario to match the reference scenario. Then
         // afterwards, do the inverse transform to convert reference results back to the
         // input coordinate system.
@@ -48,7 +48,7 @@ impl CarPowerslideTurn {
         reference_offset.x *= steer;
         let offset = transform.inverse() * reference_offset;
 
-        Some(CarPowerslideTurnPlan {
+        Some(CarPowerslideTurnBlueprint {
             start_loc,
             start_vel,
             steer,
@@ -68,11 +68,8 @@ impl CarPowerslideTurn {
         start_speed: f32,
         throttle: f32,
         target_rot_by: f32,
-    ) -> Option<CarPowerslideTurnPlan> {
-        println!("start_speed: {:?}", start_speed);
+    ) -> Option<CarPowerslideTurnBlueprint> {
         let speed_index = start_speed as usize / 100;
-        println!("speed_index: {:?}", speed_index);
-        println!("target_rot_by: {:?}", target_rot_by);
         // let lower_speed = speed_index as f32 * 100.0;
         let lower = TableSet::get(throttle, speed_index);
         // let upper_speed = ((speed_index + 1) as f32 * 100.0).min(rl::CAR_MAX_SPEED);
@@ -99,7 +96,7 @@ impl CarPowerslideTurn {
         let end_rot = UnitComplex::new(target_rot_by) * start_rot;
         let start_vel = lower.vel_2d[0];
         let end_vel = lower.vel_2d[index];
-        Some(CarPowerslideTurnPlan {
+        Some(CarPowerslideTurnBlueprint {
             start_loc,
             start_vel,
             steer: 1.0,

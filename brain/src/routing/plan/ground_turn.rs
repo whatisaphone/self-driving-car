@@ -2,26 +2,17 @@ use chip;
 use common::prelude::*;
 use nalgebra::Point2;
 use routing::{
-    models::{CarState, RoutePlan, RoutePlanError, RoutePlanner, RoutePlannerCloneBox},
+    models::{CarState, RoutePlan, RoutePlanError, RoutePlanner},
     recover::{IsSkidding, NotOnFlatGround},
     segments::{NullSegment, SimpleArc, Turn},
 };
 use strategy::Scenario;
 use utils::geometry::circle_point_tangents;
 
-#[derive(new)]
+#[derive(Clone, new)]
 pub struct TurnPlanner {
     target_loc: Point2<f32>,
     next: Option<Box<RoutePlanner>>,
-}
-
-impl RoutePlannerCloneBox for TurnPlanner {
-    fn clone_box(&self) -> Box<RoutePlanner> {
-        Box::new(Self {
-            target_loc: self.target_loc,
-            next: self.next.as_ref().map(|p| p.clone_box()),
-        })
-    }
 }
 
 impl RoutePlanner for TurnPlanner {
@@ -36,7 +27,7 @@ impl RoutePlanner for TurnPlanner {
             None => {
                 return Ok(RoutePlan {
                     segment: Box::new(NullSegment::new(start.clone())),
-                    next: self.next.as_ref().map(|p| p.clone_box()),
+                    next: self.next.clone(),
                 });
             }
         };
@@ -49,26 +40,16 @@ impl RoutePlanner for TurnPlanner {
         );
         Ok(RoutePlan {
             segment: Box::new(segment),
-            next: self.next.as_ref().map(|p| p.clone_box()),
+            next: self.next.clone(),
         })
     }
 }
 
 #[allow(dead_code)] // This basically works but I can't make use of it just yet.
-#[derive(new)]
+#[derive(Clone, new)]
 struct ArcTowards {
     target_loc: Point2<f32>,
     next: Option<Box<RoutePlanner>>,
-}
-
-#[allow(dead_code)]
-impl RoutePlannerCloneBox for ArcTowards {
-    fn clone_box(&self) -> Box<RoutePlanner> {
-        Box::new(Self {
-            target_loc: self.target_loc,
-            next: self.next.as_ref().map(|p| p.clone_box()),
-        })
-    }
 }
 
 #[allow(dead_code)]
@@ -87,7 +68,7 @@ impl RoutePlanner for ArcTowards {
             None => {
                 return Ok(RoutePlan {
                     segment: Box::new(NullSegment::new(start.clone())),
-                    next: self.next.as_ref().map(|p| p.clone_box()),
+                    next: self.next.clone(),
                 });
             }
         };
@@ -103,7 +84,7 @@ impl RoutePlanner for ArcTowards {
         .map_err(|err| RoutePlanError::OtherError(err.to_str()))?;
         Ok(RoutePlan {
             segment: Box::new(segment),
-            next: self.next.as_ref().map(|p| p.clone_box()),
+            next: self.next.clone(),
         })
     }
 }
