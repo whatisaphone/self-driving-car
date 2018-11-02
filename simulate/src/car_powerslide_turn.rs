@@ -1,8 +1,5 @@
-use common::{
-    physics::{car_forward_axis_2d, CAR_LOCAL_FORWARD_AXIS_2D},
-    prelude::*,
-};
-use nalgebra::{Point2, Unit, UnitComplex, Vector2};
+use common::{physics::CAR_LOCAL_FORWARD_AXIS_2D, prelude::*};
+use nalgebra::{Point2, UnitComplex, Vector2};
 use oven::data;
 
 pub struct CarPowerslideTurn;
@@ -24,7 +21,7 @@ impl CarPowerslideTurn {
         start_loc: Point2<f32>,
         start_vel: Vector2<f32>,
         throttle: f32,
-        target_dir: Unit<Vector2<f32>>,
+        target_rot_by: f32,
     ) -> Option<CarPowerslideTurnBlueprint> {
         // Transform the input scenario to match the reference scenario. Then
         // afterwards, do the inverse transform to convert reference results back to the
@@ -32,10 +29,6 @@ impl CarPowerslideTurn {
         let reference_dir = Vector2::y_axis();
         let transform = start_vel.to_axis().rotation_to(&reference_dir);
 
-        let start_rot = CAR_LOCAL_FORWARD_AXIS_2D.rotation_to(&start_vel.to_axis());
-        let target_rot_by = car_forward_axis_2d(start_rot)
-            .rotation_to(&target_dir)
-            .angle();
         let steer = target_rot_by.signum();
 
         let reference = Self::reference_evaluate(start_vel.norm(), throttle, target_rot_by.abs());
@@ -48,13 +41,14 @@ impl CarPowerslideTurn {
         reference_offset.x *= steer;
         let offset = transform.inverse() * reference_offset;
 
+        let start_rot = CAR_LOCAL_FORWARD_AXIS_2D.rotation_to(&start_vel.to_axis());
         Some(CarPowerslideTurnBlueprint {
             start_loc,
             start_vel,
             steer,
             throttle,
             end_loc: start_loc + offset,
-            end_rot: CAR_LOCAL_FORWARD_AXIS_2D.rotation_to(&target_dir),
+            end_rot: UnitComplex::new(start_rot.angle() + target_rot_by),
             end_vel: reference.end_vel,
             duration: reference.duration,
         })

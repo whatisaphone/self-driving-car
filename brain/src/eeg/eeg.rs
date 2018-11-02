@@ -207,6 +207,22 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
                         g,
                     );
 
+                    for boost in &[
+                        Point2::new(-3072.0, -4096.0),
+                        Point2::new(3072.0, -4096.0),
+                        Point2::new(-3072.0, 0.0),
+                        Point2::new(3072.0, 0.0),
+                        Point2::new(-3072.0, 4096.0),
+                        Point2::new(3072.0, 4096.0),
+                    ] {
+                        ellipse(
+                            color::YELLOW,
+                            ellipse::circle(0.0, 0.0, 40.0),
+                            transform.trans(boost.x as f64, boost.y as f64),
+                            g,
+                        );
+                    }
+
                     for car in packet.cars() {
                         rectangle(
                             if car.Team == 0 {

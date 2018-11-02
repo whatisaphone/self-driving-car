@@ -149,7 +149,7 @@ impl RoutePlanner for StraightWithDodge {
             start.boost,
             start.loc.to_2d()
                 + (self.target_loc - start.loc.to_2d()).normalize() * dodge.approach_distance,
-            StraightMode::Real,
+            StraightMode::Asap,
         );
         let dodge = ForwardDodge::new(before.end(), dodge.dodge);
         let after = Straight::new(

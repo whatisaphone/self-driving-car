@@ -25,8 +25,8 @@ pub struct Straight {
 /// defer to the behavior.
 #[derive(Copy, Clone)]
 pub enum StraightMode {
-    /// Run the behavior as fast as possible.
-    Real,
+    /// Run the segment as fast as possible.
+    Asap,
     /// Return immediately, depending on the subsequent behavior.
     Fake,
 }
@@ -120,7 +120,7 @@ impl SegmentRunner for StraightRunner {
                     .log("[StraightRunner] stopping because mode is fake");
                 return SegmentRunAction::Success;
             }
-            StraightMode::Real => {} // continued below :)
+            StraightMode::Asap => {} // continued below :)
         }
 
         let me = ctx.me();
