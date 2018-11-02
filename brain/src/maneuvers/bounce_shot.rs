@@ -28,7 +28,7 @@ impl BounceShot {
         }
     }
 
-    pub fn with_target_loc(self, aim_loc: Vector2<f32>) -> Self {
+    pub fn with_aim_loc(self, aim_loc: Vector2<f32>) -> Self {
         Self {
             aim_loc: Point2::from_coordinates(aim_loc),
             ..self
@@ -183,7 +183,7 @@ mod integration_tests {
             ..Default::default()
         });
         test.set_behavior(Repeat::new(|| {
-            BounceShot::new().with_target_loc(Vector2::new(-rl::FIELD_MAX_X, -1000.0))
+            BounceShot::new().with_aim_loc(Vector2::new(-rl::FIELD_MAX_X, -1000.0))
         }));
 
         test.sleep_millis(3000);
@@ -203,7 +203,7 @@ mod integration_tests {
             ..Default::default()
         });
         test.set_behavior(Repeat::new(|| {
-            BounceShot::new().with_target_loc(Vector2::new(rl::FIELD_MAX_X, -rl::FIELD_MAX_Y))
+            BounceShot::new().with_aim_loc(Vector2::new(rl::FIELD_MAX_X, -rl::FIELD_MAX_Y))
         }));
 
         test.sleep_millis(3000);

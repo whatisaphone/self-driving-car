@@ -150,17 +150,17 @@ impl Behavior for HitToOwnCorner {
 
         match intercept {
             None => Action::Return,
-            Some(intercept) => {
-                let target_loc = Self::aim_loc(ctx, &intercept);
-                Action::call(BounceShot::new().with_target_loc(target_loc))
-            }
+            Some(intercept) => match Self::aim_loc(ctx, &intercept) {
+                Err(()) => Action::Return,
+                Ok(aim_loc) => Action::call(BounceShot::new().with_aim_loc(aim_loc)),
+            },
         }
     }
 }
 
 impl HitToOwnCorner {
-    fn aim_loc(ctx: &mut Context, intercept: &Intercept) -> Vector2<f32> {
-        let avoid = my_goal_center_2d();
+    fn aim_loc(ctx: &mut Context, intercept: &Intercept) -> Result<Vector2<f32>, ()> {
+        let avoid = ctx.game.own_goal().center_2d;
 
         let me = my_car(ctx.packet);
         let me_loc = me.Physics.locp().to_2d();
@@ -172,12 +172,20 @@ impl HitToOwnCorner {
         let rtl_dir = Rotation2::new(-PI / 6.0) * me_to_ball;
         let rtl = WallRayCalculator::calculate(ball_loc, ball_loc + rtl_dir);
 
-        if (avoid - ltr.coords).norm() > (avoid - rtl.coords).norm() {
+        let result = if (avoid - ltr).norm() > (avoid - rtl).norm() {
             ctx.eeg.log("push from left to right");
-            ltr.coords
+            ltr
         } else {
             ctx.eeg.log("push from right to left");
-            rtl.coords
+            rtl
+        };
+
+        match WallRayCalculator::wall_for_point(result) {
+            Wall::OwnGoal => {
+                ctx.eeg.log("avoiding the own goal");
+                Err(())
+            }
+            _ => Ok(result.coords),
         }
     }
 }
