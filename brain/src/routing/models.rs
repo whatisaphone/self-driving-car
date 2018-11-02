@@ -2,7 +2,7 @@ use common::{physics, prelude::*};
 use nalgebra::{Point2, Point3, Unit, UnitComplex, UnitQuaternion, Vector2, Vector3};
 use rlbot;
 use simulate::rl;
-use std::iter;
+use std::{fmt, iter};
 use strategy::{Context, Scenario};
 use utils::geometry::{ExtendPoint2, ExtendUnitComplex, ExtendVector2};
 
@@ -99,14 +99,26 @@ impl ProvisionalPlanExpansion {
     }
 }
 
-#[derive(Debug)]
 pub enum RoutePlanError {
     MustBeOnFlatGround,
-    MustNotBeSkidding,
+    MustNotBeSkidding { recover_target_loc: Point2<f32> },
     UnknownIntercept,
     MustBeFacingTarget,
     MovingTooFast,
     OtherError(&'static str),
+}
+
+impl fmt::Debug for RoutePlanError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            RoutePlanError::MustBeOnFlatGround => write!(f, stringify!(MustBeOnFlatGround)),
+            RoutePlanError::MustNotBeSkidding { .. } => write!(f, stringify!(MustNotBeSkidding)),
+            RoutePlanError::UnknownIntercept => write!(f, stringify!(UnknownIntercept)),
+            RoutePlanError::MustBeFacingTarget => write!(f, stringify!(MustBeFacingTarget)),
+            RoutePlanError::MovingTooFast => write!(f, stringify!(MovingTooFast)),
+            RoutePlanError::OtherError(msg) => write!(f, "{}({:?})", stringify!(OtherError), msg),
+        }
+    }
 }
 
 #[derive(Clone)]

@@ -61,7 +61,13 @@ impl RoutePlanner for ArcTowards {
         _scenario: &Scenario,
     ) -> Result<RoutePlan, RoutePlanError> {
         guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
-        guard!(start, IsSkidding, RoutePlanError::MustNotBeSkidding);
+        guard!(
+            start,
+            IsSkidding,
+            RoutePlanError::MustNotBeSkidding {
+                recover_target_loc: self.target_loc,
+            },
+        );
 
         let turn = match calculate_circle_turn(start, self.target_loc)? {
             Some(x) => x,

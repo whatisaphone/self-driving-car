@@ -69,6 +69,23 @@ impl<N: Real> ExtendPoint3<N> for Point3<N> {
     }
 }
 
+pub trait ExtendUnitComplex {
+    fn unit(&self) -> Vector2<f32>;
+    /// Convert this complex number (representing a 2D rotation) into a unit
+    /// quaternion representing a 3D rotation around the z-axis.
+    fn around_z_axis(&self) -> UnitQuaternion<f32>;
+}
+
+impl ExtendUnitComplex for UnitComplex<f32> {
+    fn unit(&self) -> Vector2<f32> {
+        Vector2::new(self.cos_angle(), self.sin_angle())
+    }
+
+    fn around_z_axis(&self) -> UnitQuaternion<f32> {
+        UnitQuaternion::from_axis_angle(&Vector3::z_axis(), self.angle())
+    }
+}
+
 pub trait ExtendRotation3 {
     fn from_unreal_angles(pitch: f32, yaw: f32, roll: f32) -> Rotation3<f32>;
     fn to_unreal_angles(&self) -> (f32, f32, f32);

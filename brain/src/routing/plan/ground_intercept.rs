@@ -20,7 +20,6 @@ impl RoutePlanner for GroundIntercept {
         scenario: &Scenario,
     ) -> Result<RoutePlan, RoutePlanError> {
         guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
-        guard!(start, IsSkidding, RoutePlanError::MustNotBeSkidding);
 
         // Naive first pass to get a rough location.
         let guess = naive_ground_intercept(
@@ -31,6 +30,14 @@ impl RoutePlanner for GroundIntercept {
             |ball| ball.loc.z < GroundedHit::max_ball_z() && ball.vel.z < 25.0,
         )
         .ok_or_else(|| RoutePlanError::UnknownIntercept)?;
+
+        guard!(
+            start,
+            IsSkidding,
+            RoutePlanError::MustNotBeSkidding {
+                recover_target_loc: guess.car_loc.to_2d(),
+            },
+        );
 
         TurnPlanner::new(
             guess.ball_loc.to_2d(),
@@ -51,7 +58,6 @@ impl RoutePlanner for GroundInterceptStraight {
         scenario: &Scenario,
     ) -> Result<RoutePlan, RoutePlanError> {
         guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
-        guard!(start, IsSkidding, RoutePlanError::MustNotBeSkidding);
 
         let guess = naive_ground_intercept(
             scenario.ball_prediction().iter_delayed(start_time),
@@ -61,6 +67,14 @@ impl RoutePlanner for GroundInterceptStraight {
             |ball| ball.loc.z < GroundedHit::max_ball_z() && ball.vel.z < 25.0,
         )
         .ok_or_else(|| RoutePlanError::UnknownIntercept)?;
+
+        guard!(
+            start,
+            IsSkidding,
+            RoutePlanError::MustNotBeSkidding {
+                recover_target_loc: guess.car_loc.to_2d(),
+            },
+        );
 
         let end_chop = 0.5;
         GroundStraightPlanner::new(

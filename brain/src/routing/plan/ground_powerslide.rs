@@ -56,7 +56,13 @@ impl RoutePlanner for GroundPowerslideEssence {
         scenario: &Scenario,
     ) -> Result<RoutePlan, RoutePlanError> {
         guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
-        guard!(start, IsSkidding, RoutePlanError::MustNotBeSkidding);
+        guard!(
+            start,
+            IsSkidding,
+            RoutePlanError::MustNotBeSkidding {
+                recover_target_loc: self.target_loc,
+            },
+        );
         guard!(
             start,
             NotFacingTarget2D::new(self.target_loc),

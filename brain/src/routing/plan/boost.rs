@@ -27,10 +27,18 @@ impl RoutePlanner for GetDollar {
         start: &CarState,
         scenario: &Scenario,
     ) -> Result<RoutePlan, RoutePlanError> {
-        guard!(start, IsSkidding, RoutePlanError::MustNotBeSkidding);
         guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
 
         let target_loc = Point2::new(-3072.0, -4096.0); // TODO: not hardcode
+
+        guard!(
+            start,
+            IsSkidding,
+            RoutePlanError::MustNotBeSkidding {
+                recover_target_loc: target_loc,
+            },
+        );
+
         if (target_loc - start.loc.to_2d()).norm() < 500.0
             && start.vel.to_2d().norm() < 100.0
             && start

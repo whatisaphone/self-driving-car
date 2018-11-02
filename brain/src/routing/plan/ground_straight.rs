@@ -28,7 +28,13 @@ impl RoutePlanner for GroundStraightPlanner {
         scenario: &Scenario,
     ) -> Result<RoutePlan, RoutePlanError> {
         guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
-        guard!(start, IsSkidding, RoutePlanError::MustNotBeSkidding);
+        guard!(
+            start,
+            IsSkidding,
+            RoutePlanError::MustNotBeSkidding {
+                recover_target_loc: self.target_loc,
+            },
+        );
 
         let simple =
             StraightSimple::new(self.target_loc, self.target_time, self.end_chop, self.mode);
@@ -83,7 +89,13 @@ impl RoutePlanner for StraightSimple {
         _scenario: &Scenario,
     ) -> Result<RoutePlan, RoutePlanError> {
         guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
-        guard!(start, IsSkidding, RoutePlanError::MustNotBeSkidding);
+        guard!(
+            start,
+            IsSkidding,
+            RoutePlanError::MustNotBeSkidding {
+                recover_target_loc: self.target_loc,
+            },
+        );
         guard!(
             start,
             NotFacingTarget2D::new(self.target_loc),
@@ -124,7 +136,13 @@ impl RoutePlanner for StraightWithDodge {
         _scenario: &Scenario,
     ) -> Result<RoutePlan, RoutePlanError> {
         guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
-        guard!(start, IsSkidding, RoutePlanError::MustNotBeSkidding);
+        guard!(
+            start,
+            IsSkidding,
+            RoutePlanError::MustNotBeSkidding {
+                recover_target_loc: self.target_loc,
+            },
+        );
         guard!(
             start,
             NotFacingTarget2D::new(self.target_loc),

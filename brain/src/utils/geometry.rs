@@ -1,7 +1,7 @@
-use nalgebra::{Point2, Point3, Real, UnitComplex, UnitQuaternion, Vector2, Vector3};
+use nalgebra::{Point2, Point3, Real, UnitComplex};
 use std::f32::consts::PI;
 
-pub use common::ext::{ExtendPoint3, ExtendVector2, ExtendVector3};
+pub use common::ext::{ExtendPoint3, ExtendUnitComplex, ExtendVector2, ExtendVector3};
 
 pub trait ExtendF32 {
     /// Normalize an angle to between -PI and PI.
@@ -34,23 +34,6 @@ impl<N: Real> ExtendPoint2<N> for Point2<N> {
 
     fn to_3d(&self, z: N) -> Point3<N> {
         Point3::new(self.x, self.y, z)
-    }
-}
-
-pub trait ExtendUnitComplex {
-    fn unit(&self) -> Vector2<f32>;
-    /// Convert this complex number (representing a 2D rotation) into a unit
-    /// quaternion representing a 3D rotation around the z-axis.
-    fn around_z_axis(&self) -> UnitQuaternion<f32>;
-}
-
-impl ExtendUnitComplex for UnitComplex<f32> {
-    fn unit(&self) -> Vector2<f32> {
-        Vector2::new(self.cos_angle(), self.sin_angle())
-    }
-
-    fn around_z_axis(&self) -> UnitQuaternion<f32> {
-        UnitQuaternion::from_axis_angle(&Vector3::z_axis(), self.angle())
     }
 }
 

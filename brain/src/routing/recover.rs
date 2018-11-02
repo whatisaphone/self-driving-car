@@ -1,6 +1,7 @@
-use behavior::{Behavior, NullBehavior, Predicate, TimeLimit, While};
+use behavior::{Behavior, Predicate, TimeLimit, While};
 use common::{physics::car_forward_axis, prelude::*};
 use maneuvers::{DriveTowards, GetToFlatGround};
+use mechanics::SkidRecover;
 use nalgebra::Point2;
 use routing::models::{CarState, RoutePlanError};
 use std::f32::consts::PI;
@@ -16,9 +17,10 @@ impl RoutePlanError {
                 NotOnFlatGround,
                 GetToFlatGround::new(),
             ))),
-            RoutePlanError::MustNotBeSkidding => {
-                Some(Box::new(While::new(IsSkidding, NullBehavior::new())))
-            }
+            RoutePlanError::MustNotBeSkidding { recover_target_loc } => Some(Box::new(While::new(
+                IsSkidding,
+                SkidRecover::new(recover_target_loc),
+            ))),
             RoutePlanError::UnknownIntercept => {
                 let target_loc = ctx.scenario.ball_prediction().iter().last().unwrap().loc;
                 let wander = DriveTowards::new(target_loc.to_2d());
