@@ -86,11 +86,8 @@ impl Brain {
             ));
             ctx.eeg.draw(Drawable::print(
                 format!(
-                    "enemy_shot_threat: {}",
-                    ctx.scenario
-                        .enemy_shot_threat()
-                        .map(|x| format!("{:.2}", x))
-                        .unwrap_or_else(|| "<none>".to_string())
+                    "concede seconds: {:.2}",
+                    ctx.scenario.enemy_shoot_score_seconds(),
                 ),
                 color::GREEN,
             ));

@@ -5,7 +5,7 @@ use plan::ball::{BallFrame, BallTrajectory};
 use predict::intercept::NaiveIntercept;
 use rlbot;
 use simulate::{linear_interpolate, Car1D};
-use std::f32::consts::PI;
+use std::f32::{self, consts::PI};
 use strategy::game::Game;
 use utils::{one_v_one, ExtendPoint3, ExtendVector3, Wall, WallRayCalculator};
 
@@ -18,7 +18,7 @@ pub struct Scenario<'a> {
     possession: LazyCell<f32>,
     push_wall: LazyCell<Wall>,
     impending_concede: LazyCell<Option<&'a BallFrame>>,
-    enemy_shot_threat: LazyCell<Option<f32>>,
+    enemy_shoot_score_seconds: LazyCell<f32>,
 }
 
 impl<'a> Scenario<'a> {
@@ -35,7 +35,7 @@ impl<'a> Scenario<'a> {
             possession: LazyCell::new(),
             push_wall: LazyCell::new(),
             impending_concede: LazyCell::new(),
-            enemy_shot_threat: LazyCell::new(),
+            enemy_shoot_score_seconds: LazyCell::new(),
         }
     }
 
@@ -105,13 +105,13 @@ impl<'a> Scenario<'a> {
         })
     }
 
-    /// If the enemy can shoot, guesstimate the number of seconds before a shot
-    /// could be scored.
+    /// If the enemy can shoot, guesstimate the number of seconds before the
+    /// shot would be scored.
     #[allow(dead_code)]
-    pub fn enemy_shot_threat(&self) -> Option<f32> {
-        *self.enemy_shot_threat.borrow_with(|| {
+    pub fn enemy_shoot_score_seconds(&self) -> f32 {
+        *self.enemy_shoot_score_seconds.borrow_with(|| {
             let intercept = some_or_else!(self.enemy_intercept(), {
-                return None;
+                return f32::INFINITY;
             });
 
             let car = self.game.enemy();
@@ -129,9 +129,9 @@ impl<'a> Scenario<'a> {
 
             let shot_speed = ball_scoring_speed + impulse_guess * angle_factor;
             if shot_speed < 1.0 {
-                None
+                f32::INFINITY
             } else {
-                Some(ball_to_goal.norm() / shot_speed)
+                ball_to_goal.norm() / shot_speed
             }
         })
     }
