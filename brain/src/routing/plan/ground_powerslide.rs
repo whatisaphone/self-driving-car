@@ -67,35 +67,58 @@ impl RoutePlanner for GroundPowerslideEssence {
                         // arrival.
         let throttle = 1.0;
 
-        // First pass to estimate the approach
-        let (first_pass_blueprint, rot_by) = {
+        let end_rot =
+            CAR_LOCAL_FORWARD_AXIS_2D.rotation_to(&(self.target_face - self.target_loc).to_axis());
+        let rot_by = start.rot.to_2d().rotation_to(&end_rot).angle();
+
+        // First pass to estimate the approach angle
+        let blueprint = {
             let end_chop = 1.0; // Leave some time for the actual slide.
-            let first_pass =
+            let straight =
                 GroundStraightPlanner::new(self.target_loc, asap, end_chop, StraightMode::Asap)
                     .plan(start_time, start, scenario)?;
+            let straight_end = straight.segment.end();
 
-            let slide_start = first_pass.segment.end();
-            let end_rot = CAR_LOCAL_FORWARD_AXIS_2D
-                .rotation_to(&(self.target_face - self.target_loc).to_axis());
-            let rot_by = start.rot.to_2d().rotation_to(&end_rot).angle();
-            let blueprint = CarPowerslideTurn::evaluate(
-                slide_start.loc.to_2d(),
-                slide_start.vel.to_2d(),
+            CarPowerslideTurn::evaluate(
+                straight_end.loc.to_2d(),
+                straight_end.vel.to_2d(),
                 throttle,
                 rot_by,
             )
-            .ok_or(RoutePlanError::OtherError("no viable powerslide turn"))?;
-            (blueprint, rot_by)
+            .ok_or(RoutePlanError::OtherError("no viable powerslide turn"))?
         };
 
-        let slide_displacement = first_pass_blueprint.end_loc - first_pass_blueprint.start_loc;
-        let fudge = 0.75; // This planner is inaccurate at short range. If we fudge the location, we're
-                          // likely to slide through the target rather than missing it entirely, which is
-                          // an improvement :)
-        let slide_start_loc = self.target_loc - slide_displacement * fudge;
-        let straight = GroundStraightPlanner::new(slide_start_loc, asap, 0.0, StraightMode::Asap)
+        // Second pass to estimate the approach velocity
+        let blueprint = {
+            let start_to_target = self.target_loc - start.loc.to_2d();
+            let blueprint_span = blueprint.end_loc - blueprint.start_loc;
+            let dist_reduction = blueprint_span.dot(&start_to_target.to_axis());
+            let straight_dist = start_to_target.norm() - dist_reduction;
+            let straight_end_loc = start.loc.to_2d() + start_to_target.normalize() * straight_dist;
+            let straight =
+                GroundStraightPlanner::new(straight_end_loc, asap, 0.0, StraightMode::Asap)
+                    .plan(start_time, start, scenario)?;
+            let straight_end = straight.segment.end();
+
+            CarPowerslideTurn::evaluate(
+                straight_end.loc.to_2d(),
+                straight_end.vel.to_2d(),
+                throttle,
+                rot_by,
+            )
+            .ok_or(RoutePlanError::OtherError("no viable powerslide turn"))?
+        };
+
+        // This planner is inaccurate at short range, despite the tryharding above. If
+        // we fudge the location, we're likely to slide through the target rather than
+        // missing it entirely, which is at least an improvement :)
+        let fudge = 0.75;
+
+        let straight_end_loc = self.target_loc - (blueprint.end_loc - blueprint.start_loc) * fudge;
+        let straight = GroundStraightPlanner::new(straight_end_loc, asap, 0.0, StraightMode::Asap)
             .plan(start_time, start, scenario)?;
         let straight_end = straight.segment.end();
+
         let blueprint = CarPowerslideTurn::evaluate(
             straight_end.loc.to_2d(),
             straight_end.vel.to_2d(),
