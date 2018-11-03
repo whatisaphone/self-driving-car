@@ -79,8 +79,7 @@ impl WallRayCalculator {
         (ray.origin + ray.dir * intersect.toi).to_2d()
     }
 
-    pub fn calc_ray(from: Vector2<f32>, angle: f32) -> Vector2<f32> {
-        let from = Point2::from_coordinates(from);
+    pub fn calc_ray(from: Point2<f32>, angle: f32) -> Vector2<f32> {
         Self::calculate(from, from + Vector2::unit(angle)).coords
     }
 

@@ -30,6 +30,10 @@ impl<'a> Game<'a> {
         Goal::for_team(self.team)
     }
 
+    pub fn enemy_goal(&self) -> &Goal {
+        Goal::for_team(self.enemy_team)
+    }
+
     pub fn boost_dollars(&self) -> &[BoostPickup] {
         self.boost_dollars
     }
