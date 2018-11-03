@@ -137,6 +137,37 @@ impl<'a> Scenario<'a> {
     }
 }
 
+fn blitz_start(car: &rlbot::ffi::PlayerInfo, ball_prediction: &BallTrajectory) -> BlitzStart {
+    let ball_loc = ball_prediction.start().loc.to_2d();
+    let car_vel = car.Physics.vel().to_2d();
+    let car_forward = car.Physics.forward_axis_2d();
+    let car_to_ball = ball_prediction.start().loc.to_2d() - car.Physics.loc_2d();
+
+    let speed_to_ball = car_vel.dot(&(ball_loc - car.Physics.loc_2d()).normalize());
+    let car_sim = Car1D::new(speed_to_ball).with_boost(car.Boost as f32);
+
+    let rotation_penalty = car_forward
+        .rotation_to(&car_to_ball.to_axis())
+        .angle()
+        .abs()
+        * 0.25;
+    let reverse_penalty = if speed_to_ball < 0.0 {
+        -speed_to_ball * 0.002
+    } else {
+        0.0
+    };
+
+    BlitzStart {
+        car_sim,
+        penalty: rotation_penalty + reverse_penalty,
+    }
+}
+
+struct BlitzStart {
+    car_sim: Car1D,
+    penalty: f32,
+}
+
 // This is a pretty naive and heavyweight implementation. Basically simulate a
 // "race to the ball" and see if one player gets there much earlier than the
 // other.
@@ -146,8 +177,15 @@ fn simulate_ball_blitz(
 ) -> (Option<NaiveIntercept>, Option<NaiveIntercept>) {
     let (me, enemy) = one_v_one(packet);
     let mut t = 0.0;
-    let mut sim_me = Car1D::new(me.Physics.vel().norm()).with_boost(me.Boost as f32);
-    let mut sim_enemy = Car1D::new(enemy.Physics.vel().norm()).with_boost(enemy.Boost as f32);
+
+    let BlitzStart {
+        car_sim: mut sim_me,
+        penalty: me_penalty,
+    } = blitz_start(me, ball_prediction);
+    let BlitzStart {
+        car_sim: mut sim_enemy,
+        penalty: enemy_penalty,
+    } = blitz_start(enemy, ball_prediction);
 
     let mut me_result = None;
     let mut enemy_result = None;
@@ -160,7 +198,7 @@ fn simulate_ball_blitz(
             let me_dist_to_ball = (me.Physics.locp() - ball.loc).to_2d().norm();
             if sim_me.distance_traveled() >= me_dist_to_ball {
                 me_result = Some(NaiveIntercept {
-                    time: t,
+                    time: t + me_penalty,
                     ball_loc: ball.loc,
                     ball_vel: ball.vel,
                     car_loc: ball.loc,
@@ -174,7 +212,7 @@ fn simulate_ball_blitz(
             let enemy_dist_to_ball = (enemy.Physics.locp() - ball.loc).to_2d().norm();
             if sim_enemy.distance_traveled() >= enemy_dist_to_ball {
                 enemy_result = Some(NaiveIntercept {
-                    time: t,
+                    time: t + enemy_penalty,
                     ball_loc: ball.loc,
                     ball_vel: ball.vel,
                     car_loc: ball.loc,
