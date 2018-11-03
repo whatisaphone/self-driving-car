@@ -557,4 +557,25 @@ mod integration_tests {
         test.sleep_millis(3000);
         assert!(!test.enemy_has_scored());
     }
+
+    #[test]
+    fn retreat_then_save() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(-2503.1099, -3172.46, 92.65),
+                ball_vel: Vector3::new(796.011, -1343.8209, 0.0),
+                car_loc: Vector3::new(-3309.3298, -1332.26, 17.01),
+                car_rot: Rotation3::from_unreal_angles(0.009505707, -0.79850733, -0.000105084495),
+                car_vel: Vector3::new(543.18097, -569.061, 8.321),
+                ..Default::default()
+            })
+            .starting_boost(0.0)
+            .behavior(Runner2::new())
+            .run();
+        test.sleep_millis(6000);
+
+        let packet = test.sniff_packet();
+        assert!(packet.GameBall.Physics.Location.X < -1000.0);
+        assert!(!test.enemy_has_scored());
+    }
 }
