@@ -192,12 +192,27 @@ impl ExtendPhysics for rlbot::ffi::Physics {
 
 pub trait ExtendUnitQuaternion<N: Real> {
     fn xyzw(x: N, y: N, z: N, w: N) -> Self;
+
+    /// For some reason the games spits out quaternions with some components
+    /// negated? I have no idea the underlying cause, or if this is the right
+    /// place to fix it, but here we are. This function must be called to
+    /// munge/unmunge any quaternions sent to or received from the game.
+    ///
+    /// There are tests for this near `physicsify`, `convert_quat_to_pyr`, etc.
+    fn rocket_league_munge(&self) -> Self;
+
     fn to_2d(&self) -> UnitComplex<N>;
 }
 
 impl<N: Real> ExtendUnitQuaternion<N> for UnitQuaternion<N> {
     fn xyzw(x: N, y: N, z: N, w: N) -> Self {
         UnitQuaternion::from_quaternion(Quaternion::new(w, x, y, z))
+    }
+
+    fn rocket_league_munge(&self) -> Self {
+        let coords = self.as_ref().coords;
+        // I have no clue what the reasoning behind this is.
+        Self::xyzw(-coords.x, -coords.y, coords.z, coords.w)
     }
 
     fn to_2d(&self) -> UnitComplex<N> {

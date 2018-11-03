@@ -47,10 +47,9 @@ fn set_physics(dest: &mut rlbot::ffi::Physics, source: rlbot::flat::RigidBodySta
 
 fn convert_quat_to_pyr(quat: &rlbot::flat::Quaternion) -> (f32, f32, f32) {
     let quat = UnitQuaternion::xyzw(quat.x(), quat.y(), quat.z(), quat.w());
-    let (pitch, yaw, roll) = quat.to_rotation_matrix().to_unreal_angles();
-    // I have no clue why two of these are negated, but it makes the numbers match
-    // up…
-    (-pitch, yaw, -roll)
+    quat.rocket_league_munge()
+        .to_rotation_matrix()
+        .to_unreal_angles()
 }
 
 #[cfg(test)]
