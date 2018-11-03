@@ -1,6 +1,7 @@
 use behavior::{Behavior, Chain, Defense, Offense, Priority};
 use common::prelude::*;
 use maneuvers::{FiftyFifty, GetToFlatGround};
+use routing::{behavior::FollowRoute, plan::GetDollar};
 use std::f32::consts::PI;
 use strategy::{scenario::Scenario, Context};
 use utils::{my_goal_center_2d, ExtendF32, ExtendPoint3, ExtendVector2, ExtendVector3, Wall};
@@ -11,9 +12,13 @@ pub fn baseline(ctx: &mut Context) -> Box<Behavior> {
     }
 
     match ctx.scenario.push_wall() {
-        Wall::OwnGoal | Wall::OwnBackWall => Box::new(Defense::new()),
-        _ => Box::new(Offense::new()),
+        Wall::OwnGoal | Wall::OwnBackWall => return Box::new(Defense::new()),
+        _ => {}
     }
+
+    return_some!(get_boost(ctx));
+
+    Box::new(Offense::new())
 }
 
 pub fn override_(ctx: &mut Context, current: &Behavior) -> Option<Box<Behavior>> {
@@ -56,6 +61,20 @@ pub fn override_(ctx: &mut Context, current: &Behavior) -> Option<Box<Behavior>>
     }
 
     None
+}
+
+fn get_boost(ctx: &mut Context) -> Option<Box<Behavior>> {
+    if ctx.me().Boost > 50 {
+        return None;
+    }
+    if ctx.scenario.possession() < -Scenario::POSSESSION_CONTESTABLE {
+        if ctx.scenario.enemy_shoot_score_seconds() >= 7.0 {
+            return Some(Box::new(FollowRoute::new(GetDollar::then_face(
+                ctx.game.own_goal().center_2d,
+            ))));
+        }
+    }
+    return None;
 }
 
 fn enemy_can_shoot(ctx: &mut Context) -> bool {
@@ -104,5 +123,32 @@ mod integration_tests {
                 .iter()
                 .any(|x| *x == format!("{} Offense", BASELINE)));
         });
+    }
+
+    #[test]
+    fn get_boost_on_defense_if_we_have_time() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(-3112.23, -2548.45, 93.72),
+                ball_vel: Vector3::new(-15.161, 716.11096, 37.961),
+                car_loc: Vector3::new(-2500.7, -4935.0, 17.109999),
+                car_rot: Rotation3::from_unreal_angles(0.0120197795, 0.056800842, -0.0034418863),
+                car_vel: Vector3::new(492.951, -132.80101, 13.231),
+                enemy_loc: Vector3::new(-2241.9, -2789.75, 17.02),
+                enemy_rot: Rotation3::from_unreal_angles(0.009554009, 1.960959, 0.00017689279),
+                enemy_vel: Vector3::new(-472.791, 1168.0409, 8.001),
+                ..Default::default()
+            })
+            .starting_boost(0.0)
+            .behavior(Runner2::new())
+            .run();
+
+        let packet = test.sniff_packet();
+        assert!(packet.GameCars[0].Boost < 10);
+
+        test.sleep_millis(2000);
+
+        let packet = test.sniff_packet();
+        assert!(packet.GameCars[0].Boost >= 50);
     }
 }

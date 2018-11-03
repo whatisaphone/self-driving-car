@@ -6,6 +6,7 @@ pub struct Game<'a> {
     pub packet: &'a rlbot::ffi::LiveDataPacket,
     pub team: Team,
     pub enemy_team: Team,
+    boost_dollars: &'a [BoostPickup],
 }
 
 impl<'a> Game<'a> {
@@ -14,6 +15,7 @@ impl<'a> Game<'a> {
             packet,
             team: Team::Blue,
             enemy_team: Team::Orange,
+            boost_dollars: &*BOOST_DOLLARS,
         }
     }
 
@@ -26,6 +28,10 @@ impl<'a> Game<'a> {
 
     pub fn own_goal(&self) -> &Goal {
         Goal::for_team(self.team)
+    }
+
+    pub fn boost_dollars(&self) -> &[BoostPickup] {
+        self.boost_dollars
     }
 }
 
@@ -66,6 +72,10 @@ impl Goal {
     }
 }
 
+pub struct BoostPickup {
+    pub loc: Point2<f32>,
+}
+
 lazy_static! {
     static ref BLUE_GOAL: Goal = Goal {
         center_2d: Point2::new(0.0, -rl::FIELD_MAX_Y)
@@ -73,4 +83,15 @@ lazy_static! {
     static ref ORANGE_GOAL: Goal = Goal {
         center_2d: Point2::new(0.0, rl::FIELD_MAX_Y)
     };
+    static ref BOOST_DOLLARS: Vec<BoostPickup> = vec![
+        Point2::new(-3072.0, -4096.0),
+        Point2::new(3072.0, -4096.0),
+        Point2::new(-3584.0, 0.0),
+        Point2::new(3584.0, 0.0),
+        Point2::new(-3072.0, 4096.0),
+        Point2::new(3072.0, 4096.0),
+    ]
+    .into_iter()
+    .map(|loc| BoostPickup { loc })
+    .collect();
 }

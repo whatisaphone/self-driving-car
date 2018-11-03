@@ -11,7 +11,7 @@ use utils::{one_v_one, ExtendPoint3, ExtendVector3, Wall, WallRayCalculator};
 
 pub struct Scenario<'a> {
     packet: &'a rlbot::ffi::LiveDataPacket,
-    game: Game<'a>,
+    pub game: Game<'a>,
     ball_prediction: LazyCell<BallTrajectory>,
     me_intercept: LazyCell<Option<NaiveIntercept>>,
     enemy_intercept: LazyCell<Option<NaiveIntercept>>,

@@ -210,8 +210,8 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
                     for boost in &[
                         Point2::new(-3072.0, -4096.0),
                         Point2::new(3072.0, -4096.0),
-                        Point2::new(-3072.0, 0.0),
-                        Point2::new(3072.0, 0.0),
+                        Point2::new(-3584.0, 0.0),
+                        Point2::new(3584.0, 0.0),
                         Point2::new(-3072.0, 4096.0),
                         Point2::new(3072.0, 4096.0),
                     ] {

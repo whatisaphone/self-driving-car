@@ -335,6 +335,7 @@ fn test_thread(
     while !packets.next().unwrap().GameInfo.RoundActive {}
 
     rlbot.update_player_input(Default::default(), 0).unwrap();
+    rlbot.update_player_input(Default::default(), 1).unwrap();
 
     setup_scenario(
         rlbot,
@@ -397,6 +398,7 @@ fn test_thread(
 
     // For tidiness, make the car stop moving when the test is finished.
     rlbot.update_player_input(Default::default(), 0).unwrap();
+    rlbot.update_player_input(Default::default(), 1).unwrap();
 }
 
 fn setup_scenario(

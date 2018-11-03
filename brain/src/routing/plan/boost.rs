@@ -1,12 +1,13 @@
 use common::prelude::*;
 use nalgebra::Point2;
+use ordered_float::NotNan;
 use routing::{
     models::{CarState, RoutePlan, RoutePlanError, RoutePlanner},
     plan::ground_powerslide::GroundPowerslideTurn,
     recover::{IsSkidding, NotOnFlatGround},
 };
 use std::f32::consts::PI;
-use strategy::Scenario;
+use strategy::{BoostPickup, Scenario};
 
 #[derive(Clone)]
 pub struct GetDollar {
@@ -29,21 +30,24 @@ impl RoutePlanner for GetDollar {
     ) -> Result<RoutePlan, RoutePlanError> {
         guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
 
-        let target_loc = Point2::new(-3072.0, -4096.0); // TODO: not hardcode
+        let pickup = match self.chooose_pickup(start, scenario) {
+            Some(p) => p,
+            None => return Err(RoutePlanError::OtherError("no pickup found")),
+        };
 
         guard!(
             start,
             IsSkidding,
             RoutePlanError::MustNotBeSkidding {
-                recover_target_loc: target_loc,
+                recover_target_loc: pickup.loc,
             },
         );
 
-        if (target_loc - start.loc.to_2d()).norm() < 500.0
+        if (pickup.loc - start.loc.to_2d()).norm() < 500.0
             && start.vel.to_2d().norm() < 100.0
             && start
                 .forward_axis_2d()
-                .rotation_to(&(target_loc - start.loc.to_2d()).to_axis())
+                .rotation_to(&(pickup.loc - start.loc.to_2d()).to_axis())
                 .angle()
                 .abs()
                 >= PI / 3.0
@@ -51,7 +55,22 @@ impl RoutePlanner for GetDollar {
             return Err(RoutePlanError::OtherError("TODO: easier to flip to pad"));
         }
 
-        GroundPowerslideTurn::new(target_loc, self.then_face, None)
+        GroundPowerslideTurn::new(pickup.loc, self.then_face, None)
             .plan(start_time, start, scenario)
+    }
+}
+
+impl GetDollar {
+    fn chooose_pickup<'a>(
+        &self,
+        start: &CarState,
+        scenario: &'a Scenario,
+    ) -> Option<&'a BoostPickup> {
+        scenario.game.boost_dollars().iter().min_by_key(|pickup| {
+            let car_adjusted_loc = start.loc.to_2d()
+                + start.forward_axis_2d().as_ref() * 500.0
+                + start.vel.to_2d() * 0.5;
+            NotNan::new((pickup.loc - car_adjusted_loc).norm()).unwrap()
+        })
     }
 }
