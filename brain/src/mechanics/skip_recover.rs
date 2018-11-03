@@ -1,6 +1,6 @@
 use behavior::{Action, Behavior};
 use common::{physics::CAR_LOCAL_FORWARD_AXIS_2D, prelude::*};
-use eeg::Drawable;
+use eeg::{color, Drawable};
 use nalgebra::{Point2, UnitComplex};
 use strategy::Context;
 
@@ -29,6 +29,22 @@ impl Behavior for SkidRecover {
         ctx.eeg.draw(Drawable::ghost_car_ground(
             self.target_loc.coords,
             target_rot.around_z_axis().to_rotation_matrix(),
+        ));
+        ctx.eeg.draw(Drawable::Print(
+            format!("rot: {:.0}°", me_rot.angle().to_degrees()),
+            color::GREEN,
+        ));
+        ctx.eeg.draw(Drawable::Print(
+            format!("target_rot: {:.0}°", target_rot.angle().to_degrees()),
+            color::GREEN,
+        ));
+        ctx.eeg.draw(Drawable::Print(
+            format!("ang_vel: {:.0}°/s", me_ang_vel.to_degrees()),
+            color::GREEN,
+        ));
+        ctx.eeg.draw(Drawable::Print(
+            format!("future_rot: {:.0}°", future_rot.angle().to_degrees()),
+            color::GREEN,
         ));
 
         Action::Yield(rlbot::ffi::PlayerInput {
