@@ -61,7 +61,7 @@ impl RecordingTick {
 impl RecordingRigidBodyState {
     pub fn from_csv<'a>(it: &mut impl Iterator<Item = &'a str>) -> Result<Self, ()> {
         Ok(Self {
-            loc: Point3::from_coordinates(csv_vector3(it)?),
+            loc: Point3::from(csv_vector3(it)?),
             rot: csv_quat(it)?,
             vel: csv_vector3(it)?,
             ang_vel: csv_vector3(it)?,

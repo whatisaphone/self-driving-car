@@ -30,7 +30,7 @@ impl BounceShot {
 
     pub fn with_aim_loc(self, aim_loc: Vector2<f32>) -> Self {
         Self {
-            aim_loc: Point2::from_coordinates(aim_loc),
+            aim_loc: Point2::from(aim_loc),
             ..self
         }
     }
@@ -102,7 +102,7 @@ impl BounceShot {
         let goal_angle = ball_loc.coords.angle_to(enemy_goal_center());
         let adjust = (naive_angle - goal_angle).normalize_angle();
         let aim_angle = goal_angle + adjust.max(-allow_angle_diff).min(allow_angle_diff);
-        Point2::from_coordinates(WallRayCalculator::calc_ray(ball_loc, aim_angle))
+        Point2::from(WallRayCalculator::calc_ray(ball_loc, aim_angle))
     }
 
     /// Roughly where should the car be when it makes contact with the ball, in

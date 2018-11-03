@@ -55,7 +55,7 @@ fn time_wasting_hit(ctx: &mut Context, intercept_ball_loc: Point3<f32>) -> Resul
     let adjust = UnitComplex::new(ideal_adjust.max(-PI / 6.0).min(PI / 6.0));
     let rot = Vector2::x().rotation_to(ball_loc - me_loc) * adjust;
 
-    Ok(Point2::from_coordinates(WallRayCalculator::calc_ray(
+    Ok(Point2::from(WallRayCalculator::calc_ray(
         ball_loc,
         rot.angle(),
     )))

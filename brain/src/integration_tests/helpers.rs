@@ -581,7 +581,7 @@ impl TestScenario {
 
     fn ball(&self) -> RecordingRigidBodyState {
         RecordingRigidBodyState {
-            loc: Point3::from_coordinates(self.ball_loc),
+            loc: Point3::from(self.ball_loc),
             rot: UnitQuaternion::from_rotation_matrix(&self.ball_rot),
             vel: self.ball_vel,
             ang_vel: self.ball_ang_vel,
@@ -590,7 +590,7 @@ impl TestScenario {
 
     fn car(&self) -> RecordingRigidBodyState {
         RecordingRigidBodyState {
-            loc: Point3::from_coordinates(self.car_loc),
+            loc: Point3::from(self.car_loc),
             rot: UnitQuaternion::from_rotation_matrix(&self.car_rot),
             vel: self.car_vel,
             ang_vel: self.car_ang_vel,
@@ -599,7 +599,7 @@ impl TestScenario {
 
     fn enemy(&self) -> RecordingRigidBodyState {
         RecordingRigidBodyState {
-            loc: Point3::from_coordinates(self.enemy_loc),
+            loc: Point3::from(self.enemy_loc),
             rot: UnitQuaternion::from_rotation_matrix(&self.enemy_rot),
             vel: self.enemy_vel,
             ang_vel: self.enemy_ang_vel,

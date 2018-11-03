@@ -164,7 +164,7 @@ impl HitToOwnCorner {
 
         let me = my_car(ctx.packet);
         let me_loc = me.Physics.locp().to_2d();
-        let ball_loc = Point2::from_coordinates(intercept.ball_loc.to_2d());
+        let ball_loc = Point2::from(intercept.ball_loc.to_2d());
         let me_to_ball = ball_loc - me_loc;
 
         let ltr_dir = Rotation2::new(PI / 6.0) * me_to_ball;
