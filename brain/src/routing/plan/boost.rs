@@ -1,5 +1,5 @@
 use common::prelude::*;
-use nalgebra::Point2;
+use nalgebra::{center, Point2};
 use ordered_float::NotNan;
 use routing::{
     models::{CarState, RoutePlan, RoutePlanError, RoutePlanner},
@@ -70,7 +70,10 @@ impl GetDollar {
             let car_adjusted_loc = start.loc.to_2d()
                 + start.forward_axis_2d().as_ref() * 500.0
                 + start.vel.to_2d() * 0.5;
-            NotNan::new((pickup.loc - car_adjusted_loc).norm()).unwrap()
+            let ball_loc = scenario.ball_prediction().start().loc.to_2d();
+            let eval_loc = center(&car_adjusted_loc, &ball_loc);
+            let score = (pickup.loc - eval_loc).norm();
+            NotNan::new(score).unwrap()
         })
     }
 }

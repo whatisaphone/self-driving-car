@@ -53,6 +53,12 @@ impl BallTrajectory {
         Self { frames }
     }
 
+    /// Return the starting frame of the prediction (e.g., where the ball is
+    /// right now).
+    pub fn start(&self) -> &BallFrame {
+        self.frames.first().unwrap()
+    }
+
     pub fn iter(&self) -> impl DoubleEndedIterator<Item = &BallFrame> {
         self.frames.iter()
     }
