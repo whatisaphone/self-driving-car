@@ -107,6 +107,7 @@ impl RoutePlanner for StraightSimple {
             start.vel.to_2d(),
             start.boost,
             self.target_loc,
+            self.end_chop,
             self.mode,
         );
         Ok(RoutePlan {
@@ -167,6 +168,7 @@ impl RoutePlanner for StraightWithDodge {
             start.boost,
             start.loc.to_2d()
                 + (self.target_loc - start.loc.to_2d()).normalize() * dodge.approach_distance,
+            0.0,
             StraightMode::Asap,
         );
         let dodge = ForwardDodge::new(before.end(), dodge.dodge);
@@ -175,6 +177,7 @@ impl RoutePlanner for StraightWithDodge {
             dodge.end().vel.to_2d(),
             dodge.end().boost,
             self.target_loc,
+            self.end_chop,
             self.mode,
         );
         let segment = Chain::new(vec![Box::new(before), Box::new(dodge), Box::new(after)]);

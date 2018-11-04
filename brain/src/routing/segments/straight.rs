@@ -1,3 +1,4 @@
+use arrayvec::ArrayVec;
 use common::{physics::CAR_LOCAL_FORWARD_AXIS_2D, prelude::*};
 use eeg::{color, Drawable};
 use mechanics::simple_steer_towards;
@@ -37,17 +38,35 @@ impl Straight {
         start_vel: Vector2<f32>,
         start_boost: f32,
         end_loc: Point2<f32>,
+        end_chop: f32,
         mode: StraightMode,
     ) -> Self {
-        let mut car = Car1D::new(start_vel.norm()).with_boost(start_boost);
-        let total_dist = (end_loc - start_loc).norm();
+        const DT: f32 = 1.0 / 120.0;
+
+        let mut sim = Car1D::new(start_vel.norm()).with_boost(start_boost);
+        // Keep track of the simulated values so we can chop off an exact amount of time
+        // once we reach the target distance.
+        let mut sim_loc = ArrayVec::<[_; 1024]>::new();
+        let mut sim_speed = ArrayVec::<[_; 1024]>::new();
+        let mut sim_boost = ArrayVec::<[_; 1024]>::new();
+        let start_to_end_dist = (end_loc - start_loc).norm();
         loop {
-            car.step(1.0 / 120.0, 1.0, true);
-            if car.distance_traveled() >= total_dist {
+            sim_loc.push(sim.distance_traveled());
+            sim_speed.push(sim.speed());
+            sim_boost.push(sim.boost());
+            if sim.distance_traveled() >= start_to_end_dist {
                 break;
             }
+            sim.step(DT, 1.0, true);
         }
-        let end_vel = (end_loc - start_loc).normalize() * car.speed();
+        let end_frame = (sim_loc.len() - 1)
+            .checked_sub((end_chop / DT) as usize)
+            .unwrap_or(0);
+        let sim_end_loc = sim_loc[end_frame];
+        let sim_end_speed = sim_speed[end_frame];
+        let sim_end_boost = sim_boost[end_frame];
+        let end_loc = start_loc + (end_loc - start_loc).normalize() * sim_end_loc;
+        let end_vel = (end_loc - start_loc).normalize() * sim_end_speed;
 
         Self {
             start_loc,
@@ -55,8 +74,8 @@ impl Straight {
             start_boost,
             end_loc,
             end_vel,
-            end_boost: car.boost(),
-            duration: car.time(),
+            end_boost: sim_end_boost,
+            duration: end_frame as f32 * DT,
             mode,
         }
     }
