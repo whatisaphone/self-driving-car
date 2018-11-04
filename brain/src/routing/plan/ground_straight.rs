@@ -2,7 +2,7 @@ use common::{prelude::*, rl};
 use nalgebra::Point2;
 use ordered_float::NotNan;
 use routing::{
-    models::{CarState, RoutePlan, RoutePlanError, RoutePlanner, SegmentPlan},
+    models::{CarState, CarState2D, RoutePlan, RoutePlanError, RoutePlanner, SegmentPlan},
     recover::{IsSkidding, NotFacingTarget2D, NotOnFlatGround},
     segments::{Chain, ForwardDodge, Straight, StraightMode},
 };
@@ -27,6 +27,7 @@ impl RoutePlanner for GroundStraightPlanner {
         start: &CarState,
         scenario: &Scenario,
     ) -> Result<RoutePlan, RoutePlanError> {
+        assert!(!self.target_loc.x.is_nan());
         guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
         guard!(
             start,
@@ -103,9 +104,12 @@ impl RoutePlanner for StraightSimple {
         );
 
         let segment = Straight::new(
-            start.loc.to_2d(),
-            start.vel.to_2d(),
-            start.boost,
+            CarState2D {
+                loc: start.loc.to_2d(),
+                rot: start.rot.to_2d(),
+                vel: start.vel.to_2d(),
+                boost: start.boost,
+            },
             self.target_loc,
             self.end_chop,
             self.mode,
@@ -163,19 +167,26 @@ impl RoutePlanner for StraightWithDodge {
             .ok_or(RoutePlanError::MovingTooFast)?;
 
         let before = Straight::new(
-            start.loc.to_2d(),
-            start.vel.to_2d(),
-            start.boost,
+            CarState2D {
+                loc: start.loc.to_2d(),
+                rot: start.rot.to_2d(),
+                vel: start.vel.to_2d(),
+                boost: start.boost,
+            },
             start.loc.to_2d()
                 + (self.target_loc - start.loc.to_2d()).normalize() * dodge.approach_distance,
             0.0,
             StraightMode::Asap,
         );
         let dodge = ForwardDodge::new(before.end(), dodge.dodge);
+        let dodge_end = dodge.end();
         let after = Straight::new(
-            dodge.end().loc.to_2d(),
-            dodge.end().vel.to_2d(),
-            dodge.end().boost,
+            CarState2D {
+                loc: dodge_end.loc.to_2d(),
+                rot: dodge_end.rot.to_2d(),
+                vel: dodge_end.vel.to_2d(),
+                boost: dodge_end.boost,
+            },
             self.target_loc,
             self.end_chop,
             self.mode,
