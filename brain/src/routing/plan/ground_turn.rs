@@ -22,7 +22,10 @@ impl RoutePlanner for TurnPlanner {
         start: &CarState,
         _scenario: &Scenario,
     ) -> Result<RoutePlan, RoutePlanError> {
-        let turn = match calculate_circle_turn(start, self.target_loc)? {
+        // The turn segment can powerslide, and powerslides are not circles with a
+        // radius, so this could be improved.
+        let turn_radius = 400.0;
+        let turn = match calculate_circle_turn(start, turn_radius, self.target_loc)? {
             Some(x) => x,
             None => {
                 return Ok(RoutePlan {
@@ -69,7 +72,8 @@ impl RoutePlanner for ArcTowards {
             },
         );
 
-        let turn = match calculate_circle_turn(start, self.target_loc)? {
+        let turn_radius = 1.0 / chip::max_curvature(start.vel.norm().max(500.0));
+        let turn = match calculate_circle_turn(start, turn_radius, self.target_loc)? {
             Some(x) => x,
             None => {
                 return Ok(RoutePlan {
@@ -97,6 +101,7 @@ impl RoutePlanner for ArcTowards {
 
 fn calculate_circle_turn(
     start: &CarState,
+    turn_radius: f32,
     target_loc: Point2<f32>,
 ) -> Result<Option<CircleTurn>, RoutePlanError> {
     let start_loc = start.loc.to_2d();
@@ -111,9 +116,6 @@ fn calculate_circle_turn(
     }
 
     // Define a circle where our current location/rotation form a tangent.
-    let speed = f32::max(500.0, start_vel.norm());
-    let start_vel = start_forward_axis.as_ref() * speed;
-    let turn_radius = 1.0 / chip::max_curvature(speed);
     let turn_center =
         start_loc + start_right_axis.as_ref() * turn_rot.angle().signum() * turn_radius;
 
