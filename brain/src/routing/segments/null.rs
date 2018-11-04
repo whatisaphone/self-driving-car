@@ -7,6 +7,10 @@ pub struct NullSegment {
 }
 
 impl SegmentPlan for NullSegment {
+    fn name(&self) -> &str {
+        stringify!(NullSegment)
+    }
+
     fn start(&self) -> CarState {
         self.start.clone()
     }

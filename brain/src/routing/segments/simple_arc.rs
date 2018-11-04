@@ -117,6 +117,10 @@ impl SimpleArc {
 }
 
 impl SegmentPlan for SimpleArc {
+    fn name(&self) -> &str {
+        stringify!(SimpleArc)
+    }
+
     fn start(&self) -> CarState {
         CarState2D {
             loc: self.start_loc,

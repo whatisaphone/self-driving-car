@@ -13,6 +13,10 @@ pub struct ForwardDodge {
 }
 
 impl SegmentPlan for ForwardDodge {
+    fn name(&self) -> &str {
+        stringify!(ForwardDodge)
+    }
+
     fn start(&self) -> CarState {
         self.start.clone()
     }

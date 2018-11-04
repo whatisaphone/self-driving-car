@@ -89,6 +89,10 @@ impl Straight {
 }
 
 impl SegmentPlan for Straight {
+    fn name(&self) -> &str {
+        stringify!(Straight)
+    }
+
     fn start(&self) -> CarState {
         self.start.to_3d()
     }

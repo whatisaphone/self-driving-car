@@ -8,6 +8,10 @@ pub struct Chain {
 }
 
 impl SegmentPlan for Chain {
+    fn name(&self) -> &str {
+        stringify!(Chain)
+    }
+
     fn start(&self) -> CarState {
         self.segments.first().unwrap().start()
     }

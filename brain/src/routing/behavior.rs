@@ -1,4 +1,5 @@
 use behavior::{Action, Behavior};
+use eeg::{color, Drawable};
 use routing::models::{
     ProvisionalPlanExpansion, RoutePlan, RoutePlanError, RoutePlanner, SegmentRunAction,
     SegmentRunner,
@@ -97,7 +98,13 @@ impl FollowRoute {
     }
 
     fn go(&mut self, ctx: &mut Context) -> Action {
-        let action = self.current.as_mut().unwrap().runner.execute(ctx);
+        let action = {
+            let current = self.current.as_mut().unwrap();
+            ctx.eeg
+                .draw(Drawable::print(current.plan.segment.name(), color::YELLOW));
+            current.runner.execute(ctx)
+        };
+
         let success = match action {
             SegmentRunAction::Yield(i) => return Action::Yield(i),
             SegmentRunAction::Success => true,

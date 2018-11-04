@@ -61,6 +61,10 @@ impl Turn {
 }
 
 impl SegmentPlan for Turn {
+    fn name(&self) -> &str {
+        stringify!(Turn)
+    }
+
     fn start(&self) -> CarState {
         self.start.to_3d()
     }

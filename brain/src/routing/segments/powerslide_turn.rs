@@ -18,6 +18,10 @@ impl PowerslideTurn {
 }
 
 impl SegmentPlan for PowerslideTurn {
+    fn name(&self) -> &str {
+        stringify!(PowerslideTurn)
+    }
+
     fn start(&self) -> CarState {
         CarState2D {
             loc: self.blueprint.start_loc,

@@ -163,6 +163,7 @@ impl RoutePlan {
 }
 
 pub trait SegmentPlan: SegmentPlanCloneBox + Send {
+    fn name(&self) -> &str;
     fn start(&self) -> CarState;
     fn end(&self) -> CarState;
     fn duration(&self) -> f32;
