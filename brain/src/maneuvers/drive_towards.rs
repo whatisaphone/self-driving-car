@@ -24,7 +24,7 @@ pub fn drive_towards(
 
     let handbrake_cutoff = linear_interpolate(
         &[0.0, rl::CAR_NORMAL_SPEED],
-        &[PI * 0.25, PI * 0.75],
+        &[PI * 0.25, PI * 0.50],
         me.Physics.vel().norm(),
     );
 
