@@ -1,30 +1,73 @@
 use chip;
-use common::prelude::*;
+use common::{prelude::*, rl};
 use nalgebra::Point2;
 use routing::{
     models::{CarState, RoutePlan, RoutePlanError, RoutePlanner},
+    plan::{ground_powerslide::GroundSimplePowerslideTurn, higher_order::ChainedPlanner},
     recover::{IsSkidding, NotOnFlatGround},
     segments::{NullSegment, SimpleArc, Turn},
 };
+use simulate::linear_interpolate;
+use std::f32::consts::PI;
 use strategy::Scenario;
 use utils::geometry::circle_point_tangents;
 
 #[derive(Clone, new)]
 pub struct TurnPlanner {
-    target_loc: Point2<f32>,
+    target_face: Point2<f32>,
     next: Option<Box<RoutePlanner>>,
 }
 
 impl RoutePlanner for TurnPlanner {
+    fn name(&self) -> &'static str {
+        stringify!(TurnPlanner)
+    }
+
+    fn plan(
+        &self,
+        start_time: f32,
+        start: &CarState,
+        scenario: &Scenario,
+    ) -> Result<RoutePlan, RoutePlanError> {
+        let powerslide_cutoff = linear_interpolate(
+            &[0.0, rl::CAR_NORMAL_SPEED],
+            &[PI * 0.25, PI * 0.50],
+            start.vel.to_2d().norm(),
+        );
+
+        let munged_start_loc = start.loc.to_2d() + start.vel.to_2d() * 0.5;
+        let turn = start
+            .forward_axis_2d()
+            .rotation_to(&(self.target_face - munged_start_loc).to_axis());
+
+        if turn.angle().abs() > powerslide_cutoff {
+            let turn = GroundSimplePowerslideTurn::new(self.target_face);
+            ChainedPlanner::new(Box::new(turn), self.next.clone()).plan(start_time, start, scenario)
+        } else {
+            SimpleTurnPlanner::new(self.target_face, self.next.clone())
+                .plan(start_time, start, scenario)
+        }
+    }
+}
+
+#[derive(Clone, new)]
+pub struct SimpleTurnPlanner {
+    target_loc: Point2<f32>,
+    next: Option<Box<RoutePlanner>>,
+}
+
+impl RoutePlanner for SimpleTurnPlanner {
+    fn name(&self) -> &'static str {
+        stringify!(SimpleTurnPlanner)
+    }
+
     fn plan(
         &self,
         _start_time: f32,
         start: &CarState,
         _scenario: &Scenario,
     ) -> Result<RoutePlan, RoutePlanError> {
-        // The turn segment can powerslide, and powerslides are not circles with a
-        // radius, so this could be improved.
-        let turn_radius = 400.0;
+        let turn_radius = 1.0 / chip::max_curvature(start.vel.norm().max(500.0));
         let turn = match calculate_circle_turn(start, turn_radius, self.target_loc)? {
             Some(x) => x,
             None => {
@@ -57,6 +100,10 @@ struct ArcTowards {
 
 #[allow(dead_code)]
 impl RoutePlanner for ArcTowards {
+    fn name(&self) -> &'static str {
+        stringify!(ArcTowards)
+    }
+
     fn plan(
         &self,
         _start_time: f32,

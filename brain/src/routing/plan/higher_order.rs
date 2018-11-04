@@ -14,6 +14,10 @@ impl StaticPlanner {
 }
 
 impl RoutePlanner for StaticPlanner {
+    fn name(&self) -> &'static str {
+        stringify!(StaticPlanner)
+    }
+
     fn plan(
         &self,
         _start_time: f32,
@@ -32,6 +36,10 @@ pub struct ChainedPlanner {
 }
 
 impl RoutePlanner for ChainedPlanner {
+    fn name(&self) -> &'static str {
+        stringify!(ChainedPlanner)
+    }
+
     fn plan(
         &self,
         start_time: f32,

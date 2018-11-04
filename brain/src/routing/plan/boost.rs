@@ -22,6 +22,10 @@ impl GetDollar {
 }
 
 impl RoutePlanner for GetDollar {
+    fn name(&self) -> &'static str {
+        stringify!(GetDollar)
+    }
+
     fn plan(
         &self,
         start_time: f32,

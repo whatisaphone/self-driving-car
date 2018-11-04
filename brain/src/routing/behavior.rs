@@ -81,13 +81,15 @@ impl FollowRoute {
             },
         };
         let runner = plan.segment.run();
-        let provisional_expansion = plan.provisional_expand(0.0, &ctx.scenario).map_err(|err| {
-            ctx.eeg.log(format!(
-                "[FollowRoute] Provisional expansion error {:?}",
-                err
-            ));
-            Action::Abort
-        })?;
+        let provisional_expansion =
+            plan.provisional_expand(0.0, &ctx.scenario)
+                .map_err(|(planner_name, error)| {
+                    ctx.eeg.log(format!(
+                        "[FollowRoute] Provisional expansion error from {} - {:?}",
+                        planner_name, error,
+                    ));
+                    Action::Abort
+                })?;
 
         self.current = Some(Current {
             plan,

@@ -21,6 +21,10 @@ pub struct GroundStraightPlanner {
 }
 
 impl RoutePlanner for GroundStraightPlanner {
+    fn name(&self) -> &'static str {
+        stringify!(GroundStraightPlanner)
+    }
+
     fn plan(
         &self,
         start_time: f32,
@@ -83,6 +87,10 @@ struct StraightSimple {
 }
 
 impl RoutePlanner for StraightSimple {
+    fn name(&self) -> &'static str {
+        stringify!(StraightSimple)
+    }
+
     fn plan(
         &self,
         _start_time: f32,
@@ -134,6 +142,10 @@ struct StraightWithDodge {
 }
 
 impl RoutePlanner for StraightWithDodge {
+    fn name(&self) -> &'static str {
+        stringify!(StraightWithDodge)
+    }
+
     fn plan(
         &self,
         _start_time: f32,

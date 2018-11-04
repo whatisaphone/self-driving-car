@@ -21,6 +21,10 @@ pub struct GroundPowerslideTurn {
 }
 
 impl RoutePlanner for GroundPowerslideTurn {
+    fn name(&self) -> &'static str {
+        stringify!(GroundPowerslideTurn)
+    }
+
     fn plan(
         &self,
         start_time: f32,
@@ -39,6 +43,48 @@ impl RoutePlanner for GroundPowerslideTurn {
     }
 }
 
+#[derive(Clone, new)]
+pub struct GroundSimplePowerslideTurn {
+    target_face: Point2<f32>,
+}
+
+impl RoutePlanner for GroundSimplePowerslideTurn {
+    fn name(&self) -> &'static str {
+        stringify!(GroundSimplePowerslideTurn)
+    }
+
+    fn plan(
+        &self,
+        _start_time: f32,
+        start: &CarState,
+        _scenario: &Scenario,
+    ) -> Result<RoutePlan, RoutePlanError> {
+        guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
+        guard!(
+            start,
+            IsSkidding,
+            RoutePlanError::MustNotBeSkidding {
+                recover_target_loc: self.target_face,
+            },
+        );
+
+        let throttle = 1.0;
+        let munged_start_loc = start.loc.to_2d() + start.vel.to_2d() * 0.5;
+        let end_rot =
+            CAR_LOCAL_FORWARD_AXIS_2D.rotation_to(&(self.target_face - munged_start_loc).to_axis());
+        let rot_by = start.rot.to_2d().rotation_to(&end_rot).angle();
+        let blueprint =
+            CarPowerslideTurn::evaluate(start.loc.to_2d(), start.vel.to_2d(), throttle, rot_by)
+                .ok_or(RoutePlanError::OtherError("no viable powerslide turn"))?;
+        let slide = PowerslideTurn::new(blueprint, start.boost);
+
+        Ok(RoutePlan {
+            segment: Box::new(slide),
+            next: None,
+        })
+    }
+}
+
 /// This is the part after the car is facing the right way. It consists of a
 /// straight segment, then a slide segment.
 #[derive(Clone, new)]
@@ -49,6 +95,10 @@ struct GroundPowerslideEssence {
 }
 
 impl RoutePlanner for GroundPowerslideEssence {
+    fn name(&self) -> &'static str {
+        stringify!(GroundPowerslideEssence)
+    }
+
     fn plan(
         &self,
         start_time: f32,

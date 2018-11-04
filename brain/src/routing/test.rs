@@ -21,6 +21,10 @@ impl<P> RoutePlanner for CookedPlanner<P>
 where
     P: SegmentPlan + Clone + 'static,
 {
+    fn name(&self) -> &'static str {
+        stringify!(CookedPlanner)
+    }
+
     fn plan(
         &self,
         _start_time: f32,

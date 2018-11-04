@@ -1,5 +1,6 @@
 use common::{physics::CAR_LOCAL_FORWARD_AXIS_2D, prelude::*};
 use eeg::{color, Drawable};
+use nalgebra::Vector2;
 use rlbot;
 use routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner};
 use simulate::CarPowerslideTurnBlueprint;
@@ -36,7 +37,10 @@ impl SegmentPlan for PowerslideTurn {
         CarState2D {
             loc: self.blueprint.end_loc,
             rot: self.blueprint.end_rot,
-            vel: self.blueprint.end_vel,
+            // Subsequent segments will likely expect us to be fully recovered and not skidding so
+            // let's uh, yeah, we can do that, no problem! You're never skidding while standing
+            // still.
+            vel: Vector2::zeros(),
             boost: self.boost,
         }
         .to_3d()

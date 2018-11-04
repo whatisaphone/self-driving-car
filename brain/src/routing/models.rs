@@ -59,6 +59,8 @@ impl CarState2D {
 }
 
 pub trait RoutePlanner: RoutePlannerCloneBox + Send {
+    fn name(&self) -> &'static str;
+
     fn plan(
         &self,
         start_time: f32,
@@ -132,7 +134,7 @@ impl RoutePlan {
         &self,
         start_time: f32,
         scenario: &Scenario,
-    ) -> Result<ProvisionalPlanExpansion, RoutePlanError> {
+    ) -> Result<ProvisionalPlanExpansion, (&'static str, RoutePlanError)> {
         let mut tail = Vec::new();
         if let Some(ref planner) = self.next {
             Self::expand_round(&**planner, start_time, &self.segment.end(), scenario, |s| {
@@ -148,8 +150,10 @@ impl RoutePlan {
         state: &CarState,
         scenario: &Scenario,
         mut sink: impl FnMut(Box<SegmentPlan>),
-    ) -> Result<(), RoutePlanError> {
-        let step = planner.plan(start_time, &state, scenario)?;
+    ) -> Result<(), (&'static str, RoutePlanError)> {
+        let step = planner
+            .plan(start_time, &state, scenario)
+            .map_err(|e| (planner.name(), e))?;
         let state = step.segment.end();
         let duration = step.segment.duration();
         sink(step.segment);

@@ -13,6 +13,10 @@ use strategy::Scenario;
 pub struct GroundIntercept;
 
 impl RoutePlanner for GroundIntercept {
+    fn name(&self) -> &'static str {
+        stringify!(GroundIntercept)
+    }
+
     fn plan(
         &self,
         start_time: f32,
@@ -51,6 +55,10 @@ impl RoutePlanner for GroundIntercept {
 struct GroundInterceptStraight;
 
 impl RoutePlanner for GroundInterceptStraight {
+    fn name(&self) -> &'static str {
+        stringify!(GroundInterceptStraight)
+    }
+
     fn plan(
         &self,
         start_time: f32,

@@ -1,6 +1,5 @@
 use common::prelude::*;
 use eeg::{color, Drawable};
-use maneuvers::drive_towards;
 use nalgebra::{Point2, UnitComplex, Vector2};
 use routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner};
 use std::f32::consts::PI;
@@ -81,7 +80,7 @@ impl SegmentPlan for Turn {
     }
 
     fn duration(&self) -> f32 {
-        let assume_speed = f32::max(self.start.vel.norm(), 800.0);
+        let assume_speed = f32::max(self.start.vel.norm(), 800.0) * 2.0;
         self.radius * self.sweep.abs() / assume_speed
     }
 
@@ -117,24 +116,27 @@ impl Turner {
 impl SegmentRunner for Turner {
     fn execute(&mut self, ctx: &mut Context) -> SegmentRunAction {
         let me = ctx.me();
+        let me_loc = me.Physics.loc_2d();
         let me_forward = me.Physics.forward_axis_2d();
 
         // Check two end conditions to decrease the chances that silly things happen.
 
-        let steer = me_forward.rotation_to(&(self.plan.target_loc - me.Physics.loc_2d()).to_axis());
-        if steer.angle().abs() < 3.0_f32.to_radians() {
+        let yaw_diff = me_forward
+            .rotation_to(&(self.plan.target_loc - me_loc).to_axis())
+            .angle();
+        if yaw_diff.abs() < 3.0_f32.to_radians() {
             return SegmentRunAction::Success;
         }
 
-        let swept = self.plan.sweep_to(me.Physics.loc_2d());
+        let swept = self.plan.sweep_to(me_loc);
         if swept.abs() >= self.plan.sweep.abs() - 3.0_f32.to_radians() {
             return SegmentRunAction::Success;
         }
 
-        SegmentRunAction::Yield(drive_towards(
-            ctx.packet,
-            ctx.eeg,
-            self.plan.target_loc.coords,
-        ))
+        SegmentRunAction::Yield(rlbot::ffi::PlayerInput {
+            Throttle: 1.0,
+            Steer: yaw_diff.max(-1.0).min(1.0) * 2.0,
+            ..Default::default()
+        })
     }
 }
