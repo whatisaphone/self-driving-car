@@ -165,12 +165,7 @@ impl RoutePlanner for GroundPowerslideEssence {
             .ok_or(RoutePlanError::OtherError("no viable powerslide turn"))?
         };
 
-        // This planner is inaccurate at short range, despite the tryharding above. If
-        // we fudge the location, we're likely to slide through the target rather than
-        // missing it entirely, which is at least an improvement :)
-        let fudge = 0.75;
-
-        let straight_end_loc = self.target_loc - (blueprint.end_loc - blueprint.start_loc) * fudge;
+        let straight_end_loc = self.target_loc - (blueprint.end_loc - blueprint.start_loc);
         let straight = GroundStraightPlanner::new(straight_end_loc, asap, 0.0, StraightMode::Asap)
             .plan(start_time, start, scenario)?;
         let straight_end = straight.segment.end();
