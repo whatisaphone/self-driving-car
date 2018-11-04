@@ -70,8 +70,11 @@ impl GetDollar {
             let car_adjusted_loc = start.loc.to_2d()
                 + start.forward_axis_2d().as_ref() * 500.0
                 + start.vel.to_2d() * 0.5;
-            let ball_loc = scenario.ball_prediction().start().loc.to_2d();
-            let eval_loc = center(&car_adjusted_loc, &ball_loc);
+
+            let ball = scenario.ball_prediction().start();
+            let ball_adjusted_loc = ball.loc.to_2d() + ball.vel.to_2d() * 2.0;
+
+            let eval_loc = center(&car_adjusted_loc, &ball_adjusted_loc);
             let score = (pickup.loc - eval_loc).norm();
             NotNan::new(score).unwrap()
         })
