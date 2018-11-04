@@ -137,35 +137,12 @@ impl<'a> Scenario<'a> {
     }
 }
 
-fn blitz_start(car: &rlbot::ffi::PlayerInfo, ball_prediction: &BallTrajectory) -> BlitzStart {
+fn blitz_start(car: &rlbot::ffi::PlayerInfo, ball_prediction: &BallTrajectory) -> Car1D {
     let ball_loc = ball_prediction.start().loc.to_2d();
     let car_vel = car.Physics.vel().to_2d();
-    let car_forward = car.Physics.forward_axis_2d();
-    let car_to_ball = ball_prediction.start().loc.to_2d() - car.Physics.loc_2d();
-
-    let speed_to_ball = car_vel.dot(&(ball_loc - car.Physics.loc_2d()).normalize());
-    let car_sim = Car1D::new(speed_to_ball).with_boost(car.Boost as f32);
-
-    let rotation_penalty = car_forward
-        .rotation_to(&car_to_ball.to_axis())
-        .angle()
-        .abs()
-        * 0.25;
-    let reverse_penalty = if speed_to_ball < 0.0 {
-        -speed_to_ball * 0.002
-    } else {
-        0.0
-    };
-
-    BlitzStart {
-        car_sim,
-        penalty: rotation_penalty + reverse_penalty,
-    }
-}
-
-struct BlitzStart {
-    car_sim: Car1D,
-    penalty: f32,
+    let car_to_ball = ball_loc - car.Physics.loc_2d();
+    let speed_towards_ball = car_vel.dot(&car_to_ball.normalize());
+    Car1D::new(speed_towards_ball).with_boost(car.Boost as f32)
 }
 
 // This is a pretty naive and heavyweight implementation. Basically simulate a
@@ -178,14 +155,8 @@ fn simulate_ball_blitz(
     let (me, enemy) = one_v_one(packet);
     let mut t = 0.0;
 
-    let BlitzStart {
-        car_sim: mut sim_me,
-        penalty: me_penalty,
-    } = blitz_start(me, ball_prediction);
-    let BlitzStart {
-        car_sim: mut sim_enemy,
-        penalty: enemy_penalty,
-    } = blitz_start(enemy, ball_prediction);
+    let mut sim_me = blitz_start(me, ball_prediction);
+    let mut sim_enemy = blitz_start(enemy, ball_prediction);
 
     let mut me_result = None;
     let mut enemy_result = None;
@@ -198,7 +169,7 @@ fn simulate_ball_blitz(
             let me_dist_to_ball = (me.Physics.locp() - ball.loc).to_2d().norm();
             if sim_me.distance_traveled() >= me_dist_to_ball {
                 me_result = Some(NaiveIntercept {
-                    time: t + me_penalty,
+                    time: t,
                     ball_loc: ball.loc,
                     ball_vel: ball.vel,
                     car_loc: ball.loc,
@@ -212,7 +183,7 @@ fn simulate_ball_blitz(
             let enemy_dist_to_ball = (enemy.Physics.locp() - ball.loc).to_2d().norm();
             if sim_enemy.distance_traveled() >= enemy_dist_to_ball {
                 enemy_result = Some(NaiveIntercept {
-                    time: t + enemy_penalty,
+                    time: t,
                     ball_loc: ball.loc,
                     ball_vel: ball.vel,
                     car_loc: ball.loc,
@@ -226,7 +197,36 @@ fn simulate_ball_blitz(
         }
     }
 
+    if let Some(i) = &mut me_result {
+        i.time += blitz_penalty(me, &i);
+    }
+    if let Some(i) = &mut enemy_result {
+        i.time += blitz_penalty(enemy, &i);
+    }
     (me_result, enemy_result)
+}
+
+fn blitz_penalty(car: &rlbot::ffi::PlayerInfo, intercept: &NaiveIntercept) -> f32 {
+    let ball_loc = intercept.ball_loc.to_2d();
+    let ball_vel = intercept.ball_vel.to_2d();
+    let car_vel = car.Physics.vel().to_2d();
+    let car_forward = car.Physics.forward_axis_2d();
+    let car_to_ball = ball_loc - car.Physics.loc_2d();
+
+    let rotation_penalty = car_forward
+        .rotation_to(&car_to_ball.to_axis())
+        .angle()
+        .abs()
+        * 0.25;
+
+    let speed_towards_ball = (car_vel - ball_vel).dot(&car_to_ball.normalize());
+    let reverse_penalty = if speed_towards_ball < 0.0 {
+        speed_towards_ball / -2000.0
+    } else {
+        0.0
+    };
+
+    rotation_penalty + reverse_penalty
 }
 
 fn eval_push_wall(car: &Point3<f32>, ball: &Point3<f32>) -> Wall {
