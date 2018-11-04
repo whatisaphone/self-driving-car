@@ -217,13 +217,13 @@ where
         }
     }
 
-    fn drive(&self, ctx: &mut Context, target_loc: Point3<f32>, boost: bool) -> Action {
+    fn drive(&self, ctx: &mut Context, target_loc: Point3<f32>, throttle: bool) -> Action {
         let me = ctx.me();
         let steer = simple_steer_towards(&me.Physics, target_loc.to_2d().coords);
         Action::Yield(rlbot::ffi::PlayerInput {
-            Throttle: boost as i32 as f32,
+            Throttle: throttle as i32 as f32,
             Steer: steer,
-            Boost: boost,
+            Boost: me.Physics.vel().norm() < rl::CAR_ALMOST_MAX_SPEED,
             ..Default::default()
         })
     }
