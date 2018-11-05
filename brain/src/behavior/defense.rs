@@ -1,9 +1,10 @@
 use behavior::{tepid_hit::TepidHit, Action, Behavior, Chain, Priority};
 use common::prelude::*;
 use eeg::{color, Drawable};
-use maneuvers::{BounceShot, FiftyFifty, GroundShot, JumpShot, PanicDefense};
-use nalgebra::{Point2, Rotation2, Vector2};
+use maneuvers::{blocking_angle, BounceShot, GroundShot, GroundedHit, JumpShot, PanicDefense};
+use nalgebra::{Point2, Point3, Rotation2, Vector2};
 use predict::{estimate_intercept_car_ball, Intercept};
+use routing::{behavior::FollowRoute, plan::GroundIntercept};
 use std::f32::consts::PI;
 use strategy::{Context, Scenario};
 use utils::{my_car, my_goal_center_2d, ExtendPoint3, ExtendVector3, Wall, WallRayCalculator};
@@ -38,7 +39,13 @@ impl Behavior for Defense {
         }
 
         if ctx.scenario.possession() < Scenario::POSSESSION_CONTESTABLE {
-            Action::call(FiftyFifty::new())
+            Action::call(Chain::new(
+                Priority::Idle,
+                vec![
+                    Box::new(FollowRoute::new(GroundIntercept::new())),
+                    Box::new(GroundedHit::hit_towards(defensive_hit)),
+                ],
+            ))
         } else {
             Action::call(TepidHit::new())
         }
@@ -188,6 +195,21 @@ impl HitToOwnCorner {
             _ => Ok(result.coords),
         }
     }
+}
+
+fn defensive_hit(ctx: &mut Context, intercept_ball_loc: Point3<f32>) -> Result<Point2<f32>, ()> {
+    let me = ctx.me();
+    let target_angle = blocking_angle(
+        intercept_ball_loc.to_2d().coords,
+        me.Physics.loc().to_2d(),
+        ctx.game.own_goal().center_2d.coords,
+        PI / 6.0,
+    );
+    let target_loc = intercept_ball_loc.to_2d() + Vector2::unit(target_angle) * 200.0;
+    Ok(WallRayCalculator::calculate(
+        target_loc,
+        intercept_ball_loc.to_2d(),
+    ))
 }
 
 #[cfg(test)]
@@ -576,6 +598,21 @@ mod integration_tests {
 
         let packet = test.sniff_packet();
         assert!(packet.GameBall.Physics.Location.X < -1000.0);
+        assert!(!test.enemy_has_scored());
+    }
+
+    #[test]
+    fn clear_around_goal_wall() {
+        let test = TestRunner::new()
+            .one_v_one(&*recordings::CLEAR_AROUND_GOAL_WALL, 327.0)
+            .starting_boost(100.0)
+            .behavior(Runner2::new())
+            .run();
+        test.sleep_millis(3000);
+
+        let packet = test.sniff_packet();
+        assert!(packet.GameBall.Physics.Location.X < -1000.0);
+        assert!(packet.GameBall.Physics.Velocity.X < -100.0);
         assert!(!test.enemy_has_scored());
     }
 }

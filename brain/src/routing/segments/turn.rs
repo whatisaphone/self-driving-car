@@ -135,7 +135,7 @@ impl SegmentRunner for Turner {
 
         SegmentRunAction::Yield(rlbot::ffi::PlayerInput {
             Throttle: 1.0,
-            Steer: yaw_diff.max(-1.0).min(1.0) * 2.0,
+            Steer: yaw_diff.signum(),
             ..Default::default()
         })
     }

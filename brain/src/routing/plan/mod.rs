@@ -14,3 +14,4 @@ mod ground_powerslide;
 mod ground_straight;
 mod ground_turn;
 mod higher_order;
+mod pathing;

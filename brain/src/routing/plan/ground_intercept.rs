@@ -3,7 +3,10 @@ use maneuvers::GroundedHit;
 use predict::naive_ground_intercept;
 use routing::{
     models::{PlanningContext, RoutePlan, RoutePlanError, RoutePlanner},
-    plan::{ground_straight::GroundStraightPlanner, ground_turn::TurnPlanner},
+    plan::{
+        ground_straight::GroundStraightPlanner, ground_turn::TurnPlanner,
+        higher_order::ChainedPlanner, pathing,
+    },
     recover::{IsSkidding, NotOnFlatGround},
     segments::StraightMode,
 };
@@ -41,11 +44,17 @@ impl RoutePlanner for GroundIntercept {
             },
         );
 
-        TurnPlanner::new(
-            guess.ball_loc.to_2d(),
+        let turn = TurnPlanner::new(guess.ball_loc.to_2d(), None).plan(ctx)?;
+        let turn = match pathing::avoid_smacking_goal_wall(&turn.segment.end()) {
+            None => turn,
+            Some(planner) => {
+                ChainedPlanner::new(planner, Some(Box::new(self.clone()))).plan(ctx)?
+            }
+        };
+        Ok(ChainedPlanner::join_planner(
+            turn,
             Some(Box::new(GroundInterceptStraight::new())),
-        )
-        .plan(ctx)
+        ))
     }
 }
 

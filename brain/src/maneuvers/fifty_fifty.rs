@@ -72,10 +72,10 @@ impl Behavior for FiftyFifty {
     }
 }
 
-/// Calculate an angle from `car_loc` to `ball_loc`, trying to get between
+/// Calculate an angle from `ball_loc` to `car_loc`, trying to get between
 /// `ball_loc` and `block_loc`, but not adjusting the approach angle by more
 /// than `max_angle_diff`.
-fn blocking_angle(
+pub fn blocking_angle(
     ball_loc: Vector2<f32>,
     car_loc: Vector2<f32>,
     block_loc: Vector2<f32>,

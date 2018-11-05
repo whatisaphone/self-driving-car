@@ -3,7 +3,7 @@ pub use maneuvers::{
     blitz_to_location::BlitzToLocation,
     bounce_shot::BounceShot,
     drive_towards::{drive_towards, DriveTowards},
-    fifty_fifty::FiftyFifty,
+    fifty_fifty::{blocking_angle, FiftyFifty},
     get_to_flat_ground::GetToFlatGround,
     ground_shot::GroundShot,
     grounded_hit::GroundedHit,
