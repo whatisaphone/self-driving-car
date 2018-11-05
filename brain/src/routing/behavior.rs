@@ -1,8 +1,8 @@
 use behavior::{Action, Behavior};
 use eeg::{color, Drawable};
 use routing::models::{
-    ProvisionalPlanExpansion, RoutePlan, RoutePlanError, RoutePlanner, SegmentRunAction,
-    SegmentRunner,
+    PlanningContext, ProvisionalPlanExpansion, RoutePlan, RoutePlanError, RoutePlanner,
+    SegmentRunAction, SegmentRunner,
 };
 use strategy::Context;
 
@@ -65,7 +65,15 @@ impl FollowRoute {
     fn advance(&mut self, planner: &RoutePlanner, ctx: &mut Context) -> Result<(), Action> {
         assert!(self.current.is_none());
 
-        let plan = match planner.plan(0.0, &ctx.me().into(), &ctx.scenario) {
+        let plan = {
+            let context = PlanningContext {
+                game: &ctx.game,
+                start: ctx.me().into(),
+                ball_prediction: ctx.scenario.ball_prediction(),
+            };
+            planner.plan(&context)
+        };
+        let plan = match plan {
             Ok(s) => s,
             Err(err) => match err.recover(ctx) {
                 Some(b) => {
@@ -82,7 +90,7 @@ impl FollowRoute {
         };
         let runner = plan.segment.run();
         let provisional_expansion =
-            plan.provisional_expand(0.0, &ctx.scenario)
+            plan.provisional_expand(&ctx.scenario)
                 .map_err(|(planner_name, error)| {
                     ctx.eeg.log(format!(
                         "[FollowRoute] Provisional expansion error from {} - {:?}",

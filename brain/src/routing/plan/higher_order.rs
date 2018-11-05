@@ -1,5 +1,4 @@
-use routing::models::{CarState, RoutePlan, RoutePlanError, RoutePlanner};
-use strategy::Scenario;
+use routing::models::{PlanningContext, RoutePlan, RoutePlanError, RoutePlanner};
 
 /// Exhaust `head`, then advance to `next`.
 #[derive(Clone)]
@@ -18,12 +17,7 @@ impl RoutePlanner for StaticPlanner {
         stringify!(StaticPlanner)
     }
 
-    fn plan(
-        &self,
-        _start_time: f32,
-        _start: &CarState,
-        _scenario: &Scenario,
-    ) -> Result<RoutePlan, RoutePlanError> {
+    fn plan(&self, _ctx: &PlanningContext) -> Result<RoutePlan, RoutePlanError> {
         Ok(self.plan.clone())
     }
 }
@@ -40,13 +34,8 @@ impl RoutePlanner for ChainedPlanner {
         stringify!(ChainedPlanner)
     }
 
-    fn plan(
-        &self,
-        start_time: f32,
-        start: &CarState,
-        scenario: &Scenario,
-    ) -> Result<RoutePlan, RoutePlanError> {
-        let plan = self.head.plan(start_time, start, scenario)?;
+    fn plan(&self, ctx: &PlanningContext) -> Result<RoutePlan, RoutePlanError> {
+        let plan = self.head.plan(ctx)?;
         let next: Option<Box<RoutePlanner>> = match plan.next {
             Some(next) => Some(Box::new(ChainedPlanner::new(next, self.next.clone()))),
             None => self.next.clone(),

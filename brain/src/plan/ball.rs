@@ -70,6 +70,22 @@ impl BallTrajectory {
         self.frames.iter().skip(delay_frames)
     }
 
+    pub fn hacky_expensive_slice(&self, delay: f32) -> Self {
+        let delay_frames = (delay / DT) as usize;
+        let start = self.start();
+        Self {
+            frames: self
+                .frames
+                .iter()
+                .skip(delay_frames)
+                .map(|f| BallFrame {
+                    t: f.t - start.t,
+                    ..*f
+                })
+                .collect(),
+        }
+    }
+
     pub fn at_time(&self, t: f32) -> Option<&BallFrame> {
         let i = match self
             .frames

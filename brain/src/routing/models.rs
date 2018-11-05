@@ -1,9 +1,10 @@
 use common::{physics, prelude::*};
 use nalgebra::{Point2, Point3, Unit, UnitComplex, UnitQuaternion, Vector2, Vector3};
+use plan::ball::BallTrajectory;
 use rlbot;
 use simulate::rl;
 use std::{fmt, iter};
-use strategy::{Context, Scenario};
+use strategy::{Context, Game, Scenario};
 use utils::geometry::{ExtendPoint2, ExtendUnitComplex, ExtendVector2};
 
 #[derive(Clone)]
@@ -61,12 +62,7 @@ impl CarState2D {
 pub trait RoutePlanner: RoutePlannerCloneBox + Send {
     fn name(&self) -> &'static str;
 
-    fn plan(
-        &self,
-        start_time: f32,
-        start: &CarState,
-        scenario: &Scenario,
-    ) -> Result<RoutePlan, RoutePlanError>;
+    fn plan(&self, ctx: &PlanningContext) -> Result<RoutePlan, RoutePlanError>;
 }
 
 pub trait RoutePlannerCloneBox {
@@ -86,6 +82,12 @@ impl Clone for Box<RoutePlanner> {
     fn clone(&self) -> Self {
         self.clone_box()
     }
+}
+
+pub struct PlanningContext<'a> {
+    pub game: &'a Game<'a>,
+    pub start: CarState,
+    pub ball_prediction: &'a BallTrajectory,
 }
 
 pub struct ProvisionalPlanExpansion {
@@ -132,34 +134,37 @@ pub struct RoutePlan {
 impl RoutePlan {
     pub fn provisional_expand(
         &self,
-        start_time: f32,
         scenario: &Scenario,
     ) -> Result<ProvisionalPlanExpansion, (&'static str, RoutePlanError)> {
         let mut tail = Vec::new();
         if let Some(ref planner) = self.next {
-            Self::expand_round(&**planner, start_time, &self.segment.end(), scenario, |s| {
-                tail.push(s)
-            })?;
+            let context = PlanningContext {
+                game: &scenario.game,
+                start: self.segment.end(),
+                ball_prediction: scenario.ball_prediction(),
+            };
+            Self::expand_round(&**planner, &context, |s| tail.push(s))?;
         }
         Ok(ProvisionalPlanExpansion { tail })
     }
 
     fn expand_round(
         planner: &RoutePlanner,
-        start_time: f32,
-        state: &CarState,
-        scenario: &Scenario,
+        ctx: &PlanningContext,
         mut sink: impl FnMut(Box<SegmentPlan>),
     ) -> Result<(), (&'static str, RoutePlanError)> {
-        let step = planner
-            .plan(start_time, &state, scenario)
-            .map_err(|e| (planner.name(), e))?;
+        let step = planner.plan(ctx).map_err(|e| (planner.name(), e))?;
         let state = step.segment.end();
         let duration = step.segment.duration();
         sink(step.segment);
         match step.next {
             Some(planner) => {
-                Self::expand_round(&*planner, start_time + duration, &state, scenario, sink)
+                let ctx = PlanningContext {
+                    game: ctx.game,
+                    start: state,
+                    ball_prediction: &ctx.ball_prediction.hacky_expensive_slice(duration),
+                };
+                Self::expand_round(&*planner, &ctx, sink)
             }
             None => Ok(()),
         }

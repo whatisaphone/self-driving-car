@@ -1,9 +1,8 @@
 use behavior::Behavior;
 use routing::{
     behavior::FollowRoute,
-    models::{CarState, RoutePlan, RoutePlanError, RoutePlanner, SegmentPlan},
+    models::{PlanningContext, RoutePlan, RoutePlanError, RoutePlanner, SegmentPlan},
 };
-use strategy::Scenario;
 
 pub fn segment_plan_tester(plan: impl SegmentPlan + Clone + 'static) -> impl Behavior {
     FollowRoute::new(CookedPlanner::new(plan))
@@ -25,12 +24,7 @@ where
         stringify!(CookedPlanner)
     }
 
-    fn plan(
-        &self,
-        _start_time: f32,
-        _start: &CarState,
-        _scenario: &Scenario,
-    ) -> Result<RoutePlan, RoutePlanError> {
+    fn plan(&self, _ctx: &PlanningContext) -> Result<RoutePlan, RoutePlanError> {
         Ok(RoutePlan {
             segment: Box::new(self.plan.clone()),
             next: None,

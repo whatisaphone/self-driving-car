@@ -2,12 +2,13 @@ use common::{prelude::*, rl};
 use nalgebra::Point2;
 use ordered_float::NotNan;
 use routing::{
-    models::{CarState, CarState2D, RoutePlan, RoutePlanError, RoutePlanner, SegmentPlan},
+    models::{
+        CarState, CarState2D, PlanningContext, RoutePlan, RoutePlanError, RoutePlanner, SegmentPlan,
+    },
     recover::{IsSkidding, NotFacingTarget2D, NotOnFlatGround},
     segments::{Chain, ForwardDodge, Straight, StraightMode},
 };
 use simulate::{Car1D, CarForwardDodge, CarForwardDodge1D};
-use strategy::Scenario;
 
 #[derive(Clone, new)]
 pub struct GroundStraightPlanner {
@@ -25,16 +26,15 @@ impl RoutePlanner for GroundStraightPlanner {
         stringify!(GroundStraightPlanner)
     }
 
-    fn plan(
-        &self,
-        start_time: f32,
-        start: &CarState,
-        scenario: &Scenario,
-    ) -> Result<RoutePlan, RoutePlanError> {
+    fn plan(&self, ctx: &PlanningContext) -> Result<RoutePlan, RoutePlanError> {
         assert!(!self.target_loc.x.is_nan());
-        guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
         guard!(
-            start,
+            ctx.start,
+            NotOnFlatGround,
+            RoutePlanError::MustBeOnFlatGround,
+        );
+        guard!(
+            ctx.start,
             IsSkidding,
             RoutePlanError::MustNotBeSkidding {
                 recover_target_loc: self.target_loc,
@@ -47,7 +47,7 @@ impl RoutePlanner for GroundStraightPlanner {
             StraightWithDodge::new(self.target_loc, self.target_time, self.end_chop, self.mode);
 
         let planners = [&simple as &RoutePlanner, &with_dodge];
-        let plans = planners.iter().map(|p| p.plan(start_time, start, scenario));
+        let plans = planners.iter().map(|p| p.plan(ctx));
         let plans = at_least_one_ok(plans)?;
         Ok(fastest(plans.into_iter()))
     }
@@ -91,32 +91,31 @@ impl RoutePlanner for StraightSimple {
         stringify!(StraightSimple)
     }
 
-    fn plan(
-        &self,
-        _start_time: f32,
-        start: &CarState,
-        _scenario: &Scenario,
-    ) -> Result<RoutePlan, RoutePlanError> {
-        guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
+    fn plan(&self, ctx: &PlanningContext) -> Result<RoutePlan, RoutePlanError> {
         guard!(
-            start,
+            ctx.start,
+            NotOnFlatGround,
+            RoutePlanError::MustBeOnFlatGround,
+        );
+        guard!(
+            ctx.start,
             IsSkidding,
             RoutePlanError::MustNotBeSkidding {
                 recover_target_loc: self.target_loc,
             },
         );
         guard!(
-            start,
+            ctx.start,
             NotFacingTarget2D::new(self.target_loc),
             RoutePlanError::MustBeFacingTarget,
         );
 
         let segment = Straight::new(
             CarState2D {
-                loc: start.loc.to_2d(),
-                rot: start.rot.to_2d(),
-                vel: start.vel.to_2d(),
-                boost: start.boost,
+                loc: ctx.start.loc.to_2d(),
+                rot: ctx.start.rot.to_2d(),
+                vel: ctx.start.vel.to_2d(),
+                boost: ctx.start.boost,
             },
             self.target_loc,
             self.end_chop,
@@ -146,28 +145,27 @@ impl RoutePlanner for StraightWithDodge {
         stringify!(StraightWithDodge)
     }
 
-    fn plan(
-        &self,
-        _start_time: f32,
-        start: &CarState,
-        _scenario: &Scenario,
-    ) -> Result<RoutePlan, RoutePlanError> {
-        guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
+    fn plan(&self, ctx: &PlanningContext) -> Result<RoutePlan, RoutePlanError> {
         guard!(
-            start,
+            ctx.start,
+            NotOnFlatGround,
+            RoutePlanError::MustBeOnFlatGround,
+        );
+        guard!(
+            ctx.start,
             IsSkidding,
             RoutePlanError::MustNotBeSkidding {
                 recover_target_loc: self.target_loc,
             },
         );
         guard!(
-            start,
+            ctx.start,
             NotFacingTarget2D::new(self.target_loc),
             RoutePlanError::MustBeFacingTarget,
         );
 
         let dodges = StraightDodgeCalculator::new(
-            start.clone(),
+            ctx.start.clone(),
             self.target_loc,
             self.target_time,
             self.end_chop,
@@ -180,13 +178,13 @@ impl RoutePlanner for StraightWithDodge {
 
         let before = Straight::new(
             CarState2D {
-                loc: start.loc.to_2d(),
-                rot: start.rot.to_2d(),
-                vel: start.vel.to_2d(),
-                boost: start.boost,
+                loc: ctx.start.loc.to_2d(),
+                rot: ctx.start.rot.to_2d(),
+                vel: ctx.start.vel.to_2d(),
+                boost: ctx.start.boost,
             },
-            start.loc.to_2d()
-                + (self.target_loc - start.loc.to_2d()).normalize() * dodge.approach_distance,
+            ctx.start.loc.to_2d()
+                + (self.target_loc - ctx.start.loc.to_2d()).normalize() * dodge.approach_distance,
             0.0,
             StraightMode::Asap,
         );

@@ -2,7 +2,7 @@ pub use self::{boost::GetDollar, ground_intercept::GroundIntercept};
 
 macro_rules! guard {
     ($start:expr, $predicate:expr, $return:expr $(,)*) => {
-        if $predicate.evaluate($start) {
+        if $predicate.evaluate(&$start) {
             return Err($return);
         }
     };

@@ -2,14 +2,13 @@ use chip;
 use common::{prelude::*, rl};
 use nalgebra::Point2;
 use routing::{
-    models::{CarState, RoutePlan, RoutePlanError, RoutePlanner},
+    models::{CarState, PlanningContext, RoutePlan, RoutePlanError, RoutePlanner},
     plan::{ground_powerslide::GroundSimplePowerslideTurn, higher_order::ChainedPlanner},
     recover::{IsSkidding, NotOnFlatGround},
     segments::{NullSegment, SimpleArc, Turn},
 };
 use simulate::linear_interpolate;
 use std::f32::consts::PI;
-use strategy::Scenario;
 use utils::geometry::circle_point_tangents;
 
 #[derive(Clone, new)]
@@ -23,29 +22,24 @@ impl RoutePlanner for TurnPlanner {
         stringify!(TurnPlanner)
     }
 
-    fn plan(
-        &self,
-        start_time: f32,
-        start: &CarState,
-        scenario: &Scenario,
-    ) -> Result<RoutePlan, RoutePlanError> {
+    fn plan(&self, ctx: &PlanningContext) -> Result<RoutePlan, RoutePlanError> {
         let powerslide_cutoff = linear_interpolate(
             &[0.0, rl::CAR_NORMAL_SPEED],
             &[PI * 0.25, PI * 0.50],
-            start.vel.to_2d().norm(),
+            ctx.start.vel.to_2d().norm(),
         );
 
-        let munged_start_loc = start.loc.to_2d() + start.vel.to_2d() * 0.5;
-        let turn = start
+        let munged_start_loc = ctx.start.loc.to_2d() + ctx.start.vel.to_2d() * 0.5;
+        let turn = ctx
+            .start
             .forward_axis_2d()
             .rotation_to(&(self.target_face - munged_start_loc).to_axis());
 
         if turn.angle().abs() > powerslide_cutoff {
             let turn = GroundSimplePowerslideTurn::new(self.target_face);
-            ChainedPlanner::new(Box::new(turn), self.next.clone()).plan(start_time, start, scenario)
+            ChainedPlanner::new(Box::new(turn), self.next.clone()).plan(ctx)
         } else {
-            SimpleTurnPlanner::new(self.target_face, self.next.clone())
-                .plan(start_time, start, scenario)
+            SimpleTurnPlanner::new(self.target_face, self.next.clone()).plan(ctx)
         }
     }
 }
@@ -61,24 +55,19 @@ impl RoutePlanner for SimpleTurnPlanner {
         stringify!(SimpleTurnPlanner)
     }
 
-    fn plan(
-        &self,
-        _start_time: f32,
-        start: &CarState,
-        _scenario: &Scenario,
-    ) -> Result<RoutePlan, RoutePlanError> {
-        let turn_radius = 1.0 / chip::max_curvature(start.vel.norm().max(500.0));
-        let turn = match calculate_circle_turn(start, turn_radius, self.target_loc)? {
+    fn plan(&self, ctx: &PlanningContext) -> Result<RoutePlan, RoutePlanError> {
+        let turn_radius = 1.0 / chip::max_curvature(ctx.start.vel.norm().max(500.0));
+        let turn = match calculate_circle_turn(&ctx.start, turn_radius, self.target_loc)? {
             Some(x) => x,
             None => {
                 return Ok(RoutePlan {
-                    segment: Box::new(NullSegment::new(start.clone())),
+                    segment: Box::new(NullSegment::new(ctx.start.clone())),
                     next: self.next.clone(),
                 });
             }
         };
         let segment = Turn::new(
-            start.clone(),
+            ctx.start.clone(),
             self.target_loc,
             turn.center,
             turn.radius,
@@ -104,27 +93,26 @@ impl RoutePlanner for ArcTowards {
         stringify!(ArcTowards)
     }
 
-    fn plan(
-        &self,
-        _start_time: f32,
-        start: &CarState,
-        _scenario: &Scenario,
-    ) -> Result<RoutePlan, RoutePlanError> {
-        guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
+    fn plan(&self, ctx: &PlanningContext) -> Result<RoutePlan, RoutePlanError> {
         guard!(
-            start,
+            ctx.start,
+            NotOnFlatGround,
+            RoutePlanError::MustBeOnFlatGround,
+        );
+        guard!(
+            ctx.start,
             IsSkidding,
             RoutePlanError::MustNotBeSkidding {
                 recover_target_loc: self.target_loc,
             },
         );
 
-        let turn_radius = 1.0 / chip::max_curvature(start.vel.norm().max(500.0));
-        let turn = match calculate_circle_turn(start, turn_radius, self.target_loc)? {
+        let turn_radius = 1.0 / chip::max_curvature(ctx.start.vel.norm().max(500.0));
+        let turn = match calculate_circle_turn(&ctx.start, turn_radius, self.target_loc)? {
             Some(x) => x,
             None => {
                 return Ok(RoutePlan {
-                    segment: Box::new(NullSegment::new(start.clone())),
+                    segment: Box::new(NullSegment::new(ctx.start.clone())),
                     next: self.next.clone(),
                 });
             }
@@ -133,9 +121,9 @@ impl RoutePlanner for ArcTowards {
         let segment = SimpleArc::new(
             turn.center,
             turn.radius,
-            start.loc.to_2d(),
-            start.vel.to_2d(),
-            start.boost,
+            ctx.start.loc.to_2d(),
+            ctx.start.vel.to_2d(),
+            ctx.start.boost,
             turn.tangent,
         )
         .map_err(|err| RoutePlanError::OtherError(err.to_str()))?;

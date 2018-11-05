@@ -1,7 +1,7 @@
 use common::{physics::CAR_LOCAL_FORWARD_AXIS_2D, prelude::*};
 use nalgebra::Point2;
 use routing::{
-    models::{CarState, RoutePlan, RoutePlanError, RoutePlanner},
+    models::{PlanningContext, RoutePlan, RoutePlanError, RoutePlanner},
     plan::{
         ground_straight::GroundStraightPlanner,
         ground_turn::TurnPlanner,
@@ -11,7 +11,6 @@ use routing::{
     segments::{PowerslideTurn, StraightMode},
 };
 use simulate::CarPowerslideTurn;
-use strategy::Scenario;
 
 #[derive(Clone, new)]
 pub struct GroundPowerslideTurn {
@@ -25,12 +24,7 @@ impl RoutePlanner for GroundPowerslideTurn {
         stringify!(GroundPowerslideTurn)
     }
 
-    fn plan(
-        &self,
-        start_time: f32,
-        start: &CarState,
-        scenario: &Scenario,
-    ) -> Result<RoutePlan, RoutePlanError> {
+    fn plan(&self, ctx: &PlanningContext) -> Result<RoutePlan, RoutePlanError> {
         TurnPlanner::new(
             self.target_loc,
             Some(Box::new(GroundPowerslideEssence::new(
@@ -39,7 +33,7 @@ impl RoutePlanner for GroundPowerslideTurn {
                 self.next.clone(),
             ))),
         )
-        .plan(start_time, start, scenario)
+        .plan(ctx)
     }
 }
 
@@ -53,15 +47,14 @@ impl RoutePlanner for GroundSimplePowerslideTurn {
         stringify!(GroundSimplePowerslideTurn)
     }
 
-    fn plan(
-        &self,
-        _start_time: f32,
-        start: &CarState,
-        _scenario: &Scenario,
-    ) -> Result<RoutePlan, RoutePlanError> {
-        guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
+    fn plan(&self, ctx: &PlanningContext) -> Result<RoutePlan, RoutePlanError> {
         guard!(
-            start,
+            ctx.start,
+            NotOnFlatGround,
+            RoutePlanError::MustBeOnFlatGround,
+        );
+        guard!(
+            ctx.start,
             IsSkidding,
             RoutePlanError::MustNotBeSkidding {
                 recover_target_loc: self.target_face,
@@ -69,14 +62,18 @@ impl RoutePlanner for GroundSimplePowerslideTurn {
         );
 
         let throttle = 1.0;
-        let munged_start_loc = start.loc.to_2d() + start.vel.to_2d() * 0.5;
+        let munged_start_loc = ctx.start.loc.to_2d() + ctx.start.vel.to_2d() * 0.5;
         let end_rot =
             CAR_LOCAL_FORWARD_AXIS_2D.rotation_to(&(self.target_face - munged_start_loc).to_axis());
-        let rot_by = start.rot.to_2d().rotation_to(&end_rot).angle();
-        let blueprint =
-            CarPowerslideTurn::evaluate(start.loc.to_2d(), start.vel.to_2d(), throttle, rot_by)
-                .ok_or(RoutePlanError::OtherError("no viable powerslide turn"))?;
-        let slide = PowerslideTurn::new(blueprint, start.boost);
+        let rot_by = ctx.start.rot.to_2d().rotation_to(&end_rot).angle();
+        let blueprint = CarPowerslideTurn::evaluate(
+            ctx.start.loc.to_2d(),
+            ctx.start.vel.to_2d(),
+            throttle,
+            rot_by,
+        )
+        .ok_or(RoutePlanError::OtherError("no viable powerslide turn"))?;
+        let slide = PowerslideTurn::new(blueprint, ctx.start.boost);
 
         Ok(RoutePlan {
             segment: Box::new(slide),
@@ -99,22 +96,21 @@ impl RoutePlanner for GroundPowerslideEssence {
         stringify!(GroundPowerslideEssence)
     }
 
-    fn plan(
-        &self,
-        start_time: f32,
-        start: &CarState,
-        scenario: &Scenario,
-    ) -> Result<RoutePlan, RoutePlanError> {
-        guard!(start, NotOnFlatGround, RoutePlanError::MustBeOnFlatGround);
+    fn plan(&self, ctx: &PlanningContext) -> Result<RoutePlan, RoutePlanError> {
         guard!(
-            start,
+            ctx.start,
+            NotOnFlatGround,
+            RoutePlanError::MustBeOnFlatGround,
+        );
+        guard!(
+            ctx.start,
             IsSkidding,
             RoutePlanError::MustNotBeSkidding {
                 recover_target_loc: self.target_loc,
             },
         );
         guard!(
-            start,
+            ctx.start,
             NotFacingTarget2D::new(self.target_loc),
             RoutePlanError::MustBeFacingTarget,
         );
@@ -125,14 +121,14 @@ impl RoutePlanner for GroundPowerslideEssence {
 
         let end_rot =
             CAR_LOCAL_FORWARD_AXIS_2D.rotation_to(&(self.target_face - self.target_loc).to_axis());
-        let rot_by = start.rot.to_2d().rotation_to(&end_rot).angle();
+        let rot_by = ctx.start.rot.to_2d().rotation_to(&end_rot).angle();
 
         // First pass to estimate the approach angle
         let blueprint = {
             let end_chop = 1.0; // Leave some time for the actual slide.
             let straight =
                 GroundStraightPlanner::new(self.target_loc, asap, end_chop, StraightMode::Asap)
-                    .plan(start_time, start, scenario)?;
+                    .plan(ctx)?;
             let straight_end = straight.segment.end();
 
             CarPowerslideTurn::evaluate(
@@ -146,14 +142,15 @@ impl RoutePlanner for GroundPowerslideEssence {
 
         // Second pass to estimate the approach velocity
         let blueprint = {
-            let start_to_target = self.target_loc - start.loc.to_2d();
+            let start_to_target = self.target_loc - ctx.start.loc.to_2d();
             let blueprint_span = blueprint.end_loc - blueprint.start_loc;
             let dist_reduction = blueprint_span.dot(&start_to_target.to_axis());
             let straight_dist = start_to_target.norm() - dist_reduction;
-            let straight_end_loc = start.loc.to_2d() + start_to_target.normalize() * straight_dist;
+            let straight_end_loc =
+                ctx.start.loc.to_2d() + start_to_target.normalize() * straight_dist;
             let straight =
                 GroundStraightPlanner::new(straight_end_loc, asap, 0.0, StraightMode::Asap)
-                    .plan(start_time, start, scenario)?;
+                    .plan(ctx)?;
             let straight_end = straight.segment.end();
 
             CarPowerslideTurn::evaluate(
@@ -167,7 +164,7 @@ impl RoutePlanner for GroundPowerslideEssence {
 
         let straight_end_loc = self.target_loc - (blueprint.end_loc - blueprint.start_loc);
         let straight = GroundStraightPlanner::new(straight_end_loc, asap, 0.0, StraightMode::Asap)
-            .plan(start_time, start, scenario)?;
+            .plan(ctx)?;
         let straight_end = straight.segment.end();
 
         let blueprint = CarPowerslideTurn::evaluate(
@@ -186,6 +183,6 @@ impl RoutePlanner for GroundPowerslideEssence {
                 next: None,
             }))),
         )
-        .plan(start_time, start, scenario)
+        .plan(ctx)
     }
 }
