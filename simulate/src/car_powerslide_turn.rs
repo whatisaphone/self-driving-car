@@ -1,4 +1,7 @@
-use common::{physics::CAR_LOCAL_FORWARD_AXIS_2D, prelude::*};
+use common::{
+    physics::{car_forward_axis_2d, CAR_LOCAL_FORWARD_AXIS_2D},
+    prelude::*,
+};
 use nalgebra::{Point2, UnitComplex, Vector2};
 use oven::data;
 
@@ -7,6 +10,7 @@ pub struct CarPowerslideTurn;
 #[derive(Clone)]
 pub struct CarPowerslideTurnBlueprint {
     pub start_loc: Point2<f32>,
+    pub start_rot: UnitComplex<f32>,
     pub start_vel: Vector2<f32>,
     pub steer: f32,
     pub throttle: f32,
@@ -17,8 +21,13 @@ pub struct CarPowerslideTurnBlueprint {
 }
 
 impl CarPowerslideTurn {
+    /// Look up a powerslide and transform into the caller's coordinates.
+    ///
+    /// The caller is responsible for making sure they are on the ground,
+    /// starting from a straightaway, not skidding, etc.
     pub fn evaluate(
         start_loc: Point2<f32>,
+        start_rot: UnitComplex<f32>,
         start_vel: Vector2<f32>,
         throttle: f32,
         target_rot_by: f32,
@@ -31,7 +40,8 @@ impl CarPowerslideTurn {
 
         let steer = target_rot_by.signum();
 
-        let reference = Self::reference_evaluate(start_vel.norm(), throttle, target_rot_by.abs());
+        let start_speed = start_vel.dot(&car_forward_axis_2d(start_rot)).max(0.0);
+        let reference = Self::reference_evaluate(start_speed, throttle, target_rot_by.abs());
         let reference = some_or_else!(reference, {
             return None;
         });
@@ -41,9 +51,9 @@ impl CarPowerslideTurn {
         reference_offset.x *= steer;
         let offset = transform.inverse() * reference_offset;
 
-        let start_rot = CAR_LOCAL_FORWARD_AXIS_2D.rotation_to(&start_vel.to_axis());
         Some(CarPowerslideTurnBlueprint {
             start_loc,
+            start_rot,
             start_vel,
             steer,
             throttle,
@@ -63,6 +73,7 @@ impl CarPowerslideTurn {
         throttle: f32,
         target_rot_by: f32,
     ) -> Option<CarPowerslideTurnBlueprint> {
+        assert!(start_speed >= 0.0);
         let speed_index = start_speed as usize / 100;
         // let lower_speed = speed_index as f32 * 100.0;
         let lower = TableSet::get(throttle, speed_index);
@@ -92,6 +103,7 @@ impl CarPowerslideTurn {
         let end_vel = lower.vel_2d[index];
         Some(CarPowerslideTurnBlueprint {
             start_loc,
+            start_rot,
             start_vel,
             steer: 1.0,
             throttle,
@@ -348,4 +360,20 @@ lazy_static! {
         *data::powerslide_turn_speed_2200_throttle_1::CAR_VEL_2D,
         *data::powerslide_turn_speed_2299_98_throttle_1::CAR_VEL_2D,
     ];
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn should_handle_slow_sloppy_start() {
+        CarPowerslideTurn::evaluate(
+            Point2::new(0.0, 0.0),
+            CAR_LOCAL_FORWARD_AXIS_2D.rotation_to(&Vector2::new(-1.0, 0.0).to_axis()),
+            Vector2::new(1.0, 0.0),
+            1.0,
+            90.0_f32.to_radians(),
+        );
+    }
 }

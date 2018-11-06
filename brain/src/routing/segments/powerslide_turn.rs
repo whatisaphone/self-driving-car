@@ -1,4 +1,3 @@
-use common::{physics::CAR_LOCAL_FORWARD_AXIS_2D, prelude::*};
 use eeg::{color, Drawable};
 use nalgebra::Vector2;
 use rlbot;
@@ -26,7 +25,7 @@ impl SegmentPlan for PowerslideTurn {
     fn start(&self) -> CarState {
         CarState2D {
             loc: self.blueprint.start_loc,
-            rot: CAR_LOCAL_FORWARD_AXIS_2D.rotation_to(&self.blueprint.start_vel.to_axis()),
+            rot: self.blueprint.start_rot,
             vel: self.blueprint.start_vel,
             boost: self.boost,
         }

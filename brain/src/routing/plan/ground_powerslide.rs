@@ -80,6 +80,7 @@ impl RoutePlanner for GroundSimplePowerslideTurn {
         let rot_by = ctx.start.rot.to_2d().rotation_to(&end_rot).angle();
         let blueprint = CarPowerslideTurn::evaluate(
             ctx.start.loc.to_2d(),
+            ctx.start.rot.to_2d(),
             ctx.start.vel.to_2d(),
             throttle,
             rot_by,
@@ -151,6 +152,7 @@ impl RoutePlanner for GroundPowerslideEssence {
 
             CarPowerslideTurn::evaluate(
                 straight_end.loc.to_2d(),
+                straight_end.rot.to_2d(),
                 straight_end.vel.to_2d(),
                 throttle,
                 rot_by,
@@ -173,6 +175,7 @@ impl RoutePlanner for GroundPowerslideEssence {
 
             CarPowerslideTurn::evaluate(
                 straight_end.loc.to_2d(),
+                straight_end.rot.to_2d(),
                 straight_end.vel.to_2d(),
                 throttle,
                 rot_by,
@@ -187,6 +190,7 @@ impl RoutePlanner for GroundPowerslideEssence {
 
         let blueprint = CarPowerslideTurn::evaluate(
             straight_end.loc.to_2d(),
+            straight_end.rot.to_2d(),
             straight_end.vel.to_2d(),
             throttle,
             rot_by,
