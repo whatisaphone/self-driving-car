@@ -223,7 +223,7 @@ where
         Action::Yield(rlbot::ffi::PlayerInput {
             Throttle: throttle as i32 as f32,
             Steer: steer,
-            Boost: me.Physics.vel().norm() < rl::CAR_ALMOST_MAX_SPEED,
+            Boost: throttle && me.Physics.vel().norm() < rl::CAR_ALMOST_MAX_SPEED,
             ..Default::default()
         })
     }
