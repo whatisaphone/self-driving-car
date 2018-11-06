@@ -155,7 +155,7 @@ impl SegmentRunner for StraightRunner {
 
         // Drive to a point slightly in front of us, so we "hug the line" and get back
         // on course quicker in case of any inaccuracies.
-        let target_loc = self.plan.start.loc + start_to_end.normalize() * (cur_dist + 250.0);
+        let target_loc = self.plan.start.loc + start_to_end.normalize() * (cur_dist + 500.0);
 
         ctx.eeg.draw(Drawable::ghost_car_ground(
             target_loc.coords,
