@@ -102,7 +102,7 @@ impl Behavior for TimeLimit {
         let start = *self.start.get_or_insert(now);
         let elapsed = now - start;
         if elapsed >= self.limit {
-            Action::Return
+            Action::Abort
         } else {
             self.child.execute2(ctx)
         }
