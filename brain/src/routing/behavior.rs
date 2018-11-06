@@ -1,7 +1,7 @@
 use behavior::{Action, Behavior};
 use eeg::{color, Drawable};
 use routing::models::{
-    PlanningContext, ProvisionalPlanExpansion, RoutePlan, RoutePlanError, RoutePlanner,
+    PlanningContext, PlanningDump, ProvisionalPlanExpansion, RoutePlan, RoutePlanner,
     SegmentRunAction, SegmentRunner,
 };
 use strategy::Context;
@@ -40,17 +40,13 @@ impl Behavior for FollowRoute {
             }
         }
 
-        if let Err(error) = self.draw(ctx) {
-            ctx.eeg.log(format!("[FollowRoute] plan error {:?}", error));
-            return Action::Abort;
-        }
-
+        self.draw(ctx);
         self.go(ctx)
     }
 }
 
 impl FollowRoute {
-    fn draw(&mut self, ctx: &mut Context) -> Result<(), RoutePlanError> {
+    fn draw(&mut self, ctx: &mut Context) {
         // This provisional expansion serves two purposes:
         // 1. Make sure each segment thinks it can complete successfully.
         // 2. Predict far enough ahead that we can draw the whole plan to the screen.
@@ -59,19 +55,20 @@ impl FollowRoute {
         for segment in provisional_expansion.iter_starting_with(&*current.plan.segment) {
             segment.draw(ctx);
         }
-        Ok(())
     }
 
     fn advance(&mut self, planner: &RoutePlanner, ctx: &mut Context) -> Result<(), Action> {
         assert!(self.current.is_none());
 
+        let mut log = Vec::new();
         let plan = {
-            let context = PlanningContext {
+            let mut context = PlanningContext {
                 game: &ctx.game,
                 start: ctx.me().into(),
                 ball_prediction: ctx.scenario.ball_prediction(),
             };
-            planner.plan(&context)
+            let mut dump = PlanningDump { log: &mut log };
+            planner.plan(&context, &mut dump)
         };
         let plan = match plan {
             Ok(s) => s,
@@ -79,25 +76,32 @@ impl FollowRoute {
                 Some(b) => {
                     ctx.eeg
                         .log(format!("[FollowRoute] Recoverable planner error {:?}", err));
+                    for line in log {
+                        ctx.eeg.log(format!("[FollowRoute] {}", line));
+                    }
                     return Err(Action::Call(b));
                 }
                 None => {
                     ctx.eeg
                         .log(format!("[FollowRoute] Planner error {:?}", err));
+                    for line in log {
+                        ctx.eeg.log(format!("[FollowRoute] {}", line));
+                    }
                     return Err(Action::Abort);
                 }
             },
         };
         let runner = plan.segment.run();
-        let provisional_expansion =
-            plan.provisional_expand(&ctx.scenario)
-                .map_err(|(planner_name, error)| {
-                    ctx.eeg.log(format!(
-                        "[FollowRoute] Provisional expansion error from {} - {:?}",
-                        planner_name, error,
-                    ));
-                    Action::Abort
-                })?;
+        let provisional_expansion = plan.provisional_expand(&ctx.scenario).map_err(|error| {
+            ctx.eeg.log(format!(
+                "[FollowRoute] Provisional expansion error from {} - {:?}",
+                error.planner_name, error.error,
+            ));
+            for line in log.iter().chain(&error.log) {
+                ctx.eeg.log(format!("[FollowRoute] {}", line));
+            }
+            Action::Abort
+        })?;
 
         self.current = Some(Current {
             plan,

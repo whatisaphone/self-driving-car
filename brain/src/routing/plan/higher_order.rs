@@ -1,4 +1,4 @@
-use routing::models::{PlanningContext, RoutePlan, RoutePlanError, RoutePlanner};
+use routing::models::{PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner};
 
 /// Exhaust `head`, then advance to `next`.
 #[derive(Clone)]
@@ -17,7 +17,11 @@ impl RoutePlanner for StaticPlanner {
         stringify!(StaticPlanner)
     }
 
-    fn plan(&self, _ctx: &PlanningContext) -> Result<RoutePlan, RoutePlanError> {
+    fn plan(
+        &self,
+        _ctx: &PlanningContext,
+        _dump: &mut PlanningDump,
+    ) -> Result<RoutePlan, RoutePlanError> {
         Ok(self.plan.clone())
     }
 }
@@ -34,8 +38,13 @@ impl RoutePlanner for ChainedPlanner {
         stringify!(ChainedPlanner)
     }
 
-    fn plan(&self, ctx: &PlanningContext) -> Result<RoutePlan, RoutePlanError> {
-        let plan = self.head.plan(ctx)?;
+    fn plan(
+        &self,
+        ctx: &PlanningContext,
+        dump: &mut PlanningDump,
+    ) -> Result<RoutePlan, RoutePlanError> {
+        dump.log_start(self, &ctx.start);
+        let plan = self.head.plan(ctx, dump)?;
         Ok(Self::join_planner(plan, self.next.clone()))
     }
 }

@@ -2,7 +2,7 @@ use chip;
 use common::{prelude::*, rl};
 use nalgebra::Point2;
 use routing::{
-    models::{CarState, PlanningContext, RoutePlan, RoutePlanError, RoutePlanner},
+    models::{CarState, PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner},
     plan::{ground_powerslide::GroundSimplePowerslideTurn, higher_order::ChainedPlanner},
     recover::{IsSkidding, NotOnFlatGround},
     segments::{NullSegment, SimpleArc, Turn},
@@ -22,7 +22,14 @@ impl RoutePlanner for TurnPlanner {
         stringify!(TurnPlanner)
     }
 
-    fn plan(&self, ctx: &PlanningContext) -> Result<RoutePlan, RoutePlanError> {
+    fn plan(
+        &self,
+        ctx: &PlanningContext,
+        dump: &mut PlanningDump,
+    ) -> Result<RoutePlan, RoutePlanError> {
+        dump.log_start(self, &ctx.start);
+        dump.log_pretty(self, "target_face", self.target_face);
+
         let powerslide_cutoff = linear_interpolate(
             &[0.0, rl::CAR_NORMAL_SPEED],
             &[PI * 0.25, PI * 0.50],
@@ -37,9 +44,9 @@ impl RoutePlanner for TurnPlanner {
 
         if turn.angle().abs() > powerslide_cutoff {
             let turn = GroundSimplePowerslideTurn::new(self.target_face);
-            ChainedPlanner::new(Box::new(turn), self.next.clone()).plan(ctx)
+            ChainedPlanner::new(Box::new(turn), self.next.clone()).plan(ctx, dump)
         } else {
-            SimpleTurnPlanner::new(self.target_face, self.next.clone()).plan(ctx)
+            SimpleTurnPlanner::new(self.target_face, self.next.clone()).plan(ctx, dump)
         }
     }
 }
@@ -55,7 +62,13 @@ impl RoutePlanner for SimpleTurnPlanner {
         stringify!(SimpleTurnPlanner)
     }
 
-    fn plan(&self, ctx: &PlanningContext) -> Result<RoutePlan, RoutePlanError> {
+    fn plan(
+        &self,
+        ctx: &PlanningContext,
+        dump: &mut PlanningDump,
+    ) -> Result<RoutePlan, RoutePlanError> {
+        dump.log_start(self, &ctx.start);
+
         let turn_radius = 1.0 / chip::max_curvature(ctx.start.vel.norm().max(500.0));
         let turn = match calculate_circle_turn(&ctx.start, turn_radius, self.target_loc)? {
             Some(x) => x,
@@ -93,7 +106,13 @@ impl RoutePlanner for ArcTowards {
         stringify!(ArcTowards)
     }
 
-    fn plan(&self, ctx: &PlanningContext) -> Result<RoutePlan, RoutePlanError> {
+    fn plan(
+        &self,
+        ctx: &PlanningContext,
+        dump: &mut PlanningDump,
+    ) -> Result<RoutePlan, RoutePlanError> {
+        dump.log_start(self, &ctx.start);
+
         guard!(
             ctx.start,
             NotOnFlatGround,

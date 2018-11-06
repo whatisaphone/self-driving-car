@@ -1,7 +1,7 @@
 use common::{physics::CAR_LOCAL_FORWARD_AXIS_2D, prelude::*};
 use nalgebra::Point2;
 use routing::{
-    models::{PlanningContext, RoutePlan, RoutePlanError, RoutePlanner},
+    models::{PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner},
     plan::{
         ground_straight::GroundStraightPlanner,
         ground_turn::TurnPlanner,
@@ -24,7 +24,13 @@ impl RoutePlanner for GroundPowerslideTurn {
         stringify!(GroundPowerslideTurn)
     }
 
-    fn plan(&self, ctx: &PlanningContext) -> Result<RoutePlan, RoutePlanError> {
+    fn plan(
+        &self,
+        ctx: &PlanningContext,
+        dump: &mut PlanningDump,
+    ) -> Result<RoutePlan, RoutePlanError> {
+        dump.log_start(self, &ctx.start);
+
         TurnPlanner::new(
             self.target_loc,
             Some(Box::new(GroundPowerslideEssence::new(
@@ -33,7 +39,7 @@ impl RoutePlanner for GroundPowerslideTurn {
                 self.next.clone(),
             ))),
         )
-        .plan(ctx)
+        .plan(ctx, dump)
     }
 }
 
@@ -47,7 +53,13 @@ impl RoutePlanner for GroundSimplePowerslideTurn {
         stringify!(GroundSimplePowerslideTurn)
     }
 
-    fn plan(&self, ctx: &PlanningContext) -> Result<RoutePlan, RoutePlanError> {
+    fn plan(
+        &self,
+        ctx: &PlanningContext,
+        dump: &mut PlanningDump,
+    ) -> Result<RoutePlan, RoutePlanError> {
+        dump.log_start(self, &ctx.start);
+
         guard!(
             ctx.start,
             NotOnFlatGround,
@@ -96,7 +108,13 @@ impl RoutePlanner for GroundPowerslideEssence {
         stringify!(GroundPowerslideEssence)
     }
 
-    fn plan(&self, ctx: &PlanningContext) -> Result<RoutePlan, RoutePlanError> {
+    fn plan(
+        &self,
+        ctx: &PlanningContext,
+        dump: &mut PlanningDump,
+    ) -> Result<RoutePlan, RoutePlanError> {
+        dump.log_start(self, &ctx.start);
+
         guard!(
             ctx.start,
             NotOnFlatGround,
@@ -128,7 +146,7 @@ impl RoutePlanner for GroundPowerslideEssence {
             let end_chop = 1.0; // Leave some time for the actual slide.
             let straight =
                 GroundStraightPlanner::new(self.target_loc, asap, end_chop, StraightMode::Asap)
-                    .plan(ctx)?;
+                    .plan(ctx, dump)?;
             let straight_end = straight.segment.end();
 
             CarPowerslideTurn::evaluate(
@@ -150,7 +168,7 @@ impl RoutePlanner for GroundPowerslideEssence {
                 ctx.start.loc.to_2d() + start_to_target.normalize() * straight_dist;
             let straight =
                 GroundStraightPlanner::new(straight_end_loc, asap, 0.0, StraightMode::Asap)
-                    .plan(ctx)?;
+                    .plan(ctx, dump)?;
             let straight_end = straight.segment.end();
 
             CarPowerslideTurn::evaluate(
@@ -164,7 +182,7 @@ impl RoutePlanner for GroundPowerslideEssence {
 
         let straight_end_loc = self.target_loc - (blueprint.end_loc - blueprint.start_loc);
         let straight = GroundStraightPlanner::new(straight_end_loc, asap, 0.0, StraightMode::Asap)
-            .plan(ctx)?;
+            .plan(ctx, dump)?;
         let straight_end = straight.segment.end();
 
         let blueprint = CarPowerslideTurn::evaluate(
@@ -183,6 +201,6 @@ impl RoutePlanner for GroundPowerslideEssence {
                 next: None,
             }))),
         )
-        .plan(ctx)
+        .plan(ctx, dump)
     }
 }

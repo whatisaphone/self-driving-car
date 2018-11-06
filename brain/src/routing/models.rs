@@ -1,4 +1,4 @@
-use common::{physics, prelude::*};
+use common::{physics, prelude::*, PrettyPrint};
 use nalgebra::{Point2, Point3, Unit, UnitComplex, UnitQuaternion, Vector2, Vector3};
 use plan::ball::BallTrajectory;
 use rlbot;
@@ -62,7 +62,11 @@ impl CarState2D {
 pub trait RoutePlanner: RoutePlannerCloneBox + Send {
     fn name(&self) -> &'static str;
 
-    fn plan(&self, ctx: &PlanningContext) -> Result<RoutePlan, RoutePlanError>;
+    fn plan(
+        &self,
+        ctx: &PlanningContext,
+        _dump: &mut PlanningDump,
+    ) -> Result<RoutePlan, RoutePlanError>;
 }
 
 pub trait RoutePlannerCloneBox {
@@ -88,6 +92,54 @@ pub struct PlanningContext<'a> {
     pub game: &'a Game<'a>,
     pub start: CarState,
     pub ball_prediction: &'a BallTrajectory,
+}
+
+pub struct PlanningDump<'a> {
+    pub log: &'a mut Vec<String>,
+}
+
+impl<'a> PlanningDump<'a> {
+    pub fn log(&mut self, planner: &RoutePlanner, message: impl AsRef<str>) {
+        self.log
+            .push(format!("[{}] {}", planner.name(), message.as_ref()));
+    }
+
+    pub fn log_pretty(&mut self, planner: &RoutePlanner, name: &str, value: impl PrettyPrint) {
+        self.log.push(format!(
+            "[{}] {} = {}",
+            planner.name(),
+            name,
+            value.pretty(),
+        ));
+    }
+
+    pub fn log_start(&mut self, planner: &RoutePlanner, state: &CarState) {
+        self.log(planner, format!("start loc = {}", state.loc.pretty()));
+        self.log(planner, format!("start rot = {}", state.rot.pretty()));
+        self.log(planner, format!("start vel = {}", state.vel.pretty()));
+    }
+
+    pub fn log_plan(&mut self, planner: &RoutePlanner, plan: &RoutePlan) {
+        let name = plan.segment.name();
+        let end = plan.segment.end();
+        let duration = plan.segment.duration();
+        self.log(
+            planner,
+            format!("[{}] end loc = {}", name, end.loc.pretty()),
+        );
+        self.log(
+            planner,
+            format!("[{}] end rot = {}", name, end.rot.pretty()),
+        );
+        self.log(
+            planner,
+            format!("[{}] end vel = {}", name, end.vel.pretty()),
+        );
+        self.log(
+            planner,
+            format!("[{}] duration = {:.2} sec", name, duration),
+        );
+    }
 }
 
 pub struct ProvisionalPlanExpansion {
@@ -135,15 +187,29 @@ impl RoutePlan {
     pub fn provisional_expand(
         &self,
         scenario: &Scenario,
-    ) -> Result<ProvisionalPlanExpansion, (&'static str, RoutePlanError)> {
+    ) -> Result<ProvisionalPlanExpansion, ProvisionalExpandError> {
         let mut tail = Vec::new();
         if let Some(ref planner) = self.next {
-            let context = PlanningContext {
-                game: &scenario.game,
-                start: self.segment.end(),
-                ball_prediction: scenario.ball_prediction(),
+            let mut log = Vec::new();
+            let expand_result = {
+                let context = PlanningContext {
+                    game: &scenario.game,
+                    start: self.segment.end(),
+                    ball_prediction: scenario.ball_prediction(),
+                };
+                let mut dump = PlanningDump { log: &mut log };
+                Self::expand_round(&**planner, &context, &mut dump, |s| tail.push(s))
             };
-            Self::expand_round(&**planner, &context, |s| tail.push(s))?;
+            match expand_result {
+                Ok(()) => {}
+                Err((planner_name, error)) => {
+                    return Err(ProvisionalExpandError {
+                        planner_name,
+                        error,
+                        log,
+                    })
+                }
+            }
         }
         Ok(ProvisionalPlanExpansion { tail })
     }
@@ -151,24 +217,35 @@ impl RoutePlan {
     fn expand_round(
         planner: &RoutePlanner,
         ctx: &PlanningContext,
+        dump: &mut PlanningDump,
         mut sink: impl FnMut(Box<SegmentPlan>),
     ) -> Result<(), (&'static str, RoutePlanError)> {
-        let step = planner.plan(ctx).map_err(|e| (planner.name(), e))?;
-        let state = step.segment.end();
-        let duration = step.segment.duration();
-        sink(step.segment);
-        match step.next {
+        dump.log.push(format!("-{}----------", planner.name()));
+        let plan = planner.plan(ctx, dump).map_err(|e| (planner.name(), e))?;
+        dump.log_plan(planner, &plan);
+
+        let state = plan.segment.end();
+        let duration = plan.segment.duration();
+        sink(plan.segment);
+
+        match plan.next {
             Some(planner) => {
-                let ctx = PlanningContext {
+                let mut ctx = PlanningContext {
                     game: ctx.game,
                     start: state,
                     ball_prediction: &ctx.ball_prediction.hacky_expensive_slice(duration),
                 };
-                Self::expand_round(&*planner, &ctx, sink)
+                Self::expand_round(&*planner, &ctx, dump, sink)
             }
             None => Ok(()),
         }
     }
+}
+
+pub struct ProvisionalExpandError<'a> {
+    pub planner_name: &'a str,
+    pub error: RoutePlanError,
+    pub log: Vec<String>,
 }
 
 pub trait SegmentPlan: SegmentPlanCloneBox + Send {

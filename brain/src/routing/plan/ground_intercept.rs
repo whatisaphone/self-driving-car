@@ -2,7 +2,7 @@ use common::prelude::*;
 use maneuvers::GroundedHit;
 use predict::naive_ground_intercept;
 use routing::{
-    models::{PlanningContext, RoutePlan, RoutePlanError, RoutePlanner},
+    models::{PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner},
     plan::{
         ground_straight::GroundStraightPlanner, ground_turn::TurnPlanner,
         higher_order::ChainedPlanner, pathing,
@@ -19,7 +19,13 @@ impl RoutePlanner for GroundIntercept {
         stringify!(GroundIntercept)
     }
 
-    fn plan(&self, ctx: &PlanningContext) -> Result<RoutePlan, RoutePlanError> {
+    fn plan(
+        &self,
+        ctx: &PlanningContext,
+        dump: &mut PlanningDump,
+    ) -> Result<RoutePlan, RoutePlanError> {
+        dump.log_start(self, &ctx.start);
+
         guard!(
             ctx.start,
             NotOnFlatGround,
@@ -36,6 +42,8 @@ impl RoutePlanner for GroundIntercept {
         )
         .ok_or_else(|| RoutePlanError::UnknownIntercept)?;
 
+        dump.log_pretty(self, "guess ball loc", guess.ball_loc.to_2d());
+
         guard!(
             ctx.start,
             IsSkidding,
@@ -44,11 +52,13 @@ impl RoutePlanner for GroundIntercept {
             },
         );
 
-        let turn = TurnPlanner::new(guess.ball_loc.to_2d(), None).plan(ctx)?;
+        let turn = TurnPlanner::new(guess.ball_loc.to_2d(), None).plan(ctx, dump)?;
+        dump.log_plan(self, &turn);
         let turn = match pathing::avoid_smacking_goal_wall(&turn.segment.end()) {
             None => turn,
-            Some(planner) => {
-                ChainedPlanner::new(planner, Some(Box::new(self.clone()))).plan(ctx)?
+            Some(divert) => {
+                dump.log(self, "diverting due to avoid_smacking_goal_wall");
+                ChainedPlanner::new(divert, Some(Box::new(self.clone()))).plan(ctx, dump)?
             }
         };
         Ok(ChainedPlanner::join_planner(
@@ -66,7 +76,13 @@ impl RoutePlanner for GroundInterceptStraight {
         stringify!(GroundInterceptStraight)
     }
 
-    fn plan(&self, ctx: &PlanningContext) -> Result<RoutePlan, RoutePlanError> {
+    fn plan(
+        &self,
+        ctx: &PlanningContext,
+        dump: &mut PlanningDump,
+    ) -> Result<RoutePlan, RoutePlanError> {
+        dump.log_start(self, &ctx.start);
+
         guard!(
             ctx.start,
             NotOnFlatGround,
@@ -81,6 +97,8 @@ impl RoutePlanner for GroundInterceptStraight {
             |ball| ball.loc.z < GroundedHit::max_ball_z() && ball.vel.z < 25.0,
         )
         .ok_or_else(|| RoutePlanError::UnknownIntercept)?;
+
+        dump.log_pretty(self, "guess.ball_loc", guess.ball_loc.to_2d());
 
         guard!(
             ctx.start,
@@ -97,6 +115,6 @@ impl RoutePlanner for GroundInterceptStraight {
             end_chop,
             StraightMode::Fake,
         )
-        .plan(ctx)
+        .plan(ctx, dump)
     }
 }

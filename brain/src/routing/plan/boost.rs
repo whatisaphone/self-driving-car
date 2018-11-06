@@ -2,7 +2,7 @@ use common::prelude::*;
 use nalgebra::{center, Point2};
 use ordered_float::NotNan;
 use routing::{
-    models::{PlanningContext, RoutePlan, RoutePlanError, RoutePlanner},
+    models::{PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner},
     plan::ground_powerslide::GroundPowerslideTurn,
     recover::{IsSkidding, NotOnFlatGround},
 };
@@ -26,7 +26,13 @@ impl RoutePlanner for GetDollar {
         stringify!(GetDollar)
     }
 
-    fn plan(&self, ctx: &PlanningContext) -> Result<RoutePlan, RoutePlanError> {
+    fn plan(
+        &self,
+        ctx: &PlanningContext,
+        dump: &mut PlanningDump,
+    ) -> Result<RoutePlan, RoutePlanError> {
+        dump.log_start(self, &ctx.start);
+
         guard!(
             ctx.start,
             NotOnFlatGround,
@@ -59,7 +65,7 @@ impl RoutePlanner for GetDollar {
             return Err(RoutePlanError::OtherError("TODO: easier to flip to pad"));
         }
 
-        GroundPowerslideTurn::new(pickup.loc, self.then_face, None).plan(ctx)
+        GroundPowerslideTurn::new(pickup.loc, self.then_face, None).plan(ctx, dump)
     }
 }
 

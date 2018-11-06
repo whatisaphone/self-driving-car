@@ -1,9 +1,10 @@
-use common::{prelude::*, rl};
+use common::{prelude::*, rl, PrettyPrint};
 use nalgebra::Point2;
 use ordered_float::NotNan;
 use routing::{
     models::{
-        CarState, CarState2D, PlanningContext, RoutePlan, RoutePlanError, RoutePlanner, SegmentPlan,
+        CarState, CarState2D, PlanningContext, PlanningDump, RoutePlan, RoutePlanError,
+        RoutePlanner, SegmentPlan,
     },
     recover::{IsSkidding, NotFacingTarget2D, NotOnFlatGround},
     segments::{Chain, ForwardDodge, Straight, StraightMode},
@@ -26,7 +27,14 @@ impl RoutePlanner for GroundStraightPlanner {
         stringify!(GroundStraightPlanner)
     }
 
-    fn plan(&self, ctx: &PlanningContext) -> Result<RoutePlan, RoutePlanError> {
+    fn plan(
+        &self,
+        ctx: &PlanningContext,
+        dump: &mut PlanningDump,
+    ) -> Result<RoutePlan, RoutePlanError> {
+        dump.log_start(self, &ctx.start);
+        dump.log(self, format!("target_loc = {}", self.target_loc.pretty()));
+
         assert!(!self.target_loc.x.is_nan());
         guard!(
             ctx.start,
@@ -47,7 +55,7 @@ impl RoutePlanner for GroundStraightPlanner {
             StraightWithDodge::new(self.target_loc, self.target_time, self.end_chop, self.mode);
 
         let planners = [&simple as &RoutePlanner, &with_dodge];
-        let plans = planners.iter().map(|p| p.plan(ctx));
+        let plans = planners.iter().map(|p| p.plan(ctx, dump));
         let plans = at_least_one_ok(plans)?;
         Ok(fastest(plans.into_iter()))
     }
@@ -91,7 +99,11 @@ impl RoutePlanner for StraightSimple {
         stringify!(StraightSimple)
     }
 
-    fn plan(&self, ctx: &PlanningContext) -> Result<RoutePlan, RoutePlanError> {
+    fn plan(
+        &self,
+        ctx: &PlanningContext,
+        _dump: &mut PlanningDump,
+    ) -> Result<RoutePlan, RoutePlanError> {
         guard!(
             ctx.start,
             NotOnFlatGround,
@@ -145,7 +157,11 @@ impl RoutePlanner for StraightWithDodge {
         stringify!(StraightWithDodge)
     }
 
-    fn plan(&self, ctx: &PlanningContext) -> Result<RoutePlan, RoutePlanError> {
+    fn plan(
+        &self,
+        ctx: &PlanningContext,
+        _dump: &mut PlanningDump,
+    ) -> Result<RoutePlan, RoutePlanError> {
         guard!(
             ctx.start,
             NotOnFlatGround,
