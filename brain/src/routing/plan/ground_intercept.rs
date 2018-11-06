@@ -111,7 +111,7 @@ impl RoutePlanner for GroundInterceptStraight {
         let end_chop = 0.5;
         GroundStraightPlanner::new(
             guess.car_loc.to_2d(),
-            guess.time,
+            Some(guess.time),
             end_chop,
             StraightMode::Fake,
         )

@@ -18,7 +18,7 @@ pub fn avoid_smacking_goal_wall(start: &CarState) -> Option<Box<RoutePlanner>> {
             Box::new(TurnPlanner::new(waypoint, None)),
             Box::new(GroundStraightPlanner::new(
                 waypoint,
-                0.0,
+                None,
                 0.0,
                 StraightMode::Asap,
             )),

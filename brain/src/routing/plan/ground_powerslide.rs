@@ -134,8 +134,6 @@ impl RoutePlanner for GroundPowerslideEssence {
             RoutePlanError::MustBeFacingTarget,
         );
 
-        let asap = 0.0; // TODO: teach GroundStraightPlanner how to not care about the exact time of
-                        // arrival.
         let throttle = 1.0;
 
         let end_rot =
@@ -146,7 +144,7 @@ impl RoutePlanner for GroundPowerslideEssence {
         let blueprint = {
             let end_chop = 1.0; // Leave some time for the actual slide.
             let straight =
-                GroundStraightPlanner::new(self.target_loc, asap, end_chop, StraightMode::Asap)
+                GroundStraightPlanner::new(self.target_loc, None, end_chop, StraightMode::Asap)
                     .plan(ctx, dump)?;
             let straight_end = straight.segment.end();
 
@@ -169,7 +167,7 @@ impl RoutePlanner for GroundPowerslideEssence {
             let straight_end_loc =
                 ctx.start.loc.to_2d() + start_to_target.normalize() * straight_dist;
             let straight =
-                GroundStraightPlanner::new(straight_end_loc, asap, 0.0, StraightMode::Asap)
+                GroundStraightPlanner::new(straight_end_loc, None, 0.0, StraightMode::Asap)
                     .plan(ctx, dump)?;
             let straight_end = straight.segment.end();
 
@@ -184,7 +182,7 @@ impl RoutePlanner for GroundPowerslideEssence {
         };
 
         let straight_end_loc = self.target_loc - (blueprint.end_loc - blueprint.start_loc);
-        let straight = GroundStraightPlanner::new(straight_end_loc, asap, 0.0, StraightMode::Asap)
+        let straight = GroundStraightPlanner::new(straight_end_loc, None, 0.0, StraightMode::Asap)
             .plan(ctx, dump)?;
         let straight_end = straight.segment.end();
 

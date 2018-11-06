@@ -14,7 +14,7 @@ use simulate::{Car1D, CarForwardDodge, CarForwardDodge1D};
 #[derive(Clone, new)]
 pub struct GroundStraightPlanner {
     target_loc: Point2<f32>,
-    target_time: f32,
+    target_time: Option<f32>,
     /// How early to return from the SegmentRunner. This can be used to give
     /// control to a subsequent behavior and leave it enough time to jump,
     /// shoot, position itself, etc.
@@ -86,7 +86,7 @@ fn fastest(steps: impl Iterator<Item = RoutePlan>) -> RoutePlan {
 #[derive(Clone, new)]
 struct StraightSimple {
     target_loc: Point2<f32>,
-    target_time: f32,
+    target_time: Option<f32>,
     /// How early to return from the SegmentRunner. This can be used to give
     /// control to a subsequent behavior and leave it enough time to jump,
     /// shoot, position itself, etc.
@@ -144,7 +144,7 @@ impl RoutePlanner for StraightSimple {
 #[derive(Clone, new)]
 struct StraightWithDodge {
     target_loc: Point2<f32>,
-    target_time: f32,
+    target_time: Option<f32>,
     /// How early to return from the SegmentRunner. This can be used to give
     /// control to a subsequent behavior and leave it enough time to jump,
     /// shoot, position itself, etc.
@@ -230,7 +230,7 @@ impl RoutePlanner for StraightWithDodge {
 struct StraightDodgeCalculator {
     start: CarState,
     target_loc: Point2<f32>,
-    target_time: f32,
+    target_time: Option<f32>,
     end_chop: f32,
 }
 
@@ -242,10 +242,17 @@ impl StraightDodgeCalculator {
         let mut car = Car1D::new(self.start.vel.to_2d().norm()).with_boost(self.start.boost);
         let mut result = Vec::new();
 
-        while car.time() < self.target_time {
+        loop {
+            if let Some(target_time) = self.target_time {
+                if car.time() >= target_time {
+                    break;
+                }
+            }
+
             car.multi_step(GRANULARITY, rl::PHYSICS_DT, 1.0, true);
-            if let Some(dodge) = self.evaluate(&car) {
-                result.push(dodge);
+            match self.evaluate(&car) {
+                Some(dodge) => result.push(dodge),
+                None => break,
             }
         }
 
@@ -266,8 +273,10 @@ impl StraightDodgeCalculator {
 
         // Check if we can even complete the dodge by the target time.
         let total_time = approach.time() + dodge.duration() + dodge_end.time();
-        if total_time > self.target_time {
-            return None;
+        if let Some(target_time) = self.target_time {
+            if total_time > target_time {
+                return None;
+            }
         }
 
         // Check that we don't land past the target.
@@ -280,10 +289,12 @@ impl StraightDodgeCalculator {
 
         // Now simulate coasting after the landing. If we pass the target before the
         // target time, dodging made us go too fast.
-        let mut coast = Car1D::new(dodge.end_speed).with_boost(approach.boost());
-        coast.multi_step(self.target_time - total_time, rl::PHYSICS_DT, 0.0, false);
-        if total_dist + coast.distance_traveled() > target_traveled {
-            return None;
+        if let Some(target_time) = self.target_time {
+            let mut coast = Car1D::new(dodge.end_speed).with_boost(approach.boost());
+            coast.multi_step(target_time - total_time, rl::PHYSICS_DT, 0.0, false);
+            if total_dist + coast.distance_traveled() > target_traveled {
+                return None;
+            }
         }
 
         // To calculate the "best" dodge, they all need to be compared on equal terms.
