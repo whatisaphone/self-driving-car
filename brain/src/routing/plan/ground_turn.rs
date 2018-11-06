@@ -3,7 +3,7 @@ use common::{prelude::*, rl};
 use nalgebra::Point2;
 use routing::{
     models::{CarState, PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner},
-    plan::{ground_powerslide::GroundSimplePowerslideTurn, higher_order::ChainedPlanner},
+    plan::{ground_powerslide::GroundSimplePowerslideTurn, higher_order::ChainedPlanner, pathing},
     recover::{IsSkidding, NotOnFlatGround},
     segments::{NullSegment, SimpleArc, Turn},
 };
@@ -20,6 +20,40 @@ pub struct TurnPlanner {
 impl RoutePlanner for TurnPlanner {
     fn name(&self) -> &'static str {
         stringify!(TurnPlanner)
+    }
+
+    fn plan(
+        &self,
+        ctx: &PlanningContext,
+        dump: &mut PlanningDump,
+    ) -> Result<RoutePlan, RoutePlanError> {
+        dump.log_start(self, &ctx.start);
+        dump.log_pretty(self, "target_face", self.target_face);
+
+        let pathing_unaware_planner = PathingUnawareTurnPlanner::new(self.target_face, None);
+        let turn = pathing_unaware_planner.plan(ctx, dump)?;
+        dump.log_plan(self, &turn);
+        let plan = match pathing::avoid_plowing_into_goal_wall(&turn.segment.end()) {
+            None => turn,
+            Some(divert) => {
+                dump.log(self, "diverting due to avoid_plowing_into_goal_wall");
+                ChainedPlanner::new(divert, Some(Box::new(pathing_unaware_planner)))
+                    .plan(ctx, dump)?
+            }
+        };
+        Ok(ChainedPlanner::join_planner(plan, self.next.clone()))
+    }
+}
+
+#[derive(Clone, new)]
+struct PathingUnawareTurnPlanner {
+    target_face: Point2<f32>,
+    next: Option<Box<RoutePlanner>>,
+}
+
+impl RoutePlanner for PathingUnawareTurnPlanner {
+    fn name(&self) -> &'static str {
+        stringify!(PathingUnawareTurnPlanner)
     }
 
     fn plan(

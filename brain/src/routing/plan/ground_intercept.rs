@@ -5,7 +5,7 @@ use routing::{
     models::{PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner},
     plan::{
         ground_straight::GroundStraightPlanner, ground_turn::TurnPlanner,
-        higher_order::ChainedPlanner, pathing,
+        higher_order::ChainedPlanner,
     },
     recover::{IsSkidding, NotOnFlatGround},
     segments::StraightMode,
@@ -53,14 +53,6 @@ impl RoutePlanner for GroundIntercept {
         );
 
         let turn = TurnPlanner::new(guess.ball_loc.to_2d(), None).plan(ctx, dump)?;
-        dump.log_plan(self, &turn);
-        let turn = match pathing::avoid_smacking_goal_wall(&turn.segment.end()) {
-            None => turn,
-            Some(divert) => {
-                dump.log(self, "diverting due to avoid_smacking_goal_wall");
-                ChainedPlanner::new(divert, Some(Box::new(self.clone()))).plan(ctx, dump)?
-            }
-        };
         Ok(ChainedPlanner::join_planner(
             turn,
             Some(Box::new(GroundInterceptStraight::new())),
