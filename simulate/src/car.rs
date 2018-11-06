@@ -1,6 +1,6 @@
 use car1d::Car1D;
-use common::prelude::*;
-use nalgebra::{Point3, UnitQuaternion, Vector3};
+use common::{physics, prelude::*};
+use nalgebra::{Point3, Unit, UnitQuaternion, Vector2, Vector3};
 use rlbot;
 
 pub struct Car {
@@ -42,12 +42,12 @@ impl Car {
         self.loc
     }
 
-    pub fn vel(&self) -> Vector3<f32> {
-        self.vel
-    }
-
     pub fn rot(&self) -> UnitQuaternion<f32> {
         self.rot
+    }
+
+    pub fn vel(&self) -> Vector3<f32> {
+        self.vel
     }
 
     pub fn step_throttle_boost(
@@ -70,14 +70,19 @@ impl Car {
         let mut car1d = Car1D::new(self.vel.norm()).with_boost(self.boost);
         car1d.step(dt, throttle, boost);
 
-        self.loc += self.forward() * car1d.distance_traveled();
-        self.vel = self.forward() * car1d.speed();
+        self.loc += self.forward().unwrap() * car1d.distance_traveled();
+        self.vel = self.forward().unwrap() * car1d.speed();
         self.boost = car1d.boost();
         Ok(())
     }
 
     /// A unit vector in the forward direction.
-    pub fn forward(&self) -> Vector3<f32> {
-        self.rot * Vector3::x()
+    pub fn forward(&self) -> Unit<Vector3<f32>> {
+        physics::car_forward_axis(self.rot)
+    }
+
+    /// A unit vector in the forward direction in 2D.
+    pub fn forward_axis_2d(&self) -> Unit<Vector2<f32>> {
+        physics::car_forward_axis_2d(self.rot.to_2d())
     }
 }
