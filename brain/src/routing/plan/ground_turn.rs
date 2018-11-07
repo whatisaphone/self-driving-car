@@ -64,24 +64,31 @@ impl RoutePlanner for PathingUnawareTurnPlanner {
         dump.log_start(self, &ctx.start);
         dump.log_pretty(self, "target_face", self.target_face);
 
-        let powerslide_cutoff = linear_interpolate(
-            &[0.0, rl::CAR_NORMAL_SPEED],
-            &[PI * 0.25, PI * 0.50],
-            ctx.start.vel.to_2d().norm(),
-        );
-
-        let munged_start_loc = ctx.start.loc.to_2d() + ctx.start.vel.to_2d() * 0.5;
-        let turn = ctx
-            .start
-            .forward_axis_2d()
-            .rotation_to(&(self.target_face - munged_start_loc).to_axis());
-
-        if turn.angle().abs() > powerslide_cutoff {
+        if self.should_powerslide(&ctx.start) {
             let turn = GroundSimplePowerslideTurn::new(self.target_face);
             ChainedPlanner::new(Box::new(turn), self.next.clone()).plan(ctx, dump)
         } else {
             SimpleTurnPlanner::new(self.target_face, self.next.clone()).plan(ctx, dump)
         }
+    }
+}
+
+impl PathingUnawareTurnPlanner {
+    fn should_powerslide(&self, start: &CarState) -> bool {
+        if start.vel.to_2d().norm() < 1000.0 {
+            return false;
+        }
+
+        let munged_start_loc = start.loc.to_2d() + start.vel.to_2d() * 0.25;
+        let turn = start
+            .forward_axis_2d()
+            .rotation_to(&(self.target_face - munged_start_loc).to_axis());
+        let angle_cutoff = linear_interpolate(
+            &[0.0, rl::CAR_NORMAL_SPEED],
+            &[PI * 0.25, PI * 0.50],
+            start.vel.to_2d().norm(),
+        );
+        turn.angle().abs() > angle_cutoff
     }
 }
 

@@ -1,5 +1,5 @@
 use common::prelude::*;
-use nalgebra::{center, Point2};
+use nalgebra::Point2;
 use ordered_float::NotNan;
 use routing::{
     models::{PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner},
@@ -11,13 +11,12 @@ use strategy::BoostPickup;
 
 #[derive(Clone)]
 pub struct GetDollar {
-    then_face: Point2<f32>,
+    destination_hint: Point2<f32>,
 }
 
 impl GetDollar {
-    #[allow(dead_code)]
-    pub fn then_face(then_face: Point2<f32>) -> Self {
-        Self { then_face }
+    pub fn new(destination_hint: Point2<f32>) -> Self {
+        Self { destination_hint }
     }
 }
 
@@ -39,7 +38,7 @@ impl RoutePlanner for GetDollar {
             RoutePlanError::MustBeOnFlatGround,
         );
 
-        let pickup = match self.chooose_pickup(ctx) {
+        let pickup = match Self::chooose_pickup(ctx, self.destination_hint) {
             Some(p) => p,
             None => return Err(RoutePlanError::OtherError("no pickup found")),
         };
@@ -65,23 +64,39 @@ impl RoutePlanner for GetDollar {
             return Err(RoutePlanError::OtherError("TODO: easier to flip to pad"));
         }
 
-        GroundPowerslideTurn::new(pickup.loc, self.then_face, None).plan(ctx, dump)
+        GroundPowerslideTurn::new(pickup.loc, self.destination_hint, None).plan(ctx, dump)
     }
 }
 
 impl GetDollar {
-    fn chooose_pickup<'a>(&self, ctx: &'a PlanningContext) -> Option<&'a BoostPickup> {
+    fn chooose_pickup<'a>(
+        ctx: &'a PlanningContext,
+        destination_hint: Point2<f32>,
+    ) -> Option<&'a BoostPickup> {
+        // Draw a line segment, and try to find a pickup along that segment.
+        let line_start_loc = ctx.start.loc.to_2d();
+        let line_end_loc = destination_hint;
+        let line_span = line_end_loc - line_start_loc;
+
         ctx.game.boost_dollars().iter().min_by_key(|pickup| {
-            let car_adjusted_loc = ctx.start.loc.to_2d()
-                + ctx.start.forward_axis_2d().as_ref() * 500.0
-                + ctx.start.vel.to_2d() * 0.5;
-
-            let ball = ctx.ball_prediction.start();
-            let ball_adjusted_loc = ball.loc.to_2d() + ball.vel.to_2d() * 2.0;
-
-            let eval_loc = center(&car_adjusted_loc, &ball_adjusted_loc);
-            let score = (pickup.loc - eval_loc).norm();
-            NotNan::new(score).unwrap()
+            let along_dist = (pickup.loc - line_start_loc).dot(&line_span.to_axis());
+            let ortho_dist = (pickup.loc - line_start_loc).dot(&line_span.ortho().to_axis());
+            // Assume an "ideal" position 75% of the way down the line.
+            let along_score = line_span.norm() * 0.75 - along_dist;
+            let result = BoostScore {
+                invalid: along_dist < -250.0 || along_dist >= line_span.norm() + 250.0,
+                score: NotNan::new(along_score.powi(2) + (ortho_dist * 2.0).powi(2)).unwrap(),
+            };
+            eprintln!("pickup.loc = {:?}", pickup.loc);
+            eprintln!("result.invalid = {:?}", result.invalid);
+            eprintln!("result.score = {:?}", result.score);
         })
     }
+}
+
+/// Lower is better.
+#[derive(Ord, PartialOrd, Eq, PartialEq)]
+struct BoostScore {
+    invalid: bool,
+    score: NotNan<f32>,
 }

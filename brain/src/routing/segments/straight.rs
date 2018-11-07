@@ -42,9 +42,10 @@ impl Straight {
         let mut sim = Car1D::new(start.vel.norm()).with_boost(start.boost);
         // Keep track of the simulated values so we can chop off an exact amount of time
         // once we reach the target distance.
-        let mut sim_loc = ArrayVec::<[_; 1024]>::new();
-        let mut sim_speed = ArrayVec::<[_; 1024]>::new();
-        let mut sim_boost = ArrayVec::<[_; 1024]>::new();
+        const BUFFER_SIZE: usize = 1 << 12;
+        let mut sim_loc = ArrayVec::<[_; BUFFER_SIZE]>::new();
+        let mut sim_speed = ArrayVec::<[_; BUFFER_SIZE]>::new();
+        let mut sim_boost = ArrayVec::<[_; BUFFER_SIZE]>::new();
         loop {
             sim_loc.push(sim.distance_traveled());
             sim_speed.push(sim.speed());

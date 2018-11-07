@@ -1,3 +1,5 @@
+use common::rl;
+
 const JUMP_TIME: f32 = 2.0 / 120.0; // One frame, and another for input lag
 const WAIT_TIME: f32 = 0.05;
 const LANDING_TIME: f32 = 1.333333;
@@ -8,7 +10,7 @@ pub struct CarForwardDodge;
 impl CarForwardDodge {
     pub fn calc_1d(start_speed: f32) -> CarForwardDodge1D {
         let dodge_loc = start_speed * (JUMP_TIME + WAIT_TIME);
-        let dodge_vel = start_speed + DODGE_IMPULSE;
+        let dodge_vel = (start_speed + DODGE_IMPULSE).min(rl::CAR_MAX_SPEED);
         let land_loc = dodge_loc + dodge_vel * LANDING_TIME;
 
         CarForwardDodge1D {

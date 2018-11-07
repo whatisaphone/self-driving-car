@@ -8,6 +8,8 @@ use rlbot;
 pub trait ExtendVector2 {
     /// Creates a unit vector in the direction of the given `angle`.
     fn unit(angle: f32) -> Self;
+    /// Rotate this vector 90° to the right.
+    fn ortho(&self) -> Self;
     /// Shorthand for `Unit::new_normalize`.
     fn to_axis(&self) -> Unit<Self>
     where
@@ -22,6 +24,10 @@ impl ExtendVector2 for Vector2<f32> {
     fn unit(angle: f32) -> Self {
         let (sin, cos) = angle.sin_cos();
         Vector2::new(cos, sin)
+    }
+
+    fn ortho(&self) -> Self {
+        Vector2::new(self.y, -self.x)
     }
 
     fn to_axis(&self) -> Unit<Self> {
