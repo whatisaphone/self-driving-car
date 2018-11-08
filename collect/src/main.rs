@@ -3,17 +3,15 @@
 extern crate common;
 extern crate csv;
 extern crate flatbuffers;
-extern crate itertools;
 extern crate nalgebra;
 extern crate rlbot;
 
 use collector2::Collector;
 use common::rl;
 use game_state::DesiredGameState;
-use itertools::Itertools;
 use rlbot_ext::get_packet_and_inject_rigid_body_tick;
 use scenarios2::{Scenario, ScenarioStepResult};
-use std::{error::Error, fs::File, iter, thread::sleep, time::Duration};
+use std::{error::Error, fs::File, thread::sleep, time::Duration};
 
 mod collector2;
 mod game_state;
@@ -30,14 +28,7 @@ pub fn main() -> Result<(), Box<Error>> {
     start_match(&rlbot)?;
     wait_for_match_start(&rlbot)?;
 
-    let speeds = (0..=22)
-        .map(|x| x as f32 * 100.0)
-        .chain(iter::once(rl::CAR_MAX_SPEED));
-    let throttles = vec![0.0, 1.0].into_iter();
-
-    for (speed, throttle) in speeds.cartesian_product(throttles) {
-        run_scenario(&rlbot, scenarios2::PowerslideTurn::new(speed, throttle))?;
-    }
+    run_scenario(&rlbot, scenarios2::Turn::new(rl::CAR_NORMAL_SPEED))?;
 
     Ok(())
 }

@@ -56,6 +56,66 @@ fn game_state_default() -> DesiredGameState {
     }
 }
 
+pub struct Turn {
+    start_speed: f32,
+    start_time: Option<f32>,
+}
+
+impl Turn {
+    pub fn new(start_speed: f32) -> Self {
+        Self {
+            start_speed,
+            start_time: None,
+        }
+    }
+}
+
+impl Scenario for Turn {
+    fn name(&self) -> String {
+        format!("turn_{}", self.start_speed)
+    }
+
+    fn step(
+        &mut self,
+        rlbot: &rlbot::RLBot,
+        time: f32,
+        packet: &rlbot::ffi::LiveDataPacket,
+    ) -> Result<ScenarioStepResult, Box<Error>> {
+        if self.start_time.is_none() {
+            let speed = packet.GameCars[0].Physics.vel().norm();
+            if speed >= self.start_speed {
+                self.start_time = Some(time);
+            }
+        }
+
+        let throttle = (self.start_speed / 1000.0).min(1.0);
+        let boost = self.start_speed > rl::CAR_NORMAL_SPEED;
+
+        match self.start_time {
+            None => {
+                let input = rlbot::ffi::PlayerInput {
+                    Throttle: throttle,
+                    Boost: boost,
+                    ..Default::default()
+                };
+                rlbot.update_player_input(input, 0)?;
+                Ok(ScenarioStepResult::Ignore)
+            }
+            Some(start_time) if time < start_time + 3.0 => {
+                let input = rlbot::ffi::PlayerInput {
+                    Throttle: throttle,
+                    Steer: 1.0,
+                    Boost: boost,
+                    ..Default::default()
+                };
+                rlbot.update_player_input(input, 0)?;
+                Ok(ScenarioStepResult::Write)
+            }
+            _ => Ok(ScenarioStepResult::Finish),
+        }
+    }
+}
+
 pub struct PowerslideTurn {
     start_speed: f32,
     handbrake_throttle: f32,
