@@ -4,7 +4,7 @@ use maneuvers::{FiftyFifty, GetToFlatGround};
 use routing::{behavior::FollowRoute, plan::GetDollar};
 use std::f32::consts::PI;
 use strategy::{scenario::Scenario, Context};
-use utils::{my_goal_center_2d, ExtendF32, ExtendPoint3, ExtendVector2, ExtendVector3, Wall};
+use utils::{geometry::ExtendF32, my_goal_center_2d, Wall};
 
 pub fn baseline(ctx: &mut Context) -> Box<Behavior> {
     if !GetToFlatGround::on_flat_ground(ctx.packet) {

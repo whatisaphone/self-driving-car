@@ -1,7 +1,5 @@
-use nalgebra::{Point2, Point3, Real, UnitComplex};
+use nalgebra::Point2;
 use std::f32::consts::PI;
-
-pub use common::ext::{ExtendPoint3, ExtendUnitComplex, ExtendVector2, ExtendVector3};
 
 pub trait ExtendF32 {
     /// Normalize an angle to between -PI and PI.
@@ -18,22 +16,6 @@ impl ExtendF32 for f32 {
         } else {
             result
         }
-    }
-}
-
-pub trait ExtendPoint2<N: Real> {
-    fn angle_to(&self, other: Self) -> UnitComplex<N>;
-    fn to_3d(&self, z: N) -> Point3<N>;
-}
-
-impl<N: Real> ExtendPoint2<N> for Point2<N> {
-    fn angle_to(&self, other: Self) -> UnitComplex<N> {
-        let diff = other - self;
-        UnitComplex::new(N::atan2(diff.y, diff.x))
-    }
-
-    fn to_3d(&self, z: N) -> Point3<N> {
-        Point3::new(self.x, self.y, z)
     }
 }
 

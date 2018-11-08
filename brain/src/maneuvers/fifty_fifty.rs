@@ -7,7 +7,7 @@ use predict::intercept::estimate_intercept_car_ball;
 use rules::SameBallTrajectory;
 use std::f32::consts::PI;
 use strategy::Context;
-use utils::{my_goal_center, ExtendF32, ExtendVector2, ExtendVector3};
+use utils::{geometry::ExtendF32, my_goal_center};
 
 pub struct FiftyFifty {
     same_ball_trajectory: SameBallTrajectory,

@@ -7,7 +7,7 @@ use nalgebra::{Vector2, Vector3};
 use predict::naive_ground_intercept;
 use std::f32::consts::PI;
 use strategy::Context;
-use utils::{enemy_goal_center, ExtendF32, ExtendVector3};
+use utils::{enemy_goal_center, geometry::ExtendF32};
 
 pub struct GroundShot {
     min_distance: Option<f32>,

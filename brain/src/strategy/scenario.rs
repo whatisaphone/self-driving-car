@@ -7,7 +7,7 @@ use rlbot;
 use simulate::{linear_interpolate, Car1D};
 use std::f32::{self, consts::PI};
 use strategy::game::Game;
-use utils::{one_v_one, ExtendPoint3, ExtendVector3, Wall, WallRayCalculator};
+use utils::{one_v_one, Wall, WallRayCalculator};
 
 pub struct Scenario<'a> {
     packet: &'a rlbot::ffi::LiveDataPacket,

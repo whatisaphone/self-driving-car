@@ -1,10 +1,11 @@
 use behavior::{Action, Behavior};
+use common::prelude::*;
 use eeg::{color, Drawable, EEG};
 use mechanics::{simple_steer_towards, DriveLocTimeDecelerate};
 use nalgebra::Vector2;
 use predict::estimate_intercept_car_ball_2;
 use rlbot;
-use utils::{enemy_goal_center, one_v_one, ExtendPhysics, ExtendVector2, ExtendVector3};
+use utils::{enemy_goal_center, one_v_one};
 
 pub struct CarryFromBounce;
 

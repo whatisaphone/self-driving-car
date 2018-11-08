@@ -1,10 +1,10 @@
 use behavior::{Action, Behavior};
-use common::prelude::*;
+use common::{prelude::*, rl};
 use eeg::{color, Drawable, EEG};
 use mechanics::simple_yaw_diff;
 use nalgebra::{Point2, Vector2};
 use rlbot;
-use simulate::{linear_interpolate, rl};
+use simulate::linear_interpolate;
 use std::f32::consts::PI;
 use strategy::Context;
 use utils::one_v_one;

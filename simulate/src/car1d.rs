@@ -1,6 +1,6 @@
+use common::rl;
 use math::linear_interpolate;
 use oven::data;
-use rl;
 
 pub struct Car1D {
     time: f32,

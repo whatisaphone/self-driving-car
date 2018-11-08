@@ -1,15 +1,14 @@
 use behavior::{Action, Behavior, Chain};
-use common::prelude::*;
+use common::{prelude::*, rl};
 use eeg::{color, Drawable};
 use maneuvers::{drive_towards, GetToFlatGround};
 use mechanics::simple_yaw_diff;
 use nalgebra::Vector2;
 use plan::drive::get_route_dodge;
 use rlbot;
-use simulate::{rl, Car1D};
+use simulate::Car1D;
 use std::f32::consts::PI;
 use strategy::Context;
-use utils::ExtendVector3;
 
 pub struct GroundAccelToLoc {
     target_loc: Vector2<f32>,
@@ -111,7 +110,6 @@ mod integration_tests {
     use integration_tests::helpers::{TestRunner, TestScenario};
     use mechanics::GroundAccelToLoc;
     use nalgebra::{Vector2, Vector3};
-    use utils::ExtendVector3;
 
     // This test is ignored because it's finicky and not quite accurate. The
     // issue seems to be that there is more input lag for throttle than for

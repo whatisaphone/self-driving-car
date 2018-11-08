@@ -1,6 +1,6 @@
 // This file is a hot mess, don't look at it please :)
 
-use common::prelude::*;
+use common::{prelude::*, rl};
 use crossbeam_channel;
 use graphics::{types::Color, Transformed};
 use nalgebra::{Point2, Rotation3, Vector2, Vector3};
@@ -9,9 +9,7 @@ use piston_window::{
     PistonWindow, Position, Rectangle, TextureSettings, WindowSettings,
 };
 use rlbot;
-use simulate::rl;
 use std::{collections::VecDeque, mem, path::PathBuf, thread};
-use utils::ExtendVector2;
 
 pub struct EEG {
     tx: Option<crossbeam_channel::Sender<ThreadMessage>>,

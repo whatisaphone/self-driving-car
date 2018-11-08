@@ -6,7 +6,7 @@ use nalgebra::Vector3;
 use rlbot;
 use std::f32::consts::PI;
 use strategy::Context;
-use utils::{my_car, ExtendVector3};
+use utils::my_car;
 
 pub struct GetToFlatGround;
 

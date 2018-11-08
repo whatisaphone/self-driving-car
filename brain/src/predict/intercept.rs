@@ -4,7 +4,6 @@ use plan::ball::BallFrame;
 use rlbot;
 use simulate::Car1D;
 use strategy::Context;
-use utils::ExtendVector3;
 
 pub fn estimate_intercept_car_ball(
     ctx: &mut Context,

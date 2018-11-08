@@ -7,7 +7,7 @@ use predict::{estimate_intercept_car_ball, Intercept};
 use routing::{behavior::FollowRoute, plan::GroundIntercept};
 use std::f32::consts::PI;
 use strategy::{Context, Scenario};
-use utils::{my_car, my_goal_center_2d, ExtendPoint3, ExtendVector3, Wall, WallRayCalculator};
+use utils::{my_car, my_goal_center_2d, Wall, WallRayCalculator};
 
 pub struct Defense;
 

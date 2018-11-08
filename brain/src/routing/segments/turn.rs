@@ -4,7 +4,6 @@ use nalgebra::{Point2, UnitComplex, Vector2};
 use routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner};
 use std::f32::consts::PI;
 use strategy::Context;
-use utils::geometry::ExtendPoint3;
 
 #[derive(Clone)]
 pub struct Turn {

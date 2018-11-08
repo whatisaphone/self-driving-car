@@ -1,10 +1,11 @@
 use behavior::{Action, Behavior};
+use common::prelude::*;
 use eeg::{color, Drawable, EEG};
 use mechanics::simple_steer_towards;
 use nalgebra::Vector2;
 use rlbot;
 use simulate::Car1D;
-use utils::{my_car, ExtendPhysics, ExtendVector3};
+use utils::my_car;
 
 pub struct DriveLocTimeDecelerate {
     target_loc: Vector2<f32>,
@@ -160,10 +161,10 @@ struct SS {
 
 #[cfg(test)]
 mod integration_tests {
+    use common::prelude::*;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use mechanics::DriveLocTimeDecelerate;
     use nalgebra::{Vector2, Vector3};
-    use utils::{ExtendPhysics, ExtendVector3};
 
     #[test]
     fn verify_arrival_time() {

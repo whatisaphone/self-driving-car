@@ -1,5 +1,5 @@
 use behavior::{Action, Behavior};
-use common::prelude::*;
+use common::{prelude::*, rl};
 use eeg::{color, Drawable};
 use maneuvers::BounceShot;
 use mechanics::{simple_steer_towards, QuickJumpAndDodge};
@@ -7,10 +7,9 @@ use nalgebra::{Point2, Point3};
 use predict::{intercept::NaiveIntercept, naive_ground_intercept};
 use rlbot;
 use routing::recover::{IsSkidding, NotOnFlatGround};
-use simulate::{ball_car_distance, car_single_jump::time_to_z, rl, Car, CarSimulateError};
+use simulate::{ball_car_distance, car_single_jump::time_to_z, Car, CarSimulateError};
 use std::f32::consts::PI;
 use strategy::Context;
-use utils::{ExtendPoint2, ExtendPoint3, ExtendVector2, ExtendVector3};
 
 pub struct GroundedHit<Aim>
 where

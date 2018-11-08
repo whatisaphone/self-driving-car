@@ -1,10 +1,10 @@
 //! This module simulates the aerial trajectory defined in
 //! collect:scenario::aerial_60deg.
 
+use common::rl;
 use math::linear_interpolate;
 use nalgebra::Vector3;
 use oven::data;
-use rl;
 
 pub struct CarAerial60Deg {
     time: f32,

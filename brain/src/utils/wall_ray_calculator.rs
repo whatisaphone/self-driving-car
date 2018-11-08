@@ -1,12 +1,12 @@
+use common::{prelude::*, rl};
 use nalgebra::{Isometry3, Point2, Vector2, Vector3};
 use ncollide3d::{
     query::Ray,
     shape::{Plane, ShapeHandle},
     world::{CollisionGroups, CollisionWorld, GeometricQueryType},
 };
-use simulate::rl;
 use std::f32::consts::PI;
-use utils::{geometry::ExtendF32, ExtendPoint2, ExtendPoint3, ExtendVector2, TotalF32};
+use utils::{geometry::ExtendF32, TotalF32};
 
 lazy_static! {
     static ref WALL_RAY_CALCULATOR: WallRayCalculator = WallRayCalculator::new();

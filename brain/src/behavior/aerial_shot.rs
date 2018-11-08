@@ -1,8 +1,9 @@
 use behavior::{Action, Behavior};
+use common::rl;
 use eeg::Drawable;
 use maneuvers::AerialLocTime;
 use predict::estimate_intercept_car_ball;
-use simulate::{rl, CarAerial60Deg};
+use simulate::CarAerial60Deg;
 use strategy::Context;
 use utils::enemy_goal_center;
 

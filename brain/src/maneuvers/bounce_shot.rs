@@ -1,17 +1,13 @@
 use behavior::{Action, Behavior};
-use common::prelude::*;
+use common::{prelude::*, rl};
 use eeg::{color, Drawable};
 use mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
 use nalgebra::{Point2, Vector2};
 use predict::{intercept::NaiveIntercept, naive_ground_intercept};
 use rules::SameBallTrajectory;
-use simulate::rl;
 use std::f32::consts::PI;
 use strategy::Context;
-use utils::{
-    enemy_goal_center, enemy_goal_center_point, ExtendF32, ExtendVector2, ExtendVector3,
-    WallRayCalculator,
-};
+use utils::{enemy_goal_center, enemy_goal_center_point, geometry::ExtendF32, WallRayCalculator};
 
 pub struct BounceShot {
     aim_loc: Point2<f32>,
@@ -126,11 +122,10 @@ impl BounceShot {
 #[cfg(test)]
 mod integration_tests {
     use behavior::Repeat;
-    use common::prelude::*;
+    use common::{prelude::*, rl};
     use integration_tests::helpers::{TestRunner, TestScenario};
     use maneuvers::bounce_shot::BounceShot;
     use nalgebra::{Rotation3, Vector2, Vector3};
-    use simulate::rl;
 
     // `Repeat` is used in these tests so the shot is not aborted by
     // `SameBallTrajectory` when the ball bounces.

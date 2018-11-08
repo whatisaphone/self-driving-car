@@ -1,11 +1,9 @@
-use common::{physics, prelude::*, PrettyPrint};
+use common::{physics, prelude::*, rl, PrettyPrint};
 use nalgebra::{Point2, Point3, Unit, UnitComplex, UnitQuaternion, Vector2, Vector3};
 use plan::ball::BallTrajectory;
 use rlbot;
-use simulate::rl;
 use std::{fmt, iter};
 use strategy::{Context, Game, Scenario};
-use utils::geometry::{ExtendPoint2, ExtendUnitComplex, ExtendVector2};
 
 #[derive(Clone)]
 pub struct CarState {

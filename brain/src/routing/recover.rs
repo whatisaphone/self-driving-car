@@ -6,7 +6,6 @@ use nalgebra::Point2;
 use routing::models::{CarState, RoutePlanError};
 use std::f32::consts::PI;
 use strategy::Context;
-use utils::geometry::ExtendPoint3;
 
 const SKIDDING_THRESHOLD: f32 = 0.95;
 

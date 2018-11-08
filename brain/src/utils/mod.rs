@@ -1,11 +1,8 @@
+use common::rl;
 use nalgebra::{Point2, Vector2};
 use rlbot;
-use simulate::rl;
 pub use utils::{
     fps_counter::FPSCounter,
-    geometry::{
-        ExtendF32, ExtendPoint2, ExtendPoint3, ExtendUnitComplex, ExtendVector2, ExtendVector3,
-    },
     iter::TotalF32,
     wall_ray_calculator::{Wall, WallRayCalculator},
 };

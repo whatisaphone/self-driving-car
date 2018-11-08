@@ -65,6 +65,22 @@ impl ExtendVector3 for Vector3<f32> {
     }
 }
 
+pub trait ExtendPoint2<N: Real> {
+    fn angle_to(&self, other: Self) -> UnitComplex<N>;
+    fn to_3d(&self, z: N) -> Point3<N>;
+}
+
+impl<N: Real> ExtendPoint2<N> for Point2<N> {
+    fn angle_to(&self, other: Self) -> UnitComplex<N> {
+        let diff = other - self;
+        UnitComplex::new(N::atan2(diff.y, diff.x))
+    }
+
+    fn to_3d(&self, z: N) -> Point3<N> {
+        Point3::new(self.x, self.y, z)
+    }
+}
+
 pub trait ExtendPoint3<N: Real> {
     fn to_2d(&self) -> Point2<N>;
 }

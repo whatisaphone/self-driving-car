@@ -1,15 +1,14 @@
 use behavior::{Action, Behavior};
-use common::prelude::*;
+use common::{prelude::*, rl};
 use eeg::{color, Drawable};
 use maneuvers::{drive_towards, BounceShot, GetToFlatGround};
 use mechanics::simple_yaw_diff;
 use predict::naive_ground_intercept;
 use rlbot;
 use rules::SameBallTrajectory;
-use simulate::{rl, Car1D, CarAerial60Deg};
+use simulate::{Car1D, CarAerial60Deg};
 use std::f32::consts::PI;
 use strategy::Context;
-use utils::geometry::ExtendPoint2;
 
 const Z_FUDGE: f32 = 75.0;
 

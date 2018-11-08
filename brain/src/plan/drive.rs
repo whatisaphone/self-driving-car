@@ -1,11 +1,11 @@
 use behavior::Behavior;
-use common::prelude::*;
+use common::{prelude::*, rl};
 use mechanics::{simple_yaw_diff, QuickJumpAndDodge};
 use nalgebra::Vector2;
 use rlbot;
-use simulate::{rl, Car1D};
+use simulate::Car1D;
 use std::f32::consts::PI;
-use utils::{ExtendF32, ExtendVector3};
+use utils::geometry::ExtendF32;
 
 // I'm keeping this value artificially high until I implement smarter routing.
 const GROUND_DODGE_TIME: f32 = 2.0;

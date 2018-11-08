@@ -1,5 +1,5 @@
 use behavior::{Action, Behavior};
-use common::prelude::*;
+use common::{prelude::*, rl};
 use eeg::{color, Drawable};
 use maneuvers::BlitzToLocation;
 use mechanics::simple_steer_towards;
@@ -7,9 +7,8 @@ use nalgebra::Vector2;
 use plan::drive::rough_time_drive_to_loc;
 use rlbot;
 use rules::SameBallTrajectory;
-use simulate::rl;
 use strategy::Context;
-use utils::{my_goal_center_2d, ExtendF32, ExtendVector2};
+use utils::{geometry::ExtendF32, my_goal_center_2d};
 
 pub struct PanicDefense {
     use_boost: bool,
