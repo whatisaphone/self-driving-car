@@ -6,61 +6,71 @@ use std::f32::consts::PI;
 use strategy::{scenario::Scenario, Context};
 use utils::{geometry::ExtendF32, my_goal_center_2d, Wall};
 
-pub fn baseline(ctx: &mut Context) -> Box<Behavior> {
-    if !GetToFlatGround::on_flat_ground(ctx.packet) {
-        return Box::new(GetToFlatGround::new());
-    }
-
-    match ctx.scenario.push_wall() {
-        Wall::OwnGoal | Wall::OwnBackWall => return Box::new(Defense::new()),
-        _ => {}
-    }
-
-    return_some!(get_boost(ctx));
-
-    Box::new(Offense::new())
+pub trait Strategy: Send {
+    fn baseline(&mut self, ctx: &mut Context) -> Box<Behavior>;
+    fn interrupt(&mut self, ctx: &mut Context, current: &Behavior) -> Option<Box<Behavior>>;
 }
 
-pub fn override_(ctx: &mut Context, current: &Behavior) -> Option<Box<Behavior>> {
-    // Force kickoff behavior
-    if current.priority() < Priority::Force
-        && ctx.packet.GameBall.Physics.loc().norm() < 1.0
-        && ctx.packet.GameBall.Physics.vel().norm() < 1.0
-    {
-        return Some(Box::new(Chain::new(
-            Priority::Force,
-            vec![Box::new(FiftyFifty::new())],
-        )));
+#[derive(new)]
+pub struct DefaultStrategy;
+
+impl Strategy for DefaultStrategy {
+    fn baseline(&mut self, ctx: &mut Context) -> Box<Behavior> {
+        if !GetToFlatGround::on_flat_ground(ctx.packet) {
+            return Box::new(GetToFlatGround::new());
+        }
+
+        match ctx.scenario.push_wall() {
+            Wall::OwnGoal | Wall::OwnBackWall => return Box::new(Defense::new()),
+            _ => {}
+        }
+
+        return_some!(get_boost(ctx));
+
+        Box::new(Offense::new())
     }
 
-    if current.priority() < Priority::Save && enemy_can_shoot(ctx) {
-        if ctx.scenario.possession().abs() < Scenario::POSSESSION_CONTESTABLE {
-            ctx.eeg.log(format!(
-                "enemy can shoot, possession = {:.2}, going for 50/50",
-                ctx.scenario.possession()
-            ));
+    fn interrupt(&mut self, ctx: &mut Context, current: &Behavior) -> Option<Box<Behavior>> {
+        // Force kickoff behavior
+        if current.priority() < Priority::Force
+            && ctx.packet.GameBall.Physics.loc().norm() < 1.0
+            && ctx.packet.GameBall.Physics.vel().norm() < 1.0
+        {
             return Some(Box::new(Chain::new(
-                Priority::Save,
-                vec![
-                    Box::new(GetToFlatGround::new()),
-                    Box::new(FiftyFifty::new()),
-                ],
+                Priority::Force,
+                vec![Box::new(FiftyFifty::new())],
             )));
         }
 
-        if ctx.scenario.possession() < -Scenario::POSSESSION_CONTESTABLE {
-            ctx.eeg.log(format!(
-                "enemy can shoot, possession = {:.2}, going to defense",
-                ctx.scenario.possession()
-            ));
-            return Some(Box::new(Chain::new(
-                Priority::Save,
-                vec![Box::new(Defense::new())],
-            )));
-        }
-    }
+        if current.priority() < Priority::Save && enemy_can_shoot(ctx) {
+            if ctx.scenario.possession().abs() < Scenario::POSSESSION_CONTESTABLE {
+                ctx.eeg.log(format!(
+                    "enemy can shoot, possession = {:.2}, going for 50/50",
+                    ctx.scenario.possession()
+                ));
+                return Some(Box::new(Chain::new(
+                    Priority::Save,
+                    vec![
+                        Box::new(GetToFlatGround::new()),
+                        Box::new(FiftyFifty::new()),
+                    ],
+                )));
+            }
 
-    None
+            if ctx.scenario.possession() < -Scenario::POSSESSION_CONTESTABLE {
+                ctx.eeg.log(format!(
+                    "enemy can shoot, possession = {:.2}, going to defense",
+                    ctx.scenario.possession()
+                ));
+                return Some(Box::new(Chain::new(
+                    Priority::Save,
+                    vec![Box::new(Defense::new())],
+                )));
+            }
+        }
+
+        None
+    }
 }
 
 fn get_boost(ctx: &mut Context) -> Option<Box<Behavior>> {

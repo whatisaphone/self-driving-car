@@ -1,22 +1,30 @@
 use behavior::{Action, Behavior};
 use eeg::{color, Drawable};
 use rlbot;
-use strategy::{strategy, Context};
+use strategy::{
+    strategy::{DefaultStrategy, Strategy},
+    Context,
+};
 
 pub const BASELINE: &str = "baseline:";
 
 pub struct Runner2 {
+    strategy: Box<Strategy>,
     current: Option<Box<Behavior>>,
 }
 
 impl Runner2 {
     pub fn new() -> Self {
-        Self { current: None }
+        Self {
+            strategy: Box::new(DefaultStrategy::new()),
+            current: None,
+        }
     }
 
     #[cfg(test)]
     pub fn with_current(current: impl Behavior + 'static) -> Self {
         Self {
+            strategy: Box::new(DefaultStrategy::new()),
             current: Some(Box::new(current)),
         }
     }
@@ -68,7 +76,7 @@ impl Runner2 {
 
     fn choose_behavior(&mut self, ctx: &mut Context) -> &mut Behavior {
         if self.current.is_none() {
-            self.current = Some(strategy::baseline(ctx));
+            self.current = Some(self.strategy.baseline(ctx));
             ctx.eeg.log(format!(
                 "{} {}",
                 BASELINE,
@@ -76,7 +84,10 @@ impl Runner2 {
             ));
         }
 
-        if let Some(b) = strategy::override_(ctx, &**self.current.as_ref().unwrap()) {
+        if let Some(b) = self
+            .strategy
+            .interrupt(ctx, &**self.current.as_ref().unwrap())
+        {
             self.current = Some(b);
             ctx.eeg.log(format!(
                 "override: {}",
