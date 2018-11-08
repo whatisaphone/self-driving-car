@@ -7,10 +7,7 @@ use plan::hit_angle::{feasible_hit_angle_away, feasible_hit_angle_toward};
 use routing::{behavior::FollowRoute, plan::GroundIntercept};
 use std::f32::consts::PI;
 use strategy::Context;
-use utils::{
-    enemy_goal_center, my_goal_center_2d, ExtendF32, ExtendVector2, ExtendVector3,
-    WallRayCalculator,
-};
+use utils::WallRayCalculator;
 
 pub struct TepidHit;
 
@@ -37,27 +34,25 @@ impl Behavior for TepidHit {
 }
 
 fn time_wasting_hit(ctx: &mut Context, intercept_ball_loc: Point3<f32>) -> Result<Point2<f32>, ()> {
-    let me = ctx.me();
-    let ball = intercept_ball_loc.coords.to_2d();
-    let goal = enemy_goal_center();
-    let avoid = my_goal_center_2d();
+    let me_loc = ctx.me().Physics.loc_2d();
+    let ball_loc = intercept_ball_loc.to_2d();
+    let offense_aim = ctx.game.enemy_goal().center_2d;
+    let defense_avoid = ctx.game.own_goal().center_2d;
 
-    let angle_ball = me.Physics.loc().to_2d().angle_to(ball);
-    let angle_forward = me.Physics.loc().to_2d().angle_to(enemy_goal_center());
-    let angle_backward = me.Physics.loc().to_2d().angle_to(my_goal_center_2d());
+    let naive_offense = (ball_loc - me_loc).rotation_to(offense_aim - me_loc);
+    let naive_defense = (ball_loc - me_loc).rotation_to(defense_avoid - me_loc);
 
-    let angle_offense = (angle_ball - angle_forward).normalize_angle().abs();
-    let angle_defense = (angle_ball - angle_backward).normalize_angle().abs();
-
-    let theta = if angle_offense < angle_defense {
+    let aim_loc = if naive_offense.angle().abs() < naive_defense.angle().abs() {
         ctx.eeg
             .draw(Drawable::print("toward enemy goal", color::GREEN));
-        feasible_hit_angle_toward(ball, me.Physics.loc().to_2d(), goal, PI / 6.0)
+        feasible_hit_angle_toward(ball_loc, me_loc, offense_aim, PI / 6.0)
     } else {
         ctx.eeg
             .draw(Drawable::print("away from own goal", color::GREEN));
-        feasible_hit_angle_away(ball, me.Physics.loc().to_2d(), avoid, PI / 6.0)
+        feasible_hit_angle_away(ball_loc, me_loc, defense_avoid, PI / 6.0)
     };
 
-    Ok(Point2::from(WallRayCalculator::calc_ray(ball, theta)))
+    Ok(Point2::from(WallRayCalculator::calculate(
+        ball_loc, aim_loc,
+    )))
 }
