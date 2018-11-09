@@ -53,8 +53,7 @@ impl QuickJumpAndDodge {
     }
 
     pub fn dodge_time(mut self, dodge_time: f32) -> Self {
-        assert!(dodge_time >= Self::MIN_DODGE_TIME);
-        self.dodge_time = dodge_time;
+        self.dodge_time = dodge_time.max(Self::MIN_DODGE_TIME);
         self
     }
 }

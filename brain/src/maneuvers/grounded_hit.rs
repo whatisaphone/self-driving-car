@@ -25,7 +25,8 @@ impl<Aim> GroundedHit<Aim>
 where
     Aim: Fn(&mut Context, Point3<f32>) -> Result<Point2<f32>, ()> + Send,
 {
-    pub const MAX_BALL_Z: f32 = 240.0; // TODO: how high can I jump
+    pub const CONTACT_Z_OFFSET: f32 = -70.0;
+    pub const MAX_BALL_Z: f32 = 240.0 - Self::CONTACT_Z_OFFSET; // TODO: how high can I jump
 
     #[allow(dead_code)] // This is a good behavior, just gotta slip it in somewhere.
     pub fn hit_towards(aim: Aim) -> Self {
@@ -129,11 +130,18 @@ where
         let aim_loc = (self.aim)(ctx, intercept.ball_loc)?;
         self.aim_loc = Some(aim_loc);
         let target_loc_xy = BounceShot::rough_shooting_spot(intercept, aim_loc);
-        let target_loc = target_loc_xy.to_3d(intercept.ball_loc.z);
+        let target_loc = target_loc_xy.to_3d(intercept.ball_loc.z + Self::CONTACT_Z_OFFSET);
 
         // Calculate the precise location where we get as close to the ball as possible.
         let distance = ball_car_distance(intercept.ball_loc, target_loc, me.Physics.quat());
-        let target_loc = target_loc + (intercept.ball_loc - target_loc).normalize() * distance;
+        // The to_2d/to_3d thing is a hack – ideally this would instead do a
+        // time-of-impact calculate with a velocity where z = 0.
+        let target_loc = target_loc
+            + (intercept.ball_loc - target_loc)
+                .to_2d()
+                .to_3d(0.0)
+                .normalize()
+                * distance;
 
         ctx.eeg.draw(Drawable::print(
             format!("intercept_time: {:.2}", intercept_time),

@@ -4,7 +4,9 @@ pub const JUMP_MAX_Z: f32 = 241.45967;
 const JUMP_MAX_Z_TABLE_INDEX: usize = 220;
 
 pub fn time_to_z(z: f32) -> Option<f32> {
-    if z > JUMP_MAX_Z {
+    if z <= data::jump::CAR_LOC_Z[0] {
+        Some(0.0)
+    } else if z > JUMP_MAX_Z {
         None
     } else {
         let i = data::jump::CAR_LOC_Z[..JUMP_MAX_Z_TABLE_INDEX]
