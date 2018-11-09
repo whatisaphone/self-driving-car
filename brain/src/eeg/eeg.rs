@@ -132,7 +132,7 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
         .opengl(OpenGL::V3_2)
         .build()
         .unwrap();
-    window.set_position(Position { x: 1912, y: 350 });
+    window.set_position(Position { x: 1912, y: 190 });
 
     let path = PathBuf::from(r"C:\Windows\Fonts\calibri.ttf");
     let factory = window.factory.clone();
