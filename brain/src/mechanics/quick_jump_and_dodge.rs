@@ -112,7 +112,13 @@ impl Behavior for QuickJumpAndDodge {
 
             Action::Yield(result)
         } else if self.phase == Phase::Dodge || elapsed < self.dodge_time + Self::MIN_PHASE_TIME {
+            if ctx.me().OnGround {
+                ctx.eeg.log("[QuickJumpAndDodge] goomba stomped");
+                return Action::Abort;
+            }
+
             self.phase = Phase::Finished;
+
             result.Jump = true;
             result.Pitch = self.pitch;
             result.Yaw = self.yaw;
