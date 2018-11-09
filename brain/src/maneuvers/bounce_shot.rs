@@ -106,8 +106,15 @@ impl BounceShot {
     pub fn rough_shooting_spot(intercept: &NaiveIntercept, aim_loc: Point2<f32>) -> Point2<f32> {
         // This is not the greatest guess
         let guess_final_ball_speed = f32::min(intercept.car_speed * 1.25, rl::CAR_MAX_SPEED);
-        let desired_vel =
-            (aim_loc - intercept.ball_loc.to_2d()).normalize() * guess_final_ball_speed;
+        let ball_to_aim = aim_loc - intercept.ball_loc.to_2d();
+        if ball_to_aim.norm() < 0.1 {
+            warn!("[rough_shooting_spot] ball_loc == aim_loc; bailing");
+            // This happened in a Dropshot game when WallRayCalculator was still using the
+            // standard Soccar mesh. It's a degenerate case, but we at least shouldn't start
+            // spewing NaN everywhere.
+            return intercept.car_loc.to_2d();
+        }
+        let desired_vel = ball_to_aim.normalize() * guess_final_ball_speed;
         let intercept_vel = intercept.ball_vel.to_2d();
         let impulse = desired_vel - intercept_vel;
         intercept.ball_loc.to_2d() - impulse.normalize() * 200.0
