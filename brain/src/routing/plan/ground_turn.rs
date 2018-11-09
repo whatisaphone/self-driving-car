@@ -200,7 +200,6 @@ fn calculate_circle_turn(
     target_loc: Point2<f32>,
 ) -> Result<Option<CircleTurn>, RoutePlanError> {
     let start_loc = start.loc.to_2d();
-    let start_vel = start.vel.to_2d();
     let start_forward_axis = start.forward_axis().to_2d();
     let start_right_axis = start.right_axis().to_2d();
 
@@ -225,11 +224,11 @@ fn calculate_circle_turn(
     };
     let t1_rot = (start_loc - turn_center).rotation_to(tangent1 - turn_center);
     let t2_rot = (start_loc - turn_center).rotation_to(tangent2 - turn_center);
-    let t1_vel = t1_rot * start_vel;
-    let t2_vel = t2_rot * start_vel;
-    let t1_dot = t1_vel.dot(&(target_loc - tangent1));
-    let t2_dot = t2_vel.dot(&(target_loc - tangent2));
-    let tangent = match (t1_dot >= 0.0, t2_dot >= 0.0) {
+    let t1_forward_axis = t1_rot * start_forward_axis;
+    let t2_forward_axis = t2_rot * start_forward_axis;
+    let t1_dot = t1_forward_axis.dot(&(target_loc - tangent1));
+    let t2_dot = t2_forward_axis.dot(&(target_loc - tangent2));
+    let tangent = match (t1_dot > 0.0, t2_dot > 0.0) {
         (true, false) => tangent1,
         (false, true) => tangent2,
         _ => return Err(RoutePlanError::OtherError("!= 1 tangent?")),
