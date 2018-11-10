@@ -2,7 +2,7 @@ use behavior::Action;
 use nalgebra::Point3;
 use strategy::Context;
 
-const ERROR_THRESHOLD: f32 = 20.0;
+const ERROR_THRESHOLD: f32 = 25.0;
 
 /// Track the ball's trajectory vs. our prediction, and if they differ by too
 /// much, abort.

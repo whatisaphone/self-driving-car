@@ -7,6 +7,7 @@ use nalgebra::{Point2, Point3};
 use predict::{intercept::NaiveIntercept, naive_ground_intercept};
 use rlbot;
 use routing::recover::{IsSkidding, NotOnFlatGround};
+use rules::SameBallTrajectory;
 use simulate::{ball_car_distance, car_single_jump::time_to_z, Car, CarSimulateError};
 use std::f32::consts::PI;
 use strategy::Context;
@@ -16,6 +17,7 @@ where
     Aim: Fn(&mut Context, Point3<f32>) -> Result<Point2<f32>, ()> + Send,
 {
     aim: Aim,
+    same_ball_trajectory: SameBallTrajectory,
     aim_loc: Option<Point2<f32>>,
     intercept: Option<NaiveIntercept>,
     intercept_time: Option<f32>,
@@ -32,6 +34,7 @@ where
     pub fn hit_towards(aim: Aim) -> Self {
         Self {
             aim,
+            same_ball_trajectory: SameBallTrajectory::new(),
             aim_loc: None,
             intercept: None,
             intercept_time: None,
@@ -70,6 +73,7 @@ where
             ctx.eeg.log("[GroundedHit] NotOnFlatGround");
             return Action::Abort;
         }
+        return_some!(self.same_ball_trajectory.execute(ctx));
 
         let intercept = naive_ground_intercept(
             ctx.scenario.ball_prediction().iter(),
