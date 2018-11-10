@@ -1,6 +1,7 @@
 use behavior::{Action, Behavior};
 use common::{physics::CAR_LOCAL_FORWARD_AXIS_2D, prelude::*};
 use eeg::{color, Drawable};
+use maneuvers::GetToFlatGround;
 use nalgebra::{Point2, UnitComplex};
 use strategy::Context;
 
@@ -15,6 +16,11 @@ impl Behavior for SkidRecover {
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {
+        if !GetToFlatGround::on_flat_ground(ctx.packet) {
+            ctx.eeg.log("[SkidRecover] must be on flat ground");
+            return Action::Abort;
+        }
+
         let me = ctx.me();
         let me_rot = me.Physics.quat().to_2d();
         let me_ang_vel = me.Physics.ang_vel().z;
