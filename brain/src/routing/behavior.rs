@@ -1,8 +1,8 @@
 use behavior::{Action, Behavior};
 use eeg::{color, Drawable};
 use routing::models::{
-    PlanningContext, PlanningDump, ProvisionalPlanExpansion, RoutePlan, RoutePlanner,
-    SegmentRunAction, SegmentRunner,
+    PlanningContext, PlanningDump, ProvisionalPlanExpansion, RoutePlan, RoutePlanError,
+    RoutePlanner, SegmentRunAction, SegmentRunner,
 };
 use strategy::Context;
 
@@ -72,43 +72,51 @@ impl FollowRoute {
         };
         let plan = match plan {
             Ok(s) => s,
-            Err(err) => match err.recover(ctx) {
-                Some(b) => {
-                    ctx.eeg
-                        .log(format!("[FollowRoute] Recoverable planner error {:?}", err));
-                    for line in log {
-                        ctx.eeg.log(format!("[FollowRoute] {}", line));
-                    }
-                    return Err(Action::Call(b));
-                }
-                None => {
-                    ctx.eeg
-                        .log(format!("[FollowRoute] Planner error {:?}", err));
-                    for line in log {
-                        ctx.eeg.log(format!("[FollowRoute] {}", line));
-                    }
-                    return Err(Action::Abort);
-                }
-            },
+            Err(err) => return Err(self.handle_error(ctx, planner.name(), err, log)),
         };
-        let runner = plan.segment.run();
         let provisional_expansion = plan.provisional_expand(&ctx.scenario).map_err(|error| {
-            ctx.eeg.log(format!(
-                "[FollowRoute] Provisional expansion error from {} - {:?}",
-                error.planner_name, error.error,
-            ));
-            for line in log.iter().chain(&error.log) {
-                ctx.eeg.log(format!("[FollowRoute] {}", line));
-            }
-            Action::Abort
+            self.handle_error(
+                ctx,
+                error.planner_name,
+                error.error,
+                log.into_iter().chain(error.log),
+            )
         })?;
 
+        let runner = plan.segment.run();
         self.current = Some(Current {
             plan,
             runner,
             provisional_expansion,
         });
         Ok(())
+    }
+
+    fn handle_error(
+        &mut self,
+        ctx: &mut Context,
+        planner_name: &str,
+        error: RoutePlanError,
+        log: impl IntoIterator<Item = String>,
+    ) -> Action {
+        ctx.eeg.log(format!(
+            "[FollowRoute] Error {:?} from segment {}",
+            error, planner_name,
+        ));
+        for line in log {
+            ctx.eeg.log(format!("[FollowRoute] {}", line));
+        }
+
+        match error.recover(ctx) {
+            Some(b) => {
+                ctx.eeg.log("[FollowRoute] Recoverable!");
+                Action::Call(b)
+            }
+            None => {
+                ctx.eeg.log("[FollowRoute] Non-recoverable");
+                Action::Abort
+            }
+        }
     }
 
     fn go(&mut self, ctx: &mut Context) -> Action {
