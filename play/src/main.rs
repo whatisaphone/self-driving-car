@@ -28,7 +28,7 @@ fn main() {
 
     let collector = create_collector();
     let eeg = EEG::new();
-    let brain = Brain::with_root_behavior();
+    let brain = Brain::soccar();
     let mut bot = FormulaNone::new(collector, eeg, brain);
 
     let rlbot = rlbot::init().unwrap();

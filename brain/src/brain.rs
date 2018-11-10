@@ -3,7 +3,7 @@ use behavior::Behavior;
 use eeg::{color, Drawable, EEG};
 use nalgebra::clamp;
 use rlbot;
-use strategy::{Context, Runner2};
+use strategy::{Context, Dropshot, Runner2, Soccar};
 use utils::FPSCounter;
 
 pub struct Brain {
@@ -12,11 +12,19 @@ pub struct Brain {
 }
 
 impl Brain {
-    pub fn with_root_behavior() -> Self {
+    fn new(runner: Runner2) -> Self {
         Self {
-            runner: Runner2::soccar(),
+            runner,
             fps_counter: FPSCounter::new(),
         }
+    }
+
+    pub fn soccar() -> Self {
+        Self::new(Runner2::new(Soccar::new()))
+    }
+
+    pub fn dropshot() -> Self {
+        Self::new(Runner2::new(Dropshot::new()))
     }
 
     #[cfg(test)]

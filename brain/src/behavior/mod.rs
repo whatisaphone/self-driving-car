@@ -4,6 +4,7 @@ pub use behavior::{
     higher_order::{Chain, Fuse, Predicate, Repeat, TimeLimit, While},
     null::NullBehavior,
     offense::Offense,
+    tepid_hit::TepidHit,
 };
 
 mod aerial_shot;
