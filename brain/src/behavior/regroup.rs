@@ -16,7 +16,7 @@ mod integration_tests {
             car_vel: Vector3::new(63.52187, -1216.5942, 40.226746),
             ..Default::default()
         });
-        test.set_behavior(Runner2::new());
+        test.set_behavior(Runner2::soccar());
         test.sleep_millis(5000);
 
         assert!(test.has_scored());
@@ -33,7 +33,7 @@ mod integration_tests {
             car_vel: Vector3::new(-1254.4124, 211.01375, 8.24),
             ..Default::default()
         });
-        test.set_behavior(Runner2::new());
+        test.set_behavior(Runner2::soccar());
         test.sleep_millis(5000);
 
         assert!(test.has_scored());

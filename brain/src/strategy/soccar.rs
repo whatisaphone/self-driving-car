@@ -115,7 +115,7 @@ mod integration_tests {
             car_vel: Vector3::new(-1369.871, 12.749782, 8.351),
             ..Default::default()
         });
-        test.set_behavior(Runner2::new());
+        test.set_behavior(Runner2::soccar());
         test.sleep_millis(100);
 
         test.examine_eeg(|eeg| {
@@ -145,7 +145,7 @@ mod integration_tests {
                 ..Default::default()
             })
             .starting_boost(0.0)
-            .behavior(Runner2::new())
+            .behavior(Runner2::soccar())
             .run();
 
         let packet = test.sniff_packet();

@@ -132,7 +132,7 @@ mod integration_tests {
             car_vel: Vector3::new(-1599.1952, 1223.4504, 9.51471),
             ..Default::default()
         });
-        test.set_behavior(Runner2::new());
+        test.set_behavior(Runner2::soccar());
         test.sleep_millis(4000);
         test.examine_eeg(|eeg| {
             assert!(eeg
@@ -154,7 +154,7 @@ mod integration_tests {
             car_vel: Vector3::new(1566.5747, 1017.1486, 13.497895),
             ..Default::default()
         });
-        test.set_behavior(Runner2::new());
+        test.set_behavior(Runner2::soccar());
         test.sleep_millis(3000);
         test.examine_eeg(|eeg| {
             assert!(eeg
@@ -176,7 +176,7 @@ mod integration_tests {
             car_vel: Vector3::new(521.8343, 928.79755, 8.326952),
             ..Default::default()
         });
-        test.set_behavior(Runner2::new());
+        test.set_behavior(Runner2::soccar());
         test.sleep_millis(4000);
         assert!(test.has_scored());
     }
@@ -209,7 +209,7 @@ mod integration_tests {
             car_vel: Vector3::new(1287.4675, -433.82834, -183.28568),
             ..Default::default()
         });
-        test.set_behavior(Runner2::new());
+        test.set_behavior(Runner2::soccar());
         test.sleep_millis(2000);
         assert!(test.has_scored());
     }
@@ -225,7 +225,7 @@ mod integration_tests {
             boost: 0,
             ..Default::default()
         });
-        test.set_behavior(Runner2::new());
+        test.set_behavior(Runner2::soccar());
         test.sleep_millis(3000);
 
         test.examine_eeg(|eeg| {
@@ -244,7 +244,7 @@ mod integration_tests {
             car_vel: Vector3::new(232.67545, -405.04382, 8.36),
             ..Default::default()
         });
-        test.set_behavior(Runner2::new());
+        test.set_behavior(Runner2::soccar());
         test.sleep_millis(2000);
 
         test.examine_eeg(|eeg| {

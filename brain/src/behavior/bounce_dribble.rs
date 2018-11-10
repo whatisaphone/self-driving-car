@@ -17,7 +17,7 @@ mod integration_tests {
             boost: 0,
             ..Default::default()
         });
-        test.set_behavior(Runner2::new());
+        test.set_behavior(Runner2::soccar());
         test.sleep_millis(100);
 
         test.examine_eeg(|eeg| {

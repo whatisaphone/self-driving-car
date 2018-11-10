@@ -14,7 +14,7 @@ pub struct Brain {
 impl Brain {
     pub fn with_root_behavior() -> Self {
         Self {
-            runner: Runner2::new(),
+            runner: Runner2::soccar(),
             fps_counter: FPSCounter::new(),
         }
     }

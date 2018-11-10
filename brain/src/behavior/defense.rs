@@ -233,7 +233,7 @@ mod integration_tests {
         });
 
         let start_time = test.sniff_packet().GameInfo.TimeSeconds;
-        test.set_behavior(Runner2::new());
+        test.set_behavior(Runner2::soccar());
 
         let mut max_z = 0.0_f32;
         loop {
@@ -267,7 +267,7 @@ mod integration_tests {
     #[test]
     fn redirect_away_from_goal() {
         let test = TestRunner::start(
-            Runner2::new(),
+            Runner2::soccar(),
             TestScenario {
                 ball_loc: Vector3::new(-2667.985, 779.3049, 186.92154),
                 ball_vel: Vector3::new(760.02606, -1394.5569, -368.39642),
@@ -293,7 +293,7 @@ mod integration_tests {
     #[ignore] // TODO
     fn last_second_save() {
         let test = TestRunner::start(
-            Runner2::new(),
+            Runner2::soccar(),
             TestScenario {
                 ball_loc: Vector3::new(-1150.811, -1606.0569, 102.36157),
                 ball_vel: Vector3::new(484.87906, -1624.8169, 32.10115),
@@ -313,7 +313,7 @@ mod integration_tests {
     #[ignore] // TODO
     fn slow_bouncer() {
         let test = TestRunner::start(
-            Runner2::new(),
+            Runner2::soccar(),
             TestScenario {
                 ball_loc: Vector3::new(-2849.355, -2856.8281, 1293.4608),
                 ball_vel: Vector3::new(907.1093, -600.48956, 267.59674),
@@ -332,7 +332,7 @@ mod integration_tests {
     #[test]
     fn falling_save_from_the_side() {
         let test = TestRunner::start(
-            Runner2::new(),
+            Runner2::soccar(),
             TestScenario {
                 ball_loc: Vector3::new(2353.9868, -5024.7144, 236.38712),
                 ball_vel: Vector3::new(-1114.3461, 32.5409, 897.3589),
@@ -459,7 +459,7 @@ mod integration_tests {
     #[ignore] // TODO
     fn push_from_corner_to_corner_2() {
         let test = TestRunner::start(
-            Runner2::new(),
+            Runner2::soccar(),
             TestScenario {
                 ball_loc: Vector3::new(2517.809, -4768.475, 93.13),
                 ball_vel: Vector3::new(-318.6226, 490.17892, 0.0),
@@ -484,7 +484,7 @@ mod integration_tests {
     #[test]
     fn same_side_corner_push() {
         let test = TestRunner::start(
-            Runner2::new(),
+            Runner2::soccar(),
             TestScenario {
                 ball_loc: Vector3::new(-2545.9438, -4174.64, 318.26862),
                 ball_vel: Vector3::new(985.6374, -479.52872, -236.39767),
@@ -510,7 +510,7 @@ mod integration_tests {
     #[ignore] // TODO
     fn slow_rolling_save() {
         let test = TestRunner::start(
-            Runner2::new(),
+            Runner2::soccar(),
             TestScenario {
                 ball_loc: Vector3::new(1455.9731, -4179.0796, 93.15),
                 ball_vel: Vector3::new(-474.48724, -247.0518, 0.0),
@@ -531,7 +531,7 @@ mod integration_tests {
     #[test]
     fn slow_retreating_save() {
         let test = TestRunner::start(
-            Runner2::new(),
+            Runner2::soccar(),
             TestScenario {
                 ball_loc: Vector3::new(1446.3031, -2056.4917, 213.57251),
                 ball_vel: Vector3::new(-1024.0333, -1593.1566, -244.15135),
@@ -552,7 +552,7 @@ mod integration_tests {
     #[test]
     fn fast_retreating_save() {
         let test = TestRunner::start(
-            Runner2::new(),
+            Runner2::soccar(),
             TestScenario {
                 ball_loc: Vector3::new(63.619453, -336.2556, 93.03),
                 ball_vel: Vector3::new(-189.17311, -1918.067, 0.0),
@@ -592,7 +592,7 @@ mod integration_tests {
                 ..Default::default()
             })
             .starting_boost(0.0)
-            .behavior(Runner2::new())
+            .behavior(Runner2::soccar())
             .run();
         test.sleep_millis(6000);
 
@@ -606,7 +606,7 @@ mod integration_tests {
         let test = TestRunner::new()
             .one_v_one(&*recordings::CLEAR_AROUND_GOAL_WALL, 327.0)
             .starting_boost(100.0)
-            .behavior(Runner2::new())
+            .behavior(Runner2::soccar())
             .run();
         test.sleep_millis(3000);
 

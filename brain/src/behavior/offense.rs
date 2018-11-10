@@ -107,7 +107,7 @@ mod integration_tests {
             car_vel: Vector3::new(-352.9971, 833.215, 8.34),
             ..Default::default()
         });
-        test.set_behavior(Runner2::new());
+        test.set_behavior(Runner2::soccar());
         test.sleep_millis(3000);
         let packet = test.sniff_packet();
         assert!(packet.GameBall.Physics.vel().y >= 1000.0);
@@ -125,7 +125,7 @@ mod integration_tests {
                 boost: 0,
                 ..Default::default()
             })
-            .behavior(Runner2::new())
+            .behavior(Runner2::soccar())
             .run();
         test.sleep_millis(3000);
         assert!(test.has_scored());
@@ -143,7 +143,7 @@ mod integration_tests {
             boost: 0,
             ..Default::default()
         });
-        test.set_behavior(Runner2::new());
+        test.set_behavior(Runner2::soccar());
         test.sleep_millis(5000);
         assert!(test.has_scored());
     }
@@ -159,7 +159,7 @@ mod integration_tests {
             car_vel: Vector3::new(-702.66034, 1446.7336, 8.615206),
             ..Default::default()
         });
-        test.set_behavior(Runner2::new());
+        test.set_behavior(Runner2::soccar());
         test.sleep_millis(3000);
         assert!(test.has_scored());
     }
@@ -174,7 +174,7 @@ mod integration_tests {
             car_vel: Vector3::new(1251.7024, 854.6698, 8.411),
             ..Default::default()
         });
-        test.set_behavior(Runner2::new());
+        test.set_behavior(Runner2::soccar());
         test.sleep_millis(100);
         test.examine_eeg(|eeg| {
             assert!(eeg

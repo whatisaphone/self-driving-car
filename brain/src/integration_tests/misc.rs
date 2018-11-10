@@ -11,7 +11,7 @@ fn clear_ball_out_of_goal() {
         car_rot: Rotation3::from_unreal_angles(0.0, 210_f32.to_radians(), 0.0),
         ..Default::default()
     });
-    test.set_behavior(Runner2::new());
+    test.set_behavior(Runner2::soccar());
     test.sleep_millis(2000);
 
     let packet = test.sniff_packet();
@@ -30,7 +30,7 @@ fn todo() {
         car_vel: Vector3::new(-896.0074, -1726.876, 8.375226),
         ..Default::default()
     });
-    test.set_behavior(Runner2::new());
+    test.set_behavior(Runner2::soccar());
     unimplemented!();
 }
 
@@ -49,7 +49,7 @@ mod template {
                 ..TestScenario::from_recorded_row("../logs/play.csv", 10.0)
             })
             .starting_boost(25.0)
-            .behavior(Runner2::new())
+            .behavior(Runner2::soccar())
             .run();
         test.sleep_millis(7000);
         unimplemented!();
@@ -61,7 +61,7 @@ mod template {
         let test = TestRunner::new()
             .preview_recording("../logs/play.csv", 100.0, 102.0, 105.0)
             .starting_boost(25.0)
-            .behavior(Runner2::new())
+            .behavior(Runner2::soccar())
             .run();
         test.sleep_millis(7_000);
         unimplemented!();

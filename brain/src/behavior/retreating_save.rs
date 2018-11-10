@@ -16,7 +16,7 @@ mod integration_tests {
             car_vel: Vector3::new(786.13666, -620.0981, 8.309999),
             ..Default::default()
         });
-        test.set_behavior(Runner2::new());
+        test.set_behavior(Runner2::soccar());
         test.sleep_millis(5000);
 
         assert!(test.has_scored());
@@ -33,7 +33,7 @@ mod integration_tests {
             car_vel: Vector3::new(-379.28546, -1859.9683, 8.41),
             ..Default::default()
         });
-        test.set_behavior(Runner2::new());
+        test.set_behavior(Runner2::soccar());
         test.sleep_millis(5000);
 
         assert!(test.has_scored());
@@ -50,7 +50,7 @@ mod integration_tests {
             car_vel: Vector3::new(256.23804, -1591.1218, 8.3),
             ..Default::default()
         });
-        test.set_behavior(Runner2::new());
+        test.set_behavior(Runner2::soccar());
         test.sleep_millis(5000);
 
         assert!(test.has_scored());
@@ -67,7 +67,7 @@ mod integration_tests {
             car_vel: Vector3::new(-85.847946, -990.35706, 8.0),
             ..Default::default()
         });
-        test.set_behavior(Runner2::new());
+        test.set_behavior(Runner2::soccar());
         test.sleep_millis(5000);
 
         assert!(test.has_scored());
@@ -84,7 +84,7 @@ mod integration_tests {
             car_vel: Vector3::new(1141.101, -487.77042, 8.34),
             ..Default::default()
         });
-        test.set_behavior(Runner2::new());
+        test.set_behavior(Runner2::soccar());
         test.sleep_millis(5000);
 
         assert!(test.has_scored());
@@ -101,7 +101,7 @@ mod integration_tests {
             car_vel: Vector3::new(1027.5283, -1455.2512, 8.3),
             ..Default::default()
         });
-        test.set_behavior(Runner2::new());
+        test.set_behavior(Runner2::soccar());
         test.sleep_millis(5000);
 
         assert!(test.has_scored());

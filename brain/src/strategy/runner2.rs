@@ -11,7 +11,7 @@ pub struct Runner2 {
 }
 
 impl Runner2 {
-    pub fn new() -> Self {
+    pub fn soccar() -> Self {
         Self {
             strategy: Box::new(Soccar::new()),
             current: None,
