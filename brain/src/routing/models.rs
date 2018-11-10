@@ -47,6 +47,10 @@ pub struct CarState2D {
 }
 
 impl CarState2D {
+    pub fn forward_axis(&self) -> Unit<Vector2<f32>> {
+        physics::car_forward_axis_2d(self.rot)
+    }
+
     pub fn to_3d(&self) -> CarState {
         CarState {
             loc: self.loc.to_3d(rl::OCTANE_NEUTRAL_Z),
@@ -63,7 +67,7 @@ pub trait RoutePlanner: RoutePlannerCloneBox + Send {
     fn plan(
         &self,
         ctx: &PlanningContext,
-        _dump: &mut PlanningDump,
+        dump: &mut PlanningDump,
     ) -> Result<RoutePlan, RoutePlanError>;
 }
 
@@ -97,13 +101,16 @@ pub struct PlanningDump<'a> {
 }
 
 impl<'a> PlanningDump<'a> {
+    fn log_line(&mut self, message: impl Into<String>) {
+        self.log.push(message.into());
+    }
+
     pub fn log(&mut self, planner: &RoutePlanner, message: impl AsRef<str>) {
-        self.log
-            .push(format!("[{}] {}", planner.name(), message.as_ref()));
+        self.log_line(format!("[{}] {}", planner.name(), message.as_ref()));
     }
 
     pub fn log_pretty(&mut self, planner: &RoutePlanner, name: &str, value: impl PrettyPrint) {
-        self.log.push(format!(
+        self.log_line(format!(
             "[{}] {} = {}",
             planner.name(),
             name,

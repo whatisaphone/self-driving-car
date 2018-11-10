@@ -29,7 +29,7 @@ impl Runner2 {
     #[cfg(test)]
     pub fn with_current(current: impl Behavior + 'static) -> Self {
         Self {
-            strategy: Box::new(::strategy::Soccar::new()),
+            strategy: Box::new(::strategy::null::NullStrategy::new()),
             current: Some(Box::new(current)),
         }
     }

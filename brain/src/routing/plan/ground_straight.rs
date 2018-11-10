@@ -7,7 +7,7 @@ use routing::{
         RoutePlanner, SegmentPlan,
     },
     recover::{IsSkidding, NotFacingTarget2D, NotOnFlatGround},
-    segments::{Chain, ForwardDodge, Straight, StraightMode},
+    segments::{Brake, Chain, ForwardDodge, Straight, StraightMode},
 };
 use simulate::{Car1D, CarForwardDodge, CarForwardDodge1D};
 
@@ -122,6 +122,21 @@ impl RoutePlanner for StraightSimple {
             RoutePlanError::MustBeFacingTarget,
         );
 
+        if self.would_coasting_still_be_too_fast(ctx) {
+            let target_dist = (self.target_loc - ctx.start.loc.to_2d()).norm();
+            let target_speed = target_dist / self.target_time.unwrap();
+            let brake_start = CarState2D {
+                loc: ctx.start.loc.to_2d(),
+                rot: ctx.start.rot.to_2d(),
+                vel: ctx.start.vel.to_2d(),
+                boost: ctx.start.boost,
+            };
+            return Ok(RoutePlan {
+                segment: Box::new(Brake::new(brake_start, target_speed)),
+                next: Some(Box::new(self.clone())),
+            });
+        }
+
         let segment = Straight::new(
             CarState2D {
                 loc: ctx.start.loc.to_2d(),
@@ -137,6 +152,26 @@ impl RoutePlanner for StraightSimple {
             segment: Box::new(segment),
             next: None,
         })
+    }
+}
+
+impl StraightSimple {
+    fn would_coasting_still_be_too_fast(&self, ctx: &PlanningContext) -> bool {
+        let target_time = some_or_else!(self.target_time, {
+            return false;
+        });
+
+        let target_dist = (self.target_loc - ctx.start.loc.to_2d()).norm();
+        let mut sim = Car1D::new(ctx.start.vel.to_2d().norm()).with_boost(ctx.start.boost);
+        loop {
+            sim.step(rl::PHYSICS_DT, 0.0, false);
+            if sim.time() >= target_time {
+                break false;
+            }
+            if sim.distance_traveled() >= target_dist {
+                break true;
+            }
+        }
     }
 }
 
@@ -317,4 +352,34 @@ struct StraightDodge {
     approach_distance: f32,
     dodge: CarForwardDodge1D,
     score: f32,
+}
+
+#[cfg(test)]
+mod integration_tests {
+    use common::prelude::*;
+    use integration_tests::helpers::{TestRunner, TestScenario};
+    use nalgebra::{Point2, Vector3};
+    use routing::{
+        behavior::FollowRoute, plan::ground_straight::GroundStraightPlanner, segments::StraightMode,
+    };
+
+    #[test]
+    fn brake_when_going_too_fast() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                car_vel: Vector3::new(0.0, 2000.0, 0.0),
+                ..Default::default()
+            })
+            .behavior(FollowRoute::new(GroundStraightPlanner::new(
+                Point2::new(0.0, 1000.0),
+                Some(1.0),
+                0.0,
+                StraightMode::Fake,
+            )))
+            .run_for_millis(2000);
+
+        let packet = test.sniff_packet();
+        let loc = packet.GameCars[0].Physics.locp();
+        assert!(loc.y < 1000.0);
+    }
 }

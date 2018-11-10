@@ -214,6 +214,12 @@ impl TestRunner {
             join_handle: Some(thread),
         }
     }
+
+    pub fn run_for_millis(self, millis: u64) -> RunningTest {
+        let test = self.run();
+        test.sleep_millis(millis);
+        test
+    }
 }
 
 pub struct RunningTest {

@@ -1,4 +1,5 @@
 pub use routing::segments::{
+    brake::Brake,
     chain::Chain,
     forward_dodge::ForwardDodge,
     null::NullSegment,
@@ -8,6 +9,7 @@ pub use routing::segments::{
     turn::Turn,
 };
 
+mod brake;
 mod chain;
 mod forward_dodge;
 mod null;
