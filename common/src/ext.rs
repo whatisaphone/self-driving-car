@@ -164,6 +164,8 @@ pub trait ExtendPhysics {
     fn forward_axis_2d(&self) -> Unit<Vector2<f32>>;
     /// A unit vector in the car's right direction.
     fn right_axis(&self) -> Unit<Vector3<f32>>;
+    /// A unit vector towards the car's roof.
+    fn roof_axis(&self) -> Unit<Vector3<f32>>;
 }
 
 impl ExtendPhysics for rlbot::ffi::Physics {
@@ -209,6 +211,10 @@ impl ExtendPhysics for rlbot::ffi::Physics {
 
     fn right_axis(&self) -> Unit<Vector3<f32>> {
         physics::car_right_axis(self.quat())
+    }
+
+    fn roof_axis(&self) -> Unit<Vector3<f32>> {
+        physics::car_roof_axis(self.quat())
     }
 }
 

@@ -35,10 +35,7 @@ impl Behavior for GetToFlatGround {
 
         let me = ctx.me();
 
-        if me.OnGround
-            && me.Physics.rot().pitch() < -PI / 6.0
-            && me.Physics.rot().roll().abs() >= PI / 2.0
-        {
+        if me.OnGround && me.Physics.roof_axis().angle(&-Vector3::z_axis()) < PI / 3.0 {
             // We're probably upside down under the ceiling of a goal
             Action::Yield(rlbot::ffi::PlayerInput {
                 Jump: true,
