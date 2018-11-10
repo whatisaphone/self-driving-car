@@ -9,4 +9,5 @@ mod context;
 mod game;
 mod runner2;
 mod scenario;
+mod soccar;
 mod strategy;

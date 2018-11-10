@@ -1,10 +1,7 @@
 use behavior::{Action, Behavior};
 use eeg::{color, Drawable};
 use rlbot;
-use strategy::{
-    strategy::{DefaultStrategy, Strategy},
-    Context,
-};
+use strategy::{soccar::Soccar, strategy::Strategy, Context};
 
 pub const BASELINE: &str = "baseline:";
 
@@ -16,7 +13,7 @@ pub struct Runner2 {
 impl Runner2 {
     pub fn new() -> Self {
         Self {
-            strategy: Box::new(DefaultStrategy::new()),
+            strategy: Box::new(Soccar::new()),
             current: None,
         }
     }
@@ -24,7 +21,7 @@ impl Runner2 {
     #[cfg(test)]
     pub fn with_current(current: impl Behavior + 'static) -> Self {
         Self {
-            strategy: Box::new(DefaultStrategy::new()),
+            strategy: Box::new(Soccar::new()),
             current: Some(Box::new(current)),
         }
     }
