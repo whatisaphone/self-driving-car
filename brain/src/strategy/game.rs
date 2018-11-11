@@ -10,7 +10,7 @@ pub struct Game<'a> {
 }
 
 impl<'a> Game<'a> {
-    pub(in strategy) fn new(packet: &'a rlbot::ffi::LiveDataPacket) -> Self {
+    pub fn new(packet: &'a rlbot::ffi::LiveDataPacket) -> Self {
         Self {
             packet,
             team: Team::Blue,

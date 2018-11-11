@@ -1,7 +1,7 @@
 use common::prelude::*;
 use lazycell::LazyCell;
 use nalgebra::Point3;
-use plan::ball::{BallFrame, BallTrajectory};
+use plan::ball::{BallFrame, BallPredictor, BallTrajectory};
 use predict::intercept::NaiveIntercept;
 use rlbot;
 use simulate::{linear_interpolate, Car1D};
@@ -11,7 +11,8 @@ use utils::{one_v_one, Wall, WallRayCalculator};
 
 pub struct Scenario<'a> {
     packet: &'a rlbot::ffi::LiveDataPacket,
-    pub game: Game<'a>,
+    pub game: &'a Game<'a>,
+    ball_predictor: &'a BallPredictor,
     ball_prediction: LazyCell<BallTrajectory>,
     me_intercept: LazyCell<Option<NaiveIntercept>>,
     enemy_intercept: LazyCell<Option<NaiveIntercept>>,
@@ -25,10 +26,15 @@ impl<'a> Scenario<'a> {
     pub const POSSESSION_CONTESTABLE: f32 = 0.5;
     pub const POSSESSION_SATURATED: f32 = 5.0;
 
-    pub fn new(packet: &'a rlbot::ffi::LiveDataPacket) -> Scenario<'a> {
+    pub fn new(
+        game: &'a Game,
+        ball_predictor: &'a BallPredictor,
+        packet: &'a rlbot::ffi::LiveDataPacket,
+    ) -> Scenario<'a> {
         Scenario {
             packet,
-            game: Game::new(packet),
+            game,
+            ball_predictor,
             ball_prediction: LazyCell::new(),
             me_intercept: LazyCell::new(),
             enemy_intercept: LazyCell::new(),
@@ -40,9 +46,8 @@ impl<'a> Scenario<'a> {
     }
 
     pub fn ball_prediction(&self) -> &BallTrajectory {
-        let ball = self.packet.GameBall.Physics;
         self.ball_prediction
-            .borrow_with(|| BallTrajectory::predict(ball.locp(), ball.vel(), ball.ang_vel()))
+            .borrow_with(|| self.ball_predictor.predict(self.packet))
     }
 
     pub fn me_intercept(&self) -> Option<&NaiveIntercept> {

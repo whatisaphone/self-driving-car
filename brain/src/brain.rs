@@ -2,37 +2,43 @@
 use behavior::Behavior;
 use eeg::{color, Drawable, EEG};
 use nalgebra::clamp;
+use plan::ball::{BallPredictor, ChipBallPrediction, FrameworkBallPrediction};
 use rlbot;
-use strategy::{Context, Dropshot, Runner2, Soccar};
+use strategy::{Context, Dropshot, Game, Runner2, Soccar};
 use utils::FPSCounter;
 
 pub struct Brain {
     runner: Runner2,
+    ball_predictor: Box<BallPredictor>,
     fps_counter: FPSCounter,
 }
 
 impl Brain {
-    fn new(runner: Runner2) -> Self {
+    fn new(runner: Runner2, ball_predictor: impl BallPredictor + 'static) -> Self {
         Self {
             runner,
+            ball_predictor: Box::new(ball_predictor),
             fps_counter: FPSCounter::new(),
         }
     }
 
     pub fn soccar() -> Self {
-        Self::new(Runner2::new(Soccar::new()))
+        Self::new(Runner2::new(Soccar::new()), ChipBallPrediction::new())
     }
 
-    pub fn dropshot() -> Self {
-        Self::new(Runner2::new(Dropshot::new()))
+    pub fn dropshot(rlbot: &'static rlbot::RLBot) -> Self {
+        Self::new(
+            Runner2::new(Dropshot::new()),
+            FrameworkBallPrediction::new(rlbot),
+        )
     }
 
     #[cfg(test)]
     pub fn with_behavior(behavior: impl Behavior + 'static) -> Self {
-        Self {
-            runner: Runner2::with_current(behavior),
-            fps_counter: FPSCounter::new(),
-        }
+        Self::new(
+            Runner2::with_current(behavior),
+            ::plan::ball::ChipBallPrediction::new(),
+        )
     }
 
     #[cfg(test)]
@@ -86,7 +92,8 @@ impl Brain {
         eeg.draw(Drawable::print("-----------------------", color::GREEN));
 
         let mut result = {
-            let mut ctx = Context::new(packet, eeg);
+            let game = Game::new(packet);
+            let mut ctx = Context::new(&game, &*self.ball_predictor, packet, eeg);
 
             ctx.eeg.draw(Drawable::print(
                 format!("possession: {:.2}", ctx.scenario.possession()),

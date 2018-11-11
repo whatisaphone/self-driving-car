@@ -1,3 +1,4 @@
+use plan::ball::BallPredictor;
 use rlbot;
 use strategy::{game::Game, scenario::Scenario};
 use utils::{my_car, one_v_one};
@@ -5,18 +6,23 @@ use EEG;
 
 pub struct Context<'a> {
     pub packet: &'a rlbot::ffi::LiveDataPacket,
-    pub game: Game<'a>,
+    pub game: &'a Game<'a>,
     pub eeg: &'a mut EEG,
     pub scenario: Scenario<'a>,
 }
 
 impl<'a> Context<'a> {
-    pub fn new(packet: &'a rlbot::ffi::LiveDataPacket, eeg: &'a mut EEG) -> Self {
+    pub fn new(
+        game: &'a Game,
+        ball_predictor: &'a BallPredictor,
+        packet: &'a rlbot::ffi::LiveDataPacket,
+        eeg: &'a mut EEG,
+    ) -> Self {
         Self {
             packet,
-            game: Game::new(packet),
+            game,
             eeg,
-            scenario: Scenario::new(packet),
+            scenario: Scenario::new(game, ball_predictor, packet),
         }
     }
 
