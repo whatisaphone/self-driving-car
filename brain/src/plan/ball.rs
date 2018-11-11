@@ -1,29 +1,35 @@
 use chip::Ball;
-use common::prelude::*;
+use common::{prelude::*, rl};
 use nalgebra::{Point3, Vector3};
 use std::mem;
 use utils::TotalF32;
 
-const DT: f32 = 1.0 / 120.0;
 const PREDICT_DURATION: f32 = 5.0;
 
 pub struct BallTrajectory {
     frames: Vec<BallFrame>,
 }
 
+#[derive(Clone)]
 pub struct BallFrame {
     pub t: f32,
+    dt: f32,
     pub loc: Point3<f32>,
     pub vel: Vector3<f32>,
 }
 
 impl BallFrame {
     pub fn dt(&self) -> f32 {
-        DT
+        self.dt
     }
 }
 
 impl BallTrajectory {
+    fn new(frames: Vec<BallFrame>) -> Self {
+        assert!(!frames.is_empty());
+        Self { frames }
+    }
+
     /// Return the starting frame of the prediction (e.g., where the ball is
     /// right now).
     pub fn start(&self) -> &BallFrame {
@@ -36,22 +42,22 @@ impl BallTrajectory {
 
     /// Iterate over the frames, but skip the given number of seconds at the
     /// start.
-    pub fn iter_delayed(&self, delay: f32) -> impl DoubleEndedIterator<Item = &BallFrame> {
-        let delay_frames = (delay / DT) as usize;
-        self.frames.iter().skip(delay_frames)
-    }
-
     pub fn hacky_expensive_slice(&self, delay: f32) -> Self {
-        let start = self.start();
-        Self {
-            frames: self
-                .iter_delayed(delay)
-                .map(|f| BallFrame {
-                    t: f.t - start.t,
-                    ..*f
-                })
-                .collect(),
-        }
+        let frames = match self.frames.iter().position(|f| f.t >= delay) {
+            Some(i) => {
+                let start_time = self.frames[i].t;
+                self.frames[i..]
+                    .iter()
+                    .map(|f| BallFrame {
+                        t: f.t - start_time,
+                        ..*f
+                    })
+                    .collect()
+            }
+            None => vec![self.frames.last().unwrap().clone()],
+        };
+
+        Self::new(frames)
     }
 
     pub fn at_time(&self, t: f32) -> Option<&BallFrame> {
@@ -78,6 +84,8 @@ pub struct ChipBallPrediction;
 
 impl BallPredictor for ChipBallPrediction {
     fn predict(&self, packet: &rlbot::ffi::LiveDataPacket) -> BallTrajectory {
+        const DT: f32 = rl::PHYSICS_DT;
+
         let mut ball = Ball::new();
         ball.set_pos(packet.GameBall.Physics.locp());
         ball.set_vel(packet.GameBall.Physics.vel());
@@ -91,6 +99,7 @@ impl BallPredictor for ChipBallPrediction {
         // faster than `DT`.
         frames.push(BallFrame {
             t,
+            dt: DT,
             loc: ball.pos(),
             vel: ball.vel(),
         });
@@ -100,12 +109,13 @@ impl BallPredictor for ChipBallPrediction {
             ball.step(DT);
             frames.push(BallFrame {
                 t,
+                dt: DT,
                 loc: ball.pos(),
                 vel: ball.vel(),
             });
         }
 
-        BallTrajectory { frames }
+        BallTrajectory::new(frames)
     }
 }
 
@@ -116,6 +126,8 @@ pub struct FrameworkBallPrediction {
 
 impl BallPredictor for FrameworkBallPrediction {
     fn predict(&self, _packet: &rlbot::ffi::LiveDataPacket) -> BallTrajectory {
+        const DT: f32 = 1.0 / 60.0;
+
         let mut packet: rlbot::ffi::BallPredictionPacket = unsafe { mem::uninitialized() };
         self.rlbot.get_ball_prediction_struct(&mut packet).unwrap();
         let start_time = packet.Slice[0].GameSeconds;
@@ -125,11 +137,12 @@ impl BallPredictor for FrameworkBallPrediction {
             .take(packet.NumSlices as usize)
             .map(|slice| BallFrame {
                 t: slice.GameSeconds - start_time,
+                dt: DT,
                 loc: point3(slice.Physics.Location),
                 vel: vector3(slice.Physics.Velocity),
             })
             .collect();
-        BallTrajectory { frames }
+        BallTrajectory::new(frames)
     }
 }
 
