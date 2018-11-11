@@ -263,10 +263,10 @@ enum Do {
 
 #[cfg(test)]
 mod integration_tests {
+    use common::rl;
     use integration_tests::helpers::{TestRunner, TestScenario};
     use maneuvers::grounded_hit::GroundedHit;
-    use nalgebra::Vector3;
-    use utils::enemy_goal_center_point;
+    use nalgebra::{Point2, Vector3};
 
     #[test]
     fn normal_shoot() {
@@ -278,7 +278,7 @@ mod integration_tests {
             ..Default::default()
         });
         test.set_behavior(GroundedHit::hit_towards(|_, _| {
-            Ok(enemy_goal_center_point())
+            Ok(Point2::new(0.0, rl::FIELD_MAX_Y))
         }));
 
         test.sleep_millis(3000);

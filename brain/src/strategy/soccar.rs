@@ -4,7 +4,7 @@ use maneuvers::{FiftyFifty, GetToFlatGround};
 use routing::{behavior::FollowRoute, plan::GetDollar};
 use std::f32::consts::PI;
 use strategy::{scenario::Scenario, strategy::Strategy, Context};
-use utils::{geometry::ExtendF32, my_goal_center_2d, Wall};
+use utils::Wall;
 
 #[derive(new)]
 pub struct Soccar;
@@ -87,13 +87,14 @@ fn enemy_can_shoot(ctx: &mut Context) -> bool {
         Some(i) => i,
         None => return false,
     };
-    let ball_loc = enemy_intercept.ball_loc.to_2d().coords;
-    if (ball_loc - my_goal_center_2d()).norm() >= 3000.0 {
+    let ball_loc = enemy_intercept.ball_loc.to_2d();
+    let goal = ctx.game.own_goal();
+    if (ball_loc - goal.center_2d).norm() >= 3000.0 {
         return false;
     }
-    let angle_car_ball = ctx.enemy().Physics.loc().to_2d().angle_to(ball_loc);
-    let angle_ball_goal = ball_loc.angle_to(my_goal_center_2d());
-    let angle_diff = (angle_car_ball - angle_ball_goal).normalize_angle().abs();
+    let angle_car_ball = ctx.enemy().Physics.locp().to_2d().angle_to(ball_loc);
+    let angle_ball_goal = ball_loc.angle_to(goal.center_2d);
+    let angle_diff = angle_car_ball.rotation_to(&angle_ball_goal).angle().abs();
     angle_diff < PI / 2.0
 }
 

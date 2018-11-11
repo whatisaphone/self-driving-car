@@ -2,12 +2,12 @@ use behavior::{Action, Behavior};
 use common::{prelude::*, rl};
 use eeg::{color, Drawable};
 use mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
-use nalgebra::{Point2, Vector2};
+use nalgebra::Point2;
 use predict::{intercept::NaiveIntercept, naive_ground_intercept};
 use rules::SameBallTrajectory;
 use std::f32::consts::PI;
-use strategy::Context;
-use utils::{enemy_goal_center, enemy_goal_center_point, geometry::ExtendF32, WallRayCalculator};
+use strategy::{Context, Goal};
+use utils::{geometry::ExtendF32, WallRayCalculator};
 
 pub struct BounceShot {
     aim_loc: Point2<f32>,
@@ -17,17 +17,10 @@ pub struct BounceShot {
 impl BounceShot {
     pub const MAX_BALL_Z: f32 = 110.0;
 
-    pub fn new() -> Self {
+    pub fn new(aim_loc: Point2<f32>) -> Self {
         Self {
-            aim_loc: enemy_goal_center_point(),
+            aim_loc,
             same_ball_trajectory: SameBallTrajectory::new(),
-        }
-    }
-
-    pub fn with_aim_loc(self, aim_loc: Vector2<f32>) -> Self {
-        Self {
-            aim_loc: Point2::from(aim_loc),
-            ..self
         }
     }
 }
@@ -88,14 +81,14 @@ impl Behavior for BounceShot {
 
 impl BounceShot {
     /// Given a ball location, where should we aim the shot?
-    pub fn aim_loc(car_loc: Point2<f32>, ball_loc: Point2<f32>) -> Point2<f32> {
+    pub fn aim_loc(goal: &Goal, car_loc: Point2<f32>, ball_loc: Point2<f32>) -> Point2<f32> {
         // If the ball is very close to goal, aim for a point in goal opposite from the
         // ball for an easy shot. If there's some distance, aim at the middle of goal
         // so we're less likely to miss.
-        let y_dist = (enemy_goal_center().y - ball_loc.y).abs();
+        let y_dist = (goal.center_2d.y - ball_loc.y).abs();
         let allow_angle_diff = ((1000.0 - y_dist) / 1000.0).max(0.0) * PI / 12.0;
         let naive_angle = car_loc.coords.angle_to(ball_loc.coords);
-        let goal_angle = ball_loc.coords.angle_to(enemy_goal_center());
+        let goal_angle = ball_loc.coords.angle_to(goal.center_2d.coords);
         let adjust = (naive_angle - goal_angle).normalize_angle();
         let aim_angle = goal_angle + adjust.max(-allow_angle_diff).min(allow_angle_diff);
         Point2::from(WallRayCalculator::calc_ray(ball_loc, aim_angle))
@@ -132,7 +125,7 @@ mod integration_tests {
     use common::{prelude::*, rl};
     use integration_tests::helpers::{TestRunner, TestScenario};
     use maneuvers::bounce_shot::BounceShot;
-    use nalgebra::{Rotation3, Vector2, Vector3};
+    use nalgebra::{Point2, Rotation3, Vector3};
 
     // `Repeat` is used in these tests so the shot is not aborted by
     // `SameBallTrajectory` when the ball bounces.
@@ -140,7 +133,7 @@ mod integration_tests {
     #[test]
     fn normal() {
         let test = TestRunner::start(
-            Repeat::new(BounceShot::new),
+            Repeat::new(|| BounceShot::new(Point2::new(0.0, rl::FIELD_MAX_Y))),
             TestScenario {
                 ball_loc: Vector3::new(-2000.0, 2000.0, 500.0),
                 ball_vel: Vector3::new(1000.0, 0.0, 0.0),
@@ -158,7 +151,7 @@ mod integration_tests {
     #[test]
     fn slow_no_boost() {
         let test = TestRunner::start(
-            Repeat::new(BounceShot::new),
+            Repeat::new(|| BounceShot::new(Point2::new(0.0, rl::FIELD_MAX_Y))),
             TestScenario {
                 ball_loc: Vector3::new(-2000.0, 2000.0, 1000.0),
                 ball_vel: Vector3::new(500.0, 0.0, 0.0),
@@ -185,7 +178,7 @@ mod integration_tests {
             ..Default::default()
         });
         test.set_behavior(Repeat::new(|| {
-            BounceShot::new().with_aim_loc(Vector2::new(-rl::FIELD_MAX_X, -1000.0))
+            BounceShot::new(Point2::new(-rl::FIELD_MAX_X, -1000.0))
         }));
 
         test.sleep_millis(3000);
@@ -205,7 +198,7 @@ mod integration_tests {
             ..Default::default()
         });
         test.set_behavior(Repeat::new(|| {
-            BounceShot::new().with_aim_loc(Vector2::new(rl::FIELD_MAX_X, -rl::FIELD_MAX_Y))
+            BounceShot::new(Point2::new(rl::FIELD_MAX_X, -rl::FIELD_MAX_Y))
         }));
 
         test.sleep_millis(3000);

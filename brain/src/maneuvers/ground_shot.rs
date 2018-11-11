@@ -3,11 +3,11 @@ use common::prelude::*;
 use eeg::{color, Drawable};
 use maneuvers::{BounceShot, GetToFlatGround};
 use mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
-use nalgebra::{Vector2, Vector3};
+use nalgebra::{Point2, Point3};
 use predict::naive_ground_intercept;
 use std::f32::consts::PI;
 use strategy::Context;
-use utils::{enemy_goal_center, geometry::ExtendF32};
+use utils::geometry::ExtendF32;
 
 pub struct GroundShot {
     min_distance: Option<f32>,
@@ -20,17 +20,13 @@ impl GroundShot {
         GroundShot { min_distance: None }
     }
 
-    pub fn shot_angle(ball_loc: Vector3<f32>, car_loc: Vector3<f32>, aim_loc: Vector2<f32>) -> f32 {
-        let angle_me_ball = car_loc.to_2d().angle_to(ball_loc.to_2d());
-        let angle_ball_goal = ball_loc.to_2d().angle_to(aim_loc);
+    pub fn shot_angle(ball_loc: Point3<f32>, car_loc: Point3<f32>, aim_loc: Point2<f32>) -> f32 {
+        let angle_me_ball = car_loc.coords.to_2d().angle_to(ball_loc.coords.to_2d());
+        let angle_ball_goal = ball_loc.coords.to_2d().angle_to(aim_loc.coords);
         (angle_me_ball - angle_ball_goal).normalize_angle().abs()
     }
 
-    pub fn good_angle(
-        ball_loc: Vector3<f32>,
-        car_loc: Vector3<f32>,
-        aim_loc: Vector2<f32>,
-    ) -> bool {
+    pub fn good_angle(ball_loc: Point3<f32>, car_loc: Point3<f32>, aim_loc: Point2<f32>) -> bool {
         Self::shot_angle(ball_loc, car_loc, aim_loc) < PI / 6.0
     }
 }
@@ -55,9 +51,9 @@ impl Behavior for GroundShot {
             |ball| {
                 ball.loc.z < Self::MAX_BALL_Z
                     && Self::good_angle(
-                        ball.loc.coords,
-                        me.Physics.locp().coords,
-                        enemy_goal_center(),
+                        ball.loc,
+                        me.Physics.locp(),
+                        ctx.game.enemy_goal().center_2d,
                     )
             },
         );
@@ -67,7 +63,11 @@ impl Behavior for GroundShot {
             return Action::Abort;
         });
 
-        let aim_loc = BounceShot::aim_loc(me.Physics.locp().to_2d(), intercept.ball_loc.to_2d());
+        let aim_loc = BounceShot::aim_loc(
+            ctx.game.enemy_goal(),
+            me.Physics.locp().to_2d(),
+            intercept.ball_loc.to_2d(),
+        );
         let target_loc = BounceShot::rough_shooting_spot(&intercept, aim_loc);
         let target_dist = (target_loc - me.Physics.locp().to_2d()).norm();
 

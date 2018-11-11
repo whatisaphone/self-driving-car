@@ -4,6 +4,7 @@ use rlbot;
 
 pub struct Game<'a> {
     packet: &'a rlbot::ffi::LiveDataPacket,
+    mode: rlbot::ffi::GameMode,
     pub team: Team,
     pub enemy_team: Team,
     boost_dollars: Box<[BoostPickup]>,
@@ -16,6 +17,7 @@ impl<'a> Game<'a> {
     ) -> Self {
         Self {
             packet,
+            mode: infer_game_mode(field_info),
             team: Team::Blue,
             enemy_team: Team::Orange,
             boost_dollars: field_info
@@ -28,6 +30,24 @@ impl<'a> Game<'a> {
                 })
                 .collect::<Vec<_>>()
                 .into_boxed_slice(),
+        }
+    }
+
+    pub fn field_max_x(&self) -> f32 {
+        match self.mode {
+            rlbot::ffi::GameMode::Soccer => 4096.0,
+            rlbot::ffi::GameMode::Dropshot => 5026.0,
+            rlbot::ffi::GameMode::Hoops => 2966.67,
+            mode => panic!("unexpected game mode {:?}", mode),
+        }
+    }
+
+    pub fn field_max_y(&self) -> f32 {
+        match self.mode {
+            rlbot::ffi::GameMode::Soccer => 5120.0,
+            rlbot::ffi::GameMode::Dropshot => 4555.0,
+            rlbot::ffi::GameMode::Hoops => 3586.0,
+            mode => panic!("unexpected game mode {:?}", mode),
         }
     }
 
@@ -48,6 +68,15 @@ impl<'a> Game<'a> {
 
     pub fn boost_dollars(&self) -> &[BoostPickup] {
         &*self.boost_dollars
+    }
+}
+
+pub fn infer_game_mode(field_info: &rlbot::ffi::FieldInfo) -> rlbot::ffi::GameMode {
+    match field_info.NumBoosts {
+        0 => rlbot::ffi::GameMode::Dropshot,
+        20 => rlbot::ffi::GameMode::Hoops,
+        34 => rlbot::ffi::GameMode::Soccer,
+        _ => panic!("unknown game mode"),
     }
 }
 

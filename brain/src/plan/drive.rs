@@ -1,7 +1,7 @@
 use behavior::Behavior;
 use common::{prelude::*, rl};
 use mechanics::{simple_yaw_diff, QuickJumpAndDodge};
-use nalgebra::Vector2;
+use nalgebra::{Point2, Vector2};
 use rlbot;
 use simulate::Car1D;
 use std::f32::consts::PI;
@@ -10,12 +10,12 @@ use utils::geometry::ExtendF32;
 // I'm keeping this value artificially high until I implement smarter routing.
 const GROUND_DODGE_TIME: f32 = 2.0;
 
-pub fn rough_time_drive_to_loc(car: &rlbot::ffi::PlayerInfo, target_loc: Vector2<f32>) -> f32 {
+pub fn rough_time_drive_to_loc(car: &rlbot::ffi::PlayerInfo, target_loc: Point2<f32>) -> f32 {
     const DT: f32 = 1.0 / 60.0;
 
-    let target_dist = (car.Physics.loc().to_2d() - target_loc).norm();
+    let target_dist = (car.Physics.locp().to_2d() - target_loc).norm();
 
-    let mut t = 2.0 / 120.0 + steer_penalty(car, simple_yaw_diff(&car.Physics, target_loc));
+    let mut t = 2.0 / 120.0 + steer_penalty(car, simple_yaw_diff(&car.Physics, target_loc.coords));
     let mut sim_car = Car1D::new(car.Physics.vel().norm()).with_boost(car.Boost as f32);
     loop {
         t += DT;

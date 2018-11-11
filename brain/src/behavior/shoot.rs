@@ -1,10 +1,9 @@
 use behavior::{aerial_shot::AerialShot, Action, Behavior};
 use common::{prelude::*, rl};
 use maneuvers::{GroundShot, JumpShot};
-use nalgebra::Vector3;
+use nalgebra::Point3;
 use predict::estimate_intercept_car_ball;
-use strategy::Context;
-use utils::enemy_goal_center;
+use strategy::{Context, Game};
 
 pub struct Shoot;
 
@@ -13,21 +12,22 @@ impl Shoot {
         Shoot
     }
 
-    pub fn good_angle(ball_loc: Vector3<f32>, car_loc: Vector3<f32>) -> bool {
+    pub fn good_angle(game: &Game, ball_loc: Point3<f32>, car_loc: Point3<f32>) -> bool {
+        assert!(ball_loc.x.abs() < game.field_max_x() && ball_loc.y.abs() < game.field_max_y());
+
         // Aerials are not ready for prime-time yet
         if ball_loc.z >= JumpShot::MAX_BALL_Z {
             return false;
         }
 
         // This is woefully incomplete
-        if ball_loc.x.abs() >= rl::FIELD_MAX_X || ball_loc.y.abs() >= rl::FIELD_MAX_Y {
-            return false; // Ball is outside the field; clearly prediction has gone wrong somehow.
-        } else if ball_loc.y.abs() >= rl::FIELD_MAX_Y - 250.0 && ball_loc.x.abs() >= rl::GOALPOST_X
-        {
+        assert!(game.enemy_goal().center_2d.y > 0.0); // So far only implemented for orange
+
+        if ball_loc.y.abs() >= game.field_max_y() - 250.0 && ball_loc.x.abs() >= rl::GOALPOST_X {
             return false;
         }
 
-        GroundShot::good_angle(ball_loc, car_loc, enemy_goal_center())
+        GroundShot::good_angle(ball_loc, car_loc, game.enemy_goal().center_2d)
     }
 }
 
@@ -40,7 +40,7 @@ impl Behavior for Shoot {
         let me = ctx.me();
 
         let intercept = estimate_intercept_car_ball(ctx, me, |_t, &loc, _vel| {
-            Self::good_angle(loc, me.Physics.loc())
+            Self::good_angle(ctx.game, loc, me.Physics.locp())
         });
 
         let intercept = some_or_else!(intercept, {

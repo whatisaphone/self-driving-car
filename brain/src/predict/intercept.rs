@@ -6,16 +6,16 @@ use simulate::Car1D;
 use strategy::Context;
 
 pub fn estimate_intercept_car_ball(
-    ctx: &mut Context,
+    ctx: &Context,
     car: &rlbot::ffi::PlayerInfo,
-    predicate: impl Fn(f32, &Vector3<f32>, &Vector3<f32>) -> bool,
+    predicate: impl Fn(f32, &Point3<f32>, &Vector3<f32>) -> bool,
 ) -> Option<Intercept> {
     let intercept = naive_ground_intercept(
         ctx.scenario.ball_prediction().iter(),
         car.Physics.locp(),
         car.Physics.vel(),
         car.Boost as f32,
-        |bf| predicate(bf.t, &bf.loc.coords, &bf.vel),
+        |bf| predicate(bf.t, &bf.loc, &bf.vel),
     );
     intercept.map(Into::into)
 }

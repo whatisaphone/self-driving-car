@@ -7,7 +7,7 @@ use predict::{estimate_intercept_car_ball, Intercept};
 use routing::{behavior::FollowRoute, plan::GroundIntercept};
 use std::f32::consts::PI;
 use strategy::{Context, Scenario};
-use utils::{my_car, my_goal_center_2d, Wall, WallRayCalculator};
+use utils::{my_car, Wall, WallRayCalculator};
 
 pub struct Defense;
 
@@ -26,8 +26,8 @@ impl Behavior for Defense {
         let me = ctx.me();
 
         // Don't panic if we're already in goal
-        let distance_to_goal =
-            (my_goal_center_2d().y - me.Physics.loc().y) * my_goal_center_2d().y.signum();
+        let own_goal = ctx.game.own_goal().center_2d;
+        let distance_to_goal = (own_goal.y - me.Physics.locp().y) * own_goal.y.signum();
         if distance_to_goal >= 250.0 {
             return Action::call(Chain::new(
                 Priority::Save,
@@ -82,11 +82,11 @@ impl Behavior for PushToOwnCorner {
         let me_intercept =
             estimate_intercept_car_ball(ctx, me, |_t, &loc, _vel| loc.z < Self::MAX_BALL_Z);
 
+        let own_goal = ctx.game.own_goal().center_2d;
         let enemy_shootable_intercept =
             estimate_intercept_car_ball(ctx, enemy, |_t, &loc, _vel| {
                 loc.z < JumpShot::MAX_BALL_Z
-                    && GroundShot::shot_angle(loc, enemy.Physics.loc(), my_goal_center_2d())
-                        < PI / 2.0
+                    && GroundShot::shot_angle(loc, enemy.Physics.locp(), own_goal) < PI / 2.0
             });
 
         assert_eq!(ctx.me().Team, 0); // or the colors below won't be right
@@ -159,14 +159,14 @@ impl Behavior for HitToOwnCorner {
             None => Action::Return,
             Some(intercept) => match Self::aim_loc(ctx, &intercept) {
                 Err(()) => Action::Return,
-                Ok(aim_loc) => Action::call(BounceShot::new().with_aim_loc(aim_loc)),
+                Ok(aim_loc) => Action::call(BounceShot::new(aim_loc)),
             },
         }
     }
 }
 
 impl HitToOwnCorner {
-    fn aim_loc(ctx: &mut Context, intercept: &Intercept) -> Result<Vector2<f32>, ()> {
+    fn aim_loc(ctx: &mut Context, intercept: &Intercept) -> Result<Point2<f32>, ()> {
         let avoid = ctx.game.own_goal().center_2d;
 
         let me = my_car(ctx.packet);
@@ -192,7 +192,7 @@ impl HitToOwnCorner {
                 ctx.eeg.log("avoiding the own goal");
                 Err(())
             }
-            _ => Ok(result.coords),
+            _ => Ok(result),
         }
     }
 }
@@ -200,9 +200,9 @@ impl HitToOwnCorner {
 fn defensive_hit(ctx: &mut Context, intercept_ball_loc: Point3<f32>) -> Result<Point2<f32>, ()> {
     let me = ctx.me();
     let target_angle = blocking_angle(
-        intercept_ball_loc.to_2d().coords,
-        me.Physics.loc().to_2d(),
-        ctx.game.own_goal().center_2d.coords,
+        intercept_ball_loc.to_2d(),
+        me.Physics.locp().to_2d(),
+        ctx.game.own_goal().center_2d,
         PI / 6.0,
     );
     let target_loc = intercept_ball_loc.to_2d() + Vector2::unit(target_angle) * 200.0;

@@ -2,17 +2,17 @@ use behavior::{Action, Behavior};
 use common::{prelude::*, rl};
 use eeg::{color, Drawable, EEG};
 use mechanics::{simple_steer_towards, QuickJumpAndDodge};
-use nalgebra::Vector2;
+use nalgebra::Point2;
 use rlbot;
 use std::f32::consts::PI;
 use utils::my_car;
 
 pub struct BlitzToLocation {
-    target_loc: Vector2<f32>,
+    target_loc: Point2<f32>,
 }
 
 impl BlitzToLocation {
-    pub fn new(target_loc: Vector2<f32>) -> BlitzToLocation {
+    pub fn new(target_loc: Point2<f32>) -> BlitzToLocation {
         BlitzToLocation { target_loc }
     }
 }
@@ -24,13 +24,13 @@ impl Behavior for BlitzToLocation {
 
     fn execute(&mut self, packet: &rlbot::ffi::LiveDataPacket, eeg: &mut EEG) -> Action {
         let me = my_car(packet);
-        let distance = (me.Physics.loc().to_2d() - self.target_loc).norm();
+        let distance = (me.Physics.locp().to_2d() - self.target_loc).norm();
         let speed = me.Physics.vel().norm();
 
-        let steer = simple_steer_towards(&me.Physics, self.target_loc);
+        let steer = simple_steer_towards(&me.Physics, self.target_loc.coords);
 
         eeg.draw(Drawable::ghost_car_ground(
-            self.target_loc,
+            self.target_loc.coords,
             me.Physics.rot(),
         ));
         eeg.draw(Drawable::print(
@@ -81,13 +81,13 @@ impl Behavior for BlitzToLocation {
 mod integration_tests {
     use integration_tests::helpers::{TestRunner, TestScenario};
     use maneuvers::blitz_to_location::BlitzToLocation;
-    use nalgebra::{Vector2, Vector3};
+    use nalgebra::{Point2, Vector3};
 
     #[test]
     fn kickoff_off_center() {
         let test = TestRunner::start(
             BlitzToLocation {
-                target_loc: Vector2::zeros(),
+                target_loc: Point2::origin(),
             },
             TestScenario {
                 car_loc: Vector3::new(256.0, -3839.98, 17.01),

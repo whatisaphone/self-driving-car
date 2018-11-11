@@ -5,7 +5,6 @@ use maneuvers::AerialLocTime;
 use predict::estimate_intercept_car_ball;
 use simulate::CarAerial60Deg;
 use strategy::Context;
-use utils::enemy_goal_center;
 
 pub struct AerialShot {
     finished: bool,
@@ -30,7 +29,7 @@ impl Behavior for AerialShot {
         let me = ctx.me();
 
         let intercept = estimate_intercept_car_ball(ctx, &me, |t, loc, _vel| {
-            let max_comfortable_z = rl::CROSSBAR_Z + enemy_goal_center().y - loc.y;
+            let max_comfortable_z = rl::CROSSBAR_Z + ctx.game.enemy_goal().center_2d.y - loc.y;
             if loc.z >= max_comfortable_z {
                 return false;
             }

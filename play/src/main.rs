@@ -37,7 +37,7 @@ fn main() {
     }
 
     let field_info = rlbot.get_field_info().unwrap();
-    let brain = match infer_game_mode(&field_info) {
+    let brain = match Brain::infer_game_mode(&field_info) {
         rlbot::ffi::GameMode::Soccer => Brain::soccar(),
         rlbot::ffi::GameMode::Dropshot => Brain::dropshot(rlbot),
         rlbot::ffi::GameMode::Hoops => Brain::hoops(rlbot),
@@ -60,15 +60,6 @@ fn start_match(rlbot: &rlbot::RLBot) {
     };
     rlbot.start_match(match_settings).unwrap();
     rlbot.wait_for_match_start().unwrap();
-}
-
-fn infer_game_mode(field_info: &rlbot::ffi::FieldInfo) -> rlbot::ffi::GameMode {
-    match field_info.NumBoosts {
-        0 => rlbot::ffi::GameMode::Dropshot,
-        20 => rlbot::ffi::GameMode::Hoops,
-        34 => rlbot::ffi::GameMode::Soccer,
-        _ => panic!("unknown game mode"),
-    }
 }
 
 fn bot_loop(rlbot: &rlbot::RLBot, bot: &mut FormulaNone) {

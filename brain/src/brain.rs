@@ -4,7 +4,7 @@ use eeg::{color, Drawable, EEG};
 use nalgebra::clamp;
 use plan::ball::{BallPredictor, ChipBallPrediction, FrameworkBallPrediction};
 use rlbot;
-use strategy::{Context, Dropshot, Game, Runner2, Soccar};
+use strategy::{infer_game_mode, Context, Dropshot, Game, Runner2, Soccar};
 use utils::FPSCounter;
 
 pub struct Brain {
@@ -20,6 +20,10 @@ impl Brain {
             ball_predictor: Box::new(ball_predictor),
             fps_counter: FPSCounter::new(),
         }
+    }
+
+    pub fn infer_game_mode(field_info: &rlbot::ffi::FieldInfo) -> rlbot::ffi::GameMode {
+        infer_game_mode(field_info)
     }
 
     pub fn soccar() -> Self {

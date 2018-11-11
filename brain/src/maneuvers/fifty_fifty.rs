@@ -2,12 +2,12 @@ use behavior::{Action, Behavior};
 use common::prelude::*;
 use eeg::{color, Drawable};
 use mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
-use nalgebra::Vector2;
+use nalgebra::{Point2, Vector2};
 use predict::intercept::estimate_intercept_car_ball;
 use rules::SameBallTrajectory;
 use std::f32::consts::PI;
 use strategy::Context;
-use utils::{geometry::ExtendF32, my_goal_center};
+use utils::geometry::ExtendF32;
 
 pub struct FiftyFifty {
     same_ball_trajectory: SameBallTrajectory,
@@ -42,9 +42,9 @@ impl Behavior for FiftyFifty {
         });
 
         let target_angle = blocking_angle(
-            intercept.ball_loc.to_2d(),
-            me.Physics.loc().to_2d(),
-            my_goal_center(),
+            Point2::from(intercept.ball_loc.to_2d()),
+            me.Physics.locp().to_2d(),
+            ctx.game.own_goal().center_2d,
             PI / 6.0,
         );
         let target_loc = intercept.ball_loc.to_2d() + Vector2::unit(target_angle) * 200.0;
@@ -76,13 +76,13 @@ impl Behavior for FiftyFifty {
 /// `ball_loc` and `block_loc`, but not adjusting the approach angle by more
 /// than `max_angle_diff`.
 pub fn blocking_angle(
-    ball_loc: Vector2<f32>,
-    car_loc: Vector2<f32>,
-    block_loc: Vector2<f32>,
+    ball_loc: Point2<f32>,
+    car_loc: Point2<f32>,
+    block_loc: Point2<f32>,
     max_angle_diff: f32,
 ) -> f32 {
-    let naive_angle = ball_loc.angle_to(car_loc);
-    let block_angle = ball_loc.angle_to(block_loc);
+    let naive_angle = ball_loc.coords.angle_to(car_loc.coords);
+    let block_angle = ball_loc.coords.angle_to(block_loc.coords);
     let adjust = (block_angle - naive_angle)
         .normalize_angle()
         .max(-max_angle_diff)

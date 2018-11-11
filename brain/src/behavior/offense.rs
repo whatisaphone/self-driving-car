@@ -20,7 +20,7 @@ impl Behavior for Offense {
         let me = ctx.me();
 
         let intercept = estimate_intercept_car_ball(ctx, me, |_t, &loc, _vel| {
-            Shoot::good_angle(loc, me.Physics.loc())
+            Shoot::good_angle(ctx.game, loc, me.Physics.locp())
         });
 
         if intercept.is_some() {
