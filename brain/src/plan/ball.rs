@@ -71,13 +71,10 @@ impl BallTrajectory {
     }
 
     pub fn hacky_expensive_slice(&self, delay: f32) -> Self {
-        let delay_frames = (delay / DT) as usize;
         let start = self.start();
         Self {
             frames: self
-                .frames
-                .iter()
-                .skip(delay_frames)
+                .iter_delayed(delay)
                 .map(|f| BallFrame {
                     t: f.t - start.t,
                     ..*f
