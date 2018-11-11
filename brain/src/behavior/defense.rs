@@ -7,7 +7,7 @@ use predict::{estimate_intercept_car_ball, Intercept};
 use routing::{behavior::FollowRoute, plan::GroundIntercept};
 use std::f32::consts::PI;
 use strategy::{Context, Scenario};
-use utils::{my_car, Wall, WallRayCalculator};
+use utils::{Wall, WallRayCalculator};
 
 pub struct Defense;
 
@@ -169,7 +169,7 @@ impl HitToOwnCorner {
     fn aim_loc(ctx: &mut Context, intercept: &Intercept) -> Result<Point2<f32>, ()> {
         let avoid = ctx.game.own_goal().center_2d;
 
-        let me = my_car(ctx.packet);
+        let me = ctx.me();
         let me_loc = me.Physics.locp().to_2d();
         let ball_loc = Point2::from(intercept.ball_loc.to_2d());
         let me_to_ball = ball_loc - me_loc;

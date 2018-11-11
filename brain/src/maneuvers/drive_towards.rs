@@ -1,26 +1,23 @@
 use behavior::{Action, Behavior};
 use common::{prelude::*, rl};
-use eeg::{color, Drawable, EEG};
+use eeg::{color, Drawable};
 use mechanics::simple_yaw_diff;
 use nalgebra::{Point2, Vector2};
 use rlbot;
 use simulate::linear_interpolate;
 use std::f32::consts::PI;
 use strategy::Context;
-use utils::one_v_one;
 
-pub fn drive_towards(
-    packet: &rlbot::ffi::LiveDataPacket,
-    eeg: &mut EEG,
-    target_loc: Vector2<f32>,
-) -> rlbot::ffi::PlayerInput {
-    let (me, _enemy) = one_v_one(packet);
+pub fn drive_towards(ctx: &mut Context, target_loc: Vector2<f32>) -> rlbot::ffi::PlayerInput {
+    let me = ctx.me();
 
     let yaw_diff = simple_yaw_diff(&me.Physics, target_loc);
     let steer = yaw_diff.max(-1.0).min(1.0) * 2.0;
 
-    eeg.draw(Drawable::print(stringify!(drive_towards), color::YELLOW));
-    eeg.draw(Drawable::ghost_car_ground(target_loc, me.Physics.rot()));
+    ctx.eeg
+        .draw(Drawable::print(stringify!(drive_towards), color::YELLOW));
+    ctx.eeg
+        .draw(Drawable::ghost_car_ground(target_loc, me.Physics.rot()));
 
     let handbrake_cutoff = linear_interpolate(
         &[0.0, rl::CAR_NORMAL_SPEED],
@@ -54,6 +51,6 @@ impl Behavior for DriveTowards {
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {
-        Action::Yield(drive_towards(ctx.packet, ctx.eeg, self.target_loc.coords))
+        Action::Yield(drive_towards(ctx, self.target_loc.coords))
     }
 }

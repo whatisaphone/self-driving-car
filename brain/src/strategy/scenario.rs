@@ -7,7 +7,7 @@ use rlbot;
 use simulate::{linear_interpolate, Car1D};
 use std::f32::{self, consts::PI};
 use strategy::game::Game;
-use utils::{one_v_one, Wall, WallRayCalculator};
+use utils::{Wall, WallRayCalculator};
 
 pub struct Scenario<'a> {
     packet: &'a rlbot::ffi::LiveDataPacket,
@@ -73,7 +73,7 @@ impl<'a> Scenario<'a> {
     }
 
     fn race(&self) {
-        let (blitz_me, blitz_enemy) = simulate_ball_blitz(self.packet, self.ball_prediction());
+        let (blitz_me, blitz_enemy) = simulate_ball_blitz(self.game, self.ball_prediction());
         let possession = match (&blitz_me, &blitz_enemy) {
             (Some(me), Some(enemy)) => enemy.time - me.time,
             _ => {
@@ -95,7 +95,7 @@ impl<'a> Scenario<'a> {
                 Some(intercept) => intercept.ball_loc,
                 None => self.ball_prediction().iter().last().unwrap().loc,
             };
-            let (me, _enemy) = one_v_one(self.packet);
+            let me = self.game.me();
             eval_push_wall(&me.Physics.locp(), &intercept_loc)
         })
     }
@@ -154,10 +154,10 @@ fn blitz_start(car: &rlbot::ffi::PlayerInfo, ball_prediction: &BallTrajectory) -
 // "race to the ball" and see if one player gets there much earlier than the
 // other.
 fn simulate_ball_blitz(
-    packet: &rlbot::ffi::LiveDataPacket,
+    game: &Game,
     ball_prediction: &BallTrajectory,
 ) -> (Option<NaiveIntercept>, Option<NaiveIntercept>) {
-    let (me, enemy) = one_v_one(packet);
+    let (me, enemy) = game.one_v_one();
     let mut t = 0.0;
 
     let mut sim_me = blitz_start(me, ball_prediction);

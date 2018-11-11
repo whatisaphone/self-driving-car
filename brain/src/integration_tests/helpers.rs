@@ -333,6 +333,7 @@ fn test_thread(
 
     let mut eeg = EEG::new();
     let mut brain = Brain::with_behavior(NullBehavior::new());
+    brain.set_player_index(0);
 
     let mut packets = rlbot.packeteer();
     let mut physicist = rlbot.physicist();

@@ -185,7 +185,7 @@ impl SegmentRunner for SimpleArcRunner {
         let car_loc = me.Physics.locp().to_2d();
         let car_forward_axis = me.Physics.forward_axis().to_2d();
 
-        if !GetToFlatGround::on_flat_ground(ctx.packet) {
+        if !GetToFlatGround::on_flat_ground(ctx.me()) {
             ctx.eeg.log("[SimpleArcRunner] Not on flat ground");
             return SegmentRunAction::Failure;
         }

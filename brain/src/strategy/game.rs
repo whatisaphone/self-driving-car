@@ -5,6 +5,7 @@ use rlbot;
 pub struct Game<'a> {
     packet: &'a rlbot::ffi::LiveDataPacket,
     mode: rlbot::ffi::GameMode,
+    player_index: usize,
     pub team: Team,
     pub enemy_team: Team,
     boost_dollars: Box<[BoostPickup]>,
@@ -14,12 +15,15 @@ impl<'a> Game<'a> {
     pub fn new(
         field_info: &'a rlbot::ffi::FieldInfo,
         packet: &'a rlbot::ffi::LiveDataPacket,
+        player_index: usize,
     ) -> Self {
+        let team = Team::from_ffi(packet.GameCars[player_index].Team);
         Self {
             packet,
             mode: infer_game_mode(field_info),
-            team: Team::Blue,
-            enemy_team: Team::Orange,
+            player_index,
+            team,
+            enemy_team: team.opposing(),
             boost_dollars: field_info
                 .BoostPads
                 .iter()
@@ -51,11 +55,17 @@ impl<'a> Game<'a> {
         }
     }
 
+    pub fn me(&self) -> &rlbot::ffi::PlayerInfo {
+        &self.packet.GameCars[self.player_index]
+    }
+
     pub fn enemy(&self) -> &rlbot::ffi::PlayerInfo {
-        self.packet
-            .cars()
-            .find(|p| p.Team == self.enemy_team.to_ffi())
-            .expect("No car found on enemy team")
+        assert_eq!(self.packet.NumCars, 2);
+        &self.packet.GameCars[1 - self.player_index]
+    }
+
+    pub fn one_v_one(&self) -> (&rlbot::ffi::PlayerInfo, &rlbot::ffi::PlayerInfo) {
+        (self.me(), self.enemy())
     }
 
     pub fn own_goal(&self) -> &Goal {
@@ -91,10 +101,18 @@ pub enum Team {
 }
 
 impl Team {
-    fn to_ffi(&self) -> u8 {
+    fn from_ffi(index: u8) -> Self {
+        match index {
+            0 => Team::Blue,
+            1 => Team::Orange,
+            _ => panic!("wonky team index {}", index),
+        }
+    }
+
+    fn opposing(&self) -> Self {
         match self {
-            Team::Blue => 0,
-            Team::Orange => 1,
+            Team::Blue => Team::Orange,
+            Team::Orange => Team::Blue,
         }
     }
 }

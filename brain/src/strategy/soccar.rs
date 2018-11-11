@@ -11,7 +11,7 @@ pub struct Soccar;
 
 impl Strategy for Soccar {
     fn baseline(&mut self, ctx: &mut Context) -> Box<Behavior> {
-        if !GetToFlatGround::on_flat_ground(ctx.packet) {
+        if !GetToFlatGround::on_flat_ground(ctx.me()) {
             return Box::new(GetToFlatGround::new());
         }
 

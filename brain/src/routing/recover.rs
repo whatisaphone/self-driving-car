@@ -48,7 +48,7 @@ impl Predicate for NotOnFlatGround {
     }
 
     fn evaluate(&mut self, ctx: &'_ mut Context) -> bool {
-        !GetToFlatGround::on_flat_ground(ctx.packet)
+        !GetToFlatGround::on_flat_ground(ctx.me())
     }
 }
 

@@ -10,6 +10,7 @@ use utils::FPSCounter;
 pub struct Brain {
     runner: Runner2,
     ball_predictor: Box<BallPredictor>,
+    player_index: Option<i32>,
     fps_counter: FPSCounter,
 }
 
@@ -18,10 +19,12 @@ impl Brain {
         Self {
             runner,
             ball_predictor: Box::new(ball_predictor),
+            player_index: None,
             fps_counter: FPSCounter::new(),
         }
     }
 
+    // This is just here so it's exported from the crate since I'm lazy
     pub fn infer_game_mode(field_info: &rlbot::ffi::FieldInfo) -> rlbot::ffi::GameMode {
         infer_game_mode(field_info)
     }
@@ -56,6 +59,10 @@ impl Brain {
     pub fn set_behavior(&mut self, behavior: impl Behavior + 'static, eeg: &mut EEG) {
         eeg.log(format!("! {}", behavior.name()));
         self.runner = Runner2::with_current(behavior);
+    }
+
+    pub fn set_player_index(&mut self, player_index: i32) {
+        self.player_index = Some(player_index);
     }
 
     pub fn tick(
@@ -104,7 +111,7 @@ impl Brain {
         eeg.draw(Drawable::print("-----------------------", color::GREEN));
 
         let mut result = {
-            let game = Game::new(field_info, packet);
+            let game = Game::new(field_info, packet, self.player_index.unwrap() as usize);
             let mut ctx = Context::new(&game, &*self.ball_predictor, packet, eeg);
 
             ctx.eeg.draw(Drawable::print(

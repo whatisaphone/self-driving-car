@@ -38,7 +38,7 @@ impl Behavior for GroundShot {
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {
         // This behavior currently just operates in 2D
-        if !GetToFlatGround::on_flat_ground(ctx.packet) {
+        if !GetToFlatGround::on_flat_ground(ctx.me()) {
             return Action::Abort;
         }
 

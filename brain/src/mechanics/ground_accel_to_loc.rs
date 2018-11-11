@@ -48,7 +48,7 @@ impl Behavior for GroundAccelToLoc {
         ));
 
         // This behavior currently just operates in 2D
-        if !GetToFlatGround::on_flat_ground(ctx.packet) {
+        if !GetToFlatGround::on_flat_ground(ctx.me()) {
             ctx.eeg.log("[GroudAccelToLoc] not on flat ground");
             return Action::Abort;
         }
@@ -65,7 +65,7 @@ impl Behavior for GroundAccelToLoc {
         let yaw_diff = simple_yaw_diff(&me.Physics, self.target_loc);
         let too_fast = estimate_approach(&me, distance, time_remaining - 2.0 / 120.0);
 
-        let mut result = drive_towards(ctx.packet, ctx.eeg, self.target_loc);
+        let mut result = drive_towards(ctx, self.target_loc);
         if yaw_diff.abs() > PI / 8.0 && distance >= 500.0 {
             // Can't estimate accurately if not facing the right way
         } else if too_fast {

@@ -58,7 +58,7 @@ impl Behavior for JumpShot {
 
 impl JumpShot {
     fn ground(&mut self, ctx: &mut Context) -> Action {
-        if !GetToFlatGround::on_flat_ground(ctx.packet) {
+        if !GetToFlatGround::on_flat_ground(ctx.me()) {
             return Action::Abort;
         }
 
@@ -137,7 +137,7 @@ impl JumpShot {
             air_time,
         );
 
-        let mut result = drive_towards(ctx.packet, ctx.eeg, target_loc.coords);
+        let mut result = drive_towards(ctx, target_loc.coords);
         if too_fast {
             result.Throttle = 0.0;
         } else {

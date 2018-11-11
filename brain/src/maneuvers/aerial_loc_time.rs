@@ -90,7 +90,7 @@ impl AerialLocTime {
             color::GREEN,
         ));
 
-        if !GetToFlatGround::on_flat_ground(ctx.packet) {
+        if !GetToFlatGround::on_flat_ground(ctx.me()) {
             warn!("Not on flat ground");
             return Action::Abort;
         }

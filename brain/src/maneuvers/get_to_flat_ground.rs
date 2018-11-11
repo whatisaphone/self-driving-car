@@ -6,7 +6,6 @@ use nalgebra::Vector3;
 use rlbot;
 use std::f32::consts::PI;
 use strategy::Context;
-use utils::my_car;
 
 pub struct GetToFlatGround;
 
@@ -15,11 +14,10 @@ impl GetToFlatGround {
         GetToFlatGround
     }
 
-    pub fn on_flat_ground(packet: &rlbot::ffi::LiveDataPacket) -> bool {
-        let me = my_car(packet);
-        me.OnGround
-            && me.Physics.rot().pitch().abs() < 15.0_f32.to_radians()
-            && me.Physics.rot().roll().abs() < 15.0_f32.to_radians()
+    pub fn on_flat_ground(car: &rlbot::ffi::PlayerInfo) -> bool {
+        car.OnGround
+            && car.Physics.rot().pitch().abs() < 15.0_f32.to_radians()
+            && car.Physics.rot().roll().abs() < 15.0_f32.to_radians()
     }
 }
 
@@ -29,7 +27,7 @@ impl Behavior for GetToFlatGround {
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {
-        if Self::on_flat_ground(ctx.packet) {
+        if Self::on_flat_ground(ctx.me()) {
             return Action::Return;
         }
 
@@ -46,7 +44,7 @@ impl Behavior for GetToFlatGround {
                 (me.Physics.loc() + me.Physics.rot() * Vector3::new(500.0, 0.0, -500.0)).to_2d();
             ctx.eeg
                 .draw(Drawable::ghost_car_ground(target_loc, me.Physics.rot()));
-            Action::Yield(drive_towards(ctx.packet, ctx.eeg, target_loc))
+            Action::Yield(drive_towards(ctx, target_loc))
         } else if me.Physics.ang_vel().norm() >= 5.0 {
             // This is a minor hack for statelessness. We're probably in the middle of a
             // dodge. Just sit tight.

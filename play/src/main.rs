@@ -31,10 +31,15 @@ fn main() {
     let rlbot = rlbot::init().unwrap();
     let rlbot = Box::leak(Box::new(rlbot));
 
-    let use_framework = env::args().len() != 1;
-    if !use_framework {
+    let mut args = env::args();
+    args.next().unwrap(); // Program name
+    let use_framework = args.next().as_ref().map(String::as_str) == Some("--player-index");
+    let player_index = if use_framework {
+        args.next().unwrap().parse().unwrap()
+    } else {
         start_match(&rlbot);
-    }
+        0
+    };
 
     let field_info = rlbot.get_field_info().unwrap();
     let brain = match Brain::infer_game_mode(&field_info) {
@@ -47,7 +52,8 @@ fn main() {
     let collector = create_collector();
     let eeg = EEG::new();
     let mut bot = FormulaNone::new(&field_info, collector, eeg, brain);
-    bot_loop(&rlbot, &mut bot);
+    bot.set_player_index(player_index);
+    bot_loop(&rlbot, player_index, &mut bot);
 }
 
 fn start_match(rlbot: &rlbot::RLBot) {
@@ -62,16 +68,14 @@ fn start_match(rlbot: &rlbot::RLBot) {
     rlbot.wait_for_match_start().unwrap();
 }
 
-fn bot_loop(rlbot: &rlbot::RLBot, bot: &mut FormulaNone) {
-    bot.set_player_index(0);
-
+fn bot_loop(rlbot: &rlbot::RLBot, player_index: i32, bot: &mut FormulaNone) {
     let mut physics = rlbot.physicist();
 
     loop {
         let rigid_body_tick = physics.next_flat().unwrap();
         let packet = get_packet_and_inject_rigid_body_tick(&rlbot, rigid_body_tick).unwrap();
         let input = bot.tick(rigid_body_tick, &packet);
-        rlbot.update_player_input(input, 0).unwrap();
+        rlbot.update_player_input(input, player_index).unwrap();
     }
 }
 
@@ -114,10 +118,8 @@ impl<'a> FormulaNone<'a> {
         }
     }
 
-    fn set_player_index(&mut self, index: usize) {
-        if index != 0 {
-            unimplemented!();
-        }
+    fn set_player_index(&mut self, player_index: i32) {
+        self.brain.set_player_index(player_index)
     }
 
     fn tick(

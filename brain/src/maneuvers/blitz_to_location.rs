@@ -1,11 +1,11 @@
 use behavior::{Action, Behavior};
 use common::{prelude::*, rl};
-use eeg::{color, Drawable, EEG};
+use eeg::{color, Drawable};
 use mechanics::{simple_steer_towards, QuickJumpAndDodge};
 use nalgebra::Point2;
 use rlbot;
 use std::f32::consts::PI;
-use utils::my_car;
+use strategy::Context;
 
 pub struct BlitzToLocation {
     target_loc: Point2<f32>,
@@ -22,18 +22,18 @@ impl Behavior for BlitzToLocation {
         stringify!(BlitzToLocation)
     }
 
-    fn execute(&mut self, packet: &rlbot::ffi::LiveDataPacket, eeg: &mut EEG) -> Action {
-        let me = my_car(packet);
+    fn execute2(&mut self, ctx: &mut Context) -> Action {
+        let me = ctx.me();
         let distance = (me.Physics.locp().to_2d() - self.target_loc).norm();
         let speed = me.Physics.vel().norm();
 
         let steer = simple_steer_towards(&me.Physics, self.target_loc.coords);
 
-        eeg.draw(Drawable::ghost_car_ground(
+        ctx.eeg.draw(Drawable::ghost_car_ground(
             self.target_loc.coords,
             me.Physics.rot(),
         ));
-        eeg.draw(Drawable::print(
+        ctx.eeg.draw(Drawable::print(
             format!("distance: {:.0}", distance),
             color::GREEN,
         ));
@@ -65,7 +65,7 @@ impl Behavior for BlitzToLocation {
             if (distance > flip_dist && steer.abs() < PI / 24.0)
                 || (distance > flip_dist * 1.5 && steer.abs() < PI / 8.0)
             {
-                return Action::Call(Box::new(QuickJumpAndDodge::begin(packet)));
+                return Action::Call(Box::new(QuickJumpAndDodge::begin(ctx.packet)));
             }
         }
 
