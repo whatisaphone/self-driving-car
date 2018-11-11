@@ -970,6 +970,7 @@ dependencies = [
  "brain 0.1.0",
  "chrono 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "collect 0.1.0",
+ "common 0.1.0",
  "env_logger 0.5.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",

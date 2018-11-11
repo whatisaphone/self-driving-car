@@ -6,17 +6,17 @@ extern crate collect;
 extern crate log;
 #[macro_use]
 extern crate lazy_static;
+extern crate common;
 extern crate env_logger;
 extern crate rlbot;
 
 use brain::{Brain, EEG};
 use chrono::Local;
 use collect::{get_packet_and_inject_rigid_body_tick, Collector};
+use common::ext::ExtendRLBot;
 use std::{
     env,
-    error::Error,
     fs::{hard_link, remove_file, File},
-    mem,
     path::Path,
 };
 
@@ -40,12 +40,13 @@ fn main() {
     let brain = match infer_game_mode(&field_info) {
         rlbot::ffi::GameMode::Soccer => Brain::soccar(),
         rlbot::ffi::GameMode::Dropshot => Brain::dropshot(rlbot),
+        rlbot::ffi::GameMode::Hoops => Brain::hoops(rlbot),
         mode => panic!("unexpected game mode {:?}", mode),
     };
 
     let collector = create_collector();
     let eeg = EEG::new();
-    let mut bot = FormulaNone::new(collector, eeg, brain);
+    let mut bot = FormulaNone::new(&field_info, collector, eeg, brain);
     bot_loop(&rlbot, &mut bot);
 }
 
@@ -59,36 +60,6 @@ fn start_match(rlbot: &rlbot::RLBot) {
     };
     rlbot.start_match(match_settings).unwrap();
     rlbot.wait_for_match_start().unwrap();
-}
-
-trait RLBotExt {
-    fn wait_for_match_start(&self) -> Result<(), Box<Error>>;
-    fn get_field_info(&self) -> Result<rlbot::ffi::FieldInfo, Box<Error>>;
-}
-
-impl RLBotExt for rlbot::RLBot {
-    /// Copy-pasted from unreleased rlbot 0.1.1.
-    fn wait_for_match_start(&self) -> Result<(), Box<Error>> {
-        let mut packets = self.packeteer();
-        let mut count = 0;
-
-        // Sometimes we get a few stray ticks from a previous game while the next game
-        // is loading. Wait for RoundActive to stabilize before trusting it.
-        while count < 5 {
-            if packets.next()?.GameInfo.RoundActive {
-                count += 1;
-            } else {
-                count = 0;
-            }
-        }
-        Ok(())
-    }
-
-    fn get_field_info(&self) -> Result<rlbot::ffi::FieldInfo, Box<Error>> {
-        let mut field_info = unsafe { mem::uninitialized() };
-        self.update_field_info(&mut field_info)?;
-        Ok(field_info)
-    }
 }
 
 fn infer_game_mode(field_info: &rlbot::ffi::FieldInfo) -> rlbot::ffi::GameMode {
@@ -130,15 +101,22 @@ fn create_collector() -> Collector {
     collector
 }
 
-struct FormulaNone {
+struct FormulaNone<'a> {
+    field_info: &'a rlbot::ffi::FieldInfo,
     collector: collect::Collector,
     eeg: EEG,
     brain: Brain,
 }
 
-impl FormulaNone {
-    fn new(collector: collect::Collector, eeg: brain::EEG, brain: brain::Brain) -> Self {
+impl<'a> FormulaNone<'a> {
+    fn new(
+        field_info: &'a rlbot::ffi::FieldInfo,
+        collector: collect::Collector,
+        eeg: brain::EEG,
+        brain: brain::Brain,
+    ) -> Self {
         Self {
+            field_info,
             collector,
             eeg,
             brain,
@@ -164,7 +142,7 @@ impl FormulaNone {
 
         self.eeg.begin(&packet);
 
-        let input = self.brain.tick(packet, &mut self.eeg);
+        let input = self.brain.tick(self.field_info, packet, &mut self.eeg);
 
         self.collector.write(rigid_body_tick).unwrap();
         self.eeg.show(&packet);

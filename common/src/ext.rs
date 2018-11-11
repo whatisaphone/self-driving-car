@@ -4,6 +4,7 @@ use nalgebra::{
 };
 use physics;
 use rlbot;
+use std::{error::Error, mem};
 
 pub trait ExtendVector2 {
     /// Creates a unit vector in the direction of the given `angle`.
@@ -275,5 +276,35 @@ impl<N: Real> ExtendUnitVector2<N> for Unit<Vector2<N>> {
 
     fn to_3d(&self) -> Unit<Vector3<N>> {
         Unit::new_unchecked(Vector3::new(self.x, self.y, nalgebra::zero()))
+    }
+}
+
+pub trait ExtendRLBot {
+    fn get_field_info(&self) -> Result<rlbot::ffi::FieldInfo, Box<Error>>;
+    fn wait_for_match_start(&self) -> Result<(), Box<Error>>;
+}
+
+impl ExtendRLBot for rlbot::RLBot {
+    fn get_field_info(&self) -> Result<rlbot::ffi::FieldInfo, Box<Error>> {
+        let mut field_info = unsafe { mem::uninitialized() };
+        self.update_field_info(&mut field_info)?;
+        Ok(field_info)
+    }
+
+    /// Copy-pasted from unreleased rlbot 0.1.1.
+    fn wait_for_match_start(&self) -> Result<(), Box<Error>> {
+        let mut packets = self.packeteer();
+        let mut count = 0;
+
+        // Sometimes we get a few stray ticks from a previous game while the next game
+        // is loading. Wait for RoundActive to stabilize before trusting it.
+        while count < 5 {
+            if packets.next()?.GameInfo.RoundActive {
+                count += 1;
+            } else {
+                count = 0;
+            }
+        }
+        Ok(())
     }
 }

@@ -1,21 +1,33 @@
-use common::rl;
+use common::{prelude::*, rl};
 use nalgebra::{Point2, Point3};
 use rlbot;
 
 pub struct Game<'a> {
-    pub packet: &'a rlbot::ffi::LiveDataPacket,
+    packet: &'a rlbot::ffi::LiveDataPacket,
     pub team: Team,
     pub enemy_team: Team,
-    boost_dollars: &'a [BoostPickup],
+    boost_dollars: Box<[BoostPickup]>,
 }
 
 impl<'a> Game<'a> {
-    pub fn new(packet: &'a rlbot::ffi::LiveDataPacket) -> Self {
+    pub fn new(
+        field_info: &'a rlbot::ffi::FieldInfo,
+        packet: &'a rlbot::ffi::LiveDataPacket,
+    ) -> Self {
         Self {
             packet,
             team: Team::Blue,
             enemy_team: Team::Orange,
-            boost_dollars: &*BOOST_DOLLARS,
+            boost_dollars: field_info
+                .BoostPads
+                .iter()
+                .take(field_info.NumBoosts as usize)
+                .filter(|info| info.FullBoost)
+                .map(|info| BoostPickup {
+                    loc: point3(info.Location).to_2d(),
+                })
+                .collect::<Vec<_>>()
+                .into_boxed_slice(),
         }
     }
 
@@ -35,8 +47,12 @@ impl<'a> Game<'a> {
     }
 
     pub fn boost_dollars(&self) -> &[BoostPickup] {
-        self.boost_dollars
+        &*self.boost_dollars
     }
+}
+
+fn point3(v: rlbot::ffi::Vector3) -> Point3<f32> {
+    Point3::new(v.X, v.Y, v.Z)
 }
 
 #[derive(Copy, Clone)]

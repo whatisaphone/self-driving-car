@@ -5,6 +5,7 @@ extern crate lazy_static;
 extern crate nalgebra;
 extern crate rlbot;
 
+pub use ext::ExtendRLBot;
 pub use pretty::PrettyPrint;
 
 pub mod ext;

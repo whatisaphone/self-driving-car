@@ -33,6 +33,13 @@ impl Brain {
         )
     }
 
+    pub fn hoops(rlbot: &'static rlbot::RLBot) -> Self {
+        Self::new(
+            Runner2::new(Soccar::new()),
+            FrameworkBallPrediction::new(rlbot),
+        )
+    }
+
     #[cfg(test)]
     pub fn with_behavior(behavior: impl Behavior + 'static) -> Self {
         Self::new(
@@ -49,6 +56,7 @@ impl Brain {
 
     pub fn tick(
         &mut self,
+        field_info: &rlbot::ffi::FieldInfo,
         packet: &rlbot::ffi::LiveDataPacket,
         eeg: &mut EEG,
     ) -> rlbot::ffi::PlayerInput {
@@ -92,7 +100,7 @@ impl Brain {
         eeg.draw(Drawable::print("-----------------------", color::GREEN));
 
         let mut result = {
-            let game = Game::new(packet);
+            let game = Game::new(field_info, packet);
             let mut ctx = Context::new(&game, &*self.ball_predictor, packet, eeg);
 
             ctx.eeg.draw(Drawable::print(

@@ -5,7 +5,7 @@ use collect::{
     get_packet_and_inject_rigid_body_tick, RecordingPlayerTick, RecordingRigidBodyState,
     RecordingTick,
 };
-use common::prelude::*;
+use common::{ext::ExtendRLBot, prelude::*};
 use crossbeam_channel;
 use eeg::EEG;
 use flatbuffers::{FlatBufferBuilder, WIPOffset};
@@ -340,8 +340,11 @@ fn test_thread(
     // Wait for RoundActive
     while !packets.next().unwrap().GameInfo.RoundActive {}
 
-    rlbot.update_player_input(Default::default(), 0).unwrap();
-    rlbot.update_player_input(Default::default(), 1).unwrap();
+    for i in 0..match_settings.NumPlayers {
+        rlbot.update_player_input(Default::default(), i).unwrap();
+    }
+
+    let field_info = rlbot.get_field_info().unwrap();
 
     setup_scenario(
         rlbot,
@@ -397,14 +400,15 @@ fn test_thread(
         }
 
         eeg.begin(&packet);
-        let input = brain.tick(&packet, &mut eeg);
+        let input = brain.tick(&field_info, &packet, &mut eeg);
         rlbot.update_player_input(input, 0).unwrap();
         eeg.show(&packet);
     }
 
-    // For tidiness, make the car stop moving when the test is finished.
-    rlbot.update_player_input(Default::default(), 0).unwrap();
-    rlbot.update_player_input(Default::default(), 1).unwrap();
+    // For tidiness, make the cars stop moving when the test is finished.
+    for i in 0..match_settings.NumPlayers {
+        rlbot.update_player_input(Default::default(), i).unwrap();
+    }
 }
 
 fn setup_scenario(
