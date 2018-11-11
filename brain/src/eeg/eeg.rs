@@ -10,6 +10,7 @@ use piston_window::{
 };
 use rlbot;
 use std::{collections::VecDeque, mem, path::PathBuf, thread};
+use strategy::Team;
 
 pub struct EEG {
     tx: Option<crossbeam_channel::Sender<ThreadMessage>>,
@@ -110,17 +111,27 @@ impl Drawable {
 
 #[allow(dead_code)]
 pub mod color {
-    pub const TRANSPARENT: [f32; 4] = [0.0, 0.0, 0.0, 0.0];
-    pub const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
-    pub const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
-    pub const PITCH: [f32; 4] = [0.0, 0.2, 0.0, 1.0];
-    pub const RED: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
-    pub const ORANGE: [f32; 4] = [1.0, 0.5, 0.0, 1.0];
-    pub const ORANGE_DARK: [f32; 4] = [0.5, 0.25, 0.0, 1.0];
-    pub const GREEN: [f32; 4] = [0.0, 1.0, 0.0, 1.0];
-    pub const YELLOW: [f32; 4] = [1.0, 1.0, 0.0, 1.0];
-    pub const BLUE: [f32; 4] = [0.5, 0.5, 1.0, 1.0];
-    pub const BLUE_DARK: [f32; 4] = [0.25, 0.25, 0.5, 1.0];
+    use graphics::types::Color;
+    use strategy::Team;
+
+    pub const TRANSPARENT: Color = [0.0, 0.0, 0.0, 0.0];
+    pub const BLACK: Color = [0.0, 0.0, 0.0, 1.0];
+    pub const WHITE: Color = [1.0, 1.0, 1.0, 1.0];
+    pub const PITCH: Color = [0.0, 0.2, 0.0, 1.0];
+    pub const RED: Color = [1.0, 0.0, 0.0, 1.0];
+    pub const ORANGE: Color = [1.0, 0.5, 0.0, 1.0];
+    pub const ORANGE_DARK: Color = [0.5, 0.25, 0.0, 1.0];
+    pub const GREEN: Color = [0.0, 1.0, 0.0, 1.0];
+    pub const YELLOW: Color = [1.0, 1.0, 0.0, 1.0];
+    pub const BLUE: Color = [0.5, 0.5, 1.0, 1.0];
+    pub const BLUE_DARK: Color = [0.25, 0.25, 0.5, 1.0];
+
+    pub fn for_team(team: Team) -> Color {
+        match team {
+            Team::Blue => BLUE,
+            Team::Orange => ORANGE,
+        }
+    }
 }
 
 enum ThreadMessage {
@@ -223,11 +234,7 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
 
                     for car in packet.cars() {
                         rectangle(
-                            if car.Team == 0 {
-                                color::BLUE
-                            } else {
-                                color::ORANGE
-                            },
+                            color::for_team(Team::from_ffi(car.Team)),
                             car_rect,
                             transform
                                 .trans(car.Physics.Location.X as f64, car.Physics.Location.Y as f64)

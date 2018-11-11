@@ -72,7 +72,7 @@ impl Behavior for PushToOwnCorner {
             ctx.packet.GameBall.Physics.locp().to_2d(),
             ctx.packet.GameBall.Physics.locp().to_2d() + ctx.packet.GameBall.Physics.vel().to_2d(),
         );
-        let already_cornering = match WallRayCalculator::wall_for_point(ball_trajectory) {
+        let already_cornering = match WallRayCalculator::wall_for_point(ctx.game, ball_trajectory) {
             Wall::OwnGoal => false,
             _ => true,
         };
@@ -89,17 +89,21 @@ impl Behavior for PushToOwnCorner {
                     && GroundShot::shot_angle(loc, enemy.Physics.locp(), own_goal) < PI / 2.0
             });
 
-        assert_eq!(ctx.me().Team, 0); // or the colors below won't be right
         if let Some(ref i) = me_intercept {
             ctx.eeg
                 .log(format!("[Defense] me_intercept: {:.2}", i.time));
-            ctx.eeg.draw(Drawable::GhostBall2(i.ball_loc, color::BLUE));
+            ctx.eeg.draw(Drawable::GhostBall2(
+                i.ball_loc,
+                color::for_team(ctx.game.team),
+            ));
         }
         if let Some(ref i) = enemy_shootable_intercept {
             ctx.eeg
                 .log(format!("[Defense] enemy_shoot_intercept: {:.2}", i.time));
-            ctx.eeg
-                .draw(Drawable::GhostBall2(i.ball_loc, color::ORANGE));
+            ctx.eeg.draw(Drawable::GhostBall2(
+                i.ball_loc,
+                color::for_team(ctx.game.enemy_team),
+            ));
         }
 
         match (me_intercept, enemy_shootable_intercept) {
@@ -187,7 +191,7 @@ impl HitToOwnCorner {
             rtl
         };
 
-        match WallRayCalculator::wall_for_point(result) {
+        match WallRayCalculator::wall_for_point(ctx.game, result) {
             Wall::OwnGoal => {
                 ctx.eeg.log("avoiding the own goal");
                 Err(())

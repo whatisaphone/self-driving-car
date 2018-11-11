@@ -13,17 +13,15 @@ impl Shoot {
     }
 
     pub fn good_angle(game: &Game, ball_loc: Point3<f32>, car_loc: Point3<f32>) -> bool {
-        assert!(ball_loc.x.abs() < game.field_max_x() && ball_loc.y.abs() < game.field_max_y());
-
         // Aerials are not ready for prime-time yet
         if ball_loc.z >= JumpShot::MAX_BALL_Z {
             return false;
         }
 
         // This is woefully incomplete
-        assert!(game.enemy_goal().center_2d.y > 0.0); // So far only implemented for orange
-
-        if ball_loc.y.abs() >= game.field_max_y() - 250.0 && ball_loc.x.abs() >= rl::GOALPOST_X {
+        if game.enemy_goal().is_y_within_range(ball_loc.y, ..250.0)
+            && ball_loc.x.abs() >= rl::GOALPOST_X
+        {
             return false;
         }
 

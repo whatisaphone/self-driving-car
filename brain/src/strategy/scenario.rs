@@ -1,6 +1,5 @@
 use common::prelude::*;
 use lazycell::LazyCell;
-use nalgebra::Point3;
 use plan::ball::{BallFrame, BallPredictor, BallTrajectory};
 use predict::intercept::NaiveIntercept;
 use rlbot;
@@ -95,8 +94,9 @@ impl<'a> Scenario<'a> {
                 Some(intercept) => intercept.ball_loc,
                 None => self.ball_prediction().iter().last().unwrap().loc,
             };
-            let me = self.game.me();
-            eval_push_wall(&me.Physics.locp(), &intercept_loc)
+            let me_loc = self.game.me().Physics.locp();
+            let point = WallRayCalculator::calculate(me_loc.to_2d(), intercept_loc.to_2d());
+            WallRayCalculator::wall_for_point(self.game, point)
         })
     }
 
@@ -232,9 +232,4 @@ fn blitz_penalty(car: &rlbot::ffi::PlayerInfo, intercept: &NaiveIntercept) -> f3
     };
 
     rotation_penalty + reverse_penalty
-}
-
-fn eval_push_wall(car: &Point3<f32>, ball: &Point3<f32>) -> Wall {
-    let point = WallRayCalculator::calculate(car.to_2d(), ball.to_2d());
-    WallRayCalculator::wall_for_point(point)
 }

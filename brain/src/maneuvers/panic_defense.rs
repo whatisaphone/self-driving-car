@@ -100,7 +100,11 @@ impl PanicDefense {
 
         match self.phase {
             Phase::Rush { .. } | Phase::Turn { .. } => {
-                if me.Physics.loc().y <= -5000.0 {
+                if ctx
+                    .game
+                    .own_goal()
+                    .is_y_within_range(me.Physics.locp().y, ..120.0)
+                {
                     return Some(Phase::Finished);
                 }
             }
@@ -127,12 +131,16 @@ impl PanicDefense {
         }
 
         if let Phase::Rush { aim_hint, .. } = self.phase {
-            let cutoff = -ctx.game.field_max_y() - me.Physics.vel().y * 0.75;
+            let cutoff = me.Physics.vel().y.abs() * 0.75;
             ctx.eeg.draw(Drawable::print(
                 format!("cutoff_distance: {:.0}", me.Physics.loc().y - cutoff),
                 color::GREEN,
             ));
-            if me.Physics.loc().y <= cutoff {
+            if ctx
+                .game
+                .own_goal()
+                .is_y_within_range(me.Physics.locp().y, ..cutoff)
+            {
                 let target_yaw = ctx.game.own_goal().center_2d.angle_to(aim_hint).angle();
                 return Some(Phase::Turn {
                     aim_hint: calc_aim_hint(ctx),

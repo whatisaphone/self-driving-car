@@ -1,6 +1,7 @@
 use common::{prelude::*, rl};
 use nalgebra::{Point2, Point3};
 use rlbot;
+use std::ops::RangeTo;
 
 pub struct Game<'a> {
     packet: &'a rlbot::ffi::LiveDataPacket,
@@ -101,7 +102,7 @@ pub enum Team {
 }
 
 impl Team {
-    fn from_ffi(index: u8) -> Self {
+    pub fn from_ffi(index: u8) -> Self {
         match index {
             0 => Team::Blue,
             1 => Team::Orange,
@@ -129,13 +130,22 @@ impl Goal {
         }
     }
 
+    /// Returns true if the given y value is less than `range` uu in front of
+    /// the goal.
+    pub fn is_y_within_range(&self, y: f32, range: RangeTo<f32>) -> bool {
+        // range < 0 would be behind the goal, which we have no use for supporting.
+        assert!(range.end >= 0.0);
+
+        if self.center_2d.y < 0.0 {
+            y < self.center_2d.y + range.end
+        } else {
+            y > self.center_2d.y - range.end
+        }
+    }
+
     pub fn ball_is_scored(&self, ball_loc: Point3<f32>) -> bool {
         // This is just an estimate, it doesn't take into account ball radius, etc.
-        if self.center_2d.y < 0.0 {
-            ball_loc.y < self.center_2d.y
-        } else {
-            ball_loc.y > self.center_2d.y
-        }
+        self.is_y_within_range(ball_loc.y, ..0.0)
     }
 }
 

@@ -5,8 +5,8 @@ use ncollide3d::{
     shape::{Plane, ShapeHandle},
     world::{CollisionGroups, CollisionWorld, GeometricQueryType},
 };
-use std::f32::consts::PI;
-use utils::{geometry::ExtendF32, TotalF32};
+use strategy::Game;
+use utils::TotalF32;
 
 lazy_static! {
     static ref WALL_RAY_CALCULATOR: WallRayCalculator = WallRayCalculator::new();
@@ -83,14 +83,13 @@ impl WallRayCalculator {
         Self::calculate(from, from + Vector2::unit(angle)).coords
     }
 
-    pub fn wall_for_point(point: Point2<f32>) -> Wall {
-        let theta = f32::atan2(point.y, point.x);
+    pub fn wall_for_point(game: &Game, point: Point2<f32>) -> Wall {
+        let to_enemy_goal = game.enemy_goal().center_2d - Point2::origin();
+        let to_point = point - Point2::origin();
 
-        // For ease of math, center 0° on the enemy goal, 180° on own goal.
-        let theta = (theta - PI / 2.0).normalize_angle().abs();
-
-        // These are atan2(x, y) instead of atan2(y, x) because we rotated by 90° above.
-        match theta {
+        // These are intentionally atan2(x, y), since the zero angle is on the y axis,
+        // not the x axis.
+        match to_enemy_goal.rotation_to(to_point).angle().abs() {
             a if a < f32::atan2(rl::GOALPOST_X, rl::FIELD_MAX_Y) => Wall::EnemyGoal,
             a if a < f32::atan2(rl::FIELD_MAX_X, rl::FIELD_MAX_Y) => Wall::EnemyBackWall,
             a if a < f32::atan2(rl::FIELD_MAX_X, -rl::FIELD_MAX_Y) => Wall::Midfield,
