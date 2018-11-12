@@ -83,13 +83,10 @@ impl GetDollar {
             let ortho_dist = (pickup.loc - line_start_loc).dot(&line_span.ortho().to_axis());
             // Assume an "ideal" position 75% of the way down the line.
             let along_score = line_span.norm() * 0.75 - along_dist;
-            let result = BoostScore {
+            BoostScore {
                 invalid: along_dist < -250.0 || along_dist >= line_span.norm() + 250.0,
                 score: NotNan::new(along_score.powi(2) + (ortho_dist * 2.0).powi(2)).unwrap(),
-            };
-            eprintln!("pickup.loc = {:?}", pickup.loc);
-            eprintln!("result.invalid = {:?}", result.invalid);
-            eprintln!("result.score = {:?}", result.score);
+            }
         })
     }
 }
