@@ -115,6 +115,8 @@ impl RoutePlanner for GroundPowerslideEssence {
         dump: &mut PlanningDump,
     ) -> Result<RoutePlan, RoutePlanError> {
         dump.log_start(self, &ctx.start);
+        dump.log_pretty(self, "target_loc", self.target_loc);
+        dump.log_pretty(self, "target_face", self.target_face);
 
         guard!(
             ctx.start,

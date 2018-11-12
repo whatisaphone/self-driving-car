@@ -36,7 +36,7 @@ impl CarPowerslideTurn {
         // afterwards, do the inverse transform to convert reference results back to the
         // input coordinate system.
         let reference_dir = Vector2::y_axis();
-        let transform = start_vel.to_axis().rotation_to(&reference_dir);
+        let transform = car_forward_axis_2d(start_rot).rotation_to(&reference_dir);
 
         let steer = target_rot_by.signum();
 
@@ -50,6 +50,7 @@ impl CarPowerslideTurn {
         let mut reference_offset = reference.end_loc - reference.start_loc;
         reference_offset.x *= steer;
         let offset = transform.inverse() * reference_offset;
+        assert!(!offset.x.is_nan());
 
         Some(CarPowerslideTurnBlueprint {
             start_loc,
@@ -372,6 +373,17 @@ mod tests {
             Point2::new(0.0, 0.0),
             CAR_LOCAL_FORWARD_AXIS_2D.rotation_to(&Vector2::new(-1.0, 0.0).to_axis()),
             Vector2::new(1.0, 0.0),
+            1.0,
+            90.0_f32.to_radians(),
+        );
+    }
+
+    #[test]
+    fn should_handle_stationary_start() {
+        CarPowerslideTurn::evaluate(
+            Point2::new(0.0, 0.0),
+            UnitComplex::new(0.0),
+            Vector2::new(0.0, 0.0),
             1.0,
             90.0_f32.to_radians(),
         );
