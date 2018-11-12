@@ -17,7 +17,10 @@ use common::ext::ExtendRLBot;
 use std::{
     env,
     fs::{hard_link, remove_file, File},
+    panic,
     path::Path,
+    thread::sleep,
+    time::Duration,
 };
 
 mod logging;
@@ -29,7 +32,7 @@ fn main() {
         .init();
 
     let rlbot = rlbot::init().unwrap();
-    let rlbot = Box::leak(Box::new(rlbot));
+    let rlbot: &rlbot::RLBot = Box::leak(Box::new(rlbot));
 
     let mut args = env::args();
     args.next().unwrap(); // Program name
@@ -41,6 +44,44 @@ fn main() {
         0
     };
 
+    if !use_framework {
+        // In dev mode, halt on panics so they can't be ignored.
+        run_bot(rlbot, player_index);
+    } else {
+        // This is probably tournament mode, so we want to get back in action asap.
+        deny_climate_change(|| run_bot(rlbot, player_index));
+    }
+}
+
+fn start_match(rlbot: &rlbot::RLBot) {
+    let match_settings = rlbot::ffi::MatchSettings {
+        MutatorSettings: rlbot::ffi::MutatorSettings {
+            MatchLength: rlbot::ffi::MatchLength::Unlimited,
+            ..Default::default()
+        },
+        ..rlbot::ffi::MatchSettings::simple_1v1("Formula None", "All-Star")
+    };
+    rlbot.start_match(match_settings).unwrap();
+    rlbot.wait_for_match_start().unwrap();
+}
+
+/// Keep running the given function until it doesn't panic.
+fn deny_climate_change<R>(f: impl Fn() -> R) {
+    loop {
+        let result = panic::catch_unwind(panic::AssertUnwindSafe(|| {
+            f();
+        }));
+        match result {
+            Ok(x) => return x,
+            Err(_) => {
+                println!("Panicked :( Let's try again?");
+                sleep(Duration::from_millis(100));
+            }
+        }
+    }
+}
+
+fn run_bot(rlbot: &'static rlbot::RLBot, player_index: i32) {
     let field_info = rlbot.get_field_info().unwrap();
     let brain = match Brain::infer_game_mode(&field_info) {
         rlbot::ffi::GameMode::Soccer => Brain::soccar(),
@@ -54,18 +95,6 @@ fn main() {
     let mut bot = FormulaNone::new(&field_info, collector, eeg, brain);
     bot.set_player_index(player_index);
     bot_loop(&rlbot, player_index, &mut bot);
-}
-
-fn start_match(rlbot: &rlbot::RLBot) {
-    let match_settings = rlbot::ffi::MatchSettings {
-        MutatorSettings: rlbot::ffi::MutatorSettings {
-            MatchLength: rlbot::ffi::MatchLength::Unlimited,
-            ..Default::default()
-        },
-        ..rlbot::ffi::MatchSettings::simple_1v1("Formula None", "All-Star")
-    };
-    rlbot.start_match(match_settings).unwrap();
-    rlbot.wait_for_match_start().unwrap();
 }
 
 fn bot_loop(rlbot: &rlbot::RLBot, player_index: i32, bot: &mut FormulaNone) {
