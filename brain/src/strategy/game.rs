@@ -40,7 +40,7 @@ impl<'a> Game<'a> {
 
     pub fn field_max_x(&self) -> f32 {
         match self.mode {
-            rlbot::ffi::GameMode::Soccer => 4096.0,
+            rlbot::ffi::GameMode::Soccer => rl::FIELD_MAX_X,
             rlbot::ffi::GameMode::Dropshot => 5026.0,
             rlbot::ffi::GameMode::Hoops => 2966.67,
             mode => panic!("unexpected game mode {:?}", mode),
@@ -49,7 +49,7 @@ impl<'a> Game<'a> {
 
     pub fn field_max_y(&self) -> f32 {
         match self.mode {
-            rlbot::ffi::GameMode::Soccer => 5120.0,
+            rlbot::ffi::GameMode::Soccer => rl::FIELD_MAX_Y,
             rlbot::ffi::GameMode::Dropshot => 4555.0,
             rlbot::ffi::GameMode::Hoops => 3586.0,
             mode => panic!("unexpected game mode {:?}", mode),
@@ -70,11 +70,19 @@ impl<'a> Game<'a> {
     }
 
     pub fn own_goal(&self) -> &Goal {
-        Goal::for_team(self.team)
+        match self.mode {
+            rlbot::ffi::GameMode::Soccer => Goal::soccar(self.team),
+            rlbot::ffi::GameMode::Hoops => Goal::hoops(self.team),
+            _ => panic!("unexpected game mode"),
+        }
     }
 
     pub fn enemy_goal(&self) -> &Goal {
-        Goal::for_team(self.enemy_team)
+        match self.mode {
+            rlbot::ffi::GameMode::Soccer => Goal::soccar(self.enemy_team),
+            rlbot::ffi::GameMode::Hoops => Goal::hoops(self.enemy_team),
+            _ => panic!("unexpected game mode"),
+        }
     }
 
     pub fn boost_dollars(&self) -> &[BoostPickup] {
@@ -123,10 +131,20 @@ pub struct Goal {
 }
 
 impl Goal {
-    pub fn for_team(team: Team) -> &'static Self {
+    fn soccar(team: Team) -> &'static Self {
         match team {
-            Team::Blue => &BLUE_GOAL,
-            Team::Orange => &ORANGE_GOAL,
+            Team::Blue => &SOCCAR_GOAL_BLUE,
+            Team::Orange => &SOCCAR_GOAL_ORANGE,
+        }
+    }
+
+    /// This is just a hack to get a hoops bot working in time for the tourney.
+    /// Hoops doesn't really have "goals" the way they're modeled – it has
+    /// baskets.
+    fn hoops(team: Team) -> &'static Self {
+        match team {
+            Team::Blue => &HOOPS_GOAL_BLUE,
+            Team::Orange => &HOOPS_GOAL_ORANGE,
         }
     }
 
@@ -154,21 +172,16 @@ pub struct BoostPickup {
 }
 
 lazy_static! {
-    static ref BLUE_GOAL: Goal = Goal {
+    static ref SOCCAR_GOAL_BLUE: Goal = Goal {
         center_2d: Point2::new(0.0, -rl::FIELD_MAX_Y)
     };
-    static ref ORANGE_GOAL: Goal = Goal {
+    static ref SOCCAR_GOAL_ORANGE: Goal = Goal {
         center_2d: Point2::new(0.0, rl::FIELD_MAX_Y)
     };
-    static ref BOOST_DOLLARS: Vec<BoostPickup> = vec![
-        Point2::new(-3072.0, -4096.0),
-        Point2::new(3072.0, -4096.0),
-        Point2::new(-3584.0, 0.0),
-        Point2::new(3584.0, 0.0),
-        Point2::new(-3072.0, 4096.0),
-        Point2::new(3072.0, 4096.0),
-    ]
-    .into_iter()
-    .map(|loc| BoostPickup { loc })
-    .collect();
+    static ref HOOPS_GOAL_BLUE: Goal = Goal {
+        center_2d: Point2::new(0.0, -3586.0)
+    };
+    static ref HOOPS_GOAL_ORANGE: Goal = Goal {
+        center_2d: Point2::new(0.0, 3586.0)
+    };
 }
