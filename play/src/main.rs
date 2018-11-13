@@ -46,10 +46,10 @@ fn main() {
 
     if !use_framework {
         // In dev mode, halt on panics so they can't be ignored.
-        run_bot(rlbot, player_index);
+        run_bot(rlbot, player_index, use_framework);
     } else {
         // This is probably tournament mode, so we want to get back in action asap.
-        deny_climate_change(|| run_bot(rlbot, player_index));
+        deny_climate_change(|| run_bot(rlbot, player_index, use_framework));
     }
 }
 
@@ -81,7 +81,7 @@ fn deny_climate_change<R>(f: impl Fn() -> R) {
     }
 }
 
-fn run_bot(rlbot: &'static rlbot::RLBot, player_index: i32) {
+fn run_bot(rlbot: &'static rlbot::RLBot, player_index: i32, use_framework: bool) {
     let field_info = rlbot.get_field_info().unwrap();
     let brain = match Brain::infer_game_mode(&field_info) {
         rlbot::ffi::GameMode::Soccer => Brain::soccar(),
@@ -90,7 +90,11 @@ fn run_bot(rlbot: &'static rlbot::RLBot, player_index: i32) {
         mode => panic!("unexpected game mode {:?}", mode),
     };
 
-    let collector = create_collector();
+    let collector = if !use_framework {
+        Some(create_collector())
+    } else {
+        None
+    };
     let eeg = EEG::new();
     let mut bot = FormulaNone::new(&field_info, collector, eeg, brain);
     bot.set_player_index(player_index);
@@ -127,7 +131,7 @@ fn create_collector() -> Collector {
 
 struct FormulaNone<'a> {
     field_info: &'a rlbot::ffi::FieldInfo,
-    collector: collect::Collector,
+    collector: Option<collect::Collector>,
     eeg: EEG,
     brain: Brain,
 }
@@ -135,7 +139,7 @@ struct FormulaNone<'a> {
 impl<'a> FormulaNone<'a> {
     fn new(
         field_info: &'a rlbot::ffi::FieldInfo,
-        collector: collect::Collector,
+        collector: Option<collect::Collector>,
         eeg: brain::EEG,
         brain: brain::Brain,
     ) -> Self {
@@ -166,7 +170,9 @@ impl<'a> FormulaNone<'a> {
 
         let input = self.brain.tick(self.field_info, packet, &mut self.eeg);
 
-        self.collector.write(rigid_body_tick).unwrap();
+        if let Some(collector) = &mut self.collector {
+            collector.write(rigid_body_tick).unwrap();
+        }
         self.eeg.show(&packet);
 
         input

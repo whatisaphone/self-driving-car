@@ -52,6 +52,23 @@ cargo test -p brain -- --test-threads=1 integration_tests
 To run an individual test, you can replace `integration_tests` with a pattern
 that matches the name of the test.
 
+### Build a tournament package
+
+```sh
+scripts/tourney.sh
+```
+
+This will package up a release build in `target/tournament/`. It will also
+modify the local `rlbot.cfg` for quick testing. You can test the build by
+starting Rocket League and then running:
+
+```sh
+( cd target/tournament && python -c "from rlbot import runner; runner.main()" )
+```
+
+Once you know it works, zip up the directory and send it to the tournament
+organizer!
+
 ## Handy Links
 
 * [RLBot wiki – Useful Game Values](https://github.com/RLBot/RLBot/wiki/Useful-Game-Values)
@@ -83,7 +100,6 @@ that matches the name of the test.
 
 ### Next
 
-- make it work when orange
 - add the offense swing-around stuff (when no good shot angle)
 - backwards tepid hits should not dodge? (maybe all tepid hits)
 - BounceShot (and related) should verify the hit happened, and Action::Abort if
