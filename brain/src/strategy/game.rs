@@ -82,6 +82,18 @@ impl<'a> Game<'a> {
         }
     }
 
+    pub fn own_back_wall_center(&self) -> Point2<f32> {
+        let signum = match self.team {
+            Team::Blue => -1.0,
+            Team::Orange => 1.0,
+        };
+        Point2::new(0.0, self.field_max_y() * signum)
+    }
+
+    pub fn enemy_back_wall_center(&self) -> Point2<f32> {
+        -self.own_back_wall_center()
+    }
+
     pub fn boost_dollars(&self) -> &[BoostPickup] {
         &*self.boost_dollars
     }

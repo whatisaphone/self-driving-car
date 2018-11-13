@@ -36,8 +36,8 @@ impl Behavior for TepidHit {
 fn time_wasting_hit(ctx: &mut Context, intercept_ball_loc: Point3<f32>) -> Result<Point2<f32>, ()> {
     let me_loc = ctx.me().Physics.loc_2d();
     let ball_loc = intercept_ball_loc.to_2d();
-    let offense_aim = ctx.game.enemy_goal().center_2d;
-    let defense_avoid = ctx.game.own_goal().center_2d;
+    let offense_aim = ctx.game.enemy_back_wall_center();
+    let defense_avoid = ctx.game.own_back_wall_center();
 
     let naive_offense = (ball_loc - me_loc).rotation_to(offense_aim - me_loc);
     let naive_defense = (ball_loc - me_loc).rotation_to(defense_avoid - me_loc);

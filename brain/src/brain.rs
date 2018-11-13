@@ -118,13 +118,6 @@ impl Brain {
                 format!("possession: {:.2}", ctx.scenario.possession()),
                 color::GREEN,
             ));
-            ctx.eeg.draw(Drawable::print(
-                format!(
-                    "concede seconds: {:.2}",
-                    ctx.scenario.enemy_shoot_score_seconds(),
-                ),
-                color::GREEN,
-            ));
 
             self.runner.execute(&mut ctx)
         };
