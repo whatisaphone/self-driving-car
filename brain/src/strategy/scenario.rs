@@ -1,5 +1,6 @@
 use common::prelude::*;
 use lazycell::LazyCell;
+use ordered_float::NotNan;
 use plan::ball::{BallFrame, BallPredictor, BallTrajectory};
 use predict::intercept::NaiveIntercept;
 use rlbot;
@@ -14,7 +15,7 @@ pub struct Scenario<'a> {
     ball_predictor: &'a BallPredictor,
     ball_prediction: LazyCell<BallTrajectory>,
     me_intercept: LazyCell<Option<NaiveIntercept>>,
-    enemy_intercept: LazyCell<Option<NaiveIntercept>>,
+    enemy_intercept: LazyCell<Option<(&'a rlbot::ffi::PlayerInfo, NaiveIntercept)>>,
     possession: LazyCell<f32>,
     push_wall: LazyCell<Wall>,
     impending_concede: LazyCell<Option<&'a BallFrame>>,
@@ -56,7 +57,7 @@ impl<'a> Scenario<'a> {
         self.me_intercept.borrow().unwrap().as_ref()
     }
 
-    pub fn enemy_intercept(&self) -> Option<&NaiveIntercept> {
+    pub fn enemy_intercept(&self) -> Option<&(&'a rlbot::ffi::PlayerInfo, NaiveIntercept)> {
         if !self.me_intercept.filled() {
             self.race();
         }
@@ -72,9 +73,16 @@ impl<'a> Scenario<'a> {
     }
 
     fn race(&self) {
-        let (blitz_me, blitz_enemy) = simulate_ball_blitz(self.game, self.ball_prediction());
+        let blitz_me = simulate_ball_blitz(self.ball_prediction(), self.game.me());
+        let blitz_enemy = self
+            .game
+            .cars(self.game.enemy_team)
+            .map(|enemy| (enemy, simulate_ball_blitz(self.ball_prediction(), enemy)))
+            .filter_map(|(enemy, intercept)| intercept.map(|i| (enemy, i)))
+            .min_by_key(|(_enemy, intercept)| NotNan::new(intercept.time).unwrap());
+
         let possession = match (&blitz_me, &blitz_enemy) {
-            (Some(me), Some(enemy)) => enemy.time - me.time,
+            (Some(me), Some((_, enemy))) => enemy.time - me.time,
             _ => {
                 // To avoid mexican standoffs, just pretend we have full possession so we go
                 // for the ball.
@@ -112,14 +120,12 @@ impl<'a> Scenario<'a> {
 
     /// If the enemy can shoot, guesstimate the number of seconds before the
     /// shot would be scored.
-    #[allow(dead_code)]
     pub fn enemy_shoot_score_seconds(&self) -> f32 {
         *self.enemy_shoot_score_seconds.borrow_with(|| {
-            let intercept = some_or_else!(self.enemy_intercept(), {
+            let (car, intercept) = some_or_else!(self.enemy_intercept(), {
                 return f32::INFINITY;
             });
 
-            let car = self.game.enemy();
             let car_to_ball = intercept.ball_loc.to_2d() - car.Physics.loc_2d();
             let ball_to_goal = self.game.own_goal().center_2d - intercept.ball_loc.to_2d();
 
@@ -154,61 +160,37 @@ fn blitz_start(car: &rlbot::ffi::PlayerInfo, ball_prediction: &BallTrajectory) -
 // "race to the ball" and see if one player gets there much earlier than the
 // other.
 fn simulate_ball_blitz(
-    game: &Game,
     ball_prediction: &BallTrajectory,
-) -> (Option<NaiveIntercept>, Option<NaiveIntercept>) {
-    let (me, enemy) = game.one_v_one();
+    car: &rlbot::ffi::PlayerInfo,
+) -> Option<NaiveIntercept> {
     let mut t = 0.0;
 
-    let mut sim_me = blitz_start(me, ball_prediction);
-    let mut sim_enemy = blitz_start(enemy, ball_prediction);
-
-    let mut me_result = None;
-    let mut enemy_result = None;
+    let mut sim = blitz_start(car, ball_prediction);
+    let mut result = None;
 
     for ball in ball_prediction.iter() {
         t += ball.dt();
 
-        if me_result.is_none() {
-            sim_me.step(ball.dt(), 1.0, true);
-            let me_dist_to_ball = (me.Physics.locp() - ball.loc).to_2d().norm();
-            if sim_me.distance_traveled() >= me_dist_to_ball {
-                me_result = Some(NaiveIntercept {
+        if result.is_none() {
+            sim.step(ball.dt(), 1.0, true);
+            let dist_to_ball = (car.Physics.locp() - ball.loc).to_2d().norm();
+            if sim.distance_traveled() >= dist_to_ball {
+                result = Some(NaiveIntercept {
                     time: t,
                     ball_loc: ball.loc,
                     ball_vel: ball.vel,
                     car_loc: ball.loc,
                     car_speed: ball.vel.norm(),
                 });
+                break;
             }
         }
-
-        if enemy_result.is_none() {
-            sim_enemy.step(ball.dt(), 1.0, true);
-            let enemy_dist_to_ball = (enemy.Physics.locp() - ball.loc).to_2d().norm();
-            if sim_enemy.distance_traveled() >= enemy_dist_to_ball {
-                enemy_result = Some(NaiveIntercept {
-                    time: t,
-                    ball_loc: ball.loc,
-                    ball_vel: ball.vel,
-                    car_loc: ball.loc,
-                    car_speed: ball.vel.norm(),
-                });
-            }
-        }
-
-        if me_result.is_some() && enemy_result.is_some() {
-            break;
-        }
     }
 
-    if let Some(i) = &mut me_result {
-        i.time += blitz_penalty(me, &i);
+    if let Some(i) = &mut result {
+        i.time += blitz_penalty(car, &i);
     }
-    if let Some(i) = &mut enemy_result {
-        i.time += blitz_penalty(enemy, &i);
-    }
-    (me_result, enemy_result)
+    result
 }
 
 fn blitz_penalty(car: &rlbot::ffi::PlayerInfo, intercept: &NaiveIntercept) -> f32 {

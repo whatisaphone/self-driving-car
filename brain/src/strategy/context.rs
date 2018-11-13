@@ -1,6 +1,6 @@
 use plan::ball::BallPredictor;
 use rlbot;
-use strategy::{game::Game, scenario::Scenario};
+use strategy::{game::Game, scenario::Scenario, Team};
 use EEG;
 
 pub struct Context<'a> {
@@ -30,13 +30,11 @@ impl<'a> Context<'a> {
         self.game.me()
     }
 
-    /// Return the villain.
-    pub fn enemy(&self) -> &'a rlbot::ffi::PlayerInfo {
-        self.game.enemy()
+    pub fn cars(&self, team: Team) -> impl Iterator<Item = &rlbot::ffi::PlayerInfo> {
+        self.game.cars(team)
     }
 
-    /// Assert that the game is a 1v1, and return a tuple of (me, enemy).
-    pub fn one_v_one(&self) -> (&'a rlbot::ffi::PlayerInfo, &'a rlbot::ffi::PlayerInfo) {
-        self.game.one_v_one()
+    pub fn enemy_cars(&self) -> impl Iterator<Item = &rlbot::ffi::PlayerInfo> {
+        self.game.cars(self.game.enemy_team)
     }
 }

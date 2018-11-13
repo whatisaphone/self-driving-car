@@ -83,19 +83,21 @@ fn get_boost(ctx: &mut Context) -> Option<Box<Behavior>> {
 }
 
 fn enemy_can_shoot(ctx: &mut Context) -> bool {
-    let enemy_intercept = match ctx.scenario.enemy_intercept() {
+    let (_enemy, intercept) = match ctx.scenario.enemy_intercept() {
         Some(i) => i,
         None => return false,
     };
-    let ball_loc = enemy_intercept.ball_loc.to_2d();
+    let ball_loc = intercept.ball_loc.to_2d();
     let goal = ctx.game.own_goal();
     if (ball_loc - goal.center_2d).norm() >= 3000.0 {
         return false;
     }
-    let angle_car_ball = ctx.enemy().Physics.locp().to_2d().angle_to(ball_loc);
-    let angle_ball_goal = ball_loc.angle_to(goal.center_2d);
-    let angle_diff = angle_car_ball.rotation_to(&angle_ball_goal).angle().abs();
-    angle_diff < PI / 2.0
+    ctx.cars(ctx.game.enemy_team).any(|enemy| {
+        let angle_car_ball = enemy.Physics.locp().to_2d().angle_to(ball_loc);
+        let angle_ball_goal = ball_loc.angle_to(goal.center_2d);
+        let angle_diff = angle_car_ball.rotation_to(&angle_ball_goal).angle().abs();
+        angle_diff < PI / 2.0
+    })
 }
 
 #[cfg(test)]

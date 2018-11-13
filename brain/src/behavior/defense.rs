@@ -3,6 +3,7 @@ use common::prelude::*;
 use eeg::{color, Drawable};
 use maneuvers::{blocking_angle, BounceShot, GroundShot, GroundedHit, JumpShot, PanicDefense};
 use nalgebra::{Point2, Point3, Rotation2, Vector2};
+use ordered_float::NotNan;
 use predict::{estimate_intercept_car_ball, Intercept};
 use routing::{behavior::FollowRoute, plan::GroundIntercept};
 use std::f32::consts::PI;
@@ -77,17 +78,19 @@ impl Behavior for PushToOwnCorner {
             _ => true,
         };
 
-        let (me, enemy) = ctx.one_v_one();
-
         let me_intercept =
-            estimate_intercept_car_ball(ctx, me, |_t, &loc, _vel| loc.z < Self::MAX_BALL_Z);
+            estimate_intercept_car_ball(ctx, ctx.me(), |_t, &loc, _vel| loc.z < Self::MAX_BALL_Z);
 
-        let own_goal = ctx.game.own_goal().center_2d;
-        let enemy_shootable_intercept =
-            estimate_intercept_car_ball(ctx, enemy, |_t, &loc, _vel| {
-                loc.z < JumpShot::MAX_BALL_Z
-                    && GroundShot::shot_angle(loc, enemy.Physics.locp(), own_goal) < PI / 2.0
-            });
+        let enemy_shootable_intercept = ctx
+            .enemy_cars()
+            .filter_map(|enemy| {
+                estimate_intercept_car_ball(ctx, enemy, |_t, &loc, _vel| {
+                    let own_goal = ctx.game.own_goal().center_2d;
+                    loc.z < JumpShot::MAX_BALL_Z
+                        && GroundShot::shot_angle(loc, enemy.Physics.locp(), own_goal) < PI / 2.0
+                })
+            })
+            .min_by_key(|i| NotNan::new(i.time).unwrap());
 
         if let Some(ref i) = me_intercept {
             ctx.eeg

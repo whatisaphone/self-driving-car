@@ -60,13 +60,10 @@ impl<'a> Game<'a> {
         &self.packet.GameCars[self.player_index]
     }
 
-    pub fn enemy(&self) -> &rlbot::ffi::PlayerInfo {
-        assert_eq!(self.packet.NumCars, 2);
-        &self.packet.GameCars[1 - self.player_index]
-    }
-
-    pub fn one_v_one(&self) -> (&rlbot::ffi::PlayerInfo, &rlbot::ffi::PlayerInfo) {
-        (self.me(), self.enemy())
+    pub fn cars(&self, team: Team) -> impl Iterator<Item = &rlbot::ffi::PlayerInfo> {
+        self.packet
+            .cars()
+            .filter(move |p| Team::from_ffi(p.Team) == team)
     }
 
     pub fn own_goal(&self) -> &Goal {
@@ -103,7 +100,7 @@ fn point3(v: rlbot::ffi::Vector3) -> Point3<f32> {
     Point3::new(v.X, v.Y, v.Z)
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub enum Team {
     Blue,
     Orange,
