@@ -14,14 +14,7 @@ use brain::{Brain, EEG};
 use chrono::Local;
 use collect::{get_packet_and_inject_rigid_body_tick, Collector};
 use common::ext::ExtendRLBot;
-use std::{
-    env,
-    fs::{hard_link, remove_file, File},
-    panic,
-    path::Path,
-    thread::sleep,
-    time::Duration,
-};
+use std::{env, fs, panic, path::Path, thread::sleep, time::Duration};
 
 mod logging;
 
@@ -116,15 +109,15 @@ fn create_collector() -> Collector {
     let filename = Local::now()
         .format("logs/play-%Y-%m-%d_%H.%M.%S.csv")
         .to_string();
-    let file = File::create(&filename).unwrap();
+    let file = fs::File::create(&filename).unwrap();
     let collector = Collector::new(file);
 
     // Link a consistently-named file, for convenience.
     let link = Path::new("logs/play.csv");
     if link.exists() {
-        remove_file(link).unwrap();
+        fs::remove_file(link).unwrap();
     }
-    hard_link(filename, link).unwrap();
+    fs::hard_link(filename, link).unwrap();
 
     collector
 }
