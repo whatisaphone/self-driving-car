@@ -108,6 +108,7 @@ organizer!
   velocity angle and see if match)
 - QuickJumpAndDodge should allow choosing the angle at apex instead of only
   ahead of time
+- Brake should not get stuck in a loop when moving backwards
 
 ### Backlog
 
