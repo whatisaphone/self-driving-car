@@ -30,7 +30,6 @@ where
     pub const CONTACT_Z_OFFSET: f32 = -70.0;
     pub const MAX_BALL_Z: f32 = 240.0 - Self::CONTACT_Z_OFFSET; // TODO: how high can I jump
 
-    #[allow(dead_code)] // This is a good behavior, just gotta slip it in somewhere.
     pub fn hit_towards(aim: Aim) -> Self {
         Self {
             aim,
@@ -48,7 +47,7 @@ impl GroundedHit<fn(&mut Context, Point3<f32>) -> Result<Point2<f32>, ()>> {
     }
 
     /// A preset for `Aim` that hits the ball straight ahead.
-    #[allow(dead_code)] // This is a good behavior, just gotta slip it in somewhere.
+    #[allow(dead_code)]
     pub fn opposite_of_self(car: &rlbot::ffi::PlayerInfo, ball: Point3<f32>) -> Point2<f32> {
         ball.to_2d() + (ball.to_2d() - car.Physics.locp().to_2d())
     }
