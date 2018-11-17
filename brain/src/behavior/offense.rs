@@ -28,17 +28,6 @@ impl Behavior for Offense {
             return Action::call(Shoot::new());
         }
 
-        //        if me.Boost < 50 {
-        //            let boost_pad = Point2::new(-3072.0, -4096.0);
-        //            let planner = PowerslideTouchThenIntercept::new(boost_pad);
-        //            if let Ok(plan) = planner.provisional_expand(&me.into(),
-        // &ctx.scenario) {                if plan.duration() >=
-        // ctx.scenario.possession() - Scenario::POSSESSION_CONTESTABLE {
-        //                    return Action::call(FollowRoute2::new(planner));
-        //                }
-        //            }
-        //        }
-
         // TODO: if angle is almost good, slightly adjust path such that good_angle
         // becomes true
 
