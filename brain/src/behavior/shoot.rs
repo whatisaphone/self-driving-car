@@ -1,4 +1,4 @@
-use behavior::{aerial_shot::AerialShot, Action, Behavior};
+use behavior::{Action, Behavior};
 use common::{prelude::*, rl};
 use maneuvers::{GroundShot, JumpShot};
 use nalgebra::Point3;
@@ -54,7 +54,7 @@ impl Behavior for Shoot {
             return Action::call(JumpShot::new());
         }
 
-        Action::call(AerialShot::new())
+        panic!("can't reach the ball");
     }
 }
 

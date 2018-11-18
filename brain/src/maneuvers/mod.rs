@@ -1,5 +1,4 @@
 pub use maneuvers::{
-    aerial_loc_time::AerialLocTime,
     blitz_to_location::BlitzToLocation,
     bounce_shot::BounceShot,
     drive_towards::{drive_towards, DriveTowards},
@@ -11,6 +10,7 @@ pub use maneuvers::{
     panic_defense::PanicDefense,
 };
 
+#[cfg(test)]
 mod aerial_loc_time;
 mod blitz_to_location;
 mod bounce_shot;
