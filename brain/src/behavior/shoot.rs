@@ -1,8 +1,10 @@
-use behavior::{Action, Behavior};
+use behavior::{Action, Behavior, Chain, Priority};
 use common::{prelude::*, rl};
-use maneuvers::{GroundShot, JumpShot};
-use nalgebra::Point3;
-use predict::estimate_intercept_car_ball;
+use maneuvers::{BounceShot, GroundedHit};
+use nalgebra::{Point2, Point3};
+use predict::naive_ground_intercept_2;
+use routing::{behavior::FollowRoute, plan::GroundIntercept};
+use std::f32::consts::PI;
 use strategy::{Context, Game};
 
 pub struct Shoot;
@@ -12,22 +14,43 @@ impl Shoot {
         Shoot
     }
 
-    pub fn good_angle(game: &Game, ball_loc: Point3<f32>, car_loc: Point3<f32>) -> bool {
+    pub fn viable_shot(game: &Game, car_loc: Point3<f32>, ball_loc: Point3<f32>) -> Option<Shot> {
         // Aerials are not ready for prime-time yet
-        if ball_loc.z >= JumpShot::MAX_BALL_Z {
-            return false;
+        if ball_loc.z >= GroundedHit::max_ball_z() {
+            return None;
         }
 
-        // This is woefully incomplete
-        if game.enemy_goal().is_y_within_range(ball_loc.y, ..250.0)
-            && ball_loc.x.abs() >= rl::GOALPOST_X
-        {
-            return false;
+        // Evaluate a direct shot.
+        let aim_loc = BounceShot::aim_loc(game.enemy_goal(), car_loc.to_2d(), ball_loc.to_2d());
+        let car_to_ball = ball_loc.to_2d() - car_loc.to_2d();
+        let ball_to_goal = aim_loc - ball_loc.to_2d();
+        if car_to_ball.angle_to(ball_to_goal).abs() < PI / 6.0 {
+            return Some(Shot(aim_loc));
         }
 
-        GroundShot::good_angle(ball_loc, car_loc, game.enemy_goal().center_2d)
+        // Evaluate bouncing it off the side wall. Pretend the goal is reflected across
+        // the wall, and then try aiming at the reflection.
+        let reflect_x = ball_loc.x.signum() * (game.field_max_x() - rl::BALL_RADIUS);
+        let aim_loc_x = reflect_x + reflect_x - game.enemy_goal().center_2d.x;
+        let aim_loc = Point2::new(aim_loc_x, game.enemy_goal().center_2d.y);
+        let car_to_ball = ball_loc.to_2d() - car_loc.to_2d();
+        let ball_to_goal = aim_loc - ball_loc.to_2d();
+        if car_to_ball.rotation_to(ball_to_goal).angle().abs() < PI / 6.0 {
+            return Some(Shot(aim_loc));
+        }
+
+        return None;
+    }
+
+    fn aim(ctx: &mut Context, ball_loc: Point3<f32>) -> Result<Point2<f32>, ()> {
+        match Self::viable_shot(ctx.game, ctx.me().Physics.locp(), ball_loc) {
+            Some(Shot(loc)) => Ok(loc),
+            None => Err(()),
+        }
     }
 }
+
+pub struct Shot(Point2<f32>);
 
 impl Behavior for Shoot {
     fn name(&self) -> &str {
@@ -37,24 +60,23 @@ impl Behavior for Shoot {
     fn execute2(&mut self, ctx: &mut Context) -> Action {
         let me = ctx.me();
 
-        let intercept = estimate_intercept_car_ball(ctx, me, |_t, &loc, _vel| {
-            Self::good_angle(ctx.game, loc, me.Physics.locp())
-        });
+        let intercept =
+            naive_ground_intercept_2(&me.into(), ctx.scenario.ball_prediction(), |ball| {
+                Self::viable_shot(ctx.game, me.Physics.locp(), ball.loc)
+            });
 
-        let intercept = some_or_else!(intercept, {
-            ctx.eeg.log("[Shoot] no good intercept");
+        if intercept.is_none() {
+            ctx.eeg.log("[Shoot] no viable shot");
             return Action::Abort;
-        });
-
-        if intercept.ball_loc.z < GroundShot::MAX_BALL_Z {
-            return Action::call(GroundShot::new());
         }
 
-        if intercept.ball_loc.z < JumpShot::MAX_BALL_Z {
-            return Action::call(JumpShot::new());
-        }
-
-        panic!("can't reach the ball");
+        Action::call(Chain::new(
+            Priority::Idle,
+            vec![
+                Box::new(FollowRoute::new(GroundIntercept::new())),
+                Box::new(GroundedHit::hit_towards(Self::aim)),
+            ],
+        ))
     }
 }
 

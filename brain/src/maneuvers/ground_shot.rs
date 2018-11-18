@@ -1,115 +1,15 @@
-use behavior::{Action, Behavior};
 use common::prelude::*;
-use eeg::{color, Drawable};
-use maneuvers::{BounceShot, GetToFlatGround};
-use mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
 use nalgebra::{Point2, Point3};
-use predict::naive_ground_intercept;
-use std::f32::consts::PI;
-use strategy::Context;
 use utils::geometry::ExtendF32;
 
-pub struct GroundShot {
-    min_distance: Option<f32>,
-}
+pub enum GroundShot {}
 
 impl GroundShot {
-    pub const MAX_BALL_Z: f32 = 120.0; // sloppy number
-
-    pub fn new() -> GroundShot {
-        GroundShot { min_distance: None }
-    }
-
     pub fn shot_angle(ball_loc: Point3<f32>, car_loc: Point3<f32>, aim_loc: Point2<f32>) -> f32 {
         let angle_me_ball = car_loc.coords.to_2d().angle_to(ball_loc.coords.to_2d());
         let angle_ball_goal = ball_loc.coords.to_2d().angle_to(aim_loc.coords);
         (angle_me_ball - angle_ball_goal).normalize_angle().abs()
     }
-
-    pub fn good_angle(ball_loc: Point3<f32>, car_loc: Point3<f32>, aim_loc: Point2<f32>) -> bool {
-        Self::shot_angle(ball_loc, car_loc, aim_loc) < PI / 6.0
-    }
-}
-
-impl Behavior for GroundShot {
-    fn name(&self) -> &str {
-        stringify!(GroundShot)
-    }
-
-    fn execute2(&mut self, ctx: &mut Context) -> Action {
-        // This behavior currently just operates in 2D
-        if !GetToFlatGround::on_flat_ground(ctx.me()) {
-            return Action::Abort;
-        }
-
-        let me = ctx.me();
-        let intercept = naive_ground_intercept(
-            ctx.scenario.ball_prediction().iter(),
-            me.Physics.locp(),
-            me.Physics.vel(),
-            me.Boost as f32,
-            |ball| {
-                ball.loc.z < Self::MAX_BALL_Z
-                    && Self::good_angle(
-                        ball.loc,
-                        me.Physics.locp(),
-                        ctx.game.enemy_goal().center_2d,
-                    )
-            },
-        );
-
-        let intercept = some_or_else!(intercept, {
-            ctx.eeg.log("[GroundShot] no good intercept");
-            return Action::Abort;
-        });
-
-        let aim_loc = BounceShot::aim_loc(
-            ctx.game.enemy_goal(),
-            me.Physics.locp().to_2d(),
-            intercept.ball_loc.to_2d(),
-        );
-        let target_loc = BounceShot::rough_shooting_spot(&intercept, aim_loc);
-        let target_dist = (target_loc - me.Physics.locp().to_2d()).norm();
-
-        // If the ball has moved further away, assume we hit it and we're done.
-        match self.min_distance {
-            Some(md) if target_dist >= md * 2.0 => return Action::Return,
-            _ => self.min_distance = Some(target_dist),
-        }
-
-        ctx.eeg.draw(Drawable::GhostBall(intercept.ball_loc.coords));
-        ctx.eeg.draw(Drawable::Crosshair(aim_loc.coords));
-        ctx.eeg.draw(Drawable::print(
-            format!("intercept_time: {:.2}", intercept.time),
-            color::GREEN,
-        ));
-        ctx.eeg.draw(Drawable::print(
-            format!("target_dist: {:.0}", target_dist),
-            color::GREEN,
-        ));
-
-        if target_dist <= 250.0 {
-            return shoot(ctx);
-        }
-
-        // TODO: this is not how this works…
-        let mut child = GroundAccelToLoc::new(
-            target_loc.coords,
-            ctx.packet.GameInfo.TimeSeconds + intercept.time,
-        );
-        child.execute2(ctx)
-    }
-}
-
-fn shoot(ctx: &mut Context) -> Action {
-    let me = ctx.me();
-    let angle = simple_yaw_diff(&me.Physics, ctx.packet.GameBall.Physics.loc().to_2d());
-    if angle.abs() >= PI / 2.0 {
-        ctx.eeg.log("Incorrect approach angle");
-        return Action::Return;
-    }
-
-    return Action::call(QuickJumpAndDodge::begin(ctx.packet).yaw(angle));
 }
 
 #[cfg(test)]
@@ -117,7 +17,6 @@ mod integration_tests {
     use behavior::runner::PUSHED;
     use common::prelude::*;
     use integration_tests::helpers::{TestRunner, TestScenario};
-    use maneuvers::GroundShot;
     use nalgebra::{Rotation3, Vector3};
     use strategy::Runner2;
 
@@ -184,49 +83,49 @@ mod integration_tests {
     #[test]
     #[ignore] // TODO
     fn easy_open_net() {
-        let test = TestRunner::start0(TestScenario {
-            ball_loc: Vector3::new(999.651, 3636.9731, 93.14),
-            ball_vel: Vector3::new(-271.7422, -1642.4099, 0.0),
-            car_loc: Vector3::new(1981.3068, -3343.5154, 16.99),
-            car_rot: Rotation3::from_unreal_angles(-0.00958738, 1.9184347, 0.0),
-            car_vel: Vector3::new(-544.83453, 1537.2355, 8.53),
-            boost: 0,
-            ..Default::default()
-        });
-        test.set_behavior(GroundShot::new());
-        test.sleep_millis(4000);
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(999.651, 3636.9731, 93.14),
+                ball_vel: Vector3::new(-271.7422, -1642.4099, 0.0),
+                car_loc: Vector3::new(1981.3068, -3343.5154, 16.99),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, 1.9184347, 0.0),
+                car_vel: Vector3::new(-544.83453, 1537.2355, 8.53),
+                boost: 0,
+                ..Default::default()
+            })
+            .run_for_millis(4000);
         assert!(test.has_scored());
     }
 
     #[test]
     #[ignore] // TODO
     fn tight_angle_needs_correction() {
-        let test = TestRunner::start0(TestScenario {
-            ball_loc: Vector3::new(-2618.1267, 4567.453, 93.14),
-            ball_vel: Vector3::new(204.82155, -438.9531, 0.0),
-            car_loc: Vector3::new(-3850.746, 3749.8147, 16.319502),
-            car_rot: Rotation3::from_unreal_angles(-0.15867114, -0.33191508, 0.005273059),
-            car_vel: Vector3::new(1287.4675, -433.82834, -183.28568),
-            ..Default::default()
-        });
-        test.set_behavior(Runner2::soccar());
-        test.sleep_millis(2000);
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(-2618.1267, 4567.453, 93.14),
+                ball_vel: Vector3::new(204.82155, -438.9531, 0.0),
+                car_loc: Vector3::new(-3850.746, 3749.8147, 16.319502),
+                car_rot: Rotation3::from_unreal_angles(-0.15867114, -0.33191508, 0.005273059),
+                car_vel: Vector3::new(1287.4675, -433.82834, -183.28568),
+                ..Default::default()
+            })
+            .run_for_millis(2000);
         assert!(test.has_scored());
     }
 
     #[test]
     fn corner_shot() {
-        let test = TestRunner::start0(TestScenario {
-            ball_loc: Vector3::new(-2616.377, 4173.1816, 122.709236),
-            ball_vel: Vector3::new(662.0207, -114.385414, 294.32352),
-            car_loc: Vector3::new(-3791.579, 2773.0996, 14.34),
-            car_rot: Rotation3::from_unreal_angles(0.013038836, 0.08504006, -0.0035473306),
-            car_vel: Vector3::new(1109.654, 62.572224, 22.532219),
-            boost: 0,
-            ..Default::default()
-        });
-        test.set_behavior(Runner2::soccar());
-        test.sleep_millis(3000);
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(-2616.377, 4173.1816, 122.709236),
+                ball_vel: Vector3::new(662.0207, -114.385414, 294.32352),
+                car_loc: Vector3::new(-3791.579, 2773.0996, 14.34),
+                car_rot: Rotation3::from_unreal_angles(0.013038836, 0.08504006, -0.0035473306),
+                car_vel: Vector3::new(1109.654, 62.572224, 22.532219),
+                boost: 0,
+                ..Default::default()
+            })
+            .run_for_millis(3000);
 
         test.examine_eeg(|eeg| {
             assert!(eeg.log.iter().any(|x| x == "> GroundShot"));
@@ -236,16 +135,16 @@ mod integration_tests {
 
     #[test]
     fn rolling_to_corner_of_goal() {
-        let test = TestRunner::start0(TestScenario {
-            ball_loc: Vector3::new(151.63426, 4371.35, 93.15),
-            ball_vel: Vector3::new(-435.87555, 272.40097, 0.0),
-            car_loc: Vector3::new(-2071.033, 4050.8577, 17.01),
-            car_rot: Rotation3::from_unreal_angles(-0.009491506, -0.61694795, 0.0),
-            car_vel: Vector3::new(232.67545, -405.04382, 8.36),
-            ..Default::default()
-        });
-        test.set_behavior(Runner2::soccar());
-        test.sleep_millis(2000);
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(151.63426, 4371.35, 93.15),
+                ball_vel: Vector3::new(-435.87555, 272.40097, 0.0),
+                car_loc: Vector3::new(-2071.033, 4050.8577, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.009491506, -0.61694795, 0.0),
+                car_vel: Vector3::new(232.67545, -405.04382, 8.36),
+                ..Default::default()
+            })
+            .run_for_millis(2000);
 
         test.examine_eeg(|eeg| {
             assert!(eeg.log.iter().any(|x| x == "> GroundShot"));

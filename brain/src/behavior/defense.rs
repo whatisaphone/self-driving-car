@@ -1,7 +1,7 @@
 use behavior::{tepid_hit::TepidHit, Action, Behavior, Chain, Priority};
 use common::prelude::*;
 use eeg::{color, Drawable};
-use maneuvers::{blocking_angle, BounceShot, GroundShot, GroundedHit, JumpShot, PanicDefense};
+use maneuvers::{blocking_angle, BounceShot, GroundShot, GroundedHit, PanicDefense};
 use nalgebra::{Point2, Point3, Rotation2, Vector2};
 use ordered_float::NotNan;
 use predict::{estimate_intercept_car_ball, Intercept};
@@ -86,7 +86,7 @@ impl Behavior for PushToOwnCorner {
             .filter_map(|enemy| {
                 estimate_intercept_car_ball(ctx, enemy, |_t, &loc, _vel| {
                     let own_goal = ctx.game.own_goal().center_2d;
-                    loc.z < JumpShot::MAX_BALL_Z
+                    loc.z < GroundedHit::max_ball_z()
                         && GroundShot::shot_angle(loc, enemy.Physics.locp(), own_goal) < PI / 2.0
                 })
             })

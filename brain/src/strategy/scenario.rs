@@ -181,6 +181,7 @@ fn simulate_ball_blitz(
                     ball_vel: ball.vel,
                     car_loc: ball.loc,
                     car_speed: ball.vel.norm(),
+                    data: (),
                 });
                 break;
             }

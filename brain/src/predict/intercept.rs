@@ -1,7 +1,8 @@
 use common::prelude::*;
-use nalgebra::{Point3, Vector3};
-use plan::ball::BallFrame;
+use nalgebra::{Point3, UnitQuaternion, Vector3};
+use plan::ball::{BallFrame, BallTrajectory};
 use rlbot;
+use routing::models::CarState;
 use simulate::Car1D;
 use strategy::Context;
 
@@ -21,42 +22,69 @@ pub fn estimate_intercept_car_ball(
 }
 
 pub fn naive_ground_intercept<'a>(
-    mut ball: impl Iterator<Item = &'a BallFrame>,
+    ball: impl Iterator<Item = &'a BallFrame>,
     start_loc: Point3<f32>,
     start_vel: Vector3<f32>,
     start_boost: f32,
     predicate: impl Fn(&BallFrame) -> bool,
 ) -> Option<NaiveIntercept> {
+    let start = CarState {
+        loc: start_loc,
+        rot: UnitQuaternion::identity(), // This isn't used.
+        vel: start_vel,
+        boost: start_boost,
+    };
+    naive_ground_intercept_inner(
+        &start,
+        ball,
+        |ball| if predicate(ball) { Some(()) } else { None },
+    )
+}
+
+pub fn naive_ground_intercept_2<T>(
+    start: &CarState,
+    ball: &BallTrajectory,
+    predicate: impl Fn(&BallFrame) -> Option<T>,
+) -> Option<NaiveIntercept<T>> {
+    naive_ground_intercept_inner(start, ball.iter(), predicate)
+}
+
+fn naive_ground_intercept_inner<'a, T>(
+    start: &CarState,
+    mut ball: impl Iterator<Item = &'a BallFrame>,
+    predicate: impl Fn(&BallFrame) -> Option<T>,
+) -> Option<NaiveIntercept<T>> {
     // We don't want the center of the car to be at the center of the ball –
     // we want their meshes to barely be touching.
     const RADII: f32 = 240.0;
 
-    let mut sim_car = Car1D::new(start_vel.norm()).with_boost(start_boost);
+    let mut sim_car = Car1D::new(start.vel.norm()).with_boost(start.boost);
 
-    let sim_ball = ball.find(|ball| {
+    let sim_ball = ball.find_map(|ball| {
         sim_car.step(ball.dt(), 1.0, true);
 
-        let target_traveled = (ball.loc - start_loc).to_2d().norm() - RADII;
+        let target_traveled = (ball.loc - start.loc).to_2d().norm() - RADII;
         if sim_car.distance_traveled() >= target_traveled {
-            if predicate(ball) {
-                return true;
+            if let Some(data) = predicate(ball) {
+                return Some((ball, data));
             }
         }
 
-        false
+        None
     });
 
-    let sim_ball = some_or_else!(sim_ball, {
+    let (sim_ball, data) = some_or_else!(sim_ball, {
         return None;
     });
 
-    let intercept_loc = sim_ball.loc - (sim_ball.loc - start_loc).normalize() * RADII;
+    let intercept_loc = sim_ball.loc - (sim_ball.loc - start.loc).normalize() * RADII;
     let intercept = NaiveIntercept {
         time: sim_ball.t,
         ball_loc: sim_ball.loc,
         ball_vel: sim_ball.vel,
         car_loc: intercept_loc,
         car_speed: sim_car.speed(),
+        data,
     };
     Some(intercept)
 }
@@ -69,16 +97,17 @@ pub struct Intercept {
     pub car_speed: f32,
 }
 
-pub struct NaiveIntercept {
+pub struct NaiveIntercept<T = ()> {
     pub time: f32,
     pub ball_loc: Point3<f32>,
     pub ball_vel: Vector3<f32>,
     pub car_loc: Point3<f32>,
     pub car_speed: f32,
+    pub data: T,
 }
 
-impl From<NaiveIntercept> for Intercept {
-    fn from(i: NaiveIntercept) -> Self {
+impl<T> From<NaiveIntercept<T>> for Intercept {
+    fn from(i: NaiveIntercept<T>) -> Self {
         Self {
             time: i.time,
             ball_loc: i.ball_loc.coords,

@@ -1,6 +1,6 @@
 use behavior::{shoot::Shoot, tepid_hit::TepidHit, Action, Behavior};
 use common::prelude::*;
-use predict::estimate_intercept_car_ball;
+use predict::naive_ground_intercept_2;
 use strategy::Context;
 
 pub struct Offense;
@@ -19,9 +19,10 @@ impl Behavior for Offense {
     fn execute2(&mut self, ctx: &mut Context) -> Action {
         let me = ctx.me();
 
-        let intercept = estimate_intercept_car_ball(ctx, me, |_t, &loc, _vel| {
-            Shoot::good_angle(ctx.game, loc, me.Physics.locp())
-        });
+        let intercept =
+            naive_ground_intercept_2(&me.into(), ctx.scenario.ball_prediction(), |ball| {
+                Shoot::viable_shot(ctx.game, me.Physics.locp(), ball.loc)
+            });
 
         if intercept.is_some() {
             ctx.eeg.log("[Offense] Taking the shot!");

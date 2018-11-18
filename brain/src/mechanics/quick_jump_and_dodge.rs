@@ -40,12 +40,6 @@ impl QuickJumpAndDodge {
         }
     }
 
-    pub fn yaw(mut self, steer: f32) -> Self {
-        self.pitch = -1.0;
-        self.yaw = steer;
-        self
-    }
-
     pub fn angle(mut self, angle: f32) -> Self {
         self.pitch = -angle.cos();
         self.yaw = angle.sin();

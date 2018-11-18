@@ -157,8 +157,8 @@ impl Goal {
         }
     }
 
-    /// Returns true if the given y value is less than `range` uu in front of
-    /// the goal.
+    /// Returns true if the given y value is less than `range.end` uu in front
+    /// of the goal.
     pub fn is_y_within_range(&self, y: f32, range: RangeTo<f32>) -> bool {
         // range < 0 would be behind the goal, which we have no use for supporting.
         assert!(range.end >= 0.0);

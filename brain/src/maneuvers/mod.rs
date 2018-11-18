@@ -6,7 +6,6 @@ pub use maneuvers::{
     get_to_flat_ground::GetToFlatGround,
     ground_shot::GroundShot,
     grounded_hit::GroundedHit,
-    jump_shot::JumpShot,
     panic_defense::PanicDefense,
 };
 
