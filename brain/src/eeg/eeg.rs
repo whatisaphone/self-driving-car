@@ -1,6 +1,6 @@
 // This file is a hot mess, don't look at it please :)
 
-use common::{prelude::*, rl};
+use common::{prelude::*, rl, PrettyPrint};
 use crossbeam_channel;
 use graphics::{types::Color, Transformed};
 use nalgebra::{Point2, Rotation3, Vector2, Vector3};
@@ -46,6 +46,14 @@ impl EEG {
         self.draw_list.draw(drawable);
     }
 
+    pub fn print_value(&mut self, label: &str, value: impl PrettyPrint) {
+        self.draw_list.print_value(label, value);
+    }
+
+    pub fn print_time(&mut self, label: &str, time: f32) {
+        self.draw_list.print_time(label, time);
+    }
+
     pub fn begin(&mut self, packet: &rlbot::ffi::LiveDataPacket) {
         self.current_packet_time = packet.GameInfo.TimeSeconds;
     }
@@ -85,6 +93,20 @@ impl DrawList {
 
     fn draw(&mut self, drawable: Drawable) {
         self.drawables.push(drawable);
+    }
+
+    fn print_value(&mut self, label: &str, value: impl PrettyPrint) {
+        self.draw(Drawable::print(
+            format!("{}: {}", label, value.pretty()),
+            color::GREEN,
+        ));
+    }
+
+    fn print_time(&mut self, label: &str, time: f32) {
+        self.draw(Drawable::print(
+            format!("{}: {:.2}", label, time),
+            color::GREEN,
+        ));
     }
 }
 

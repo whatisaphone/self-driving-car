@@ -7,6 +7,14 @@ pub trait PrettyPrint {
     fn pretty(&self) -> Self::PrettyPrinter;
 }
 
+impl PrettyPrint for String {
+    type PrettyPrinter = Self;
+
+    fn pretty(&self) -> Self::PrettyPrinter {
+        self.clone() // :(
+    }
+}
+
 impl<N: Real> PrettyPrint for Vector2<N> {
     type PrettyPrinter = Vector2PrettyPrinter<N>;
 

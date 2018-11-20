@@ -1,6 +1,6 @@
 use behavior::{Action, Behavior};
 use common::{prelude::*, rl};
-use eeg::{color, Drawable};
+use eeg::Drawable;
 use maneuvers::BounceShot;
 use mechanics::{simple_steer_towards, QuickJumpAndDodge};
 use nalgebra::{Point2, Point3};
@@ -146,14 +146,9 @@ where
                 .normalize()
                 * distance;
 
-        ctx.eeg.draw(Drawable::print(
-            format!("intercept_time: {:.2}", intercept_time),
-            color::GREEN,
-        ));
-        ctx.eeg.draw(Drawable::print(
-            format!("intercept_loc_z: {:.0}", intercept.ball_loc.z),
-            color::GREEN,
-        ));
+        ctx.eeg.print_time("intercept_time", intercept_time);
+        ctx.eeg
+            .print_value("intercept_loc_z", format!("{:.0}", intercept.ball_loc.z));
         ctx.eeg.draw(Drawable::Crosshair(aim_loc.coords));
         ctx.eeg.draw(Drawable::GhostBall(intercept.ball_loc.coords));
         ctx.eeg
@@ -191,34 +186,13 @@ where
         // Calculate how far ahead/behind the target location
         let car_offset = (car_loc - target_loc).dot(&drive.forward());
 
-        ctx.eeg.draw(Drawable::print(
-            format!(
-                "i_ball: [{:.0}, {:.0}, {:.0}]",
-                self.intercept.as_ref().unwrap().ball_loc.x,
-                self.intercept.as_ref().unwrap().ball_loc.y,
-                self.intercept.as_ref().unwrap().ball_loc.z
-            ),
-            color::GREEN,
-        ));
-        ctx.eeg.draw(Drawable::print(
-            format!(
-                "target: [{:.0}, {:.0}, {:.0}]",
-                target_loc.coords.x, target_loc.coords.y, target_loc.coords.z
-            ),
-            color::GREEN,
-        ));
-        ctx.eeg.draw(Drawable::print(
-            format!("drive_time: {:.2}", drive_time),
-            color::GREEN,
-        ));
-        ctx.eeg.draw(Drawable::print(
-            format!("jump_time: {:.2}", jump_time),
-            color::GREEN,
-        ));
-        ctx.eeg.draw(Drawable::print(
-            format!("car_offset: {:.0}", car_offset),
-            color::GREEN,
-        ));
+        ctx.eeg
+            .print_value("i_ball", self.intercept.as_ref().unwrap().ball_loc);
+        ctx.eeg.print_value("target", target_loc);
+        ctx.eeg.print_time("drive_time", drive_time);
+        ctx.eeg.print_time("jump_time", jump_time);
+        ctx.eeg
+            .print_value("car_offset", format!("{:.0}", car_offset));
 
         if car_offset > 0.0 {
             Ok(Do::Coast)
