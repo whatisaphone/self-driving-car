@@ -7,7 +7,6 @@ extern crate nalgebra;
 extern crate rlbot;
 
 use collector2::Collector;
-use common::rl;
 use game_state::DesiredGameState;
 use rlbot_ext::get_packet_and_inject_rigid_body_tick;
 use scenarios2::{Scenario, ScenarioStepResult};
@@ -28,7 +27,11 @@ pub fn main() -> Result<(), Box<Error>> {
     start_match(&rlbot)?;
     wait_for_match_start(&rlbot)?;
 
-    run_scenario(&rlbot, scenarios2::Turn::new(rl::CAR_NORMAL_SPEED))?;
+    for axis in scenarios2::AirAxis::all() {
+        run_scenario(&rlbot, scenarios2::AirRotateAccel::new(axis))?;
+        run_scenario(&rlbot, scenarios2::AirRotateCoast::new(axis))?;
+        run_scenario(&rlbot, scenarios2::AirRotateCounter::new(axis))?;
+    }
 
     Ok(())
 }

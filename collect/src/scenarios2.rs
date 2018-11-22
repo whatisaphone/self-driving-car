@@ -9,7 +9,7 @@ use game_state::{
     Vector3Partial,
 };
 use rlbot;
-use std::{error::Error, f32::consts::PI};
+use std::{error::Error, f32::consts::PI, fmt};
 
 pub trait Scenario {
     fn name(&self) -> String;
@@ -289,6 +289,192 @@ impl Scenario for Dodge {
                 rlbot.update_player_input(input, 0)?;
                 return Ok(ScenarioStepResult::Write);
             }
+        }
+    }
+}
+
+#[derive(Copy, Clone)]
+pub enum AirAxis {
+    Pitch,
+    Yaw,
+    Roll,
+}
+
+impl AirAxis {
+    pub fn all() -> impl Iterator<Item = Self> {
+        vec![AirAxis::Pitch, AirAxis::Yaw, AirAxis::Roll].into_iter()
+    }
+
+    fn get_input_axis_mut<'a>(&self, input: &'a mut rlbot::ffi::PlayerInput) -> &'a mut f32 {
+        match *self {
+            AirAxis::Pitch => &mut input.Pitch,
+            AirAxis::Yaw => &mut input.Yaw,
+            AirAxis::Roll => &mut input.Roll,
+        }
+    }
+}
+
+impl fmt::Display for AirAxis {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(match self {
+            AirAxis::Pitch => "pitch",
+            AirAxis::Yaw => "yaw",
+            AirAxis::Roll => "roll",
+        })
+    }
+}
+
+fn game_state_default_air() -> DesiredGameState {
+    let mut state = game_state_default();
+    state.car_states[0].physics.as_mut().unwrap().location =
+        Some(Vector3Partial::new(0.0, 0.0, 1000.0));
+    state.car_states[0].physics.as_mut().unwrap().rotation =
+        Some(RotatorPartial::new(0.0, 0.0, 0.0));
+    state
+}
+
+pub struct AirRotateAccel {
+    axis: AirAxis,
+    start_time: Option<f32>,
+}
+
+impl AirRotateAccel {
+    pub fn new(axis: AirAxis) -> Self {
+        Self {
+            axis,
+            start_time: None,
+        }
+    }
+}
+
+impl Scenario for AirRotateAccel {
+    fn name(&self) -> String {
+        format!("air_rotate_{}_accel", self.axis)
+    }
+
+    fn initial_state(&self) -> DesiredGameState {
+        game_state_default_air()
+    }
+
+    fn step(
+        &mut self,
+        rlbot: &rlbot::RLBot,
+        time: f32,
+        _packet: &rlbot::ffi::LiveDataPacket,
+    ) -> Result<ScenarioStepResult, Box<Error>> {
+        if self.start_time.is_none() {
+            self.start_time = Some(time);
+        }
+
+        match self.start_time {
+            Some(start_time) if time < start_time + 1.0 => {
+                let mut input = rlbot::ffi::PlayerInput::default();
+                *self.axis.get_input_axis_mut(&mut input) = 1.0;
+                rlbot.update_player_input(input, 0)?;
+                Ok(ScenarioStepResult::Write)
+            }
+            _ => Ok(ScenarioStepResult::Finish),
+        }
+    }
+}
+
+pub struct AirRotateCoast {
+    axis: AirAxis,
+    start_time: Option<f32>,
+}
+
+impl AirRotateCoast {
+    pub fn new(axis: AirAxis) -> Self {
+        Self {
+            axis,
+            start_time: None,
+        }
+    }
+}
+
+impl Scenario for AirRotateCoast {
+    fn name(&self) -> String {
+        format!("air_rotate_{}_coast", self.axis)
+    }
+
+    fn initial_state(&self) -> DesiredGameState {
+        game_state_default_air()
+    }
+
+    fn step(
+        &mut self,
+        rlbot: &rlbot::RLBot,
+        time: f32,
+        _packet: &rlbot::ffi::LiveDataPacket,
+    ) -> Result<ScenarioStepResult, Box<Error>> {
+        if self.start_time.is_none() {
+            self.start_time = Some(time);
+        }
+
+        match self.start_time {
+            Some(start_time) if time < start_time + 1.0 => {
+                let mut input = rlbot::ffi::PlayerInput::default();
+                *self.axis.get_input_axis_mut(&mut input) = 1.0;
+                rlbot.update_player_input(input, 0)?;
+                Ok(ScenarioStepResult::Ignore)
+            }
+            Some(start_time) if time < start_time + 3.0 => {
+                let input = rlbot::ffi::PlayerInput::default();
+                rlbot.update_player_input(input, 0)?;
+                Ok(ScenarioStepResult::Write)
+            }
+            _ => Ok(ScenarioStepResult::Finish),
+        }
+    }
+}
+
+pub struct AirRotateCounter {
+    axis: AirAxis,
+    start_time: Option<f32>,
+}
+
+impl AirRotateCounter {
+    pub fn new(axis: AirAxis) -> Self {
+        Self {
+            axis,
+            start_time: None,
+        }
+    }
+}
+
+impl Scenario for AirRotateCounter {
+    fn name(&self) -> String {
+        format!("air_rotate_{}_counter", self.axis)
+    }
+
+    fn initial_state(&self) -> DesiredGameState {
+        game_state_default_air()
+    }
+
+    fn step(
+        &mut self,
+        rlbot: &rlbot::RLBot,
+        time: f32,
+        _packet: &rlbot::ffi::LiveDataPacket,
+    ) -> Result<ScenarioStepResult, Box<Error>> {
+        if self.start_time.is_none() {
+            self.start_time = Some(time);
+        }
+
+        match self.start_time {
+            Some(start_time) if time < start_time + 1.0 => {
+                let mut input = rlbot::ffi::PlayerInput::default();
+                *self.axis.get_input_axis_mut(&mut input) = 1.0;
+                rlbot.update_player_input(input, 0)?;
+                Ok(ScenarioStepResult::Ignore)
+            }
+            Some(start_time) if time < start_time + 2.0 => {
+                let mut input = rlbot::ffi::PlayerInput::default();
+                *self.axis.get_input_axis_mut(&mut input) = -1.0;
+                rlbot.update_player_input(input, 0)?;
+                Ok(ScenarioStepResult::Write)
+            }
+            _ => Ok(ScenarioStepResult::Finish),
         }
     }
 }
