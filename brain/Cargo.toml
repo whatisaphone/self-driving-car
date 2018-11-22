@@ -27,6 +27,7 @@ chip = "0.0.4"
 
 common = { path = "../common" }
 collect = { path = "../collect" }
+dom = { path = "../dom" }
 simulate = { path = "../simulate" }
 
 [dev-dependencies]

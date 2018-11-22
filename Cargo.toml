@@ -4,6 +4,7 @@ members = [
     "brain-test-data",
     "collect",
     "common",
+    "dom",
     "oven",
     "play",
     "simulate",

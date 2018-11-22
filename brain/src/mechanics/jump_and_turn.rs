@@ -1,4 +1,5 @@
 use behavior::{Action, Behavior};
+use common::physics;
 use nalgebra::UnitQuaternion;
 use rlbot;
 use strategy::Context;
@@ -41,9 +42,16 @@ impl Behavior for JumpAndTurn {
         ctx.eeg.print_value("target_rot", self.target_rot);
 
         let jump = elapsed < self.jump_duration;
+        let (pitch, yaw, roll) = dom::get_pitch_yaw_roll(
+            ctx.me(),
+            physics::car_forward_axis(self.target_rot),
+            physics::car_roof_axis(self.target_rot),
+        );
 
         Action::Yield(rlbot::ffi::PlayerInput {
-            Pitch: 0.75, // TODO: don't hardcode
+            Pitch: pitch,
+            Yaw: yaw,
+            Roll: roll,
             Jump: jump,
             ..Default::default()
         })

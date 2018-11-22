@@ -37,6 +37,13 @@
       entry: sh -c '( cd common && cargo check --all-targets --features strict )'
       pass_filenames: false
 
+    - id: check-dom
+      name: check-dom
+      language: system
+      files: '[.]rs$'
+      entry: sh -c '( cd dom && cargo check --all-targets --features strict )'
+      pass_filenames: false
+
     - id: check-oven
       name: check-oven
       language: system

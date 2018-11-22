@@ -74,6 +74,7 @@ dependencies = [
  "common 0.1.0",
  "crossbeam-channel 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "derive-new 0.5.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "dom 0.1.0",
  "flatbuffers 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "itertools 0.7.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -328,6 +329,15 @@ version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "libloading 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "dom"
+version = "0.1.0"
+dependencies = [
+ "common 0.1.0",
+ "nalgebra 0.16.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rlbot 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
