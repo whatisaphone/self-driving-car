@@ -37,7 +37,7 @@ fn main() {
             .to_str()
             .unwrap()
             .replace(".", "_");
-        let legacy = ["aerial_60deg", "boost", "coast", "jump", "throttle"]
+        let legacy = ["boost", "coast", "jump", "throttle"]
             .iter()
             .any(|&s| s == basename);
         let r = csv::ReaderBuilder::new()

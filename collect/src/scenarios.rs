@@ -49,27 +49,3 @@ pub fn coast(
     }
     Ok(true)
 }
-
-/// Aerial while trying (very naively) to achieve a pitch of 60°.
-pub fn aerial_60deg(
-    rlbot: &rlbot::RLBot,
-    time: f32,
-    packet: &rlbot::ffi::LiveDataPacket,
-) -> Result<bool, Box<Error>> {
-    if time < 1.0 {
-        let input = Default::default();
-        rlbot.update_player_input(input, 0)?;
-    } else if time < 5.0 {
-        let pitch = (60.0_f32.to_radians() - packet.GameCars[0].Physics.Rotation.Pitch) / 2.0;
-        let input = rlbot::ffi::PlayerInput {
-            Pitch: pitch.max(-1.0).min(1.0),
-            Jump: true,
-            Boost: time >= 1.25,
-            ..Default::default()
-        };
-        rlbot.update_player_input(input, 0)?;
-    } else {
-        return Ok(false);
-    }
-    Ok(true)
-}
