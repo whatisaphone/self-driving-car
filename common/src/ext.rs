@@ -57,10 +57,18 @@ impl ExtendVector2 for Vector2<f32> {
 }
 
 pub trait ExtendVector3 {
+    /// Shorthand for `Unit::new_normalize`.
+    fn to_axis(&self) -> Unit<Self>
+    where
+        Self: Sized;
     fn to_2d(&self) -> Vector2<f32>;
 }
 
 impl ExtendVector3 for Vector3<f32> {
+    fn to_axis(&self) -> Unit<Self> {
+        Unit::new_normalize(*self)
+    }
+
     fn to_2d(&self) -> Vector2<f32> {
         Vector2::new(self.x, self.y)
     }

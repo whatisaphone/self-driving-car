@@ -10,6 +10,7 @@ pub struct Game<'a> {
     pub team: Team,
     pub enemy_team: Team,
     boost_dollars: Box<[BoostPickup]>,
+    me_vehicle: &'a Vehicle,
 }
 
 impl<'a> Game<'a> {
@@ -35,6 +36,7 @@ impl<'a> Game<'a> {
                 })
                 .collect::<Vec<_>>()
                 .into_boxed_slice(),
+            me_vehicle: &OCTANE,
         }
     }
 
@@ -58,6 +60,10 @@ impl<'a> Game<'a> {
 
     pub fn me(&self) -> &rlbot::ffi::PlayerInfo {
         &self.packet.GameCars[self.player_index]
+    }
+
+    pub fn me_vehicle(&self) -> &Vehicle {
+        &self.me_vehicle
     }
 
     pub fn cars(&self, team: Team) -> impl Iterator<Item = &rlbot::ffi::PlayerInfo> {
@@ -96,6 +102,10 @@ impl<'a> Game<'a> {
 
     pub fn boost_dollars(&self) -> &[BoostPickup] {
         &*self.boost_dollars
+    }
+
+    pub fn ball_radius(&self) -> f32 {
+        rl::BALL_RADIUS
     }
 }
 
@@ -180,6 +190,22 @@ pub struct BoostPickup {
     pub loc: Point2<f32>,
 }
 
+pub struct Vehicle {
+    half_size: HalfExtents,
+}
+
+impl Vehicle {
+    pub fn front_half_extent(&self) -> f32 {
+        self.half_size.x
+    }
+}
+
+pub struct HalfExtents {
+    x: f32,
+    /* y: f32,
+     * z: f32, */
+}
+
 lazy_static! {
     static ref SOCCAR_GOAL_BLUE: Goal = Goal {
         center_2d: Point2::new(0.0, -rl::FIELD_MAX_Y)
@@ -192,5 +218,15 @@ lazy_static! {
     };
     static ref HOOPS_GOAL_ORANGE: Goal = Goal {
         center_2d: Point2::new(0.0, 3586.0)
+    };
+    static ref OCTANE: Vehicle = Vehicle {
+        // Source:
+        // https://www.youtube.com/watch?v=4OBMq9faWzg
+        // https://1drv.ms/x/s!Av9du64LKhjw8Xe7tHDJA2Q6FjsL
+        half_size: HalfExtents {
+            x: 59.003689,
+            // y: 42.099705,
+            // z: 18.079536,
+        },
     };
 }

@@ -10,5 +10,8 @@ nalgebra = "0.16.0"
 
 rlbot = "0.1.1"
 
+[dev-dependencies]
+chip = "0.0.4"
+
 [features]
 strict = []

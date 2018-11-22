@@ -1,4 +1,4 @@
-use nalgebra::{Point2, Point3, Real, UnitQuaternion, Vector2, Vector3};
+use nalgebra::{Point2, Point3, Real, Rotation3, Unit, UnitQuaternion, Vector2, Vector3};
 use physics;
 use std::fmt::{self, Formatter};
 
@@ -71,6 +71,28 @@ impl<N: Real> fmt::Display for Vector3PrettyPrinter<N> {
     }
 }
 
+impl<N: Real> PrettyPrint for Unit<Vector3<N>> {
+    type PrettyPrinter = UnitVector3PrettyPrinter<N>;
+
+    fn pretty(&self) -> Self::PrettyPrinter {
+        Self::PrettyPrinter { data: *self }
+    }
+}
+
+pub struct UnitVector3PrettyPrinter<N: Real> {
+    data: Unit<Vector3<N>>,
+}
+
+impl<N: Real> fmt::Display for UnitVector3PrettyPrinter<N> {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+        write!(
+            f,
+            "({:.2}, {:.2}, {:.2})",
+            self.data.x, self.data.y, self.data.z,
+        )
+    }
+}
+
 impl PrettyPrint for UnitQuaternion<f32> {
     type PrettyPrinter = UnitQuaternionPrettyPrinter;
 
@@ -86,10 +108,16 @@ pub struct UnitQuaternionPrettyPrinter {
 impl fmt::Display for UnitQuaternionPrettyPrinter {
     fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
         let forward = physics::car_forward_axis(self.data);
-        write!(
-            f,
-            "forward is ({:.2}, {:.2}, {:.2})",
-            forward.x, forward.y, forward.z,
-        )
+        write!(f, "forward is {}", forward.pretty())
+    }
+}
+
+impl PrettyPrint for Rotation3<f32> {
+    type PrettyPrinter = UnitQuaternionPrettyPrinter;
+
+    fn pretty(&self) -> Self::PrettyPrinter {
+        Self::PrettyPrinter {
+            data: UnitQuaternion::from_rotation_matrix(self),
+        }
     }
 }

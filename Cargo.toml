@@ -11,4 +11,4 @@ members = [
 
 [patch.crates-io]
 #rlbot = { path = "../rlbot-rust" }
-#chip = { path = "../chip" }
+chip = { path = "../chip" }

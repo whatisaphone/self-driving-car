@@ -1,4 +1,4 @@
-use common::prelude::*;
+use common::{prelude::*, rotation};
 use nalgebra::UnitQuaternion;
 use rlbot;
 use std::error::Error;
@@ -27,56 +27,30 @@ pub fn physicsify(packet: &mut rlbot::ffi::LiveDataPacket, physics: rlbot::flat:
 }
 
 fn set_physics(dest: &mut rlbot::ffi::Physics, source: rlbot::flat::RigidBodyState) {
-    dest.Location.X = source.location().unwrap().x();
-    dest.Location.Y = source.location().unwrap().y();
-    dest.Location.Z = source.location().unwrap().z();
+    dest.Location = vector3(source.location().unwrap());
 
-    let (pitch, yaw, roll) = convert_quat_to_pyr(source.rotation().unwrap());
-    dest.Rotation.Pitch = pitch;
-    dest.Rotation.Yaw = yaw;
-    dest.Rotation.Roll = roll;
+    let rotation = rotator(source.rotation().unwrap());
+    dest.Rotation = rotation;
 
-    dest.Velocity.X = source.velocity().unwrap().x();
-    dest.Velocity.Y = source.velocity().unwrap().y();
-    dest.Velocity.Z = source.velocity().unwrap().z();
+    dest.Velocity = vector3(source.velocity().unwrap());
 
-    dest.AngularVelocity.X = source.angularVelocity().unwrap().x();
-    dest.AngularVelocity.Y = source.angularVelocity().unwrap().y();
-    dest.AngularVelocity.Z = source.angularVelocity().unwrap().z();
+    dest.AngularVelocity = vector3(source.angularVelocity().unwrap());
 }
 
-fn convert_quat_to_pyr(quat: &rlbot::flat::Quaternion) -> (f32, f32, f32) {
-    let quat = UnitQuaternion::xyzw(quat.x(), quat.y(), quat.z(), quat.w());
-    quat.rocket_league_munge()
-        .to_rotation_matrix()
-        .to_unreal_angles()
+fn vector3(v: &rlbot::flat::Vector3) -> rlbot::ffi::Vector3 {
+    rlbot::ffi::Vector3 {
+        X: v.x(),
+        Y: v.y(),
+        Z: v.z(),
+    }
 }
 
-#[cfg(test)]
-mod tests {
-    use rlbot;
-    use rlbot_ext;
-
-    #[test]
-    fn rotation() {
-        let cases = [
-            (
-                rlbot::flat::Quaternion::new(-0.0015563988, 0.0045613004, 0.32138819, 0.94693524),
-                (-0.009683254, 0.65443456, 0.0),
-            ),
-            (
-                rlbot::flat::Quaternion::new(0.37422496, 0.6927582, -0.34245488, 0.51260734),
-                (-1.3085815, 2.421868, 2.7907903),
-            ),
-        ];
-
-        for (quat, (approx_pitch, approx_yaw, approx_roll)) in cases.iter() {
-            println!("{:?}", quat);
-            println!("{:?} {:?} {:?}", approx_pitch, approx_yaw, approx_roll);
-            let (pitch, yaw, roll) = rlbot_ext::convert_quat_to_pyr(&quat);
-            assert!((pitch - approx_pitch).abs() < 0.02, "{}", pitch);
-            assert!((yaw - approx_yaw).abs() < 0.02, "{}", yaw);
-            assert!((roll - approx_roll).abs() < 0.02, "{}", roll);
-        }
+fn rotator(q: &rlbot::flat::Quaternion) -> rlbot::ffi::Rotator {
+    let quat = UnitQuaternion::xyzw(q.x(), q.y(), q.z(), q.w());
+    let (pitch, yaw, roll) = rotation::convert_quat_to_pyr(&quat);
+    rlbot::ffi::Rotator {
+        Pitch: pitch,
+        Yaw: yaw,
+        Roll: roll,
     }
 }

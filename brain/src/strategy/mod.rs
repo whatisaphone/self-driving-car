@@ -1,7 +1,7 @@
 pub use strategy::{
     context::Context,
     dropshot::Dropshot,
-    game::{infer_game_mode, BoostPickup, Game, Goal, Team},
+    game::{infer_game_mode, BoostPickup, Game, Goal, Team, Vehicle},
     runner2::Runner2,
     scenario::Scenario,
     soccar::Soccar,

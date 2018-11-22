@@ -69,7 +69,7 @@ version = "0.1.0"
 dependencies = [
  "arrayvec 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "brain-test-data 0.1.0",
- "chip 0.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "chip 0.0.4",
  "collect 0.1.0",
  "common 0.1.0",
  "crossbeam-channel 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -126,7 +126,6 @@ dependencies = [
 [[package]]
 name = "chip"
 version = "0.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "nalgebra 0.16.8 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -182,6 +181,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "common"
 version = "0.1.0"
 dependencies = [
+ "chip 0.0.4",
  "lazy_static 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "nalgebra 0.16.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "rlbot 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1491,7 +1491,6 @@ dependencies = [
 "checksum cc 1.0.25 (registry+https://github.com/rust-lang/crates.io-index)" = "f159dfd43363c4d08055a07703eb7a3406b0dac4d0584d96965a3262db3c9d16"
 "checksum cfg-if 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "082bb9b28e00d3c9d39cc03e64ce4cea0f1bb9b3fde493f0cbc008472d22bdf4"
 "checksum cgl 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "55e7ec0b74fe5897894cbc207092c577e87c52f8a59e8ca8d97ef37551f60a49"
-"checksum chip 0.0.4 (registry+https://github.com/rust-lang/crates.io-index)" = "0e01a75af5695472cfc7c2d1282235b93edc073472a8c26f2c27a39d33f5e095"
 "checksum chrono 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)" = "45912881121cb26fad7c38c17ba7daa18764771836b34fab7d3fbd93ed633878"
 "checksum cloudabi 0.0.3 (registry+https://github.com/rust-lang/crates.io-index)" = "ddfc5b9aa5d4507acaf872de71051dfd0e309860e88966e1051e462a077aac4f"
 "checksum cocoa 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)" = "b0c23085dde1ef4429df6e5896b89356d35cdd321fb43afe3e378d010bb5adc6"
