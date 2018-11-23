@@ -26,7 +26,7 @@ impl<Aim> GroundedHit<Aim>
 where
     Aim: Fn(&mut Context, Point3<f32>) -> Result<Point2<f32>, ()> + Send,
 {
-    pub const CONTACT_Z_OFFSET: f32 = 0.0;
+    const CONTACT_Z_OFFSET: f32 = -70.0; // This is misguided and should probably go away.
     pub const MAX_BALL_Z: f32 = 240.0 - Self::CONTACT_Z_OFFSET; // TODO: how high can I jump
 
     pub fn hit_towards(aim: Aim) -> Self {
