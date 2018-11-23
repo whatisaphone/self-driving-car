@@ -1,25 +1,16 @@
-use behavior::{Action, Behavior};
+use behavior::{defensive_hit, Action, Behavior, Chain, Priority};
 use common::prelude::*;
-use eeg::{color, Drawable};
-use mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
-use nalgebra::{Point2, Vector2};
-use predict::intercept::estimate_intercept_car_ball;
-use rules::SameBallTrajectory;
-use std::f32::consts::PI;
+use maneuvers::GroundedHit;
+use nalgebra::Point2;
+use routing::{behavior::FollowRoute, plan::GroundIntercept};
 use strategy::Context;
 use utils::geometry::ExtendF32;
 
-pub struct FiftyFifty {
-    same_ball_trajectory: SameBallTrajectory,
-}
+pub struct FiftyFifty;
 
 impl FiftyFifty {
-    const BALL_MAX_Z: f32 = 130.0;
-
-    pub fn new() -> FiftyFifty {
-        FiftyFifty {
-            same_ball_trajectory: SameBallTrajectory::new(),
-        }
+    pub fn new() -> Self {
+        FiftyFifty
     }
 }
 
@@ -28,47 +19,14 @@ impl Behavior for FiftyFifty {
         stringify!(FiftyFifty)
     }
 
-    fn execute2(&mut self, ctx: &mut Context) -> Action {
-        return_some!(self.same_ball_trajectory.execute(ctx));
-
-        let me = ctx.me();
-
-        let intercept =
-            estimate_intercept_car_ball(ctx, me, |_t, loc, _vel| loc.z < Self::BALL_MAX_Z);
-
-        let intercept = some_or_else!(intercept, {
-            ctx.eeg.log("[FiftyFifty] unknown intercept");
-            return Action::Abort;
-        });
-
-        let target_angle = blocking_angle(
-            Point2::from(intercept.ball_loc.to_2d()),
-            me.Physics.locp().to_2d(),
-            ctx.game.own_goal().center_2d,
-            PI / 6.0,
-        );
-        let target_loc = intercept.ball_loc.to_2d() + Vector2::unit(target_angle) * 200.0;
-        let target_dist = (target_loc - me.Physics.loc().to_2d()).norm();
-
-        ctx.eeg.draw(Drawable::GhostBall(intercept.ball_loc));
-        ctx.eeg.draw(Drawable::print(
-            format!("target_dist: {:.0}", target_dist),
-            color::GREEN,
-        ));
-        ctx.eeg.draw(Drawable::print(
-            format!("intercept_time: {:.2}", intercept.time),
-            color::GREEN,
-        ));
-
-        if intercept.time >= 0.2 {
-            // TODO: this is not how this works…
-            let mut child =
-                GroundAccelToLoc::new(target_loc, ctx.packet.GameInfo.TimeSeconds + intercept.time);
-            child.execute2(ctx)
-        } else {
-            let angle = simple_yaw_diff(&me.Physics, intercept.ball_loc.to_2d());
-            Action::call(QuickJumpAndDodge::begin(ctx.packet).angle(angle))
-        }
+    fn execute2(&mut self, _ctx: &mut Context) -> Action {
+        Action::call(Chain::new(
+            Priority::Idle,
+            vec![
+                Box::new(FollowRoute::new(GroundIntercept::new())),
+                Box::new(GroundedHit::hit_towards(defensive_hit)),
+            ],
+        ))
     }
 }
 

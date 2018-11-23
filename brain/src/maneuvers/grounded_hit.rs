@@ -7,7 +7,10 @@ use predict::{intercept::NaiveIntercept, naive_ground_intercept};
 use rlbot;
 use routing::recover::{IsSkidding, NotOnFlatGround};
 use rules::SameBallTrajectory;
-use simulate::{car_single_jump::time_to_z, linear_interpolate, Car, CarSimulateError};
+use simulate::{
+    car_single_jump::{time_to_z, JUMP_MAX_Z},
+    linear_interpolate, Car, CarSimulateError,
+};
 use std::f32::consts::PI;
 use strategy::{Context, Game};
 
@@ -73,21 +76,9 @@ where
         }
         return_some!(self.same_ball_trajectory.execute(ctx));
 
-        // TODO: dynamically calculate max z based on distance-to-aim/target pitch.
-        let intercept = naive_ground_intercept(
-            ctx.scenario.ball_prediction().iter(),
-            me.Physics.locp(),
-            me.Physics.vel(),
-            me.Boost as f32,
-            |ball| ball.loc.z < Self::MAX_BALL_Z,
-        );
-
-        let intercept = some_or_else!(intercept, {
-            ctx.eeg.log("[GroundedHit] can't find intercept");
+        if let Err(()) = self.intercept_loc(ctx) {
             return Action::Abort;
-        });
-        self.intercept_time = Some(ctx.packet.GameInfo.TimeSeconds + intercept.time);
-        self.intercept = Some(intercept);
+        }
 
         let (target_loc, target_rot) = match self.target_loc(ctx) {
             Ok(x) => x,
@@ -125,6 +116,44 @@ impl<Aim> GroundedHit<Aim>
 where
     Aim: Fn(&mut Context, Point3<f32>) -> Result<Point2<f32>, ()> + Send,
 {
+    fn intercept_loc(&mut self, ctx: &mut Context) -> Result<(), ()> {
+        let me = ctx.me();
+
+        // First pass: get approximate jump height
+        let intercept = naive_ground_intercept(
+            ctx.scenario.ball_prediction().iter(),
+            me.Physics.locp(),
+            me.Physics.vel(),
+            me.Boost as f32,
+            |ball| ball.loc.z < Self::MAX_BALL_Z,
+        );
+        let intercept = some_or_else!(intercept, {
+            ctx.eeg.log("[GroundedHit] can't find intercept");
+            return Err(());
+        });
+
+        let aim_loc = (self.aim)(ctx, intercept.ball_loc)?;
+        let (target_loc, _) = Self::preliminary_target(ctx, &intercept, aim_loc);
+        let ball_max_z = JUMP_MAX_Z + (intercept.ball_loc.z - target_loc.z);
+
+        // Second pass: Get a more accurate intercept based on how high we need to jump.
+        let intercept = naive_ground_intercept(
+            ctx.scenario.ball_prediction().iter(),
+            me.Physics.locp(),
+            me.Physics.vel(),
+            me.Boost as f32,
+            |ball| ball.loc.z < ball_max_z,
+        );
+        let intercept = some_or_else!(intercept, {
+            ctx.eeg.log("[GroundedHit] can't find intercept");
+            return Err(());
+        });
+
+        self.intercept_time = Some(ctx.packet.GameInfo.TimeSeconds + intercept.time);
+        self.intercept = Some(intercept);
+        Ok(())
+    }
+
     fn target_loc(&mut self, ctx: &mut Context) -> Result<(Point3<f32>, UnitQuaternion<f32>), ()> {
         let intercept = self.intercept.as_ref().unwrap();
         let intercept_time = self.intercept_time.unwrap();
@@ -133,17 +162,7 @@ where
         let aim_loc = (self.aim)(ctx, intercept.ball_loc)?;
         self.aim_loc = Some(aim_loc);
 
-        let pitch = linear_interpolate(
-            &[1000.0, 5000.0],
-            &[PI / 15.0, PI / 4.0],
-            (aim_loc - intercept.ball_loc.to_2d()).norm(),
-        );
-        let (target_loc, target_rot) = car_ball_contact_with_pitch(
-            ctx.game,
-            intercept.ball_loc,
-            ctx.me().Physics.locp(),
-            pitch,
-        );
+        let (target_loc, target_rot) = Self::preliminary_target(ctx, intercept, aim_loc);
 
         // TODO: iteratively find contact point which hits the ball towards aim_loc
 
@@ -156,6 +175,19 @@ where
             .draw(Drawable::GhostCar(target_loc.coords, me.Physics.rot()));
 
         Ok((target_loc, target_rot))
+    }
+
+    fn preliminary_target(
+        ctx: &mut Context,
+        intercept: &NaiveIntercept<()>,
+        aim_loc: Point2<f32>,
+    ) -> (Point3<f32>, UnitQuaternion<f32>) {
+        let pitch = linear_interpolate(
+            &[1000.0, 5000.0],
+            &[PI / 15.0, PI / 4.0],
+            (aim_loc - intercept.ball_loc.to_2d()).norm(),
+        );
+        car_ball_contact_with_pitch(ctx.game, intercept.ball_loc, ctx.me().Physics.locp(), pitch)
     }
 
     fn estimate_approach(

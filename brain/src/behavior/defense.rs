@@ -207,7 +207,12 @@ impl HitToOwnCorner {
     }
 }
 
-fn defensive_hit(ctx: &mut Context, intercept_ball_loc: Point3<f32>) -> Result<Point2<f32>, ()> {
+/// For `GroundedHit::hit_towards`, calculate an aim location which puts us
+/// between the ball and our own goal.
+pub fn defensive_hit(
+    ctx: &mut Context,
+    intercept_ball_loc: Point3<f32>,
+) -> Result<Point2<f32>, ()> {
     let me = ctx.me();
     let target_angle = blocking_angle(
         intercept_ball_loc.to_2d(),
@@ -215,11 +220,7 @@ fn defensive_hit(ctx: &mut Context, intercept_ball_loc: Point3<f32>) -> Result<P
         ctx.game.own_goal().center_2d,
         PI / 6.0,
     );
-    let target_loc = intercept_ball_loc.to_2d() + Vector2::unit(target_angle) * 200.0;
-    Ok(WallRayCalculator::calculate(
-        target_loc,
-        intercept_ball_loc.to_2d(),
-    ))
+    Ok(intercept_ball_loc.to_2d() - Vector2::unit(target_angle) * 1000.0)
 }
 
 #[cfg(test)]
@@ -585,6 +586,7 @@ mod integration_tests {
         let test = TestRunner::new()
             .one_v_one(&*recordings::JUMP_SAVE_FROM_INSIDE_GOAL, 106.0)
             .starting_boost(0.0)
+            .behavior(Runner2::soccar())
             .run();
         test.sleep_millis(3000);
         assert!(!test.enemy_has_scored());
