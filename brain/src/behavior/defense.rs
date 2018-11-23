@@ -342,9 +342,8 @@ mod integration_tests {
 
     #[test]
     fn falling_save_from_the_side() {
-        let test = TestRunner::start(
-            Runner2::soccar(),
-            TestScenario {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
                 ball_loc: Vector3::new(2353.9868, -5024.7144, 236.38712),
                 ball_vel: Vector3::new(-1114.3461, 32.5409, 897.3589),
                 car_loc: Vector3::new(2907.8083, -4751.0806, 17.010809),
@@ -352,14 +351,14 @@ mod integration_tests {
                 car_vel: Vector3::new(-1412.7858, -672.18933, -6.2963967),
                 boost: 0,
                 ..Default::default()
-            },
-        );
-
-        test.sleep_millis(3000);
+            })
+            .behavior(Runner2::soccar())
+            .run_for_millis(3000);
 
         let packet = test.sniff_packet();
         println!("{:?}", packet.GameBall.Physics.vel());
-        assert!(packet.GameBall.Physics.vel().x < -2000.0);
+        assert!(packet.GameBall.Physics.vel().x < -1200.0);
+        assert!(packet.GameBall.Physics.vel().y > 500.0);
     }
 
     #[test]
