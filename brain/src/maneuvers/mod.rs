@@ -4,7 +4,6 @@ pub use maneuvers::{
     drive_towards::{drive_towards, DriveTowards},
     fifty_fifty::{blocking_angle, FiftyFifty},
     get_to_flat_ground::GetToFlatGround,
-    ground_shot::GroundShot,
     grounded_hit::GroundedHit,
     panic_defense::PanicDefense,
 };

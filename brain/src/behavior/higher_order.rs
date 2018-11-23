@@ -251,6 +251,7 @@ impl Behavior for TryChoose {
         for (index, behavior) in self.choices.iter_mut().enumerate() {
             match behavior.execute2(ctx) {
                 Action::Abort => continue,
+                Action::Return => continue,
                 action @ _ => {
                     self.chosen_index = Some(index);
                     ctx.eeg.log(format!("[TryChoose] Chose index {}", index));

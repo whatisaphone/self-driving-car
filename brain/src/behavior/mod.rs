@@ -16,6 +16,7 @@ mod defense;
 #[allow(dead_code)]
 #[macro_use]
 mod higher_order;
+mod defense2;
 mod null;
 mod offense;
 mod regroup;

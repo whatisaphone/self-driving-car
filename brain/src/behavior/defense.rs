@@ -1,14 +1,16 @@
-use behavior::{tepid_hit::TepidHit, Action, Behavior, Chain, Priority};
+use behavior::{
+    defense2::retreat::Retreat, tepid_hit::TepidHit, Action, Behavior, Chain, Priority,
+};
 use common::prelude::*;
 use eeg::{color, Drawable};
-use maneuvers::{blocking_angle, BounceShot, GroundShot, GroundedHit, PanicDefense};
+use maneuvers::{blocking_angle, BounceShot, GroundedHit};
 use nalgebra::{Point2, Point3, Rotation2, Vector2};
 use ordered_float::NotNan;
 use predict::{estimate_intercept_car_ball, Intercept};
 use routing::{behavior::FollowRoute, plan::GroundIntercept};
 use std::f32::consts::PI;
 use strategy::{Context, Scenario};
-use utils::{Wall, WallRayCalculator};
+use utils::{geometry::ExtendF32, Wall, WallRayCalculator};
 
 pub struct Defense;
 
@@ -26,19 +28,14 @@ impl Behavior for Defense {
     fn execute2(&mut self, ctx: &mut Context) -> Action {
         let me = ctx.me();
 
-        // Don't panic if we're already in goal
+        // If we're not in goal, get there.
         let own_goal = ctx.game.own_goal().center_2d;
         let distance_to_goal = (own_goal.y - me.Physics.locp().y) * own_goal.y.signum();
         if distance_to_goal >= 250.0 {
-            return Action::call(Chain::new(
-                Priority::Save,
-                vec![
-                    Box::new(PushToOwnCorner::new()),
-                    Box::new(PanicDefense::new().use_boost(false)),
-                ],
-            ));
+            return Action::call(Retreat::new());
         }
 
+        // If we're already in goal, try to take control of the ball somehow.
         if ctx.scenario.possession() < Scenario::POSSESSION_CONTESTABLE {
             Action::call(Chain::new(
                 Priority::Idle,
@@ -53,13 +50,19 @@ impl Behavior for Defense {
     }
 }
 
-struct PushToOwnCorner;
+pub struct PushToOwnCorner;
 
 impl PushToOwnCorner {
     const MAX_BALL_Z: f32 = HitToOwnCorner::MAX_BALL_Z;
 
-    fn new() -> Self {
+    pub fn new() -> Self {
         PushToOwnCorner
+    }
+
+    fn shot_angle(ball_loc: Point3<f32>, car_loc: Point3<f32>, aim_loc: Point2<f32>) -> f32 {
+        let angle_me_ball = car_loc.coords.to_2d().angle_to(ball_loc.coords.to_2d());
+        let angle_ball_goal = ball_loc.coords.to_2d().angle_to(aim_loc.coords);
+        (angle_me_ball - angle_ball_goal).normalize_angle().abs()
     }
 }
 
@@ -87,7 +90,7 @@ impl Behavior for PushToOwnCorner {
                 estimate_intercept_car_ball(ctx, enemy, |_t, &loc, _vel| {
                     let own_goal = ctx.game.own_goal().center_2d;
                     loc.z < GroundedHit::max_ball_z()
-                        && GroundShot::shot_angle(loc, enemy.Physics.locp(), own_goal) < PI / 2.0
+                        && Self::shot_angle(loc, enemy.Physics.locp(), own_goal) < PI / 2.0
                 })
             })
             .min_by_key(|i| NotNan::new(i.time).unwrap());
@@ -120,8 +123,8 @@ impl Behavior for PushToOwnCorner {
                 }
             }
             (None, _) => {
-                ctx.eeg.log("Can't reach ball; panicking");
-                Action::call(PanicDefense::new())
+                ctx.eeg.log("Can't reach ball");
+                Action::Abort
             }
             (Some(me), Some(enemy)) => {
                 if me.time < enemy.time - Scenario::POSSESSION_CONTESTABLE {
@@ -131,8 +134,8 @@ impl Behavior for PushToOwnCorner {
                     ctx.eeg.log("Defensive race");
                     Action::call(HitToOwnCorner::new())
                 } else {
-                    ctx.eeg.log("Can't reach ball before enemy; panicking");
-                    Action::call(PanicDefense::new())
+                    ctx.eeg.log("Can't reach ball before enemy");
+                    Action::Abort
                 }
             }
         }

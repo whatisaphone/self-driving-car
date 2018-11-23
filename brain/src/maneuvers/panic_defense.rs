@@ -38,10 +38,6 @@ impl PanicDefense {
             phase: Phase::Start,
         }
     }
-
-    pub fn use_boost(self, use_boost: bool) -> Self {
-        Self { use_boost, ..self }
-    }
 }
 
 impl Behavior for PanicDefense {
