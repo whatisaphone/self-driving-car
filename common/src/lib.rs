@@ -8,10 +8,12 @@ extern crate nalgebra;
 extern crate rlbot;
 
 pub use ext::ExtendRLBot;
+pub use polyfill::ExtendDuration;
 pub use pretty::PrettyPrint;
 
 pub mod ext;
 pub mod physics;
+mod polyfill;
 pub mod prelude;
 mod pretty;
 pub mod rl;

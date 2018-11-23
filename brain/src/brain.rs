@@ -1,9 +1,11 @@
 #[cfg(test)]
 use behavior::Behavior;
+use common::ExtendDuration;
 use eeg::{color, Drawable, EEG};
 use nalgebra::clamp;
 use plan::ball::{BallPredictor, ChipBallPrediction, FrameworkBallPrediction};
 use rlbot;
+use std::time::Instant;
 use strategy::{infer_game_mode, Context, Dropshot, Game, Runner2, Soccar};
 use utils::FPSCounter;
 
@@ -110,17 +112,7 @@ impl Brain {
         ));
         eeg.draw(Drawable::print("-----------------------", color::GREEN));
 
-        let mut result = {
-            let game = Game::new(field_info, packet, self.player_index.unwrap() as usize);
-            let mut ctx = Context::new(&game, &*self.ball_predictor, packet, eeg);
-
-            ctx.eeg.draw(Drawable::print(
-                format!("possession: {:.2}", ctx.scenario.possession()),
-                color::GREEN,
-            ));
-
-            self.runner.execute(&mut ctx)
-        };
+        let mut result = self.determine_controls(field_info, packet, eeg);
 
         result.Throttle = clamp(result.Throttle, -1.0, 1.0);
         result.Steer = clamp(result.Steer, -1.0, 1.0);
@@ -161,6 +153,36 @@ impl Brain {
             format!("handbrake: {}", result.Handbrake),
             color::GREEN,
         ));
+
+        result
+    }
+
+    fn determine_controls(
+        &mut self,
+        field_info: &rlbot::ffi::FieldInfo,
+        packet: &rlbot::ffi::LiveDataPacket,
+        eeg: &mut EEG,
+    ) -> rlbot::ffi::PlayerInput {
+        let start = Instant::now();
+
+        let game = Game::new(field_info, packet, self.player_index.unwrap() as usize);
+        let mut ctx = Context::new(&game, &*self.ball_predictor, packet, eeg);
+
+        ctx.eeg.draw(Drawable::print(
+            format!("possession: {:.2}", ctx.scenario.possession()),
+            color::GREEN,
+        ));
+
+        let result = self.runner.execute(&mut ctx);
+
+        let stop = Instant::now();
+        let duration = stop - start;
+        let calc_ms = duration.as_millis_polyfill();
+        // RL's physics runs at 120Hz, which leaves us ~8ms to make a decision.
+        if calc_ms >= 8 {
+            ctx.eeg
+                .log(format!("[Brain] Slow frame took {}ms.", calc_ms));
+        }
 
         result
     }
