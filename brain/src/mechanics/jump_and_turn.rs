@@ -5,7 +5,8 @@ use rlbot;
 use strategy::Context;
 use utils::Stopwatch;
 
-const MIN_JUMP_TIME: f32 = 2.0 / 120.0;
+const MIN_JUMP_TIME: f32 = 6.0 / 120.0;
+const MIN_RELEASE_TIME: f32 = 6.0 / 120.0;
 
 pub struct JumpAndTurn {
     jump_duration: f32,
@@ -16,9 +17,8 @@ pub struct JumpAndTurn {
 
 impl JumpAndTurn {
     pub fn new(jump_duration: f32, total_duration: f32, target_rot: UnitQuaternion<f32>) -> Self {
-        assert!(jump_duration >= MIN_JUMP_TIME);
-        assert!(jump_duration <= total_duration);
-
+        let jump_duration = jump_duration.max(MIN_JUMP_TIME);
+        let total_duration = total_duration.max(jump_duration + MIN_RELEASE_TIME);
         Self {
             jump_duration,
             total_duration,

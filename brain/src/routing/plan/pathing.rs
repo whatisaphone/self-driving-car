@@ -9,10 +9,13 @@ use routing::{
     segments::StraightMode,
 };
 
-/// Calculate whether driving straight would intersect the goal wall. If so,
-/// return the route we should follow to get outside the goal.
-pub fn avoid_plowing_into_goal_wall(start: &CarState) -> Option<Box<RoutePlanner>> {
-    match avoid_plowing_into_goal_wall_waypoint(start) {
+/// Calculate whether driving straight to `target_loc` would intersect the goal
+/// wall. If so, return the route we should follow to get outside the goal.
+pub fn avoid_plowing_into_goal_wall(
+    start: &CarState,
+    target_loc: Point2<f32>,
+) -> Option<Box<RoutePlanner>> {
+    match avoid_plowing_into_goal_wall_waypoint(start, target_loc) {
         None => None,
         Some(waypoint) => Some(ChainedPlanner::chain(vec![
             Box::new(TurnPlanner::new(waypoint, None)),
@@ -26,14 +29,21 @@ pub fn avoid_plowing_into_goal_wall(start: &CarState) -> Option<Box<RoutePlanner
     }
 }
 
-/// Calculate whether driving straight would intersect the goal wall. If so,
-/// return the waypoint we should drive to first to avoid embarrassing
-/// ourselves.
-pub fn avoid_plowing_into_goal_wall_waypoint(start: &CarState) -> Option<Point2<f32>> {
+/// Calculate whether driving straight to `target_loc` would intersect the goal
+/// wall. If so, return the waypoint we should drive to first to avoid
+/// embarrassing ourselves.
+fn avoid_plowing_into_goal_wall_waypoint(
+    start: &CarState,
+    target_loc: Point2<f32>,
+) -> Option<Point2<f32>> {
     let margin = 125.0;
-    if start.loc.y.abs() < rl::FIELD_MAX_Y {
+
+    // Only proceed if we're crossing over the goalline.
+    let brink = rl::FIELD_MAX_Y * start.loc.y.signum();
+    if (brink - start.loc.y).signum() == (brink - target_loc.y).signum() {
         return None;
     }
+
     let goal_y = rl::FIELD_MAX_Y * start.loc.y.signum();
     let ray = physics::car_forward_axis_2d(start.rot.to_2d());
     let toi = (goal_y - start.loc.y) / ray.y;

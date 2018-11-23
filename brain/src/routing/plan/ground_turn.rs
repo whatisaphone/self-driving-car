@@ -33,14 +33,15 @@ impl RoutePlanner for TurnPlanner {
         let pathing_unaware_planner = PathingUnawareTurnPlanner::new(self.target_face, None);
         let turn = pathing_unaware_planner.plan(ctx, dump)?;
         dump.log_plan(self, &turn);
-        let plan = match pathing::avoid_plowing_into_goal_wall(&turn.segment.end()) {
-            None => turn,
-            Some(divert) => {
-                dump.log(self, "diverting due to avoid_plowing_into_goal_wall");
-                ChainedPlanner::new(divert, Some(Box::new(pathing_unaware_planner)))
-                    .plan(ctx, dump)?
-            }
-        };
+        let plan =
+            match pathing::avoid_plowing_into_goal_wall(&turn.segment.end(), self.target_face) {
+                None => turn,
+                Some(divert) => {
+                    dump.log(self, "diverting due to avoid_plowing_into_goal_wall");
+                    ChainedPlanner::new(divert, Some(Box::new(pathing_unaware_planner)))
+                        .plan(ctx, dump)?
+                }
+            };
         Ok(ChainedPlanner::join_planner(plan, self.next.clone()))
     }
 }
