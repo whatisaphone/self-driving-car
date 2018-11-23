@@ -108,7 +108,7 @@ pub struct UnitQuaternionPrettyPrinter {
 impl fmt::Display for UnitQuaternionPrettyPrinter {
     fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
         let forward = physics::car_forward_axis(self.data);
-        write!(f, "forward is {}", forward.pretty())
+        write!(f, "@{}", forward.pretty())
     }
 }
 

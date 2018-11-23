@@ -161,7 +161,7 @@ enum ThreadMessage {
 }
 
 fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
-    let mut window: PistonWindow = WindowSettings::new("Formula nOne", (640, 640))
+    let mut window: PistonWindow = WindowSettings::new("Formula nOne", (660, 640))
         .opengl(OpenGL::V3_2)
         .build()
         .unwrap();
@@ -359,7 +359,7 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
 
                     let mut y = 20.0;
                     for (txt, color) in prints.into_iter() {
-                        text(color, 16, &txt, &mut glyphs, c.transform.trans(420.0, y), g).unwrap();
+                        text(color, 14, &txt, &mut glyphs, c.transform.trans(420.0, y), g).unwrap();
                         y += 20.0;
                     }
                 });
