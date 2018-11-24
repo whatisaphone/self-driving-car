@@ -68,12 +68,18 @@ impl FollowRoute {
                 ball_prediction: ctx.scenario.ball_prediction(),
             };
             let mut dump = PlanningDump { log: &mut log };
+            ctx.eeg
+                .log(format!("[FollowRoute] planning with {}", planner.name()));
             planner.plan(&context, &mut dump)
         };
         let plan = match plan {
             Ok(s) => s,
             Err(err) => return Err(self.handle_error(ctx, planner.name(), err, log)),
         };
+        ctx.eeg.log(format!(
+            "[FollowRoute] next segment is {}",
+            plan.segment.name(),
+        ));
         let provisional_expansion = plan.provisional_expand(&ctx.scenario).map_err(|error| {
             self.handle_error(
                 ctx,
@@ -142,7 +148,6 @@ impl FollowRoute {
         let next = some_or_else!(current.plan.next, {
             return Action::Return;
         });
-        ctx.eeg.log("[FollowRoute] Next segment");
         if let Err(action) = self.advance(&*next, ctx) {
             return action;
         }
