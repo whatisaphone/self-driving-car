@@ -335,6 +335,7 @@ dependencies = [
 name = "dom"
 version = "0.1.0"
 dependencies = [
+ "chip 0.0.4",
  "common 0.1.0",
  "nalgebra 0.16.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "rlbot 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",

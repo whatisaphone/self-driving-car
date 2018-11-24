@@ -10,5 +10,7 @@ extern crate common;
 extern crate nalgebra;
 
 pub use student_agents::get_pitch_yaw_roll;
+pub use vector_math::to_rotation_matrix;
 
 mod student_agents;
+mod vector_math;

@@ -125,22 +125,16 @@ pub trait ExtendRotation3 {
     fn roll(&self) -> f32;
 }
 
-// There are three different rotation conventions we need to deal with:
-//
-// 1. `Rotation3::from_euler_angles` – (roll, pitch, yaw).
-// 2. `Rotation3::to_euler_angles` – (roll, yaw, pitch).
-// 3. Unreal itself – (yaw, pitch, roll).
-//
-// This situation is not tenable, so I reimplemented an the conversions using
-// Unreal's convention.
 impl ExtendRotation3 for Rotation3<f32> {
     fn from_unreal_angles(pitch: f32, yaw: f32, roll: f32) -> Rotation3<f32> {
-        Rotation3::from_euler_angles(roll, pitch, yaw)
+        // Luckily, `nalgebra` and Unreal use the same rotation order. However, Unreal
+        // negates the pitch and roll for some reason(?)
+        Rotation3::from_euler_angles(-roll, -pitch, yaw)
     }
 
     fn to_unreal_angles(&self) -> (f32, f32, f32) {
         let (roll, pitch, yaw) = self.to_euler_angles();
-        (pitch, yaw, roll)
+        (-pitch, yaw, -roll)
     }
 
     fn pitch(&self) -> f32 {
@@ -231,14 +225,6 @@ pub trait ExtendUnitQuaternion<N: Real> {
     fn xyzw(x: N, y: N, z: N, w: N) -> Self;
 
     fn to_2d(&self) -> UnitComplex<N>;
-
-    /// For some reason the games spits out quaternions with some components
-    /// negated? I have no idea the underlying cause, or if this is the right
-    /// place to fix it, but here we are. This function must be called to
-    /// munge/unmunge any quaternions sent to or received from the game.
-    ///
-    /// There are tests for this near `physicsify`, `convert_quat_to_pyr`, etc.
-    fn rocket_league_munge(&self) -> Self;
 }
 
 impl<N: Real> ExtendUnitQuaternion<N> for UnitQuaternion<N> {
@@ -248,12 +234,6 @@ impl<N: Real> ExtendUnitQuaternion<N> for UnitQuaternion<N> {
 
     fn to_2d(&self) -> UnitComplex<N> {
         UnitComplex::new(self.scaled_axis().z)
-    }
-
-    fn rocket_league_munge(&self) -> Self {
-        let coords = self.as_ref().coords;
-        // I have no clue what the reasoning behind this is.
-        Self::xyzw(-coords.x, -coords.y, coords.z, coords.w)
     }
 }
 

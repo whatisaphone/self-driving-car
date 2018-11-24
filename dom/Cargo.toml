@@ -10,5 +10,8 @@ rlbot = "0.1.1"
 
 common = { path = "../common" }
 
+[dev-dependencies]
+chip = "0.0.4"
+
 [features]
 strict = []

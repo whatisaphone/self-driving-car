@@ -41,7 +41,7 @@ impl Behavior for GetToFlatGround {
             })
         } else if me.OnGround {
             let target_loc =
-                (me.Physics.loc() + me.Physics.rot() * Vector3::new(500.0, 0.0, -500.0)).to_2d();
+                (me.Physics.loc() + me.Physics.rot() * Vector3::new(500.0, 0.0, 250.0)).to_2d();
             ctx.eeg
                 .draw(Drawable::ghost_car_ground(target_loc, me.Physics.rot()));
             Action::Yield(drive_towards(ctx, target_loc))
@@ -53,10 +53,16 @@ impl Behavior for GetToFlatGround {
                 ..Default::default()
             })
         } else {
+            let (pitch, yaw, roll) = dom::get_pitch_yaw_roll(
+                ctx.me(),
+                me.Physics.vel().to_2d().to_3d(0.0).to_axis(),
+                Vector3::z_axis(),
+            );
             Action::Yield(rlbot::ffi::PlayerInput {
                 Throttle: 1.0,
-                Pitch: (-me.Physics.rot().pitch()).max(-1.0).min(1.0),
-                Roll: (-me.Physics.rot().roll()).max(-1.0).min(1.0),
+                Pitch: pitch,
+                Yaw: yaw,
+                Roll: roll,
                 ..Default::default()
             })
         }

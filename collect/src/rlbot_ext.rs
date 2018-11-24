@@ -28,12 +28,8 @@ pub fn physicsify(packet: &mut rlbot::ffi::LiveDataPacket, physics: rlbot::flat:
 
 fn set_physics(dest: &mut rlbot::ffi::Physics, source: rlbot::flat::RigidBodyState) {
     dest.Location = vector3(source.location().unwrap());
-
-    let rotation = rotator(source.rotation().unwrap());
-    dest.Rotation = rotation;
-
+    dest.Rotation = rotator(source.rotation().unwrap());
     dest.Velocity = vector3(source.velocity().unwrap());
-
     dest.AngularVelocity = vector3(source.angularVelocity().unwrap());
 }
 

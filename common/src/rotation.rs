@@ -2,8 +2,6 @@ use nalgebra::UnitQuaternion;
 use prelude::*;
 
 pub fn convert_quat_to_pyr(quat: &UnitQuaternion<f32>) -> (f32, f32, f32) {
-    let coords = quat.as_ref().coords;
-    let quat = UnitQuaternion::xyzw(-coords.x, -coords.y, coords.z, coords.w);
     quat.to_rotation_matrix().to_unreal_angles()
 }
 
@@ -61,33 +59,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // it's broken and my data is incorrect :(
-    fn from_unreal_angles() {
-        for &(_case_quat, (case_pitch, case_yaw, case_roll)) in &*CASES {
-            println!("{:?} {:?} {:?}", case_pitch, case_yaw, case_roll);
-            let mat1 = chip::euler_rotation(&Vector3::new(case_pitch, case_yaw, case_roll));
-            let mat2 = Rotation3::from_unreal_angles(case_pitch, case_yaw, case_roll);
-            eprintln!("mat1 = {:?}", mat1);
-            eprintln!("mat2 = {:?}", mat2);
-            assert!(mat1.rotation_to(&mat2).angle() < EPS);
-        }
-    }
-
-    #[test]
-    #[ignore] // it's broken and my data is incorrect :(
-    fn chip_to_unreal_angles() {
-        for &(_case_quat, (case_pitch, case_yaw, case_roll)) in &*CASES {
-            println!("{:?} {:?} {:?}", case_pitch, case_yaw, case_roll);
-            let mat1 = chip::euler_rotation(&Vector3::new(case_pitch, case_yaw, case_roll));
-            let (pitch, yaw, roll) = mat1.to_unreal_angles();
-            assert!((pitch - case_pitch).abs() < EPS, "{}", pitch);
-            assert!((yaw - case_yaw).abs() < EPS, "{}", yaw);
-            assert!((roll - case_roll).abs() < EPS, "{}", roll);
-        }
-    }
-
-    #[test]
-    #[ignore] // it's broken and my data is incorrect :(
     fn quat_to_unreal_angles() {
         for &(case_quat, (case_pitch, case_yaw, case_roll)) in &*CASES {
             println!("{:?}", case_quat);
@@ -110,4 +81,32 @@ mod tests {
             assert!((roll - case_roll).abs() < EPS, "{}", roll);
         }
     }
+
+    #[test]
+    #[ignore(note = "I think chip's function is incorrect?")]
+    fn chip_from_unreal_angles() {
+        for &(_case_quat, (case_pitch, case_yaw, case_roll)) in &*CASES {
+            println!("{:?} {:?} {:?}", case_pitch, case_yaw, case_roll);
+            let mat1 = chip::euler_rotation(&Vector3::new(case_pitch, case_yaw, case_roll));
+            let mat2 = Rotation3::from_unreal_angles(case_pitch, case_yaw, case_roll);
+            eprintln!("mat1 = {:?}", mat1);
+            eprintln!("mat2 = {:?}", mat2);
+            assert!(mat1.rotation_to(&mat2).angle() < EPS);
+        }
+    }
+
+    #[test]
+    #[ignore(note = "I think chip's function is incorrect?")]
+    fn chip_to_unreal_angles() {
+        for &(_case_quat, (case_pitch, case_yaw, case_roll)) in &*CASES {
+            println!("{:?} {:?} {:?}", case_pitch, case_yaw, case_roll);
+            let mat1 = chip::euler_rotation(&Vector3::new(case_pitch, case_yaw, case_roll));
+            let (pitch, yaw, roll) = mat1.to_unreal_angles();
+            assert!((pitch - case_pitch).abs() < EPS, "{}", pitch);
+            assert!((yaw - case_yaw).abs() < EPS, "{}", yaw);
+            assert!((roll - case_roll).abs() < EPS, "{}", roll);
+        }
+    }
+
+    // See also the tests for `dom::to_rotation_matrix`.
 }

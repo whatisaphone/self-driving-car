@@ -15,7 +15,7 @@ pub fn get_pitch_yaw_roll(
 
     let mut pitch = desired_facing_angular_vel.dot(&car.Physics.right_axis());
     let yaw = -desired_facing_angular_vel.dot(&car.Physics.roof_axis());
-    let mut roll = -desired_up_angular_vel.dot(&car.Physics.forward_axis());
+    let mut roll = desired_up_angular_vel.dot(&car.Physics.forward_axis());
 
     let mut pitch_vel = car.Physics.ang_vel().dot(&car.Physics.right_axis());
     let yaw_vel = -car.Physics.ang_vel().dot(&car.Physics.roof_axis());

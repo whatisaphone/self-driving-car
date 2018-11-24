@@ -514,7 +514,7 @@ fn rotator<'a, 'b>(
     builder: &'b mut FlatBufferBuilder<'a>,
     r: UnitQuaternion<f32>,
 ) -> WIPOffset<rlbot::flat::RotatorPartial<'a>> {
-    let rotation = r.rocket_league_munge().to_rotation_matrix();
+    let rotation = r.to_rotation_matrix();
     rlbot::flat::RotatorPartial::create(
         builder,
         &rlbot::flat::RotatorPartialArgs {
