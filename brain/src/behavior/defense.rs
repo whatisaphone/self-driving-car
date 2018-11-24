@@ -363,18 +363,17 @@ mod integration_tests {
 
     #[test]
     fn retreating_push_to_corner() {
-        let test = TestRunner::start0(TestScenario {
-            ball_loc: Vector3::new(436.92395, 1428.1085, 93.15),
-            ball_vel: Vector3::new(-112.55582, -978.27814, 0.0),
-            car_loc: Vector3::new(1105.1365, 2072.0022, 17.0),
-            car_rot: Rotation3::from_unreal_angles(-0.009491506, -2.061095, -0.0000958738),
-            car_vel: Vector3::new(-546.6459, -1095.6816, 8.29),
-            ..Default::default()
-        });
-
-        test.set_behavior(Defense::new());
-
-        test.sleep_millis(1000);
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(436.92395, 1428.1085, 93.15),
+                ball_vel: Vector3::new(-112.55582, -978.27814, 0.0),
+                car_loc: Vector3::new(1105.1365, 2072.0022, 17.0),
+                car_rot: Rotation3::from_unreal_angles(-0.009491506, -2.061095, -0.0000958738),
+                car_vel: Vector3::new(-546.6459, -1095.6816, 8.29),
+                ..Default::default()
+            })
+            .behavior(Defense::new())
+            .run_for_millis(1500);
 
         test.examine_eeg(|eeg| {
             assert!(eeg.log.iter().any(|x| x == "redirect to own corner"));
@@ -384,7 +383,7 @@ mod integration_tests {
 
         let packet = test.sniff_packet();
         println!("{:?}", packet.GameBall.Physics.Velocity);
-        assert!(packet.GameBall.Physics.vel().norm() >= 2000.0);
+        assert!(packet.GameBall.Physics.vel().norm() >= 1500.0);
     }
 
     #[test]
