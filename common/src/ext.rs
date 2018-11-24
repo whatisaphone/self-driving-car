@@ -6,23 +6,23 @@ use physics;
 use rlbot;
 use std::{error::Error, mem};
 
-pub trait ExtendVector2 {
+pub trait ExtendVector2<N: Real> {
     /// Creates a unit vector in the direction of the given `angle`.
-    fn unit(angle: f32) -> Self;
+    fn unit(angle: N) -> Self;
     /// Rotate this vector 90° to the right.
     fn ortho(&self) -> Self;
     /// Shorthand for `Unit::new_normalize`.
     fn to_axis(&self) -> Unit<Self>
     where
         Self: Sized;
-    fn to_3d(&self, z: f32) -> Vector3<f32>;
-    fn uc_angle_to(&self, other: Self) -> UnitComplex<f32>;
-    fn angle_to(&self, other: Self) -> f32;
-    fn rotation_to(&self, other: Self) -> UnitComplex<f32>;
+    fn to_3d(&self, z: N) -> Vector3<N>;
+    fn uc_angle_to(&self, other: Self) -> UnitComplex<N>;
+    fn angle_to(&self, other: Self) -> N;
+    fn rotation_to(&self, other: Self) -> UnitComplex<N>;
 }
 
-impl ExtendVector2 for Vector2<f32> {
-    fn unit(angle: f32) -> Self {
+impl<N: Real> ExtendVector2<N> for Vector2<N> {
+    fn unit(angle: N) -> Self {
         let (sin, cos) = angle.sin_cos();
         Vector2::new(cos, sin)
     }
@@ -35,23 +35,23 @@ impl ExtendVector2 for Vector2<f32> {
         Unit::new_normalize(*self)
     }
 
-    fn to_3d(&self, z: f32) -> Vector3<f32> {
+    fn to_3d(&self, z: N) -> Vector3<N> {
         Vector3::new(self.x, self.y, z)
     }
 
     // This treats `Vector`s as `Point`s. It should be deprecated.
-    fn uc_angle_to(&self, other: Self) -> UnitComplex<f32> {
+    fn uc_angle_to(&self, other: Self) -> UnitComplex<N> {
         let diff = other - self;
-        UnitComplex::new(f32::atan2(diff.y, diff.x))
+        UnitComplex::new(N::atan2(diff.y, diff.x))
     }
 
     // This treats `Vector`s as `Point`s. It should be deprecated.
-    fn angle_to(&self, other: Self) -> f32 {
+    fn angle_to(&self, other: Self) -> N {
         let diff = other - self;
-        f32::atan2(diff.y, diff.x)
+        N::atan2(diff.y, diff.x)
     }
 
-    fn rotation_to(&self, other: Self) -> UnitComplex<f32> {
+    fn rotation_to(&self, other: Self) -> UnitComplex<N> {
         UnitComplex::rotation_between(self, &other)
     }
 }
