@@ -20,9 +20,6 @@ where
 {
     aim: Aim,
     same_ball_trajectory: SameBallTrajectory,
-    aim_loc: Option<Point2<f32>>,
-    intercept: Option<NaiveIntercept>,
-    intercept_time: Option<f32>,
 }
 
 impl<Aim> GroundedHit<Aim>
@@ -36,9 +33,6 @@ where
         Self {
             aim,
             same_ball_trajectory: SameBallTrajectory::new(),
-            aim_loc: None,
-            intercept: None,
-            intercept_time: None,
         }
     }
 }
@@ -76,11 +70,12 @@ where
         }
         return_some!(self.same_ball_trajectory.execute(ctx));
 
-        if let Err(()) = self.intercept_loc(ctx) {
-            return Action::Abort;
-        }
+        let intercept = match self.intercept_loc(ctx) {
+            Ok(i) => i,
+            Err(()) => return Action::Abort,
+        };
 
-        let (target_loc, target_rot) = match self.target_loc(ctx) {
+        let (target_loc, target_rot) = match self.target_loc(ctx, &intercept) {
             Ok(x) => x,
             Err(()) => {
                 ctx.eeg.log("[GroundedHit] error finding target_loc");
@@ -97,7 +92,7 @@ where
             return Action::Abort;
         }
 
-        match self.estimate_approach(ctx, target_loc) {
+        match self.estimate_approach(ctx, &intercept, target_loc) {
             Ok(Do::Coast) => self.drive(ctx, target_loc, false),
             Ok(Do::Boost) => self.drive(ctx, target_loc, true),
             Ok(Do::Jump) => self.jump(target_loc, target_rot),
@@ -116,7 +111,7 @@ impl<Aim> GroundedHit<Aim>
 where
     Aim: Fn(&mut Context, Point3<f32>) -> Result<Point2<f32>, ()> + Send,
 {
-    fn intercept_loc(&mut self, ctx: &mut Context) -> Result<(), ()> {
+    fn intercept_loc(&mut self, ctx: &mut Context) -> Result<NaiveIntercept, ()> {
         let me = ctx.me();
 
         // First pass: get approximate jump height
@@ -149,24 +144,22 @@ where
             return Err(());
         });
 
-        self.intercept_time = Some(ctx.packet.GameInfo.TimeSeconds + intercept.time);
-        self.intercept = Some(intercept);
-        Ok(())
+        Ok(intercept)
     }
 
-    fn target_loc(&mut self, ctx: &mut Context) -> Result<(Point3<f32>, UnitQuaternion<f32>), ()> {
-        let intercept = self.intercept.as_ref().unwrap();
-        let intercept_time = self.intercept_time.unwrap();
-
+    fn target_loc(
+        &mut self,
+        ctx: &mut Context,
+        intercept: &NaiveIntercept,
+    ) -> Result<(Point3<f32>, UnitQuaternion<f32>), ()> {
         let me = ctx.me();
         let aim_loc = (self.aim)(ctx, intercept.ball_loc)?;
-        self.aim_loc = Some(aim_loc);
 
         let (target_loc, target_rot) = Self::preliminary_target(ctx, intercept, aim_loc);
 
         // TODO: iteratively find contact point which hits the ball towards aim_loc
 
-        ctx.eeg.print_time("intercept_time", intercept_time);
+        ctx.eeg.print_time("intercept_time", intercept.time);
         ctx.eeg
             .print_value("intercept_loc_z", format!("{:.0}", intercept.ball_loc.z));
         ctx.eeg.draw(Drawable::Crosshair(aim_loc.coords));
@@ -193,12 +186,12 @@ where
     fn estimate_approach(
         &mut self,
         ctx: &mut Context,
+        intercept: &NaiveIntercept,
         target_loc: Point3<f32>,
     ) -> Result<Do, CarSimulateError> {
-        let intercept_time = self.intercept_time.unwrap();
-        let jump_time = intercept_time - ctx.packet.GameInfo.TimeSeconds;
+        let total_time = intercept.time;
         let jump_duration = time_to_z(target_loc.z).unwrap();
-        let drive_time = jump_time - jump_duration;
+        let drive_time = total_time - jump_duration;
 
         if drive_time < 0.0 {
             return Ok(Do::Jump);
@@ -219,11 +212,10 @@ where
         // Calculate how far ahead/behind the target location
         let car_offset = (car_loc - target_loc).dot(&drive.forward());
 
-        ctx.eeg
-            .print_value("i_ball", self.intercept.as_ref().unwrap().ball_loc);
+        ctx.eeg.print_value("i_ball", intercept.ball_loc);
         ctx.eeg.print_value("target", target_loc);
         ctx.eeg.print_time("drive_time", drive_time);
-        ctx.eeg.print_time("jump_time", jump_time);
+        ctx.eeg.print_time("total_time", total_time);
         ctx.eeg
             .print_value("car_offset", format!("{:.0}", car_offset));
 
