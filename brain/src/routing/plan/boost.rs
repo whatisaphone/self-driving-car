@@ -73,12 +73,24 @@ impl GetDollar {
         ctx: &'a PlanningContext,
         destination_hint: Point2<f32>,
     ) -> Option<&'a BoostPickup> {
+        Self::choose_pickup(
+            ctx.game.boost_dollars().iter(),
+            ctx.start.loc.to_2d(),
+            destination_hint,
+        )
+    }
+
+    pub fn choose_pickup<'a>(
+        pickups: impl Iterator<Item = &'a BoostPickup>,
+        start_loc: Point2<f32>,
+        destination_hint: Point2<f32>,
+    ) -> Option<&'a BoostPickup> {
         // Draw a line segment, and try to find a pickup along that segment.
-        let line_start_loc = ctx.start.loc.to_2d();
+        let line_start_loc = start_loc;
         let line_end_loc = destination_hint;
         let line_span = line_end_loc - line_start_loc;
 
-        ctx.game.boost_dollars().iter().min_by_key(|pickup| {
+        pickups.min_by_key(|pickup| {
             let along_dist = (pickup.loc - line_start_loc).dot(&line_span.to_axis());
             let ortho_dist = (pickup.loc - line_start_loc).dot(&line_span.ortho().to_axis());
             // Assume an "ideal" position 75% of the way down the line.
