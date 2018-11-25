@@ -11,6 +11,8 @@ use simulate::linear_interpolate;
 use std::f32::consts::PI;
 use utils::geometry::circle_point_tangents;
 
+const SLOWEST_TURNING_SPEED: f32 = 900.0;
+
 #[derive(Clone, new)]
 pub struct TurnPlanner {
     target_face: Point2<f32>,
@@ -111,7 +113,8 @@ impl RoutePlanner for SimpleTurnPlanner {
     ) -> Result<RoutePlan, RoutePlanError> {
         dump.log_start(self, &ctx.start);
 
-        let turn_radius = 1.0 / chip::max_curvature(ctx.start.vel.norm().max(500.0));
+        let turn_radius =
+            1.0 / chip::max_curvature(ctx.start.vel.norm().max(SLOWEST_TURNING_SPEED));
         let turn = match calculate_circle_turn(&ctx.start, turn_radius, self.target_loc)? {
             Some(x) => x,
             None => {
@@ -168,7 +171,8 @@ impl RoutePlanner for ArcTowards {
             },
         );
 
-        let turn_radius = 1.0 / chip::max_curvature(ctx.start.vel.norm().max(500.0));
+        let turn_radius =
+            1.0 / chip::max_curvature(ctx.start.vel.norm().max(SLOWEST_TURNING_SPEED));
         let turn = match calculate_circle_turn(&ctx.start, turn_radius, self.target_loc)? {
             Some(x) => x,
             None => {
