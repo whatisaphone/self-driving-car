@@ -52,6 +52,19 @@ cargo test -p brain -- --test-threads=1 integration_tests
 To run an individual test, you can replace `integration_tests` with a pattern
 that matches the name of the test.
 
+### Profiling
+
+Adapt this command to your needs:
+
+```sh
+cd brain
+vsperf="C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Team Tools\Performance Tools\VSPerf.exe"
+RUST_BACKTRACE=1 \
+"$vsperf" \
+    -launch:../target/debug/deps/brain-b7338d0ad12bc0e2.exe \
+    -args:"--test-threads=1 recording_template --ignored"
+```
+
 ### Build a tournament package
 
 ```sh
