@@ -15,6 +15,7 @@ use rlbot;
 use std::{
     f32::consts::PI,
     fs::File,
+    panic,
     path::Path,
     sync::{Arc, Barrier, Mutex, MutexGuard},
     thread::{self, sleep},
@@ -268,10 +269,13 @@ impl RunningTest {
     pub fn examine_eeg(&self, f: impl Fn(&EEG) + Send + 'static) {
         let (tx, rx) = crossbeam_channel::bounded(1);
         self.messages.send(Message::ExamineEEG(Box::new(move |eeg| {
-            f(eeg);
-            tx.send(());
+            let unwind = panic::catch_unwind(panic::AssertUnwindSafe(|| f(eeg)));
+            tx.send(unwind);
         })));
-        rx.recv().unwrap();
+        match rx.recv().unwrap() {
+            Ok(()) => {}
+            Err(unwind) => panic::resume_unwind(unwind),
+        };
     }
 }
 
