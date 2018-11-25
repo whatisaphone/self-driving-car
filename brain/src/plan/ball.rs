@@ -4,7 +4,7 @@ use nalgebra::{Point3, Vector3};
 use std::mem;
 use utils::TotalF32;
 
-const PREDICT_DURATION: f32 = 5.0;
+const PREDICT_DURATION: f32 = 7.0;
 
 pub struct BallTrajectory {
     frames: Vec<BallFrame>,
