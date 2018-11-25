@@ -84,13 +84,19 @@ organizer!
 
 ## Handy Links
 
+### Rocket League
+
 * [RLBot wiki – Useful Game Values](https://github.com/RLBot/RLBot/wiki/Useful-Game-Values)
 * [Vehicle specifications](https://www.reddit.com/r/RocketLeague/comments/7fotyx/vehicle_specifications_v139_hitboxes_handling/)
 * [Sam Mish's RL physics notes](https://samuelpmish.github.io/notes/RocketLeague/)
-  * [The author's bot](https://github.com/samuelpmish/Lobot)
+  * [RLUtilities](https://github.com/samuelpmish/RLUtilities)
 * [DomNomNom's bot](https://github.com/DomNomNom/RocketBot)
+
+### Math
+
 * [Biarc interpolation](http://www.ryanjuckett.com/programming/biarc-interpolation/)
 * [Rotation converter](https://www.andre-gaschler.com/rotationconverter/)
+* [Parabola trajectory math](http://hyperphysics.phy-astr.gsu.edu/hbase/traj.html)
 
 ## Ideas
 
