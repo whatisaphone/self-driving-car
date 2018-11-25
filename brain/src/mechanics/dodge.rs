@@ -1,13 +1,24 @@
 use behavior::{Action, Behavior, Chain};
 use mechanics::Yielder;
+use nalgebra::UnitComplex;
 use rlbot;
 use strategy::Context;
 
-pub struct Dodge;
+pub struct Dodge {
+    angle: UnitComplex<f32>,
+}
 
 impl Dodge {
     pub fn new() -> Self {
-        Dodge
+        Self {
+            angle: UnitComplex::identity(),
+        }
+    }
+
+    /// The angle of the dodge, where 0° means straight forward.
+    pub fn angle(mut self, angle: UnitComplex<f32>) -> Self {
+        self.angle = angle;
+        self
     }
 }
 
@@ -22,11 +33,15 @@ impl Behavior for Dodge {
             return Action::Abort;
         }
 
+        let pitch = -self.angle.cos_angle();
+        let yaw = self.angle.sin_angle();
+
         Action::call(Chain::new(
             self.priority(),
             vec![Box::new(Yielder::new(
                 rlbot::ffi::PlayerInput {
-                    Pitch: -1.0,
+                    Pitch: pitch,
+                    Yaw: yaw,
                     Jump: true,
                     ..Default::default()
                 },

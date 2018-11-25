@@ -1,8 +1,9 @@
 use behavior::{Action, Behavior, Chain};
 use common::{physics, prelude::*, rl};
 use eeg::Drawable;
+use maneuvers::BounceShot;
 use mechanics::{simple_steer_towards, Dodge, JumpAndTurn};
-use nalgebra::{Point2, Point3, UnitQuaternion};
+use nalgebra::{Point2, Point3, UnitComplex, UnitQuaternion};
 use predict::{intercept::NaiveIntercept, naive_ground_intercept};
 use rlbot;
 use routing::recover::{IsSkidding, NotOnFlatGround};
@@ -75,7 +76,7 @@ where
             Err(()) => return Action::Abort,
         };
 
-        let (target_loc, target_rot) = match self.target_loc(ctx, &intercept) {
+        let (target_loc, target_rot, dodge_angle) = match self.target_loc(ctx, &intercept) {
             Ok(x) => x,
             Err(()) => {
                 ctx.eeg.log("[GroundedHit] error finding target_loc");
@@ -95,7 +96,7 @@ where
         match self.estimate_approach(ctx, &intercept, target_loc) {
             Ok(Do::Coast) => self.drive(ctx, target_loc, false),
             Ok(Do::Boost) => self.drive(ctx, target_loc, true),
-            Ok(Do::Jump) => self.jump(target_loc, target_rot),
+            Ok(Do::Jump) => self.jump(target_loc, target_rot, dodge_angle),
             Err(error) => {
                 ctx.eeg.log(format!(
                     "[GroundedHit] can't estimate approach: {:?}",
@@ -128,7 +129,7 @@ where
         });
 
         let aim_loc = (self.aim)(ctx, intercept.ball_loc)?;
-        let (target_loc, _) = Self::preliminary_target(ctx, &intercept, aim_loc);
+        let (target_loc, _, _) = Self::preliminary_target(ctx, &intercept, aim_loc);
         let ball_max_z = JUMP_MAX_Z + (intercept.ball_loc.z - target_loc.z);
 
         // Second pass: Get a more accurate intercept based on how high we need to jump.
@@ -151,11 +152,12 @@ where
         &mut self,
         ctx: &mut Context,
         intercept: &NaiveIntercept,
-    ) -> Result<(Point3<f32>, UnitQuaternion<f32>), ()> {
+    ) -> Result<(Point3<f32>, UnitQuaternion<f32>, UnitComplex<f32>), ()> {
         let me = ctx.me();
         let aim_loc = (self.aim)(ctx, intercept.ball_loc)?;
 
-        let (target_loc, target_rot) = Self::preliminary_target(ctx, intercept, aim_loc);
+        let (target_loc, target_rot, dodge_angle) =
+            Self::preliminary_target(ctx, intercept, aim_loc);
 
         // TODO: iteratively find contact point which hits the ball towards aim_loc
 
@@ -167,20 +169,32 @@ where
         ctx.eeg
             .draw(Drawable::GhostCar(target_loc.coords, me.Physics.rot()));
 
-        Ok((target_loc, target_rot))
+        Ok((target_loc, target_rot, dodge_angle))
     }
 
     fn preliminary_target(
         ctx: &mut Context,
         intercept: &NaiveIntercept<()>,
         aim_loc: Point2<f32>,
-    ) -> (Point3<f32>, UnitQuaternion<f32>) {
+    ) -> (Point3<f32>, UnitQuaternion<f32>, UnitComplex<f32>) {
         let pitch = linear_interpolate(
             &[1000.0, 5000.0],
             &[PI / 15.0, PI / 4.0],
             (aim_loc - intercept.ball_loc.to_2d()).norm(),
         );
-        car_ball_contact_with_pitch(ctx.game, intercept.ball_loc, ctx.me().Physics.locp(), pitch)
+        // Just do something hacky for now
+        let (naive_target_loc, target_rot) = car_ball_contact_with_pitch(
+            ctx.game,
+            intercept.ball_loc,
+            ctx.me().Physics.locp(),
+            pitch,
+        );
+        let rough_target_loc = BounceShot::rough_shooting_spot(intercept, aim_loc);
+        let target_loc = rough_target_loc.to_3d(naive_target_loc.z);
+        let dodge_angle = (target_loc.to_2d() - ctx.me().Physics.loc_2d())
+            .to_axis()
+            .rotation_to(&(intercept.ball_loc.to_2d() - target_loc.to_2d()).to_axis());
+        (target_loc, target_rot, dodge_angle)
     }
 
     fn estimate_approach(
@@ -237,13 +251,18 @@ where
         })
     }
 
-    fn jump(&self, target_loc: Point3<f32>, target_rot: UnitQuaternion<f32>) -> Action {
+    fn jump(
+        &self,
+        target_loc: Point3<f32>,
+        target_rot: UnitQuaternion<f32>,
+        dodge_angle: UnitComplex<f32>,
+    ) -> Action {
         let jump_time = time_to_z(target_loc.z).unwrap();
         Action::call(Chain::new(
             self.priority(),
             vec![
                 Box::new(JumpAndTurn::new(jump_time - 0.05, jump_time, target_rot)),
-                Box::new(Dodge::new()),
+                Box::new(Dodge::new().angle(dodge_angle)),
             ],
         ))
     }
@@ -261,7 +280,7 @@ pub fn car_ball_contact_with_pitch(
     let up = UnitQuaternion::from_axis_angle(&physics::car_right_axis(car_rot), -pitch);
     let car_rot = up * car_rot;
 
-    let contact_dist = game.ball_radius() + game.me_vehicle().front_half_extent();
+    let contact_dist = game.ball_radius() + game.me_vehicle().pivot_to_front_dist();
     let flat_ball_to_car = (car_reference_loc - ball_loc).to_2d().normalize() * contact_dist;
     let car_loc = ball_loc + up * flat_ball_to_car.to_3d(0.0);
 

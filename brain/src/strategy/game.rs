@@ -1,5 +1,5 @@
 use common::{prelude::*, rl};
-use nalgebra::{Point2, Point3};
+use nalgebra::{Point2, Point3, Vector3};
 use rlbot;
 use std::ops::RangeTo;
 
@@ -191,19 +191,15 @@ pub struct BoostPickup {
 }
 
 pub struct Vehicle {
-    half_size: HalfExtents,
+    half_size: Vector3<f32>,
+    pivot_offset: Vector3<f32>,
 }
 
 impl Vehicle {
-    pub fn front_half_extent(&self) -> f32 {
-        self.half_size.x
+    /// Distance from the pivot point to the nose of the car.
+    pub fn pivot_to_front_dist(&self) -> f32 {
+        self.half_size.x + self.pivot_offset.x
     }
-}
-
-pub struct HalfExtents {
-    x: f32,
-    /* y: f32,
-     * z: f32, */
 }
 
 lazy_static! {
@@ -223,10 +219,7 @@ lazy_static! {
         // Source:
         // https://www.youtube.com/watch?v=4OBMq9faWzg
         // https://1drv.ms/x/s!Av9du64LKhjw8Xe7tHDJA2Q6FjsL
-        half_size: HalfExtents {
-            x: 59.003689,
-            // y: 42.099705,
-            // z: 18.079536,
-        },
+        half_size: Vector3::new(59.003689, 42.099705, 18.079536),
+        pivot_offset: Vector3::new(13.87566, 0.0, 20.75499),
     };
 }
