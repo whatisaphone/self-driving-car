@@ -514,7 +514,7 @@ mod integration_tests {
         });
         let packet = test.sniff_packet();
         println!("{:?}", packet.GameBall.Physics.vel());
-        assert!(packet.GameBall.Physics.vel().x < -500.0);
+        assert!(packet.GameBall.Physics.vel().x < -300.0);
     }
 
     #[test]
