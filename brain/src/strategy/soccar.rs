@@ -159,4 +159,26 @@ mod integration_tests {
         let packet = test.sniff_packet();
         assert!(packet.GameCars[0].Boost >= 50);
     }
+
+    #[test]
+    #[ignore] // Doesn't work yet
+    fn get_boost_on_offense_if_we_have_time() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(810.51, 373.18, 227.86),
+                ball_vel: Vector3::new(1538.241, 861.4509, -272.631),
+                car_loc: Vector3::new(837.23, -759.61, 18.4),
+                car_rot: Rotation3::from_unreal_angles(-0.08508434, -0.4163043, 0.009112751),
+                car_vel: Vector3::new(1678.101, -205.961, -160.641),
+                ..Default::default()
+            })
+            .starting_boost(28.0)
+            .behavior(Runner2::soccar())
+            .run_for_millis(2000);
+
+        let packet = test.sniff_packet();
+        assert!(packet.GameCars[0].Boost >= 80);
+        // Go to the closest boost, don't go off to some distant corner.
+        assert!(packet.GameCars[0].Physics.loc().y.abs() < 2000.0);
+    }
 }
