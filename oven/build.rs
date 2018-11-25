@@ -62,42 +62,13 @@ fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) 
     }
 
     macro_rules! write_array {
-        ($name:expr, $type:expr, $items:expr) => {
+        ($name:expr, $type:expr, $items:expr $(,)*) => {
             let items = $items;
             writeln!(w, "    pub const {}: &[{}] = &[", $name, $type).unwrap();
             for x in items {
                 writeln!(w, "        {},", x).unwrap();
             }
             writeln!(w, "    ];\n").unwrap();
-        };
-    }
-
-    macro_rules! write_lazy_static_array {
-        ($name:expr, $type:expr, $items:expr) => {
-            let name = $name;
-            let type_ = $type;
-            let items = $items;
-            writeln!(w, "    lazy_static! {{").unwrap();
-            writeln!(
-                w,
-                "        static ref {name}_BUF: [{type}; {len}] = [",
-                name = name,
-                type = type_,
-                len = items.len(),
-            )
-            .unwrap();
-            for x in items {
-                writeln!(w, "            {},", x).unwrap();
-            }
-            writeln!(w, "        ];").unwrap();
-            writeln!(
-                w,
-                "        pub static ref {name}: &'static [{type}] = &*{name}_BUF;",
-                name = name,
-                type = type_,
-            )
-            .unwrap();
-            writeln!(w, "    }}\n").unwrap();
         };
     }
 
@@ -111,13 +82,6 @@ fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) 
             .collect::<Vec<_>>()
     };
 
-    let player0_loc = col!("player0_loc_x")
-        .zip(col!("player0_loc_y"))
-        .zip(col!("player0_loc_z"))
-        .map(|((x, y), z)| {
-            Point3::<f32>::new(x.parse().unwrap(), y.parse().unwrap(), z.parse().unwrap())
-        });
-
     let player0_rot = col!("player0_rot_x")
         .zip(col!("player0_rot_y"))
         .zip(col!("player0_rot_z"))
@@ -129,17 +93,10 @@ fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) 
                 z.parse().unwrap(),
                 w.parse().unwrap(),
             )
-        });
+        })
+        .collect::<Vec<_>>();
 
-    let player0_vel = col!("player0_vel_x")
-        .zip(col!("player0_vel_y"))
-        .zip(col!("player0_vel_z"))
-        .map(|((x, y), z)| {
-            Vector3::<f32>::new(x.parse().unwrap(), y.parse().unwrap(), z.parse().unwrap())
-        });
-
-    let player0_loc_2d = player0_loc.map(|x| x.to_2d());
-    let player0_rot_2d = player0_rot.map(|x| x.to_2d()).collect::<Vec<_>>();
+    let player0_rot_2d = player0_rot.iter().map(|r| r.to_2d()).collect::<Vec<_>>();
     let player0_rot_2d_angle_cum = player0_rot_2d
         .iter()
         .scan(0.0, |state, rot| {
@@ -147,29 +104,26 @@ fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) 
             Some(state.to_source())
         })
         .collect::<Vec<_>>();
-    let player0_vel_2d = player0_vel.map(|x| x.to_2d());
 
     writeln!(w, "pub mod {} {{", name).unwrap();
     writeln!(w, "    use nalgebra::{{Point2, Vector2}};\n").unwrap();
     write_array!("TIME", "f32", time.iter().map(|x| x.to_source()));
     write_array!("TIME_REV", "f32", time.iter().rev().map(|x| x.to_source()));
-    write_lazy_static_array!(
-        "CAR_LOC_2D",
-        "Point2<f32>",
-        player0_loc_2d.map(|x| x.to_source())
-    );
-    write_lazy_static_array!(
-        "CAR_VEL_2D",
-        "Vector2<f32>",
-        player0_vel_2d.map(|x| x.to_source())
-    );
+    write_array!("CAR_LOC_X", "f32", col!("player0_loc_x").map(floatify));
+    write_array!("CAR_LOC_Y", "f32", col!("player0_loc_y").map(floatify));
+    write_array!("CAR_VEL_X", "f32", col!("player0_vel_x").map(floatify));
     write_array!("CAR_VEL_Y", "f32", col!("player0_vel_y").map(floatify));
     write_array!(
         "CAR_VEL_Y_REV",
         "f32",
-        col!("player0_vel_y").rev().map(floatify)
+        col!("player0_vel_y").rev().map(floatify),
     );
     write_array!("CAR_ROT_2D_ANGLE_CUM", "f32", player0_rot_2d_angle_cum);
+    writeln!(w, "    lazy_static! {{
+        pub static ref CAR_LOC_2D: Vec<Point2<f32>> = CAR_LOC_X.iter().zip(CAR_LOC_Y.iter()).map(|(&x, &y)| Point2::new(x, y)).collect();
+        pub static ref CAR_VEL_2D: Vec<Vector2<f32>> = CAR_VEL_X.iter().zip(CAR_VEL_Y.iter()).map(|(&x, &y)| Vector2::new(x, y)).collect();\
+    }}")
+    .unwrap();
     writeln!(w, "}}\n").unwrap();
 }
 
