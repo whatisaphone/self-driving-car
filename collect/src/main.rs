@@ -27,11 +27,8 @@ pub fn main() -> Result<(), Box<Error>> {
     start_match(&rlbot)?;
     wait_for_match_start(&rlbot)?;
 
-    for axis in scenarios::AirAxis::all() {
-        run_scenario(&rlbot, scenarios::AirRotateAccel::new(axis))?;
-        run_scenario(&rlbot, scenarios::AirRotateCoast::new(axis))?;
-        run_scenario(&rlbot, scenarios::AirRotateCounter::new(axis))?;
-    }
+    run_scenario(&rlbot, scenarios::Throttle::new(false))?;
+    run_scenario(&rlbot, scenarios::Throttle::new(true))?;
 
     Ok(())
 }

@@ -32,6 +32,51 @@ pub enum ScenarioStepResult {
     Finish,
 }
 
+pub trait SimpleScenario {
+    fn name(&self) -> String;
+
+    fn initial_state(&self) -> DesiredGameState {
+        game_state_default()
+    }
+
+    fn step(&mut self, time: f32, packet: &rlbot::ffi::LiveDataPacket) -> SimpleScenarioStepResult;
+}
+
+pub enum SimpleScenarioStepResult {
+    Ignore(rlbot::ffi::PlayerInput),
+    Write(rlbot::ffi::PlayerInput),
+    Finish,
+}
+
+impl<S: SimpleScenario> Scenario for S {
+    fn name(&self) -> String {
+        self.name()
+    }
+
+    fn initial_state(&self) -> DesiredGameState {
+        self.initial_state()
+    }
+
+    fn step(
+        &mut self,
+        rlbot: &rlbot::RLBot,
+        time: f32,
+        packet: &rlbot::ffi::LiveDataPacket,
+    ) -> Result<ScenarioStepResult, Box<Error>> {
+        match self.step(time, packet) {
+            SimpleScenarioStepResult::Ignore(i) => {
+                rlbot.update_player_input(i, 0)?;
+                Ok(ScenarioStepResult::Ignore)
+            }
+            SimpleScenarioStepResult::Write(i) => {
+                rlbot.update_player_input(i, 0)?;
+                Ok(ScenarioStepResult::Write)
+            }
+            SimpleScenarioStepResult::Finish => Ok(ScenarioStepResult::Finish),
+        }
+    }
+}
+
 fn game_state_default() -> DesiredGameState {
     DesiredGameState {
         ball_state: Some(DesiredBallState {
@@ -53,6 +98,44 @@ fn game_state_default() -> DesiredGameState {
             jumped: Some(false),
             double_jumped: Some(false),
         }],
+    }
+}
+
+pub struct Throttle {
+    boost: bool,
+}
+
+impl Throttle {
+    pub fn new(boost: bool) -> Self {
+        Throttle { boost }
+    }
+}
+
+impl SimpleScenario for Throttle {
+    fn name(&self) -> String {
+        if self.boost {
+            "boost".to_string()
+        } else {
+            "throttle".to_string()
+        }
+    }
+
+    fn step(
+        &mut self,
+        time: f32,
+        _packet: &rlbot::ffi::LiveDataPacket,
+    ) -> SimpleScenarioStepResult {
+        if time < 2.0 {
+            SimpleScenarioStepResult::Ignore(Default::default())
+        } else if time < 5.0 {
+            SimpleScenarioStepResult::Write(rlbot::ffi::PlayerInput {
+                Throttle: 1.0,
+                Boost: self.boost,
+                ..Default::default()
+            })
+        } else {
+            SimpleScenarioStepResult::Finish
+        }
     }
 }
 

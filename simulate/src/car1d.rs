@@ -161,7 +161,7 @@ mod tests {
     fn max_speed_boost() {
         let mut car = Car1D::new(2299.98);
         car.step(DT, 1.0, true);
-        assert_eq!(car.vel, 2299.98);
+        assert_eq!(car.vel, 2299.981);
         assert!(99.4 <= car.boost && car.boost < 99.5);
     }
 

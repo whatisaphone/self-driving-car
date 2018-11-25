@@ -37,9 +37,7 @@ fn main() {
             .to_str()
             .unwrap()
             .replace(".", "_");
-        let legacy = ["boost", "coast", "jump", "throttle"]
-            .iter()
-            .any(|&s| s == basename);
+        let legacy = ["coast", "jump"].iter().any(|&s| s == basename);
         let r = csv::ReaderBuilder::new()
             .has_headers(!legacy)
             .from_reader(file);
