@@ -9,14 +9,14 @@ extern crate rlbot;
 use collector2::Collector;
 use game_state::DesiredGameState;
 use rlbot_ext::get_packet_and_inject_rigid_body_tick;
-use scenarios2::{Scenario, ScenarioStepResult};
+use scenarios::{Scenario, ScenarioStepResult};
 use std::{error::Error, fs::File, thread::sleep, time::Duration};
 
 mod collector2;
 mod game_state;
 mod rlbot_ext;
 mod scenarios;
-mod scenarios2;
+mod scenarios_old;
 
 pub fn main() -> Result<(), Box<Error>> {
     let rlbot = rlbot::init()?;
@@ -27,10 +27,10 @@ pub fn main() -> Result<(), Box<Error>> {
     start_match(&rlbot)?;
     wait_for_match_start(&rlbot)?;
 
-    for axis in scenarios2::AirAxis::all() {
-        run_scenario(&rlbot, scenarios2::AirRotateAccel::new(axis))?;
-        run_scenario(&rlbot, scenarios2::AirRotateCoast::new(axis))?;
-        run_scenario(&rlbot, scenarios2::AirRotateCounter::new(axis))?;
+    for axis in scenarios::AirAxis::all() {
+        run_scenario(&rlbot, scenarios::AirRotateAccel::new(axis))?;
+        run_scenario(&rlbot, scenarios::AirRotateCoast::new(axis))?;
+        run_scenario(&rlbot, scenarios::AirRotateCounter::new(axis))?;
     }
 
     Ok(())
