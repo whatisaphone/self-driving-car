@@ -494,19 +494,18 @@ mod integration_tests {
 
     #[test]
     fn same_side_corner_push() {
-        let test = TestRunner::start(
-            Runner2::soccar(),
-            TestScenario {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
                 ball_loc: Vector3::new(-2545.9438, -4174.64, 318.26862),
                 ball_vel: Vector3::new(985.6374, -479.52872, -236.39767),
                 car_loc: Vector3::new(-1808.3466, -3266.7039, 16.41444),
                 car_rot: Rotation3::from_unreal_angles(-0.009203885, -0.65855706, -0.0015339808),
                 car_vel: Vector3::new(947.339, -565.98175, 15.669456),
                 ..Default::default()
-            },
-        );
+            })
+            .behavior(Runner2::soccar())
+            .run_for_millis(2000);
 
-        test.sleep_millis(2000);
         test.examine_eeg(|eeg| {
             assert!(eeg.log.iter().any(|x| x == "redirect to own corner"));
             assert!(eeg.log.iter().any(|x| x == "push from right to left"));
