@@ -283,18 +283,17 @@ mod integration_tests {
 
     #[test]
     fn normal_shoot() {
-        let test = TestRunner::start0(TestScenario {
-            ball_loc: Vector3::new(-2000.0, 2000.0, 500.0),
-            ball_vel: Vector3::new(1000.0, 0.0, 0.0),
-            car_loc: Vector3::new(0.0, 0.0, 17.01),
-            car_vel: Vector3::new(0.0, 0.0, 0.0),
-            ..Default::default()
-        });
-        test.set_behavior(GroundedHit::hit_towards(|_, _| {
-            Ok(Point2::new(0.0, rl::FIELD_MAX_Y))
-        }));
-
-        test.sleep_millis(3000);
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(-2000.0, 2000.0, 500.0),
+                ball_vel: Vector3::new(1000.0, 0.0, 0.0),
+                car_loc: Vector3::new(0.0, 0.0, 17.01),
+                ..Default::default()
+            })
+            .behavior(GroundedHit::hit_towards(|_, _| {
+                Ok(Point2::new(0.0, rl::FIELD_MAX_Y))
+            }))
+            .run_for_millis(3500);
         assert!(test.has_scored());
     }
 }
