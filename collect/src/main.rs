@@ -27,8 +27,7 @@ pub fn main() -> Result<(), Box<Error>> {
     start_match(&rlbot)?;
     wait_for_match_start(&rlbot)?;
 
-    run_scenario(&rlbot, scenarios::Throttle::new(false))?;
-    run_scenario(&rlbot, scenarios::Throttle::new(true))?;
+    run_scenario(&rlbot, scenarios::Coast::new())?;
 
     Ok(())
 }

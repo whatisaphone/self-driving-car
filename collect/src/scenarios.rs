@@ -107,7 +107,7 @@ pub struct Throttle {
 
 impl Throttle {
     pub fn new(boost: bool) -> Self {
-        Throttle { boost }
+        Self { boost }
     }
 }
 
@@ -133,6 +133,45 @@ impl SimpleScenario for Throttle {
                 Boost: self.boost,
                 ..Default::default()
             })
+        } else {
+            SimpleScenarioStepResult::Finish
+        }
+    }
+}
+
+pub struct Coast;
+
+impl Coast {
+    pub fn new() -> Self {
+        Coast
+    }
+}
+
+impl SimpleScenario for Coast {
+    fn name(&self) -> String {
+        "coast".to_string()
+    }
+
+    fn initial_state(&self) -> DesiredGameState {
+        let mut state = game_state_default();
+        state.car_states[0].physics.as_mut().unwrap().location =
+            Some(Vector3Partial::new(0.0, -5000.0, 17.01));
+        state
+    }
+
+    fn step(
+        &mut self,
+        time: f32,
+        _packet: &rlbot::ffi::LiveDataPacket,
+    ) -> SimpleScenarioStepResult {
+        if time < 1.5 {
+            SimpleScenarioStepResult::Ignore(rlbot::ffi::PlayerInput {
+                Throttle: 1.0,
+                Boost: true,
+                ..Default::default()
+            })
+        } else if time < 7.0 {
+            SimpleScenarioStepResult::Write(Default::default())
         } else {
             SimpleScenarioStepResult::Finish
         }

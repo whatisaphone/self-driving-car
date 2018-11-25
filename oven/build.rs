@@ -37,7 +37,7 @@ fn main() {
             .to_str()
             .unwrap()
             .replace(".", "_");
-        let legacy = ["coast", "jump"].iter().any(|&s| s == basename);
+        let legacy = basename == "jump";
         let r = csv::ReaderBuilder::new()
             .has_headers(!legacy)
             .from_reader(file);
@@ -152,6 +152,7 @@ fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) 
     writeln!(w, "pub mod {} {{", name).unwrap();
     writeln!(w, "    use nalgebra::{{Point2, Vector2}};\n").unwrap();
     write_array!("TIME", "f32", time.iter().map(|x| x.to_source()));
+    write_array!("TIME_REV", "f32", time.iter().rev().map(|x| x.to_source()));
     write_lazy_static_array!(
         "CAR_LOC_2D",
         "Point2<f32>",
@@ -163,6 +164,11 @@ fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) 
         player0_vel_2d.map(|x| x.to_source())
     );
     write_array!("CAR_VEL_Y", "f32", col!("player0_vel_y").map(floatify));
+    write_array!(
+        "CAR_VEL_Y_REV",
+        "f32",
+        col!("player0_vel_y").rev().map(floatify)
+    );
     write_array!("CAR_ROT_2D_ANGLE_CUM", "f32", player0_rot_2d_angle_cum);
     writeln!(w, "}}\n").unwrap();
 }
