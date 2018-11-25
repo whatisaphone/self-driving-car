@@ -21,6 +21,7 @@ use std::{
     thread::{self, sleep},
     time::Duration,
 };
+use strategy::Team;
 
 const RECORDING_DISTANCE_THRESHOLD: f32 = 25.0;
 const STATE_SET_DEBOUNCE: i32 = 10;
@@ -30,6 +31,7 @@ pub struct TestRunner {
     ball_recording: Option<(Vec<f32>, Vec<RecordingRigidBodyState>)>,
     car_inital_state: Option<(RecordingRigidBodyState, f32)>,
     enemy_recording: Option<(Vec<f32>, Vec<RecordingPlayerTick>)>,
+    enemy_initial_boost: f32,
 }
 
 /// Static API
@@ -53,12 +55,15 @@ impl TestRunner {
 
 /// Builder API
 impl TestRunner {
+    const DEFAULT_STARTING_BOOST: f32 = 100.0;
+
     pub fn new() -> Self {
         Self {
             behavior: None,
             ball_recording: None,
             car_inital_state: None,
             enemy_recording: None,
+            enemy_initial_boost: Self::DEFAULT_STARTING_BOOST,
         }
     }
 
@@ -79,12 +84,18 @@ impl TestRunner {
     }
 
     fn car(mut self, state: RecordingRigidBodyState) -> Self {
-        self.car_inital_state = Some((state, 1.0));
+        self.car_inital_state = Some((state, Self::DEFAULT_STARTING_BOOST));
         self
     }
 
     pub fn starting_boost(mut self, boost: f32) -> Self {
         self.car_inital_state.as_mut().unwrap().1 = boost;
+        self
+    }
+
+    #[allow(dead_code)]
+    pub fn enemy_starting_boost(mut self, boost: f32) -> Self {
+        self.enemy_initial_boost = boost;
         self
     }
 
@@ -170,7 +181,10 @@ impl TestRunner {
             .unwrap_or(times.len());
 
         self = self.ball(&times[..ball_release_index], &ball[..ball_release_index]);
-        self.car_inital_state = Some((ticks[0].players[0].state.clone(), 1.0));
+        self.car_inital_state = Some((
+            ticks[0].players[0].state.clone(),
+            Self::DEFAULT_STARTING_BOOST,
+        ));
         self.enemy_recording = Some((times, enemy_ticks));
         self
     }
@@ -187,7 +201,7 @@ impl TestRunner {
         };
 
         let enemy = match self.enemy_recording {
-            Some((times, ticks)) => CarScenario::new(times, ticks, 1.0),
+            Some((times, ticks)) => CarScenario::new(times, ticks, self.enemy_initial_boost),
             None => panic!(),
         };
 
@@ -388,12 +402,14 @@ fn test_thread(
                 Message::HasScored(tx) => {
                     let first_score = first_packet.match_score();
                     let current_score = packet.match_score();
-                    tx.send(current_score[0] > first_score[0]); // Index 0 means own team
+                    let team = Team::Blue.to_ffi() as usize;
+                    tx.send(current_score[team] > first_score[team]);
                 }
                 Message::EnemyHasScored(tx) => {
                     let first_score = first_packet.match_score();
                     let current_score = packet.match_score();
-                    tx.send(current_score[1] > first_score[1]); // Index 1 means enemy team
+                    let team = Team::Orange.to_ffi() as usize;
+                    tx.send(current_score[team] > first_score[team]);
                 }
                 Message::ExamineEEG(f) => {
                     f(&eeg);

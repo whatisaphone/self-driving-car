@@ -137,6 +137,13 @@ impl Team {
         }
     }
 
+    pub fn to_ffi(&self) -> u8 {
+        match *self {
+            Team::Blue => 0,
+            Team::Orange => 1,
+        }
+    }
+
     fn opposing(&self) -> Self {
         match self {
             Team::Blue => Team::Orange,
