@@ -5,6 +5,7 @@ mod integration_tests {
     use nalgebra::{Rotation3, Vector3};
 
     #[test]
+    #[ignore(note = "The great bankruptcy of 2018")]
     fn far_corner_falling() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -38,6 +39,7 @@ mod integration_tests {
     }
 
     #[test]
+    #[ignore(note = "The great bankruptcy of 2018")]
     fn correct_mispredicted_bounce() {
         let test = TestRunner::new()
             .scenario(TestScenario {

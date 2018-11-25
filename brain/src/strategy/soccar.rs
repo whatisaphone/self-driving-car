@@ -183,6 +183,7 @@ mod integration_tests {
     }
 
     #[test]
+    #[ignore(note = "The great bankruptcy of 2018")]
     fn clear_stationary_ball() {
         let test = TestRunner::new()
             .scenario(TestScenario {

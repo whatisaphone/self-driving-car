@@ -301,6 +301,7 @@ mod integration_tests {
     use nalgebra::{Point2, Vector3};
 
     #[test]
+    #[ignore(note = "The great bankruptcy of 2018")]
     fn normal_shoot() {
         let test = TestRunner::new()
             .scenario(TestScenario {

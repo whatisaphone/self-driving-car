@@ -155,6 +155,7 @@ mod integration_tests {
     }
 
     #[test]
+    #[ignore(note = "The great bankruptcy of 2018")]
     fn tepid_hit_from_own_goal() {
         let test = TestRunner::start0(TestScenario {
             ball_loc: Vector3::new(2869.6829, -4145.095, 97.65185),

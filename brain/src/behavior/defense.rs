@@ -341,6 +341,7 @@ mod integration_tests {
     }
 
     #[test]
+    #[ignore(note = "The great bankruptcy of 2018")]
     fn falling_save_from_the_side() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -441,6 +442,7 @@ mod integration_tests {
     }
 
     #[test]
+    #[ignore(note = "The great bankruptcy of 2018")]
     fn push_from_corner_to_corner() {
         let test = TestRunner::start(
             HitToOwnCorner::new(),
@@ -591,6 +593,7 @@ mod integration_tests {
     }
 
     #[test]
+    #[ignore(note = "The great bankruptcy of 2018")]
     fn retreat_then_save() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -612,6 +615,7 @@ mod integration_tests {
     }
 
     #[test]
+    #[ignore(note = "The great bankruptcy of 2018")]
     fn clear_around_goal_wall() {
         let test = TestRunner::new()
             .one_v_one(&*recordings::CLEAR_AROUND_GOAL_WALL, 327.0)

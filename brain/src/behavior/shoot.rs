@@ -97,6 +97,7 @@ mod integration_tests {
     use strategy::Runner2;
 
     #[test]
+    #[ignore(note = "The great bankruptcy of 2018")]
     fn awkwardly_angled_breakaway() {
         let test = TestRunner::start0(TestScenario {
             ball_loc: Vector3::new(61.44401, -2595.4697, 94.76237),
@@ -145,6 +146,7 @@ mod integration_tests {
     }
 
     #[test]
+    #[ignore(note = "The great bankruptcy of 2018")]
     fn fast_falling_ball() {
         let test = TestRunner::start0(TestScenario {
             ball_loc: Vector3::new(3862.044, 1163.3925, 1456.4243),
