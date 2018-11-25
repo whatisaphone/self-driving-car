@@ -181,4 +181,20 @@ mod integration_tests {
         // Go to the closest boost, don't go off to some distant corner.
         assert!(packet.GameCars[0].Physics.loc().y.abs() < 2000.0);
     }
+
+    #[test]
+    fn clear_stationary_ball() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(-500.0, -5000.0, 0.0),
+                car_loc: Vector3::new(500.0, -5000.0, 17.0),
+                car_rot: Rotation3::from_unreal_angles(0.0, 210_f32.to_radians(), 0.0),
+                ..Default::default()
+            })
+            .behavior(Runner2::soccar())
+            .run_for_millis(2000);
+
+        let packet = test.sniff_packet();
+        assert!(packet.GameBall.Physics.Location.X < -1000.0);
+    }
 }

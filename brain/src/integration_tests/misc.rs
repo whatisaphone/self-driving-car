@@ -4,21 +4,6 @@ use nalgebra::{Rotation3, Vector3};
 use strategy::Runner2;
 
 #[test]
-fn clear_ball_out_of_goal() {
-    let test = TestRunner::start0(TestScenario {
-        ball_loc: Vector3::new(-500.0, -5000.0, 0.0),
-        car_loc: Vector3::new(500.0, -5000.0, 17.0),
-        car_rot: Rotation3::from_unreal_angles(0.0, 210_f32.to_radians(), 0.0),
-        ..Default::default()
-    });
-    test.set_behavior(Runner2::soccar());
-    test.sleep_millis(2000);
-
-    let packet = test.sniff_packet();
-    assert!(packet.GameBall.Physics.Location.X < -1000.0);
-}
-
-#[test]
 #[ignore]
 // We came in too hot, we should be able to smack it to the side.
 fn todo() {
