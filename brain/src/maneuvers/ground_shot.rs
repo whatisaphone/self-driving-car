@@ -111,11 +111,9 @@ mod integration_tests {
                 boost: 0,
                 ..Default::default()
             })
+            .behavior(Runner2::soccar())
             .run_for_millis(3000);
 
-        test.examine_eeg(|eeg| {
-            assert!(eeg.log.iter().any(|x| x == "> GroundShot"));
-        });
         assert!(test.has_scored());
     }
 
@@ -130,11 +128,9 @@ mod integration_tests {
                 car_vel: Vector3::new(232.67545, -405.04382, 8.36),
                 ..Default::default()
             })
+            .behavior(Runner2::soccar())
             .run_for_millis(2000);
 
-        test.examine_eeg(|eeg| {
-            assert!(eeg.log.iter().any(|x| x == "> GroundShot"));
-        });
         assert!(test.has_scored());
     }
 }
