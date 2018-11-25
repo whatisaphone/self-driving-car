@@ -47,7 +47,7 @@ impl RoutePlanner for TurnPlanner {
 }
 
 #[derive(Clone, new)]
-struct PathingUnawareTurnPlanner {
+pub struct PathingUnawareTurnPlanner {
     target_face: Point2<f32>,
     next: Option<Box<RoutePlanner>>,
 }

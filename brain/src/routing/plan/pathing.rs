@@ -3,7 +3,7 @@ use nalgebra::Point2;
 use routing::{
     models::{CarState, RoutePlanner},
     plan::{
-        ground_straight::GroundStraightPlanner, ground_turn::TurnPlanner,
+        ground_straight::GroundStraightPlanner, ground_turn::PathingUnawareTurnPlanner,
         higher_order::ChainedPlanner,
     },
     segments::StraightMode,
@@ -18,7 +18,7 @@ pub fn avoid_plowing_into_goal_wall(
     match avoid_plowing_into_goal_wall_waypoint(start, target_loc) {
         None => None,
         Some(waypoint) => Some(ChainedPlanner::chain(vec![
-            Box::new(TurnPlanner::new(waypoint, None)),
+            Box::new(PathingUnawareTurnPlanner::new(waypoint, None)),
             Box::new(GroundStraightPlanner::new(
                 waypoint,
                 None,
