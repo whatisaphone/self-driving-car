@@ -119,6 +119,8 @@ organizer!
 
 ### Next
 
+- GetToFlatGround: require stricter roof pointing before jumping (test case
+  fast_retreating_save)
 - aiming model for most power
 - AnticipatingDrive with ability to throttle without boosting
 - aerials v2.0
