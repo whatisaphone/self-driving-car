@@ -3,7 +3,7 @@ use common::{prelude::*, rl};
 use mechanics::{simple_yaw_diff, QuickJumpAndDodge};
 use nalgebra::{Point2, Vector2};
 use rlbot;
-use simulate::Car1D;
+use simulate::Car1Dv2;
 use std::f32::consts::PI;
 use utils::geometry::ExtendF32;
 
@@ -11,21 +11,17 @@ use utils::geometry::ExtendF32;
 const GROUND_DODGE_TIME: f32 = 2.0;
 
 pub fn rough_time_drive_to_loc(car: &rlbot::ffi::PlayerInfo, target_loc: Point2<f32>) -> f32 {
-    const DT: f32 = 1.0 / 60.0;
-
     let target_dist = (car.Physics.locp().to_2d() - target_loc).norm();
 
-    let mut t = 2.0 / 120.0 + steer_penalty(car, simple_yaw_diff(&car.Physics, target_loc.coords));
-    let mut sim_car = Car1D::new(car.Physics.vel().norm()).with_boost(car.Boost as f32);
-    loop {
-        t += DT;
-        sim_car.step(DT, 1.0, true);
+    let base_time =
+        2.0 / 120.0 + steer_penalty(car, simple_yaw_diff(&car.Physics, target_loc.coords));
 
-        if sim_car.distance_traveled() >= target_dist {
-            break;
-        }
-    }
-    t
+    let mut sim_car = Car1Dv2::new()
+        .with_speed(car.Physics.vel().norm())
+        .with_boost(car.Boost as f32);
+    sim_car.advance_by_distance(target_dist, 1.0, true);
+
+    base_time + sim_car.time()
 }
 
 // Very very rough

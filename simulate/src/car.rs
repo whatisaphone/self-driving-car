@@ -1,4 +1,4 @@
-use car1d::Car1D;
+use car1dv2::Car1Dv2;
 use common::{physics, prelude::*};
 use nalgebra::{Point3, Unit, UnitQuaternion, Vector2, Vector3};
 use rlbot;
@@ -67,10 +67,12 @@ impl Car {
             return Err(CarSimulateError::Skidding);
         }
 
-        let mut car1d = Car1D::new(self.vel.norm()).with_boost(self.boost);
-        car1d.step(dt, throttle, boost);
+        let mut car1d = Car1Dv2::new()
+            .with_speed(self.vel.norm())
+            .with_boost(self.boost);
+        car1d.advance(dt, throttle, boost);
 
-        self.loc += self.forward().unwrap() * car1d.distance_traveled();
+        self.loc += self.forward().unwrap() * car1d.distance();
         self.vel = self.forward().unwrap() * car1d.speed();
         self.boost = car1d.boost();
         Ok(())

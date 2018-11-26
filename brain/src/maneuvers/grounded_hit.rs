@@ -10,7 +10,7 @@ use routing::recover::{IsSkidding, NotOnFlatGround};
 use rules::SameBallTrajectory;
 use simulate::{
     car_single_jump::{time_to_z, JUMP_MAX_Z},
-    linear_interpolate, Car, CarSimulateError,
+    linear_interpolate, Car1Dv2, CarSimulateError,
 };
 use std::f32::consts::PI;
 use strategy::{Context, Game};
@@ -212,19 +212,20 @@ where
         }
 
         // Phase 1: driving forward
-        let mut drive = Car::from_player_info(ctx.me());
-        let mut t = 0.0;
-        while t < drive_time {
-            drive.step_throttle_boost(rl::PHYSICS_DT, 1.0, true)?;
-            t += rl::PHYSICS_DT;
-        }
+        let mut drive = Car1Dv2::new()
+            .with_speed(ctx.me().Physics.vel().norm())
+            .with_boost(ctx.me().Boost as f32);
+        drive.advance(drive_time, 1.0, true);
+        let drive_start_loc = ctx.me().Physics.loc_2d();
+        let drive_forward = (target_loc.to_2d() - drive_start_loc).to_axis();
+        let drive_end_loc = drive_start_loc + drive_forward.as_ref() * drive.distance();
+        let drive_end_vel = drive_forward.as_ref() * drive.speed();
 
         // Phase 2: a jump in which the xy-velocity stays constant
-        let car_loc_xy = drive.loc().to_2d() + drive.vel().to_2d() * jump_duration;
-        let car_loc = car_loc_xy.to_3d(target_loc.z);
+        let jump_end_loc = drive_end_loc + drive_end_vel * jump_duration;
 
         // Calculate how far ahead/behind the target location
-        let car_offset = (car_loc - target_loc).dot(&drive.forward());
+        let car_offset = (jump_end_loc - target_loc.to_2d()).dot(&drive_forward);
 
         ctx.eeg.print_value("i_ball", intercept.ball_loc);
         ctx.eeg.print_value("target", target_loc);

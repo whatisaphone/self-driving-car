@@ -1,10 +1,9 @@
-use arrayvec::ArrayVec;
 use common::prelude::*;
 use eeg::{color, Drawable};
 use mechanics::simple_steer_towards;
 use nalgebra::{Point2, Vector2};
 use routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner};
-use simulate::Car1D;
+use simulate::Car1Dv2;
 use strategy::Context;
 
 #[derive(Clone)]
@@ -32,35 +31,30 @@ pub enum StraightMode {
 
 impl Straight {
     pub fn new(start: CarState2D, end_loc: Point2<f32>, end_chop: f32, mode: StraightMode) -> Self {
-        const DT: f32 = 1.0 / 120.0;
-
         let start_to_end_dist = (end_loc - start.loc).norm();
-        if start_to_end_dist < 1.0 {
+        if start_to_end_dist < 0.1 {
             return Self::zero(start);
         }
 
-        let mut sim = Car1D::new(start.vel.norm()).with_boost(start.boost);
-        // Keep track of the simulated values so we can chop off an exact amount of time
-        // once we reach the target distance.
-        const BUFFER_SIZE: usize = 1 << 12;
-        let mut sim_loc = ArrayVec::<[_; BUFFER_SIZE]>::new();
-        let mut sim_speed = ArrayVec::<[_; BUFFER_SIZE]>::new();
-        let mut sim_boost = ArrayVec::<[_; BUFFER_SIZE]>::new();
-        loop {
-            sim_loc.push(sim.distance_traveled());
-            sim_speed.push(sim.speed());
-            sim_boost.push(sim.boost());
-            if sim.distance_traveled() >= start_to_end_dist {
-                break;
-            }
-            sim.step(DT, 1.0, true);
+        let mut sim = Car1Dv2::new()
+            .with_speed(start.vel.norm())
+            .with_boost(start.boost);
+        sim.advance_by_distance(start_to_end_dist, 1.0, true);
+
+        // end_chop is the caller requesting we end the segment before reaching the
+        // target.
+        if end_chop != 0.0 {
+            let duration = (sim.time() - end_chop).max(0.0);
+            sim = Car1Dv2::new()
+                .with_speed(start.vel.norm())
+                .with_boost(start.boost);
+            sim.advance(duration, 1.0, true);
         }
-        let end_frame = (sim_loc.len() - 1)
-            .checked_sub((end_chop / DT) as usize)
-            .unwrap_or(0);
-        let sim_end_loc = sim_loc[end_frame];
-        let sim_end_speed = sim_speed[end_frame];
-        let sim_end_boost = sim_boost[end_frame];
+
+        let sim_end_loc = sim.distance();
+        let sim_end_speed = sim.speed();
+        let sim_end_boost = sim.boost();
+
         let end_loc = start.loc + (end_loc - start.loc).normalize() * sim_end_loc;
         if (end_loc - start.loc).norm() < 1.0 {
             return Self::zero(start);
@@ -72,7 +66,7 @@ impl Straight {
             end_loc,
             end_vel,
             end_boost: sim_end_boost,
-            duration: end_frame as f32 * DT,
+            duration: sim.time(),
             mode,
         }
     }

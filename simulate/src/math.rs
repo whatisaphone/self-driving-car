@@ -14,22 +14,23 @@ pub fn linear_interpolate(xs: &[f32], ys: &[f32], x: f32) -> f32 {
 
 /// This lets you split interpolation into two steps, to save on unnecessary
 /// binary searches. Pair with [`linear_interpolate_use_index`].
-pub fn linear_interpolate_find_index(xs: &[f32], x: f32) -> f32 {
+pub fn linear_interpolate_find_index(xs: &[f32], x: f32) -> f64 {
     match xs.binary_search_by(|n| n.partial_cmp(&x).unwrap()) {
-        Ok(i) => i as f32,
+        Ok(i) => i as f64,
         Err(0) => 0.0,
-        Err(i) if i == xs.len() => (i - 1) as f32,
+        Err(i) if i == xs.len() => (i - 1) as f64,
         Err(i) => {
             let left = xs[i - 1];
             let right = xs[i];
-            (i - 1) as f32 + (x - left) / (right - left)
+            // Use `f64` to compensate for precision loss when adding a large integral part.
+            (i - 1) as f64 + ((x - left) / (right - left)) as f64
         }
     }
 }
 
-pub fn linear_interpolate_use_index(ys: &[f32], x: f32) -> f32 {
+pub fn linear_interpolate_use_index(ys: &[f32], x: f64) -> f32 {
     let int = x.floor() as usize;
-    let frac = x - int as f32;
+    let frac = (x - int as f64) as f32;
     if frac == 0.0 {
         return ys[int];
     }

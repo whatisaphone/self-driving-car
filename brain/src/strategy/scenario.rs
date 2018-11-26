@@ -4,7 +4,7 @@ use ordered_float::NotNan;
 use plan::ball::{BallFrame, BallPredictor, BallTrajectory};
 use predict::intercept::NaiveIntercept;
 use rlbot;
-use simulate::{linear_interpolate, Car1D};
+use simulate::{linear_interpolate, Car1Dv2};
 use std::f32::{self, consts::PI};
 use strategy::game::Game;
 use utils::{Wall, WallRayCalculator};
@@ -148,12 +148,14 @@ impl<'a> Scenario<'a> {
     }
 }
 
-fn blitz_start(car: &rlbot::ffi::PlayerInfo, ball_prediction: &BallTrajectory) -> Car1D {
+fn blitz_start(car: &rlbot::ffi::PlayerInfo, ball_prediction: &BallTrajectory) -> Car1Dv2 {
     let ball_loc = ball_prediction.start().loc.to_2d();
     let car_vel = car.Physics.vel().to_2d();
     let car_to_ball = ball_loc - car.Physics.loc_2d();
     let speed_towards_ball = car_vel.dot(&car_to_ball.normalize());
-    Car1D::new(speed_towards_ball).with_boost(car.Boost as f32)
+    Car1Dv2::new()
+        .with_speed(speed_towards_ball.max(0.0))
+        .with_boost(car.Boost as f32)
 }
 
 // This is a pretty naive and heavyweight implementation. Basically simulate a
@@ -163,29 +165,23 @@ fn simulate_ball_blitz(
     ball_prediction: &BallTrajectory,
     car: &rlbot::ffi::PlayerInfo,
 ) -> Option<NaiveIntercept> {
-    let mut t = 0.0;
-
     let mut sim = blitz_start(car, ball_prediction);
     let mut result = None;
 
-    for ball in ball_prediction.iter() {
-        t += ball.dt();
-
-        if result.is_none() {
-            sim.step(ball.dt(), 1.0, true);
-            let dist_to_ball = (car.Physics.locp() - ball.loc).to_2d().norm();
-            if sim.distance_traveled() >= dist_to_ball {
-                result = Some(NaiveIntercept {
-                    time: t,
-                    ball_loc: ball.loc,
-                    ball_vel: ball.vel,
-                    car_loc: ball.loc,
-                    car_speed: ball.vel.norm(),
-                    data: (),
-                });
-                break;
-            }
+    for ball in ball_prediction.iter_step_by(0.125) {
+        let dist_to_ball = (car.Physics.locp() - ball.loc).to_2d().norm();
+        if sim.distance() >= dist_to_ball {
+            result = Some(NaiveIntercept {
+                time: ball.t - ball_prediction.start().t,
+                ball_loc: ball.loc,
+                ball_vel: ball.vel,
+                car_loc: ball.loc,
+                car_speed: ball.vel.norm(),
+                data: (),
+            });
+            break;
         }
+        sim.advance(ball.dt(), 1.0, true);
     }
 
     if let Some(i) = &mut result {

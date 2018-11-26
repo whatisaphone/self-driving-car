@@ -4,7 +4,6 @@ version = "0.1.0"
 authors = ["John Simon <john@whatisaph.one>"]
 
 [dependencies]
-arrayvec = "0.4.7"
 crossbeam-channel = "0.2.6"
 derive-new = "0.5.5"
 flatbuffers = "0.5.0"

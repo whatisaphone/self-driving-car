@@ -6,7 +6,7 @@ use mechanics::simple_yaw_diff;
 use nalgebra::Vector2;
 use plan::drive::get_route_dodge;
 use rlbot;
-use simulate::Car1D;
+use simulate::Car1Dv2;
 use std::f32::consts::PI;
 use strategy::Context;
 
@@ -87,21 +87,12 @@ impl Behavior for GroundAccelToLoc {
 /// Starting at `origin`, if we go pedal to the metal for `time` seconds, will
 /// we have traveled `distance`?
 fn estimate_approach(car: &rlbot::ffi::PlayerInfo, distance: f32, time: f32) -> bool {
-    const DT: f32 = 1.0 / 60.0;
-
-    let mut t = 1.5 / 120.0; // Start a few ticks later to compensate for input lag.
-    let mut sim_car = Car1D::new(car.Physics.vel().norm()).with_boost(car.Boost as f32);
-
-    while t < time {
-        t += DT;
-        sim_car.step(DT, 1.0, true);
-
-        if sim_car.distance_traveled() >= distance {
-            return true;
-        }
-    }
-
-    false
+    let lag_comp = 1.5 / 120.0; // Start a few ticks later to compensate for input lag.
+    let mut sim_car = Car1Dv2::new()
+        .with_speed(car.Physics.vel().norm())
+        .with_boost(car.Boost as f32);
+    sim_car.advance(time - lag_comp, 1.0, true);
+    sim_car.distance() >= distance
 }
 
 #[cfg(test)]

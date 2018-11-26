@@ -40,6 +40,14 @@ impl BallTrajectory {
         self.frames.iter()
     }
 
+    pub fn iter_step_by<'a>(&'a self, dt: f32) -> impl Iterator<Item = BallFrame> + 'a {
+        let factor = (dt / self.frames[0].dt).round();
+        self.frames
+            .iter()
+            .step_by(factor as usize)
+            .map(move |f| BallFrame { dt, ..*f })
+    }
+
     /// Iterate over the frames, but skip the given number of seconds at the
     /// start.
     pub fn hacky_expensive_slice(&self, delay: f32) -> Self {

@@ -3,7 +3,7 @@ use nalgebra::{Point3, UnitQuaternion, Vector3};
 use plan::ball::{BallFrame, BallTrajectory};
 use rlbot;
 use routing::models::CarState;
-use simulate::Car1D;
+use simulate::Car1Dv2;
 use strategy::Context;
 
 pub fn estimate_intercept_car_ball(
@@ -58,13 +58,15 @@ fn naive_ground_intercept_inner<'a, T>(
     // we want their meshes to barely be touching.
     const RADII: f32 = 240.0;
 
-    let mut sim_car = Car1D::new(start.vel.norm()).with_boost(start.boost);
+    let mut sim_car = Car1Dv2::new()
+        .with_speed(start.vel.norm())
+        .with_boost(start.boost);
 
     let sim_ball = ball.find_map(|ball| {
-        sim_car.step(ball.dt(), 1.0, true);
+        sim_car.advance(ball.dt(), 1.0, true);
 
-        let target_traveled = (ball.loc - start.loc).to_2d().norm() - RADII;
-        if sim_car.distance_traveled() >= target_traveled {
+        let target_dist = (ball.loc - start.loc).to_2d().norm() - RADII;
+        if sim_car.distance() >= target_dist {
             if let Some(data) = predicate(ball) {
                 return Some((ball, data));
             }

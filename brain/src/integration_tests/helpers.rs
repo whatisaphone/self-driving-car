@@ -70,7 +70,9 @@ impl TestRunner {
     pub fn scenario(mut self, scenario: TestScenario) -> Self {
         self = self.ball(vec![0.0], vec![scenario.ball()]);
         self = self.car(scenario.car());
+        self = self.starting_boost(scenario.boost as f32);
         self = self.enemy(vec![0.0], vec![Default::default()], vec![scenario.enemy()]);
+        self = self.enemy_starting_boost(scenario.boost as f32);
         self
     }
 
