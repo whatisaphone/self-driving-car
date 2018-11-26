@@ -39,12 +39,12 @@ pub const PHYSICS_DT: f32 = 1.0 / PHYSICS_TICK_FREQ;
 /// The max speed a car can reach using only the throttle.
 ///
 /// This value was observed in data from `collect`.
-pub const CAR_NORMAL_SPEED: f32 = 1410.0;
+pub const CAR_NORMAL_SPEED: f32 = 1410.001;
 
 /// The max speed a car can reach by boosting.
 ///
 /// This value was observed in data from `collect`.
-pub const CAR_MAX_SPEED: f32 = 2299.98;
+pub const CAR_MAX_SPEED: f32 = 2299.981;
 
 /// Almost max speed. This is a placeholder for behaviors where some sort of
 /// boost hysteresis would have been appropriate but I was too lazy to

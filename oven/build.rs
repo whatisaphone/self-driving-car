@@ -111,6 +111,11 @@ fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) 
     write_array!("TIME_REV", "f32", time.iter().rev().map(|x| x.to_source()));
     write_array!("CAR_LOC_X", "f32", col!("player0_loc_x").map(floatify));
     write_array!("CAR_LOC_Y", "f32", col!("player0_loc_y").map(floatify));
+    write_array!(
+        "CAR_LOC_Y_REV",
+        "f32",
+        col!("player0_loc_y").rev().map(floatify),
+    );
     write_array!("CAR_VEL_X", "f32", col!("player0_vel_x").map(floatify));
     write_array!("CAR_VEL_Y", "f32", col!("player0_vel_y").map(floatify));
     write_array!(

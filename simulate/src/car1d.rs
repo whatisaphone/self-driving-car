@@ -122,6 +122,7 @@ impl Car1D {
 #[cfg(test)]
 mod tests {
     use car1d::Car1D;
+    use common::rl;
 
     const DT: f32 = 1.0 / 60.0;
 
@@ -159,9 +160,9 @@ mod tests {
 
     #[test]
     fn max_speed_boost() {
-        let mut car = Car1D::new(2299.98);
+        let mut car = Car1D::new(rl::CAR_MAX_SPEED);
         car.step(DT, 1.0, true);
-        assert_eq!(car.vel, 2299.981);
+        assert_eq!(car.vel, rl::CAR_MAX_SPEED);
         assert!(99.4 <= car.boost && car.boost < 99.5);
     }
 
