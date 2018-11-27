@@ -22,10 +22,15 @@ impl SegmentPlan for ForwardDodge {
     }
 
     fn end(&self) -> CarState {
+        assert!((self.start.vel.norm() - self.dodge.start_speed).abs() < 1.0);
+        assert!(self.dodge.end_speed >= self.dodge.start_speed);
+        let forward_axis = self.start.forward_axis_2d().unwrap();
+        let vel =
+            self.start.vel.to_2d() + forward_axis * (self.dodge.end_speed - self.dodge.start_speed);
         CarState2D {
-            loc: self.start.loc.to_2d() + self.start.vel.to_2d().normalize() * self.dodge.end_dist,
+            loc: self.start.loc.to_2d() + vel.normalize() * self.dodge.end_dist,
             rot: self.start.rot.to_2d(),
-            vel: self.start.vel.to_2d().normalize() * self.dodge.end_speed,
+            vel,
             boost: self.start.boost,
         }
         .to_3d()
@@ -98,5 +103,28 @@ impl SegmentRunner for ForwardDodgeRunner {
             Action::Return => SegmentRunAction::Success,
             Action::Abort => SegmentRunAction::Failure,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use nalgebra::{Point2, UnitComplex, Vector2};
+    use simulate::CarForwardDodge;
+
+    #[test]
+    fn zero_vel() {
+        let start = CarState2D {
+            loc: Point2::origin(),
+            rot: UnitComplex::identity(),
+            vel: Vector2::zeros(),
+            boost: 0.0,
+        }
+        .to_3d();
+        let dodge = CarForwardDodge::calc_1d(0.0);
+        let segment = ForwardDodge::new(start, dodge);
+        let end = segment.end();
+        assert!(end.loc.x >= 500.0);
+        assert_eq!(end.vel.x, 500.0);
     }
 }

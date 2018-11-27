@@ -14,6 +14,7 @@ impl CarForwardDodge {
         let land_loc = dodge_loc + dodge_vel * LANDING_TIME;
 
         CarForwardDodge1D {
+            start_speed,
             end_dist: land_loc,
             end_speed: dodge_vel,
             jump_duration: JUMP_TIME,
@@ -25,6 +26,7 @@ impl CarForwardDodge {
 
 #[derive(Clone)]
 pub struct CarForwardDodge1D {
+    pub start_speed: f32,
     pub end_dist: f32,
     pub end_speed: f32,
     pub jump_duration: f32,

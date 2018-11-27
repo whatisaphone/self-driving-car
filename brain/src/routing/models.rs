@@ -52,6 +52,8 @@ impl CarState2D {
     }
 
     pub fn to_3d(&self) -> CarState {
+        assert!(!self.loc.x.is_nan());
+        assert!(!self.vel.x.is_nan());
         CarState {
             loc: self.loc.to_3d(rl::OCTANE_NEUTRAL_Z),
             rot: self.rot.around_z_axis(),
