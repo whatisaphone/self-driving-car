@@ -60,7 +60,7 @@ impl Car1Dv2 {
             return; // Rigorously simulate zero time elapsing.
         }
 
-        if boost && self.boost == 0.0 {
+        if boost && self.boost <= EPS {
             boost = false;
         }
 
@@ -75,7 +75,7 @@ impl Car1Dv2 {
         assert!(curve.dt >= 0.0 && curve.dt <= dt + EPS);
         assert!(curve.distance >= 0.0 && curve.distance <= dt * rl::CAR_MAX_SPEED * 1.01);
         assert!(curve.new_speed >= 0.0 && curve.new_speed <= rl::CAR_MAX_SPEED);
-        assert!(curve.boost_used >= 0.0 && curve.boost_used <= self.boost);
+        assert!(curve.boost_used >= 0.0 && curve.boost_used <= self.boost + EPS);
 
         self.time += curve.dt;
         self.distance += curve.distance;
@@ -93,7 +93,7 @@ impl Car1Dv2 {
     pub fn advance_by_distance(&mut self, distance: f32, throttle: f32, mut boost: bool) {
         assert!(distance > 0.0);
 
-        if boost && self.boost == 0.0 {
+        if boost && self.boost <= EPS {
             boost = false;
         }
 
@@ -105,7 +105,7 @@ impl Car1Dv2 {
         };
 
         // Some sanity checks.
-        assert!(curve.dt >= curve.distance / rl::CAR_MAX_SPEED);
+        assert!(curve.dt >= curve.distance / rl::CAR_MAX_SPEED - EPS);
         assert!(curve.distance >= 0.0 && curve.distance <= distance + EPS);
         assert!(curve.new_speed >= 0.0 && curve.new_speed <= rl::CAR_MAX_SPEED);
         assert!(curve.boost_used >= 0.0 && curve.boost_used <= self.boost);
@@ -194,6 +194,7 @@ impl Car1Dv2 {
     fn calc_throttle_by_distance(&self, distance: f32) -> CurveResult {
         let (dt, distance, new_speed) =
             Self::lookup_advance_by_distance(distance, self.speed, 1.0, false);
+
         CurveResult {
             dt,
             distance,
@@ -206,15 +207,21 @@ impl Car1Dv2 {
         let (dt, distance, new_speed) =
             Self::lookup_advance_by_distance(distance, self.speed, 1.0, true);
 
+        let boost_used = dt * rl::BOOST_DEPLETION;
+        if boost_used > self.boost {
+            return self.calc_boost_by_time(self.boost / rl::BOOST_DEPLETION);
+        }
+
         CurveResult {
             dt,
             distance,
             new_speed,
-            boost_used: dt * rl::BOOST_DEPLETION,
+            boost_used,
         }
     }
 
     fn calc_constant_speed_by_distance(&self, distance: f32, boost: bool) -> CurveResult {
+        assert!(self.speed >= rl::CAR_NORMAL_SPEED);
         let dt = distance / self.speed;
         self.calc_constant_speed_by_time(dt, boost)
     }
@@ -416,6 +423,13 @@ mod tests {
     }
 
     #[test]
+    fn advance_boost_supersonic_dont_trigger_assert_2() {
+        let mut car = Car1Dv2::new().with_speed(1673.71265).with_boost(3.00000286);
+        car.advance(0.125, 1.0, true);
+        assert!(car.boost().abs() <= EPS);
+    }
+
+    #[test]
     fn advance_boost_max_speed() {
         let mut car = Car1Dv2::new().with_speed(rl::CAR_MAX_SPEED);
         car.advance(DT, 1.0, true);
@@ -433,7 +447,7 @@ mod tests {
 
     #[test]
     fn advance_boost_supersonic_boost_underflow() {
-        let mut car = Car1Dv2::new().with_speed(2000.0).with_boost(0.001);
+        let mut car = Car1Dv2::new().with_speed(2000.0).with_boost(0.01);
         car.advance(DT, 1.0, true);
         assert!(2000.001 <= car.speed() && car.speed() < 2001.0);
         assert_eq!(car.boost(), 0.0);
@@ -446,7 +460,7 @@ mod tests {
             .with_boost(0.0001);
         car.advance(DT, 1.0, true);
         assert_eq!(car.speed(), rl::CAR_MAX_SPEED);
-        assert_eq!(car.boost(), 0.0);
+        assert!(car.boost().abs() <= EPS);
     }
 
     #[test]
@@ -500,12 +514,30 @@ mod tests {
     }
 
     #[test]
+    fn advance_by_distance_boost_with_low_boost_rest() {
+        let mut car = Car1Dv2::new().with_boost(10.0);
+        car.advance_by_distance(1000.0, 1.0, true);
+        assert!((car.distance() - 1000.0).abs() <= EPS);
+        assert!(1200.0 <= car.speed() && car.speed() < 1300.0);
+        assert_eq!(car.boost(), 0.0);
+    }
+
+    #[test]
+    fn advance_by_distance_boost_with_low_boost_slow() {
+        let mut car = Car1Dv2::new().with_speed(347.61176).with_boost(34.0);
+        car.advance_by_distance(5000.0, 1.0, true);
+        assert!((car.distance() - 5000.0).abs() <= EPS);
+        assert!(1700.0 <= car.speed() && car.speed() < 1800.0);
+        assert!(car.boost().abs() <= EPS);
+    }
+
+    #[test]
     fn advance_by_distance_boost_with_no_boost() {
         let mut car = Car1Dv2::new().with_speed(1000.0).with_boost(0.0);
         car.advance_by_distance(1000.0, 1.0, true);
         assert!((car.distance() - 1000.0).abs() <= EPS);
         assert!(1300.0 <= car.speed() && car.speed() < 1400.0);
-        assert_eq!(car.boost, 0.0);
+        assert_eq!(car.boost(), 0.0);
     }
 
     #[test]
@@ -515,5 +547,12 @@ mod tests {
         assert!((car.distance() - 8000.0).abs() <= EPS);
         assert_eq!(car.speed(), rl::CAR_MAX_SPEED);
         assert_eq!(car.boost(), 0.0);
+    }
+
+    #[test]
+    fn advance_by_distance_boost_almost_supersonic_dont_trigger_assert() {
+        let mut car = Car1Dv2::new().with_speed(2292.90942);
+        car.advance_by_distance(1000.0, 1.0, true);
+        assert_eq!(car.speed(), rl::CAR_MAX_SPEED);
     }
 }
