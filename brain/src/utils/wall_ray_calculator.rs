@@ -1,82 +1,62 @@
 use common::{prelude::*, rl};
 use nalgebra::{Isometry3, Point2, Vector2, Vector3};
 use ncollide3d::{
-    query::Ray,
-    shape::{Plane, ShapeHandle},
-    world::{CollisionGroups, CollisionWorld, GeometricQueryType},
+    query::{Ray, RayCast},
+    shape::Plane,
 };
+use ordered_float::NotNan;
 use strategy::Game;
-use utils::TotalF32;
 
 lazy_static! {
     static ref WALL_RAY_CALCULATOR: WallRayCalculator = WallRayCalculator::new();
 }
 
 pub struct WallRayCalculator {
-    world: CollisionWorld<f32, ()>,
+    walls: Vec<(Plane<f32>, Isometry3<f32>)>,
 }
 
 impl WallRayCalculator {
     fn new() -> Self {
-        let mut fixed = CollisionGroups::new();
-        fixed.set_membership(&[0]);
-
-        let mut world = CollisionWorld::new(1.0);
-        let exact = GeometricQueryType::Contacts(0.0, 0.0);
-        world.add(
-            Isometry3::new(Vector3::new(-rl::FIELD_MAX_X, 0.0, 0.0), Vector3::zeros()),
-            ShapeHandle::new(Plane::new(Vector3::x_axis())),
-            fixed,
-            exact,
-            (),
-        );
-        world.add(
-            Isometry3::new(Vector3::new(0.0, -rl::FIELD_MAX_Y, 0.0), Vector3::zeros()),
-            ShapeHandle::new(Plane::new(Vector3::y_axis())),
-            fixed,
-            exact,
-            (),
-        );
-        world.add(
-            Isometry3::new(Vector3::new(rl::FIELD_MAX_X, 0.0, 0.0), Vector3::zeros()),
-            ShapeHandle::new(Plane::new(-Vector3::x_axis())),
-            fixed,
-            exact,
-            (),
-        );
-        world.add(
-            Isometry3::new(Vector3::new(0.0, rl::FIELD_MAX_Y, 0.0), Vector3::zeros()),
-            ShapeHandle::new(Plane::new(-Vector3::y_axis())),
-            fixed,
-            exact,
-            (),
-        );
-        world.update();
-        Self { world }
+        let walls = vec![
+            (
+                Plane::new(Vector3::x_axis()),
+                Isometry3::new(Vector3::new(-rl::FIELD_MAX_X, 0.0, 0.0), Vector3::zeros()),
+            ),
+            (
+                Plane::new(Vector3::y_axis()),
+                Isometry3::new(Vector3::new(0.0, -rl::FIELD_MAX_Y, 0.0), Vector3::zeros()),
+            ),
+            (
+                Plane::new(-Vector3::x_axis()),
+                Isometry3::new(Vector3::new(rl::FIELD_MAX_X, 0.0, 0.0), Vector3::zeros()),
+            ),
+            (
+                Plane::new(-Vector3::y_axis()),
+                Isometry3::new(Vector3::new(0.0, rl::FIELD_MAX_Y, 0.0), Vector3::zeros()),
+            ),
+        ];
+        Self { walls }
     }
 
     pub fn calculate(from: Point2<f32>, to: Point2<f32>) -> Point2<f32> {
         let ray = Ray::new(from.to_3d(0.0), (to - from).to_3d(0.0));
-        let (_, intersect) = WALL_RAY_CALCULATOR
-            .world
-            .interferences_with_ray(&ray, &CollisionGroups::new())
-            .filter(|(cobj, _)| {
+        let toi = WALL_RAY_CALCULATOR
+            .walls
+            .iter()
+            .filter(|(_wall, m)| {
                 // Ignore walls that the `from` point is "behind"
-                if cobj.position().translation.vector.y == -rl::FIELD_MAX_Y
-                    && from.y < -rl::FIELD_MAX_Y
-                {
+                if m.translation.vector.y == -rl::FIELD_MAX_Y && from.y < -rl::FIELD_MAX_Y {
                     return false;
                 }
-                if cobj.position().translation.vector.y == rl::FIELD_MAX_Y
-                    && from.y > rl::FIELD_MAX_Y
-                {
+                if m.translation.vector.y == rl::FIELD_MAX_Y && from.y > rl::FIELD_MAX_Y {
                     return false;
                 }
                 true
             })
-            .min_by_key(|(_, intersect)| TotalF32(intersect.toi))
+            .filter_map(|(wall, m)| wall.toi_with_ray(m, &ray, false))
+            .min_by_key(|&toi| NotNan::new(toi).unwrap())
             .unwrap();
-        (ray.origin + ray.dir * intersect.toi).to_2d()
+        (ray.origin + ray.dir * toi).to_2d()
     }
 
     pub fn calc_ray(from: Point2<f32>, angle: f32) -> Vector2<f32> {
