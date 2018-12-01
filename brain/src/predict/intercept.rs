@@ -1,9 +1,10 @@
 use common::prelude::*;
 use nalgebra::{Point3, UnitQuaternion, Vector3};
-use plan::ball::{BallFrame, BallTrajectory};
+use plan::ball::BallFrame;
 use rlbot;
 use routing::models::CarState;
 use simulate::Car1Dv2;
+use std::borrow::Borrow;
 use strategy::Context;
 
 pub fn estimate_intercept_car_ball(
@@ -34,24 +35,16 @@ pub fn naive_ground_intercept<'a>(
         vel: start_vel,
         boost: start_boost,
     };
-    naive_ground_intercept_inner(
+    naive_ground_intercept_2(
         &start,
         ball,
         |ball| if predicate(ball) { Some(()) } else { None },
     )
 }
 
-pub fn naive_ground_intercept_2<T>(
+pub fn naive_ground_intercept_2<T, BF: Borrow<BallFrame>>(
     start: &CarState,
-    ball: &BallTrajectory,
-    predicate: impl Fn(&BallFrame) -> Option<T>,
-) -> Option<NaiveIntercept<T>> {
-    naive_ground_intercept_inner(start, ball.iter(), predicate)
-}
-
-fn naive_ground_intercept_inner<'a, T>(
-    start: &CarState,
-    mut ball: impl Iterator<Item = &'a BallFrame>,
+    ball: impl IntoIterator<Item = BF>,
     predicate: impl Fn(&BallFrame) -> Option<T>,
 ) -> Option<NaiveIntercept<T>> {
     // We don't want the center of the car to be at the center of the ball –
@@ -62,13 +55,15 @@ fn naive_ground_intercept_inner<'a, T>(
         .with_speed(start.vel.norm())
         .with_boost(start.boost);
 
-    let sim_ball = ball.find_map(|ball| {
+    let sim_ball = ball.into_iter().find_map(|ball| {
+        let ball = ball.borrow();
+
         sim_car.advance(ball.dt(), 1.0, true);
 
         let target_dist = (ball.loc - start.loc).to_2d().norm() - RADII;
         if sim_car.distance() >= target_dist {
-            if let Some(data) = predicate(ball) {
-                return Some((ball, data));
+            if let Some(data) = predicate(&ball) {
+                return Some((ball.clone(), data));
             }
         }
 

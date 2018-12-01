@@ -1,7 +1,7 @@
 use chip::Ball;
 use common::{prelude::*, rl};
 use nalgebra::{Point3, Vector3};
-use std::mem;
+use std::{iter::Cloned, mem, slice::Iter};
 use utils::TotalF32;
 
 const PREDICT_DURATION: f32 = 7.0;
@@ -85,6 +85,15 @@ impl BallTrajectory {
             return None;
         }
         Some(&self.frames[i])
+    }
+}
+
+impl<'a> IntoIterator for &'a BallTrajectory {
+    type Item = BallFrame;
+    type IntoIter = Cloned<Iter<'a, BallFrame>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.frames.iter().cloned()
     }
 }
 

@@ -19,10 +19,11 @@ impl Behavior for Offense {
     fn execute2(&mut self, ctx: &mut Context) -> Action {
         let me = ctx.me();
 
-        let intercept =
-            naive_ground_intercept_2(&me.into(), ctx.scenario.ball_prediction(), |ball| {
-                Shoot::viable_shot(ctx.game, me.Physics.locp(), ball.loc)
-            });
+        let intercept = naive_ground_intercept_2(
+            &me.into(),
+            ctx.scenario.ball_prediction().iter_step_by(0.125),
+            |ball| Shoot::viable_shot(ctx.game, me.Physics.locp(), ball.loc),
+        );
 
         if intercept.is_some() {
             ctx.eeg.log("[Offense] Taking the shot!");
