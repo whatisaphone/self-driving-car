@@ -57,11 +57,10 @@ that matches the name of the test.
 Adapt this command to your needs:
 
 ```sh
-cd brain
 vsperf="C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Team Tools\Performance Tools\VSPerf.exe"
 RUST_BACKTRACE=1 \
 "$vsperf" \
-    -launch:../target/debug/deps/brain-b7338d0ad12bc0e2.exe \
+    -launch:target/debug/deps/brain-a1b2c3.exe \
     -args:"--test-threads=1 recording_template --ignored"
 ```
 
