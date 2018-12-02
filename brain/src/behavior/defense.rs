@@ -18,6 +18,16 @@ impl Defense {
     pub fn new() -> Defense {
         Defense
     }
+
+    fn is_between_ball_and_own_goal(ctx: &mut Context) -> bool {
+        let goal_loc = ctx.game.own_goal().center_2d;
+        let ball_loc = ctx.packet.GameBall.Physics.loc_2d();
+        let goal_to_ball_axis = (ball_loc - goal_loc).to_axis();
+
+        let ball_dist = (ball_loc - goal_loc).dot(&goal_to_ball_axis);
+        let me_dist = (ctx.me().Physics.loc_2d() - goal_loc).dot(&goal_to_ball_axis);
+        ball_dist > me_dist
+    }
 }
 
 impl Behavior for Defense {
@@ -26,12 +36,8 @@ impl Behavior for Defense {
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {
-        let me = ctx.me();
-
-        // If we're not in goal, get there.
-        let own_goal = ctx.game.own_goal().center_2d;
-        let distance_to_goal = (own_goal.y - me.Physics.locp().y) * own_goal.y.signum();
-        if distance_to_goal >= 250.0 {
+        // If we're not between the ball and our goal, get there.
+        if !Self::is_between_ball_and_own_goal(ctx) {
             return Action::call(Retreat::new());
         }
 
@@ -627,5 +633,20 @@ mod integration_tests {
         assert!(packet.GameBall.Physics.Location.X < -1000.0);
         assert!(packet.GameBall.Physics.Velocity.X < -100.0);
         assert!(!test.enemy_has_scored());
+    }
+
+    /// This guards against a behavior where even a tiny touch by the enemy
+    /// triggers SameBallTrajectory and causes us to turn around and retreat
+    /// back to goal.
+    #[test]
+    fn defensive_confidence() {
+        let test = TestRunner::new()
+            .one_v_one(&*recordings::DEFENSIVE_CONFIDENCE, 24.0)
+            .starting_boost(65.0)
+            .behavior(Runner2::soccar())
+            .run_for_millis(3000);
+
+        let packet = test.sniff_packet();
+        assert!(packet.GameBall.Physics.Velocity.Y >= 500.0);
     }
 }
