@@ -3,7 +3,7 @@ extern crate csv;
 extern crate nalgebra;
 
 use common::prelude::*;
-use nalgebra::{Point2, Point3, Real, UnitComplex, UnitQuaternion, Vector2, Vector3};
+use nalgebra::{UnitComplex, UnitQuaternion};
 use std::{
     env,
     fmt::Write as FmtWrite,
@@ -226,60 +226,6 @@ trait ToSource {
 impl ToSource for f32 {
     fn to_source(&self) -> String {
         floatify(self.to_string())
-    }
-}
-
-impl<N: Real + ToSource> ToSource for Vector2<N> {
-    fn to_source(&self) -> String {
-        format!(
-            "Vector2::new({x}, {y})",
-            x = self.x.to_source(),
-            y = self.y.to_source(),
-        )
-    }
-}
-
-impl<N: Real + ToSource> ToSource for Vector3<N> {
-    fn to_source(&self) -> String {
-        format!(
-            "Vector3::new({x}, {y}, {z})",
-            x = self.x.to_source(),
-            y = self.y.to_source(),
-            z = self.z.to_source(),
-        )
-    }
-}
-
-impl<N: Real + ToSource> ToSource for Point2<N> {
-    fn to_source(&self) -> String {
-        format!(
-            "Point2::new({x}, {y})",
-            x = self.x.to_source(),
-            y = self.y.to_source(),
-        )
-    }
-}
-
-impl<N: Real + ToSource> ToSource for Point3<N> {
-    fn to_source(&self) -> String {
-        format!(
-            "Point3::new({x}, {y}, {z})",
-            x = self.x.to_source(),
-            y = self.y.to_source(),
-            z = self.z.to_source(),
-        )
-    }
-}
-
-impl<N: Real + ToSource> ToSource for UnitQuaternion<N> {
-    fn to_source(&self) -> String {
-        format!(
-            "UnitQuaternion::from_quaternion(Quaternion::new({w}, {x}, {y}, {z}))",
-            w = self.as_ref().coords.w.to_source(),
-            x = self.as_ref().coords.x.to_source(),
-            y = self.as_ref().coords.y.to_source(),
-            z = self.as_ref().coords.z.to_source(),
-        )
     }
 }
 
