@@ -14,7 +14,6 @@ use std::{error::Error, fs::File, thread::sleep, time::Duration};
 mod collector2;
 mod rlbot_ext;
 mod scenarios;
-mod scenarios_old;
 
 pub fn main() -> Result<(), Box<Error>> {
     let rlbot = rlbot::init()?;
