@@ -1,4 +1,4 @@
-use common::rl;
+use common::{math::fractionality, rl};
 use math::linear_interpolate;
 use oven::data;
 
@@ -56,7 +56,11 @@ impl Car1D {
     }
 
     pub fn multi_step(&mut self, time: f32, dt: f32, throttle: f32, boost: bool) {
-        let steps = (time / dt).round() as usize;
+        let steps = time / dt;
+        // Enforce integral steps.
+        assert!(fractionality(steps) <= 1e-6);
+        let steps = steps.round() as usize;
+
         for _ in 0..steps {
             self.step(dt, throttle, boost);
         }

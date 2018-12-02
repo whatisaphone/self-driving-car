@@ -12,6 +12,7 @@ pub use polyfill::ExtendDuration;
 pub use pretty::PrettyPrint;
 
 pub mod ext;
+pub mod math;
 pub mod physics;
 mod polyfill;
 pub mod prelude;

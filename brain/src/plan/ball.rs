@@ -1,5 +1,5 @@
 use chip::Ball;
-use common::{prelude::*, rl};
+use common::{math::fractionality, prelude::*, rl};
 use nalgebra::{Point3, Vector3};
 use std::{iter::Cloned, mem, slice::Iter};
 use utils::TotalF32;
@@ -41,11 +41,10 @@ impl BallTrajectory {
     }
 
     pub fn iter_step_by<'a>(&'a self, dt: f32) -> impl Iterator<Item = BallFrame> + 'a {
-        let factor_float = dt / self.frames[0].dt;
-        let factor = factor_float.round();
-
+        let factor = dt / self.frames[0].dt;
         // Enforce integral divisions.
-        assert!((factor_float - factor).abs() <= 1e-6);
+        assert!(fractionality(factor) <= 1e-6);
+        let factor = factor.round();
 
         self.frames
             .iter()
