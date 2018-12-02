@@ -6,7 +6,7 @@ use eeg::{color, Drawable};
 use maneuvers::{blocking_angle, BounceShot, GroundedHit};
 use nalgebra::{Point2, Point3, Rotation2, Vector2};
 use ordered_float::NotNan;
-use predict::{estimate_intercept_car_ball, Intercept};
+use predict::{intercept::NaiveIntercept, naive_ground_intercept_2};
 use routing::{behavior::FollowRoute, plan::GroundIntercept};
 use std::f32::consts::PI;
 use strategy::{Context, Scenario};
@@ -88,15 +88,17 @@ impl Behavior for PushToOwnCorner {
         };
 
         let me_intercept =
-            estimate_intercept_car_ball(ctx, ctx.me(), |_t, &loc, _vel| loc.z < Self::MAX_BALL_Z);
+            naive_ground_intercept_2(&ctx.me().into(), ctx.scenario.ball_prediction(), |ball| {
+                ball.loc.z < Self::MAX_BALL_Z
+            });
 
         let enemy_shootable_intercept = ctx
             .enemy_cars()
             .filter_map(|enemy| {
-                estimate_intercept_car_ball(ctx, enemy, |_t, &loc, _vel| {
+                naive_ground_intercept_2(&enemy.into(), ctx.scenario.ball_prediction(), |ball| {
                     let own_goal = ctx.game.own_goal().center_2d;
-                    loc.z < GroundedHit::max_ball_z()
-                        && Self::shot_angle(loc, enemy.Physics.locp(), own_goal) < PI / 2.0
+                    ball.loc.z < GroundedHit::max_ball_z()
+                        && Self::shot_angle(ball.loc, enemy.Physics.locp(), own_goal) < PI / 2.0
                 })
             })
             .min_by_key(|i| NotNan::new(i.time).unwrap());
@@ -105,7 +107,7 @@ impl Behavior for PushToOwnCorner {
             ctx.eeg
                 .log(format!("[Defense] me_intercept: {:.2}", i.time));
             ctx.eeg.draw(Drawable::GhostBall2(
-                i.ball_loc,
+                i.ball_loc.coords,
                 color::for_team(ctx.game.team),
             ));
         }
@@ -113,7 +115,7 @@ impl Behavior for PushToOwnCorner {
             ctx.eeg
                 .log(format!("[Defense] enemy_shoot_intercept: {:.2}", i.time));
             ctx.eeg.draw(Drawable::GhostBall2(
-                i.ball_loc,
+                i.ball_loc.coords,
                 color::for_team(ctx.game.enemy_team),
             ));
         }
@@ -166,10 +168,10 @@ impl Behavior for HitToOwnCorner {
     fn execute2(&mut self, ctx: &mut Context) -> Action {
         ctx.eeg.log("redirect to own corner");
 
-        let me = ctx.me();
-
         let intercept =
-            estimate_intercept_car_ball(ctx, me, |_t, &loc, _vel| loc.z < Self::MAX_BALL_Z);
+            naive_ground_intercept_2(&ctx.me().into(), ctx.scenario.ball_prediction(), |ball| {
+                ball.loc.z < Self::MAX_BALL_Z
+            });
 
         match intercept {
             None => Action::Return,
@@ -182,12 +184,12 @@ impl Behavior for HitToOwnCorner {
 }
 
 impl HitToOwnCorner {
-    fn aim_loc(ctx: &mut Context, intercept: &Intercept) -> Result<Point2<f32>, ()> {
+    fn aim_loc(ctx: &mut Context, intercept: &NaiveIntercept) -> Result<Point2<f32>, ()> {
         let avoid = ctx.game.own_goal().center_2d;
 
         let me = ctx.me();
         let me_loc = me.Physics.locp().to_2d();
-        let ball_loc = Point2::from(intercept.ball_loc.to_2d());
+        let ball_loc = intercept.ball_loc.to_2d();
         let me_to_ball = ball_loc - me_loc;
 
         let ltr_dir = Rotation2::new(PI / 6.0) * me_to_ball;
