@@ -55,8 +55,8 @@ impl Behavior for BounceShot {
         let intercept_car_loc = Self::rough_shooting_spot(&intercept, self.aim_loc);
         let distance = (ctx.me().Physics.locp().to_2d() - intercept_car_loc).norm();
 
-        ctx.eeg.draw(Drawable::Crosshair(self.aim_loc.coords));
-        ctx.eeg.draw(Drawable::GhostBall(intercept.ball_loc.coords));
+        ctx.eeg.draw(Drawable::Crosshair(self.aim_loc));
+        ctx.eeg.draw(Drawable::GhostBall(intercept.ball_loc));
         ctx.eeg.draw(Drawable::print(
             format!("intercept_time: {:.2}", intercept.time),
             color::GREEN,

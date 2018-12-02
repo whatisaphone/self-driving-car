@@ -33,7 +33,7 @@ impl Behavior for SkidRecover {
         let steer = me_rot.rotation_to(&future_rot).angle().max(-1.0).min(1.0);
 
         ctx.eeg.draw(Drawable::ghost_car_ground(
-            self.target_loc.coords,
+            self.target_loc,
             target_rot.around_z_axis().to_rotation_matrix(),
         ));
         ctx.eeg.draw(Drawable::Print(

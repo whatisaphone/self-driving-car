@@ -16,8 +16,10 @@ pub fn drive_towards(ctx: &mut Context, target_loc: Vector2<f32>) -> rlbot::ffi:
 
     ctx.eeg
         .draw(Drawable::print(stringify!(drive_towards), color::YELLOW));
-    ctx.eeg
-        .draw(Drawable::ghost_car_ground(target_loc, me.Physics.rot()));
+    ctx.eeg.draw(Drawable::ghost_car_ground(
+        Point2::from(target_loc),
+        me.Physics.rot(),
+    ));
 
     let handbrake_cutoff = linear_interpolate(
         &[0.0, rl::CAR_NORMAL_SPEED],

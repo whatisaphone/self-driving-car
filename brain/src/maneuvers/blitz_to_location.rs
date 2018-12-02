@@ -30,7 +30,7 @@ impl Behavior for BlitzToLocation {
         let steer = simple_steer_towards(&me.Physics, self.target_loc.coords);
 
         ctx.eeg.draw(Drawable::ghost_car_ground(
-            self.target_loc.coords,
+            self.target_loc,
             me.Physics.rot(),
         ));
         ctx.eeg.draw(Drawable::print(

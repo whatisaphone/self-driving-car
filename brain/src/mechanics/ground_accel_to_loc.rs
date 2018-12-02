@@ -3,7 +3,7 @@ use common::{prelude::*, rl};
 use eeg::{color, Drawable};
 use maneuvers::{drive_towards, GetToFlatGround};
 use mechanics::simple_yaw_diff;
-use nalgebra::Vector2;
+use nalgebra::{Point2, Vector2};
 use plan::drive::get_route_dodge;
 use rlbot;
 use simulate::Car1Dv2;
@@ -35,7 +35,7 @@ impl Behavior for GroundAccelToLoc {
         let time_remaining = self.target_time - ctx.packet.GameInfo.TimeSeconds;
 
         ctx.eeg.draw(Drawable::ghost_car_ground(
-            self.target_loc,
+            Point2::from(self.target_loc),
             me.Physics.rot(),
         ));
         ctx.eeg.draw(Drawable::print(

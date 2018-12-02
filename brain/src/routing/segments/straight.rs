@@ -152,10 +152,8 @@ impl SegmentRunner for StraightRunner {
         // on course quicker in case of any inaccuracies.
         let target_loc = self.plan.start.loc + start_to_end.normalize() * (cur_dist + 500.0);
 
-        ctx.eeg.draw(Drawable::ghost_car_ground(
-            target_loc.coords,
-            me.Physics.rot(),
-        ));
+        ctx.eeg
+            .draw(Drawable::ghost_car_ground(target_loc, me.Physics.rot()));
 
         SegmentRunAction::Yield(rlbot::ffi::PlayerInput {
             Throttle: 1.0,

@@ -3,7 +3,7 @@
 use common::{prelude::*, rl, PrettyPrint};
 use crossbeam_channel;
 use graphics::{types::Color, Transformed};
-use nalgebra::{Point2, Rotation3, Vector2, Vector3};
+use nalgebra::{Point2, Point3, Rotation3};
 use piston_window::{
     circle_arc, clear, ellipse, line, rectangle, text, AdvancedWindow, Ellipse, Glyphs, OpenGL,
     PistonWindow, Position, Rectangle, TextureSettings, WindowSettings,
@@ -112,17 +112,17 @@ impl DrawList {
 
 #[derive(Clone)]
 pub enum Drawable {
-    GhostBall(Vector3<f32>),
-    GhostBall2(Vector3<f32>, Color),
-    GhostCar(Vector3<f32>, Rotation3<f32>),
-    Crosshair(Vector2<f32>),
+    GhostBall(Point3<f32>),
+    GhostBall2(Point3<f32>, Color),
+    GhostCar(Point3<f32>, Rotation3<f32>),
+    Crosshair(Point2<f32>),
     Line(Point2<f32>, Point2<f32>, Color),
     Arc(Point2<f32>, f32, f32, f32, Color),
     Print(String, Color),
 }
 
 impl Drawable {
-    pub fn ghost_car_ground(loc: Vector2<f32>, rot: Rotation3<f32>) -> Drawable {
+    pub fn ghost_car_ground(loc: Point2<f32>, rot: Rotation3<f32>) -> Drawable {
         Drawable::GhostCar(loc.to_3d(rl::OCTANE_NEUTRAL_Z), rot)
     }
 

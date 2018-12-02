@@ -198,10 +198,8 @@ impl SegmentRunner for SimpleArcRunner {
 
         let target_loc = self.calculate_ahead_loc(car_loc, 15.0_f32.to_radians());
 
-        ctx.eeg.draw(Drawable::ghost_car_ground(
-            target_loc.coords,
-            me.Physics.rot(),
-        ));
+        ctx.eeg
+            .draw(Drawable::ghost_car_ground(target_loc, me.Physics.rot()));
 
         let rotation = car_forward_axis.unwrap().rotation_to(target_loc - car_loc);
         SegmentRunAction::Yield(rlbot::ffi::PlayerInput {

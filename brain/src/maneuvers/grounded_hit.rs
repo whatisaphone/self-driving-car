@@ -164,10 +164,10 @@ where
         ctx.eeg.print_time("intercept_time", intercept.time);
         ctx.eeg
             .print_value("intercept_loc_z", format!("{:.0}", intercept.ball_loc.z));
-        ctx.eeg.draw(Drawable::Crosshair(aim_loc.coords));
-        ctx.eeg.draw(Drawable::GhostBall(intercept.ball_loc.coords));
+        ctx.eeg.draw(Drawable::Crosshair(aim_loc));
+        ctx.eeg.draw(Drawable::GhostBall(intercept.ball_loc));
         ctx.eeg
-            .draw(Drawable::GhostCar(target_loc.coords, me.Physics.rot()));
+            .draw(Drawable::GhostCar(target_loc, me.Physics.rot()));
 
         Ok((target_loc, target_rot, dodge_angle))
     }
