@@ -73,13 +73,13 @@ where
     Some(intercept)
 }
 
-pub struct NaiveIntercept<T = ()> {
+pub struct NaiveIntercept<D = ()> {
     pub time: f32,
     pub ball_loc: Point3<f32>,
     pub ball_vel: Vector3<f32>,
     pub car_loc: Point3<f32>,
     pub car_speed: f32,
-    pub data: T,
+    pub data: D,
 }
 
 pub trait IntoInterceptData {
@@ -90,8 +90,12 @@ pub trait IntoInterceptData {
 impl IntoInterceptData for bool {
     type Data = ();
 
-    fn into_intercept_data(self) -> Option<<Self as IntoInterceptData>::Data> {
-        unimplemented!()
+    fn into_intercept_data(self) -> Option<Self::Data> {
+        if self {
+            Some(())
+        } else {
+            None
+        }
     }
 }
 
@@ -99,6 +103,6 @@ impl<T> IntoInterceptData for Option<T> {
     type Data = T;
 
     fn into_intercept_data(self) -> Option<Self::Data> {
-        unimplemented!()
+        self
     }
 }
