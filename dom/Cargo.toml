@@ -6,7 +6,7 @@ authors = ["John Simon <john@whatisaph.one>"]
 [dependencies]
 nalgebra = "0.16.0"
 
-rlbot = "0.1.1"
+rlbot = "0.2.0"
 
 common = { path = "../common" }
 

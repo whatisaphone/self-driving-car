@@ -10,7 +10,7 @@ ordered-float = "1.0.1"
 
 nalgebra = "0.16.0"
 
-rlbot = "0.1.1"
+rlbot = "0.2.0"
 
 common = { path = "../common" }
 
