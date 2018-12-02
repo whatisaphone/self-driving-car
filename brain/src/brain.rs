@@ -51,10 +51,7 @@ impl Brain {
 
     #[cfg(test)]
     pub fn with_behavior(behavior: impl Behavior + 'static) -> Self {
-        Self::new(
-            Runner2::with_current(behavior),
-            ::plan::ball::ChipBallPrediction::new(),
-        )
+        Self::new(Runner2::with_current(behavior), ChipBallPrediction::new())
     }
 
     #[cfg(test)]
