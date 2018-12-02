@@ -14,16 +14,8 @@ fn main() {
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
     let mut out = File::create(out_dir.join("recordings.rs")).unwrap();
 
-    writeln!(out, "use collect::RecordingRigidBodyState;\n").unwrap();
-    writeln!(out, "use models::OneVOneScenario;\n").unwrap();
-    writeln!(
-        out,
-        "use nalgebra::{{Point3, Quaternion, UnitQuaternion, Vector3}};\n"
-    )
-    .unwrap();
-    writeln!(out, "use rlbot::ffi::PlayerInput;\n").unwrap();
+    writeln!(out, "use models::OneVOneScenario;").unwrap();
     writeln!(out).unwrap();
-    writeln!(out, "lazy_static! {{").unwrap();
 
     for entry in csv_dir.read_dir().unwrap().map(Result::unwrap) {
         let filename = entry.file_name().into_string().unwrap();
@@ -36,14 +28,10 @@ fn main() {
         let mut r = csv::ReaderBuilder::new().from_reader(file);
         translate_csv(basename, &mut r, &mut out);
     }
-
-    writeln!(out, "}}").unwrap(); // lazy_static!
 }
 
 fn translate_csv(name: &str, csv: &mut csv::Reader<impl Read>, out: &mut impl Write) {
-    let name = name.to_ascii_uppercase();
-
-    let rows: Vec<_> = csv.records().collect();
+    let rows: Vec<_> = csv.records().map(Result::unwrap).collect();
     let headers = csv.headers().unwrap();
 
     macro_rules! column_index {
@@ -52,28 +40,26 @@ fn translate_csv(name: &str, csv: &mut csv::Reader<impl Read>, out: &mut impl Wr
         };
     }
 
-    macro_rules! write_float_array {
-        ($column:expr, $suffix:expr) => {
-            let i_col = column_index!($column);
+    macro_rules! col {
+        ($header:expr) => {{
+            let index = column_index!($header);
+            rows.iter().map(move |ref row| &row[index])
+        }};
+    }
 
-            writeln!(
-                out,
-                "pub static ref {}{}: [f32; {}] = [",
-                name,
-                $suffix,
-                rows.len()
-            )
-            .unwrap();
-            for row in rows.iter() {
-                let row = row.as_ref().unwrap();
-                writeln!(out, "    {},", floatify(&row[i_col])).unwrap();
+    macro_rules! write_array {
+        ($name:expr, $type:expr, $items:expr $(,)*) => {
+            let items = $items;
+            writeln!(out, "    pub const {}: &[{}] = &[", $name, $type).unwrap();
+            for x in items {
+                writeln!(out, "        {},", x).unwrap();
             }
-            writeln!(out, "];\n").unwrap();
+            writeln!(out, "    ];\n").unwrap();
         };
     }
 
     macro_rules! write_player_input_array {
-        ($column_prefix:expr, $suffix:expr) => {
+        ($name:expr, $column_prefix:expr) => {
             let i_throttle = column_index!(concat!($column_prefix, "_throttle"));
             let i_steer = column_index!(concat!($column_prefix, "_steer"));
             let i_pitch = column_index!(concat!($column_prefix, "_pitch"));
@@ -85,116 +71,103 @@ fn translate_csv(name: &str, csv: &mut csv::Reader<impl Read>, out: &mut impl Wr
 
             writeln!(
                 out,
-                "pub static ref {}{}: [PlayerInput; {}] = [",
-                name,
-                $suffix,
-                rows.len()
+                "    pub const {}: &[rlbot::ffi::PlayerInput] = &[",
+                $name,
             )
             .unwrap();
             for row in rows.iter() {
-                let row = row.as_ref().unwrap();
-                writeln!(out, "    PlayerInput {{").unwrap();
-                writeln!(out, "        Throttle: {},", floatify(&row[i_throttle])).unwrap();
-                writeln!(out, "        Steer: {},", floatify(&row[i_steer])).unwrap();
-                writeln!(out, "        Pitch: {},", floatify(&row[i_pitch])).unwrap();
-                writeln!(out, "        Yaw: {},", floatify(&row[i_yaw])).unwrap();
-                writeln!(out, "        Roll: {},", floatify(&row[i_roll])).unwrap();
-                writeln!(out, "        Jump: {},", &row[i_jump]);
-                writeln!(out, "        Boost: {},", &row[i_boost]);
-                writeln!(out, "        Handbrake: {},", &row[i_handbrake]);
-                writeln!(out, "    }},").unwrap();
+                writeln!(out, "        rlbot::ffi::PlayerInput {{").unwrap();
+                writeln!(out, "            Throttle: {},", floatify(&row[i_throttle])).unwrap();
+                writeln!(out, "            Steer: {},", floatify(&row[i_steer])).unwrap();
+                writeln!(out, "            Pitch: {},", floatify(&row[i_pitch])).unwrap();
+                writeln!(out, "            Yaw: {},", floatify(&row[i_yaw])).unwrap();
+                writeln!(out, "            Roll: {},", floatify(&row[i_roll])).unwrap();
+                writeln!(out, "            Jump: {},", &row[i_jump]);
+                writeln!(out, "            Boost: {},", &row[i_boost]);
+                writeln!(out, "            Handbrake: {},", &row[i_handbrake]);
+                writeln!(out, "        }},").unwrap();
             }
-            writeln!(out, "];\n").unwrap();
+            writeln!(out, "    ];\n").unwrap();
         };
     }
 
     macro_rules! write_rigid_body_state_array {
-        ($column_prefix:expr, $suffix:expr) => {
-            let i_loc_x = column_index!(concat!($column_prefix, "_loc_x"));
-            let i_loc_y = column_index!(concat!($column_prefix, "_loc_y"));
-            let i_loc_z = column_index!(concat!($column_prefix, "_loc_z"));
-            let i_rot_x = column_index!(concat!($column_prefix, "_rot_x"));
-            let i_rot_y = column_index!(concat!($column_prefix, "_rot_y"));
-            let i_rot_z = column_index!(concat!($column_prefix, "_rot_z"));
-            let i_rot_w = column_index!(concat!($column_prefix, "_rot_w"));
-            let i_vel_x = column_index!(concat!($column_prefix, "_vel_x"));
-            let i_vel_y = column_index!(concat!($column_prefix, "_vel_y"));
-            let i_vel_z = column_index!(concat!($column_prefix, "_vel_z"));
-            let i_ang_vel_x = column_index!(concat!($column_prefix, "_ang_x"));
-            let i_ang_vel_y = column_index!(concat!($column_prefix, "_ang_y"));
-            let i_ang_vel_z = column_index!(concat!($column_prefix, "_ang_z"));
+        ($name:expr, $column_prefix:expr) => {
+            write_array!(format!("{}_LOC_X", $name), "f32", col!(format!("{}_loc_x", $column_prefix)).map(floatify));
+            write_array!(format!("{}_LOC_Y", $name), "f32", col!(format!("{}_loc_y", $column_prefix)).map(floatify));
+            write_array!(format!("{}_LOC_Z", $name), "f32", col!(format!("{}_loc_z", $column_prefix)).map(floatify));
+            write_array!(format!("{}_ROT_X", $name), "f32", col!(format!("{}_rot_x", $column_prefix)).map(floatify));
+            write_array!(format!("{}_ROT_Y", $name), "f32", col!(format!("{}_rot_y", $column_prefix)).map(floatify));
+            write_array!(format!("{}_ROT_Z", $name), "f32", col!(format!("{}_rot_z", $column_prefix)).map(floatify));
+            write_array!(format!("{}_ROT_W", $name), "f32", col!(format!("{}_rot_w", $column_prefix)).map(floatify));
+            write_array!(format!("{}_VEL_X", $name), "f32", col!(format!("{}_vel_x", $column_prefix)).map(floatify));
+            write_array!(format!("{}_VEL_Y", $name), "f32", col!(format!("{}_vel_y", $column_prefix)).map(floatify));
+            write_array!(format!("{}_VEL_Z", $name), "f32", col!(format!("{}_vel_z", $column_prefix)).map(floatify));
+            write_array!(format!("{}_ANG_VEL_X", $name), "f32", col!(format!("{}_ang_x", $column_prefix)).map(floatify));
+            write_array!(format!("{}_ANG_VEL_Y", $name), "f32", col!(format!("{}_ang_y", $column_prefix)).map(floatify));
+            write_array!(format!("{}_ANG_VEL_Z", $name), "f32", col!(format!("{}_ang_z", $column_prefix)).map(floatify));
 
-            writeln!(out, "pub static ref {}{}: [RecordingRigidBodyState; {}] = [", name, $suffix, rows.len()).unwrap();
-            for row in rows.iter() {
-                let row = row.as_ref().unwrap();
-                writeln!(out, "    RecordingRigidBodyState {{").unwrap();
-                writeln!(
-                    out,
-                    "        loc: Point3::new({x}, {y}, {z}),",
-                    x = floatify(&row[i_loc_x]),
-                    y = floatify(&row[i_loc_y]),
-                    z = floatify(&row[i_loc_z]),
-                )
-                .unwrap();
-                writeln!(
-                    out,
-                    "        rot: UnitQuaternion::from_quaternion(Quaternion::new({w}, {x}, {y}, {z})),",
-                    w = floatify(&row[i_rot_w]),
-                    x = floatify(&row[i_rot_x]),
-                    y = floatify(&row[i_rot_y]),
-                    z = floatify(&row[i_rot_z]),
-                )
-                .unwrap();
-                writeln!(
-                    out,
-                    "        vel: Vector3::new({x}, {y}, {z}),",
-                    x = floatify(&row[i_vel_x]),
-                    y = floatify(&row[i_vel_y]),
-                    z = floatify(&row[i_vel_z]),
-                )
-                .unwrap();
-                writeln!(
-                    out,
-                    "        ang_vel: Vector3::new({x}, {y}, {z}),",
-                    x = floatify(&row[i_ang_vel_x]),
-                    y = floatify(&row[i_ang_vel_y]),
-                    z = floatify(&row[i_ang_vel_z]),
-                )
-                .unwrap();
-                writeln!(out, "    }},").unwrap();
-            }
-            writeln!(out, "];\n").unwrap();
+            writeln!(out, "    lazy_static! {{").unwrap();
+            writeln!(out, "        pub static ref {name}_LOC: Vec<Point3<f32>> = {name}_LOC_X.iter().zip({name}_LOC_Y.iter()).zip({name}_LOC_Z.iter())", name = $name).unwrap();
+            writeln!(out, "            .map(|((&x, &y), &z)| Point3::new(x, y, z)).collect();").unwrap();
+            writeln!(out).unwrap();
+            writeln!(out, "        pub static ref {name}_ROT: Vec<UnitQuaternion<f32>> = {name}_ROT_X.iter().zip({name}_ROT_Y.iter()).zip({name}_ROT_Z.iter()).zip({name}_ROT_W.iter())", name = $name).unwrap();
+            writeln!(out, "            .map(|(((&x, &y), &z), &w)| UnitQuaternion::from_quaternion(Quaternion::new(w, x, y, z))).collect();").unwrap();
+            writeln!(out).unwrap();
+            writeln!(out, "        pub static ref {name}_VEL: Vec<Vector3<f32>> = {name}_VEL_X.iter().zip({name}_VEL_Y.iter()).zip({name}_VEL_Z.iter())", name = $name).unwrap();
+            writeln!(out, "            .map(|((&x, &y), &z)| Vector3::new(x, y, z)).collect();").unwrap();
+            writeln!(out).unwrap();
+            writeln!(out, "        pub static ref {name}_ANG_VEL: Vec<Vector3<f32>> = {name}_ANG_VEL_X.iter().zip({name}_ANG_VEL_Y.iter()).zip({name}_ANG_VEL_Z.iter())", name = $name).unwrap();
+            writeln!(out, "            .map(|((&x, &y), &z)| Vector3::new(x, y, z)).collect();").unwrap();
+            writeln!(out).unwrap();
+            writeln!(out, "        pub static ref {name}: Vec<RecordingRigidBodyState> = {name}_LOC.iter().zip({name}_ROT.iter()).zip({name}_VEL.iter()).zip({name}_ANG_VEL.iter())", name = $name).unwrap();
+            writeln!(out, "            .map(|(((&loc, &rot), &vel), &ang_vel)| RecordingRigidBodyState {{").unwrap();
+            writeln!(out, "                loc, rot, vel, ang_vel,").unwrap();
+            writeln!(out, "            }})").unwrap();
+            writeln!(out, "            .collect();").unwrap();
+            writeln!(out, "    }}\n").unwrap(); // lazy_static!
         };
     }
 
     macro_rules! write_one_v_one {
         () => {
+            writeln!(out, "lazy_static! {{").unwrap();
             writeln!(
                 out,
-                "pub static ref {}: OneVOneScenario<'static> = OneVOneScenario {{",
+                "    pub static ref {}: OneVOneScenario<'static> = OneVOneScenario {{",
+                name.to_ascii_uppercase(),
+            )
+            .unwrap();
+            writeln!(out, "        times: &{}::TIME,", name).unwrap();
+            writeln!(out, "        ball_states: &{}::BALL,", name).unwrap();
+            writeln!(
+                out,
+                "        car_initial_state: {}::PLAYER0_STATE[0].clone(),",
                 name,
             )
             .unwrap();
-            writeln!(out, "    times: &{}_TIME[..],", name).unwrap();
-            writeln!(out, "    ball_states: &{}_BALL[..],", name).unwrap();
-            writeln!(
-                out,
-                "    car_initial_state: {}_PLAYER0_STATE[0].clone(),",
-                name
-            )
-            .unwrap();
-            writeln!(out, "    enemy_inputs: &{}_PLAYER1_INPUT[..],", name).unwrap();
-            writeln!(out, "    enemy_states: &{}_PLAYER1_STATE[..],", name).unwrap();
-            writeln!(out, "}};").unwrap();
+            writeln!(out, "        enemy_inputs: &{}::PLAYER1_INPUT,", name).unwrap();
+            writeln!(out, "        enemy_states: &{}::PLAYER1_STATE,", name).unwrap();
+            writeln!(out, "    }};").unwrap(); // OneVOneScenario
+            writeln!(out, "}}\n").unwrap(); // lazy_static!
         };
     }
 
-    write_float_array!("time", "_TIME");
-    write_rigid_body_state_array!("ball", "_BALL");
-    write_player_input_array!("player0", "_PLAYER0_INPUT");
-    write_rigid_body_state_array!("player0", "_PLAYER0_STATE");
-    write_player_input_array!("player1", "_PLAYER1_INPUT");
-    write_rigid_body_state_array!("player1", "_PLAYER1_STATE");
+    writeln!(out, "mod {} {{", name).unwrap();
+    writeln!(out, "    use collect::RecordingRigidBodyState;").unwrap();
+    writeln!(
+        out,
+        "    use nalgebra::{{Point3, Quaternion, UnitQuaternion, Vector3}};",
+    )
+    .unwrap();
+    writeln!(out).unwrap();
+    write_array!("TIME", "f32", col!("time").map(floatify));
+    write_rigid_body_state_array!("BALL", "ball");
+    write_player_input_array!("PLAYER0_INPUT", "player0");
+    write_rigid_body_state_array!("PLAYER0_STATE", "player0");
+    write_player_input_array!("PLAYER1_INPUT", "player1");
+    write_rigid_body_state_array!("PLAYER1_STATE", "player1");
+    writeln!(out, "}}\n").unwrap(); // mod
     write_one_v_one!();
 }
 
