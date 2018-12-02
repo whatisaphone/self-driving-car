@@ -4,17 +4,14 @@
 #![allow(dead_code)]
 
 use common::{prelude::*, rl};
-use game_state::{
-    DesiredBallState, DesiredCarState, DesiredGameState, DesiredPhysics, RotatorPartial,
-    Vector3Partial,
-};
+use nalgebra::{Point3, Vector3};
 use rlbot;
 use std::{error::Error, f32::consts::PI, fmt};
 
 pub trait Scenario {
     fn name(&self) -> String;
 
-    fn initial_state(&self) -> DesiredGameState {
+    fn initial_state(&self) -> rlbot::state::DesiredGameState {
         game_state_default()
     }
 
@@ -35,7 +32,7 @@ pub enum ScenarioStepResult {
 pub trait SimpleScenario {
     fn name(&self) -> String;
 
-    fn initial_state(&self) -> DesiredGameState {
+    fn initial_state(&self) -> rlbot::state::DesiredGameState {
         game_state_default()
     }
 
@@ -53,7 +50,7 @@ impl<S: SimpleScenario> Scenario for S {
         self.name()
     }
 
-    fn initial_state(&self) -> DesiredGameState {
+    fn initial_state(&self) -> rlbot::state::DesiredGameState {
         self.initial_state()
     }
 
@@ -77,28 +74,39 @@ impl<S: SimpleScenario> Scenario for S {
     }
 }
 
-fn game_state_default() -> DesiredGameState {
-    DesiredGameState {
-        ball_state: Some(DesiredBallState {
-            physics: Some(DesiredPhysics {
-                location: Some(Vector3Partial::new(2000.0, 0.0, 0.0)),
-                rotation: Some(RotatorPartial::new(0.0, 0.0, 0.0)),
-                velocity: Some(Vector3Partial::new(0.0, 0.0, 0.0)),
-                angular_velocity: Some(Vector3Partial::new(0.0, 0.0, 0.0)),
-            }),
-        }),
-        car_states: vec![DesiredCarState {
-            physics: Some(DesiredPhysics {
-                location: Some(Vector3Partial::new(0.0, 0.0, 17.01)),
-                rotation: Some(RotatorPartial::new(0.0, PI / 2.0, 0.0)),
-                velocity: Some(Vector3Partial::new(0.0, 0.0, 0.0)),
-                angular_velocity: Some(Vector3Partial::new(0.0, 0.0, 0.0)),
-            }),
-            boost_amount: Some(100.0),
-            jumped: Some(false),
-            double_jumped: Some(false),
-        }],
-    }
+fn game_state_default() -> rlbot::state::DesiredGameState {
+    rlbot::state::DesiredGameState::new()
+        .ball_state(
+            rlbot::state::DesiredBallState::new().physics(
+                rlbot::state::DesiredPhysics::new()
+                    .location(Point3::new(2000.0, 0.0, 0.0))
+                    .rotation(
+                        rlbot::state::RotatorPartial::new()
+                            .pitch(0.0)
+                            .yaw(0.0)
+                            .roll(0.0),
+                    )
+                    .velocity(Vector3::new(0.0, 0.0, 0.0))
+                    .angular_velocity(Vector3::new(0.0, 0.0, 0.0)),
+            ),
+        )
+        .car_state(
+            0,
+            rlbot::state::DesiredCarState::new()
+                .physics(
+                    rlbot::state::DesiredPhysics::new()
+                        .location(Point3::new(2000.0, 0.0, 17.01))
+                        .rotation(
+                            rlbot::state::RotatorPartial::new()
+                                .pitch(0.0)
+                                .yaw(PI / 2.0)
+                                .roll(0.0),
+                        )
+                        .velocity(Vector3::new(0.0, 0.0, 0.0))
+                        .angular_velocity(Vector3::new(0.0, 0.0, 0.0)),
+                )
+                .boost_amount(100.0),
+        )
 }
 
 pub struct Throttle {
@@ -152,10 +160,20 @@ impl SimpleScenario for Coast {
         "coast".to_string()
     }
 
-    fn initial_state(&self) -> DesiredGameState {
+    fn initial_state(&self) -> rlbot::state::DesiredGameState {
         let mut state = game_state_default();
-        state.car_states[0].physics.as_mut().unwrap().location =
-            Some(Vector3Partial::new(0.0, -5000.0, 17.01));
+        state.car_states[0]
+            .as_mut()
+            .unwrap()
+            .physics
+            .as_mut()
+            .unwrap()
+            .location = Some(
+            rlbot::state::Vector3Partial::new()
+                .x(0.0)
+                .y(-5000.0)
+                .z(17.01),
+        );
         state
     }
 
@@ -262,10 +280,20 @@ impl Scenario for PowerslideTurn {
         )
     }
 
-    fn initial_state(&self) -> DesiredGameState {
+    fn initial_state(&self) -> rlbot::state::DesiredGameState {
         let mut state = game_state_default();
-        state.car_states[0].physics.as_mut().unwrap().location =
-            Some(Vector3Partial::new(0.0, -5000.0, 0.0));
+        state.car_states[0]
+            .as_mut()
+            .unwrap()
+            .physics
+            .as_mut()
+            .unwrap()
+            .location = Some(
+            rlbot::state::Vector3Partial::new()
+                .x(0.0)
+                .y(-5000.0)
+                .z(17.01),
+        );
         state
     }
 
@@ -446,12 +474,27 @@ impl fmt::Display for AirAxis {
     }
 }
 
-fn game_state_default_air() -> DesiredGameState {
+fn game_state_default_air() -> rlbot::state::DesiredGameState {
     let mut state = game_state_default();
-    state.car_states[0].physics.as_mut().unwrap().location =
-        Some(Vector3Partial::new(0.0, 0.0, 1000.0));
-    state.car_states[0].physics.as_mut().unwrap().rotation =
-        Some(RotatorPartial::new(0.0, 0.0, 0.0));
+    state.car_states[0]
+        .as_mut()
+        .unwrap()
+        .physics
+        .as_mut()
+        .unwrap()
+        .location = Some(rlbot::state::Vector3Partial::new().x(0.0).y(0.0).z(1000.0));
+    state.car_states[0]
+        .as_mut()
+        .unwrap()
+        .physics
+        .as_mut()
+        .unwrap()
+        .rotation = Some(
+        rlbot::state::RotatorPartial::new()
+            .pitch(0.0)
+            .yaw(0.0)
+            .roll(0.0),
+    );
     state
 }
 
@@ -474,7 +517,7 @@ impl Scenario for AirRotateAccel {
         format!("air_rotate_{}_accel", self.axis)
     }
 
-    fn initial_state(&self) -> DesiredGameState {
+    fn initial_state(&self) -> rlbot::state::DesiredGameState {
         game_state_default_air()
     }
 
@@ -519,7 +562,7 @@ impl Scenario for AirRotateCoast {
         format!("air_rotate_{}_coast", self.axis)
     }
 
-    fn initial_state(&self) -> DesiredGameState {
+    fn initial_state(&self) -> rlbot::state::DesiredGameState {
         game_state_default_air()
     }
 
@@ -569,7 +612,7 @@ impl Scenario for AirRotateCounter {
         format!("air_rotate_{}_counter", self.axis)
     }
 
-    fn initial_state(&self) -> DesiredGameState {
+    fn initial_state(&self) -> rlbot::state::DesiredGameState {
         game_state_default_air()
     }
 

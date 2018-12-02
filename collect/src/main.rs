@@ -7,13 +7,11 @@ extern crate nalgebra;
 extern crate rlbot;
 
 use collector2::Collector;
-use game_state::DesiredGameState;
 use rlbot_ext::get_packet_and_inject_rigid_body_tick;
 use scenarios::{Scenario, ScenarioStepResult};
 use std::{error::Error, fs::File, thread::sleep, time::Duration};
 
 mod collector2;
-mod game_state;
 mod rlbot_ext;
 mod scenarios;
 mod scenarios_old;
@@ -33,7 +31,7 @@ pub fn main() -> Result<(), Box<Error>> {
 }
 
 fn run_scenario(rlbot: &rlbot::RLBot, mut scenario: impl Scenario) -> Result<(), Box<Error>> {
-    stabilize_scenario(&rlbot, &scenario.initial_state());
+    stabilize_scenario(&rlbot, scenario.initial_state());
 
     let f = File::create(format!("oven/data/{}.csv", scenario.name()))?;
     let mut collector = Collector::new(f);
@@ -93,9 +91,10 @@ fn wait_for_match_start(rlbot: &rlbot::RLBot) -> Result<(), Box<Error>> {
     Ok(())
 }
 
-fn stabilize_scenario(rlbot: &rlbot::RLBot, desired_game_state: &DesiredGameState) {
-    let buffer = desired_game_state.serialize();
-    rlbot.set_game_state(buffer.finished_data()).unwrap();
+fn stabilize_scenario(rlbot: &rlbot::RLBot, desired_game_state: rlbot::state::DesiredGameState) {
+    rlbot
+        .set_game_state_struct(desired_game_state.clone())
+        .unwrap();
     sleep(Duration::from_millis(2000));
-    rlbot.set_game_state(buffer.finished_data()).unwrap();
+    rlbot.set_game_state_struct(desired_game_state).unwrap();
 }

@@ -8,7 +8,6 @@ use collect::{
 use common::{ext::ExtendRLBot, prelude::*};
 use crossbeam_channel;
 use eeg::EEG;
-use flatbuffers::{FlatBufferBuilder, WIPOffset};
 use nalgebra::{Point3, Rotation3, UnitQuaternion, Vector3};
 use ordered_float::NotNan;
 use rlbot;
@@ -373,6 +372,7 @@ fn test_thread(
         car_scenario.initial_state(),
         car_scenario.starting_boost,
         enemy_scenario.initial_state(),
+        enemy_scenario.starting_boost,
     );
 
     let first_packet = {
@@ -440,11 +440,26 @@ fn setup_scenario(
     car: &RecordingRigidBodyState,
     car_boost_amount: f32,
     enemy: &RecordingRigidBodyState,
+    enemy_boost_amount: f32,
 ) {
-    set_state(rlbot, ball, car, car_boost_amount, enemy);
+    set_state(
+        rlbot,
+        ball,
+        car,
+        car_boost_amount,
+        enemy,
+        enemy_boost_amount,
+    );
     // Wait for car suspension to settle to neutral, then set it again.
     sleep(Duration::from_millis(1000));
-    set_state(rlbot, ball, car, car_boost_amount, enemy);
+    set_state(
+        rlbot,
+        ball,
+        car,
+        car_boost_amount,
+        enemy,
+        enemy_boost_amount,
+    );
 
     // Wait a few frames for the state to take effect.
     rlbot.packeteer().next().unwrap();
@@ -459,92 +474,47 @@ fn set_state(
     car: &RecordingRigidBodyState,
     car_boost_amount: f32,
     enemy: &RecordingRigidBodyState,
+    enemy_boost_amount: f32,
 ) {
-    let mut builder = FlatBufferBuilder::new_with_capacity(1024);
+    let ball_state = rlbot::state::DesiredBallState::new().physics(
+        rlbot::state::DesiredPhysics::new()
+            .location(ball.loc)
+            .rotation(rotator(ball.rot))
+            .velocity(ball.vel)
+            .angular_velocity(ball.ang_vel),
+    );
+    let car_state = rlbot::state::DesiredCarState::new()
+        .physics(
+            rlbot::state::DesiredPhysics::new()
+                .location(car.loc)
+                .rotation(rotator(car.rot))
+                .velocity(car.vel)
+                .angular_velocity(car.ang_vel),
+        )
+        .boost_amount(car_boost_amount);
+    let enemy_state = rlbot::state::DesiredCarState::new()
+        .physics(
+            rlbot::state::DesiredPhysics::new()
+                .location(enemy.loc)
+                .rotation(rotator(enemy.rot))
+                .velocity(enemy.vel)
+                .angular_velocity(enemy.ang_vel),
+        )
+        .boost_amount(enemy_boost_amount);
+    let game_state = rlbot::state::DesiredGameState::new()
+        .ball_state(ball_state)
+        .car_state(0, car_state)
+        .car_state(1, enemy_state);
 
-    let physics = desired_physics(&mut builder, ball.loc, ball.rot, ball.vel, ball.ang_vel);
-    let ball_state = {
-        let mut b = rlbot::flat::DesiredBallStateBuilder::new(&mut builder);
-        b.add_physics(physics);
-        b.finish()
-    };
-
-    let physics = desired_physics(&mut builder, car.loc, car.rot, car.vel, car.ang_vel);
-    let car_state = {
-        let boost_amount = rlbot::flat::Float::new(car_boost_amount);
-        let mut b = rlbot::flat::DesiredCarStateBuilder::new(&mut builder);
-        b.add_physics(physics);
-        b.add_boostAmount(&boost_amount);
-        b.finish()
-    };
-
-    let physics = desired_physics(&mut builder, enemy.loc, enemy.rot, enemy.vel, enemy.ang_vel);
-    let enemy_state = {
-        let boost_amount = rlbot::flat::Float::new(100.0);
-        let mut b = rlbot::flat::DesiredCarStateBuilder::new(&mut builder);
-        b.add_physics(physics);
-        b.add_boostAmount(&boost_amount);
-        b.finish()
-    };
-
-    let car_states = builder.create_vector(&[car_state, enemy_state]);
-    let desired_game_state = {
-        let mut b = rlbot::flat::DesiredGameStateBuilder::new(&mut builder);
-        b.add_ballState(ball_state);
-        b.add_carStates(car_states);
-        b.finish()
-    };
-
-    builder.finish(desired_game_state, None);
-    rlbot.set_game_state(builder.finished_data()).unwrap()
+    rlbot.set_game_state_struct(game_state).unwrap();
 }
 
-fn desired_physics<'a, 'b>(
-    builder: &'b mut FlatBufferBuilder<'a>,
-    loc: Point3<f32>,
-    rot: UnitQuaternion<f32>,
-    vel: Vector3<f32>,
-    ang_vel: Vector3<f32>,
-) -> WIPOffset<rlbot::flat::DesiredPhysics<'a>> {
-    let loc = vector3(builder, loc.coords);
-    let rot = rotator(builder, rot);
-    let vel = vector3(builder, vel);
-    let ang_vel = vector3(builder, ang_vel);
-    let mut b = rlbot::flat::DesiredPhysicsBuilder::new(builder);
-    b.add_location(loc);
-    b.add_rotation(rot);
-    b.add_velocity(vel);
-    b.add_angularVelocity(ang_vel);
-    b.finish()
-}
-
-fn vector3<'a, 'b>(
-    builder: &'b mut FlatBufferBuilder<'a>,
-    v: Vector3<f32>,
-) -> WIPOffset<rlbot::flat::Vector3Partial<'a>> {
-    rlbot::flat::Vector3Partial::create(
-        builder,
-        &rlbot::flat::Vector3PartialArgs {
-            x: Some(&rlbot::flat::Float::new(v.x)),
-            y: Some(&rlbot::flat::Float::new(v.y)),
-            z: Some(&rlbot::flat::Float::new(v.z)),
-        },
-    )
-}
-
-fn rotator<'a, 'b>(
-    builder: &'b mut FlatBufferBuilder<'a>,
-    r: UnitQuaternion<f32>,
-) -> WIPOffset<rlbot::flat::RotatorPartial<'a>> {
-    let rotation = r.to_rotation_matrix();
-    rlbot::flat::RotatorPartial::create(
-        builder,
-        &rlbot::flat::RotatorPartialArgs {
-            pitch: Some(&rlbot::flat::Float::new(rotation.pitch())),
-            yaw: Some(&rlbot::flat::Float::new(rotation.yaw())),
-            roll: Some(&rlbot::flat::Float::new(rotation.roll())),
-        },
-    )
+fn rotator(r: UnitQuaternion<f32>) -> rlbot::state::RotatorPartial {
+    let (pitch, yaw, roll) = r.to_rotation_matrix().to_unreal_angles();
+    rlbot::state::RotatorPartial::new()
+        .pitch(pitch)
+        .yaw(yaw)
+        .roll(roll)
 }
 
 pub struct TestScenario {
@@ -719,23 +689,16 @@ impl BallDirector {
         let state = &self.scenario.states[index];
         let current_loc = packet.GameBall.Physics.locp();
         if (state.loc - current_loc).norm() >= RECORDING_DISTANCE_THRESHOLD {
-            let mut builder = FlatBufferBuilder::new_with_capacity(1024);
+            let ball_state = rlbot::state::DesiredBallState::new().physics(
+                rlbot::state::DesiredPhysics::new()
+                    .location(state.loc)
+                    .rotation(rotator(state.rot))
+                    .velocity(state.vel)
+                    .angular_velocity(state.ang_vel),
+            );
+            let game_state = rlbot::state::DesiredGameState::new().ball_state(ball_state);
 
-            let physics =
-                desired_physics(&mut builder, state.loc, state.rot, state.vel, state.ang_vel);
-            let desired_ball_state = {
-                let mut b = rlbot::flat::DesiredBallStateBuilder::new(&mut builder);
-                b.add_physics(physics);
-                b.finish()
-            };
-            let desired_game_state = {
-                let mut b = rlbot::flat::DesiredGameStateBuilder::new(&mut builder);
-                b.add_ballState(desired_ball_state);
-                b.finish()
-            };
-
-            builder.finish(desired_game_state, None);
-            rlbot.set_game_state(builder.finished_data()).unwrap();
+            rlbot.set_game_state_struct(game_state).unwrap();
         }
     }
 }
@@ -814,38 +777,17 @@ impl CarDirector {
 
         let current_loc = packet.GameCars[self.player_index as usize].Physics.locp();
         if (tick.state.loc - current_loc).norm() >= RECORDING_DISTANCE_THRESHOLD {
-            let mut builder = FlatBufferBuilder::new_with_capacity(1024);
-
-            let mut car_states = Vec::new();
-
-            // Push empty states to pad out the array so we target the right index
-            for _ in 0..self.player_index {
-                car_states.push(rlbot::flat::DesiredCarStateBuilder::new(&mut builder).finish());
-            }
-
-            let physics = desired_physics(
-                &mut builder,
-                tick.state.loc,
-                tick.state.rot,
-                tick.state.vel,
-                tick.state.ang_vel,
+            let car_state = rlbot::state::DesiredCarState::new().physics(
+                rlbot::state::DesiredPhysics::new()
+                    .location(tick.state.loc)
+                    .rotation(rotator(tick.state.rot))
+                    .velocity(tick.state.vel)
+                    .angular_velocity(tick.state.ang_vel),
             );
-            {
-                let boost_amount = rlbot::flat::Float::new(100.0);
-                let mut b = rlbot::flat::DesiredCarStateBuilder::new(&mut builder);
-                b.add_physics(physics);
-                b.add_boostAmount(&boost_amount);
-                car_states.push(b.finish());
-            };
-            let car_states = builder.create_vector(&car_states);
-            let desired_game_state = {
-                let mut b = rlbot::flat::DesiredGameStateBuilder::new(&mut builder);
-                b.add_carStates(car_states);
-                b.finish()
-            };
+            let game_state = rlbot::state::DesiredGameState::new()
+                .car_state(self.player_index as usize, car_state);
 
-            builder.finish(desired_game_state, None);
-            rlbot.set_game_state(builder.finished_data()).unwrap();
+            rlbot.set_game_state_struct(game_state).unwrap();
         }
     }
 }
