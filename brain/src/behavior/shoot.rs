@@ -24,7 +24,7 @@ impl Shoot {
         let aim_loc = BounceShot::aim_loc(game.enemy_goal(), car_loc.to_2d(), ball_loc.to_2d());
         let car_to_ball = ball_loc.to_2d() - car_loc.to_2d();
         let ball_to_goal = aim_loc - ball_loc.to_2d();
-        if car_to_ball.angle_to(ball_to_goal).abs() < PI / 6.0 {
+        if car_to_ball.rotation_to(ball_to_goal).angle().abs() < PI / 6.0 {
             return Some(Shot(aim_loc));
         }
 
