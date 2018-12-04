@@ -1,8 +1,23 @@
-use nalgebra::UnitQuaternion;
+use nalgebra::{Matrix3, Rotation3, UnitQuaternion};
 use prelude::*;
 
 pub fn convert_quat_to_pyr(quat: &UnitQuaternion<f32>) -> (f32, f32, f32) {
-    quat.to_rotation_matrix().to_unreal_angles()
+    clamp_rotation_matrix(quat.to_rotation_matrix()).to_unreal_angles()
+}
+
+/// Work around https://github.com/rustsim/nalgebra/issues/494
+fn clamp_rotation_matrix(r: Rotation3<f32>) -> Rotation3<f32> {
+    Rotation3::from_matrix_unchecked(Matrix3::new(
+        r[(0, 0)].max(-1.0).min(1.0),
+        r[(0, 1)].max(-1.0).min(1.0),
+        r[(0, 2)].max(-1.0).min(1.0),
+        r[(1, 0)].max(-1.0).min(1.0),
+        r[(1, 1)].max(-1.0).min(1.0),
+        r[(1, 2)].max(-1.0).min(1.0),
+        r[(2, 0)].max(-1.0).min(1.0),
+        r[(2, 1)].max(-1.0).min(1.0),
+        r[(2, 2)].max(-1.0).min(1.0),
+    ))
 }
 
 /// I am really not confident about these angle conversions, so let's test as
@@ -106,6 +121,14 @@ mod tests {
             assert!((yaw - case_yaw).abs() < EPS, "{}", yaw);
             assert!((roll - case_roll).abs() < EPS, "{}", roll);
         }
+    }
+
+    /// Check for https://github.com/rustsim/nalgebra/issues/494
+    #[test]
+    fn workaround_nan_bug() {
+        let quat = UnitQuaternion::xyzw(-0.6993922f32, -0.10406871, 0.69942284, -0.10405792);
+        let (pitch, _yaw, _roll) = rotation::convert_quat_to_pyr(&quat);
+        assert!(!pitch.is_nan());
     }
 
     // See also the tests for `dom::to_rotation_matrix`.

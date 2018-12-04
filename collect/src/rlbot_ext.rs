@@ -44,6 +44,7 @@ fn vector3(v: &rlbot::flat::Vector3) -> rlbot::ffi::Vector3 {
 fn rotator(q: &rlbot::flat::Quaternion) -> rlbot::ffi::Rotator {
     let quat = UnitQuaternion::xyzw(q.x(), q.y(), q.z(), q.w());
     let (pitch, yaw, roll) = rotation::convert_quat_to_pyr(&quat);
+    assert!(!pitch.is_nan());
     rlbot::ffi::Rotator {
         Pitch: pitch,
         Yaw: yaw,
