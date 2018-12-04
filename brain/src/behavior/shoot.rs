@@ -1,5 +1,5 @@
 use behavior::{Action, Behavior, Chain, Priority};
-use common::{prelude::*, rl};
+use common::prelude::*;
 use maneuvers::{BounceShot, GroundedHit};
 use nalgebra::{Point2, Point3};
 use predict::naive_ground_intercept_2;
@@ -26,25 +26,6 @@ impl Shoot {
         let ball_to_goal = aim_loc - ball_loc.to_2d();
         if car_to_ball.rotation_to(ball_to_goal).angle().abs() < PI / 6.0 {
             return Some(Shot(aim_loc));
-        }
-
-        // Evaluate bouncing it off the side wall. Pretend the goal is reflected across
-        // the wall, and then try aiming at the reflection.
-        let reflect_x = ball_loc.x.signum() * (game.field_max_x() - rl::BALL_RADIUS);
-        // The ball must be some distance away from the wall so we don't try to pinch.
-        if (ball_loc.x - reflect_x).abs() >= 50.0
-            // For now the bot doesn't know how to chip, so if the ball is on
-            // the ground and we try to reflect, we'll just roll it up the wall.
-            // Not a great shot.
-            && ball_loc.z >= 200.0
-        {
-            let aim_loc_x = reflect_x + reflect_x - game.enemy_goal().center_2d.x;
-            let aim_loc = Point2::new(aim_loc_x, game.enemy_goal().center_2d.y);
-            let car_to_ball = ball_loc.to_2d() - car_loc.to_2d();
-            let ball_to_goal = aim_loc - ball_loc.to_2d();
-            if car_to_ball.rotation_to(ball_to_goal).angle().abs() < PI / 6.0 {
-                return Some(Shot(aim_loc));
-            }
         }
 
         return None;
