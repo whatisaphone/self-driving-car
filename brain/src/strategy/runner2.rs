@@ -58,12 +58,10 @@ impl Runner2 {
             return Default::default();
         }
 
-        let action = {
-            let behavior = self.choose_behavior(ctx);
-            ctx.eeg
-                .draw(Drawable::print(behavior.name(), color::YELLOW));
-            behavior.execute2(ctx)
-        };
+        let behavior = self.choose_behavior(ctx);
+        ctx.eeg
+            .draw(Drawable::print(behavior.name(), color::YELLOW));
+        let action = behavior.execute2(ctx);
 
         match action {
             Action::Yield(i) => i,

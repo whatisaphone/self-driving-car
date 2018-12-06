@@ -62,18 +62,16 @@ impl FollowRoute {
     fn advance(&mut self, planner: &RoutePlanner, ctx: &mut Context) -> Result<(), Action> {
         assert!(self.current.is_none());
 
-        let mut log = Vec::new();
-        let plan = {
-            let context = PlanningContext {
-                game: &ctx.game,
-                start: ctx.me().into(),
-                ball_prediction: ctx.scenario.ball_prediction(),
-            };
-            let mut dump = PlanningDump { log: &mut log };
-            ctx.eeg
-                .log(format!("[FollowRoute] planning with {}", planner.name()));
-            planner.plan(&context, &mut dump)
+        let context = PlanningContext {
+            game: &ctx.game,
+            start: ctx.me().into(),
+            ball_prediction: ctx.scenario.ball_prediction(),
         };
+        let mut log = Vec::new();
+        let mut dump = PlanningDump { log: &mut log };
+        ctx.eeg
+            .log(format!("[FollowRoute] planning with {}", planner.name()));
+        let plan = planner.plan(&context, &mut dump);
         let plan = match plan {
             Ok(s) => s,
             Err(err) => return Err(self.handle_error(ctx, planner.name(), err, log)),
@@ -128,14 +126,11 @@ impl FollowRoute {
     }
 
     fn go(&mut self, ctx: &mut Context) -> Action {
-        let action = {
-            let current = self.current.as_mut().unwrap();
-            ctx.eeg
-                .draw(Drawable::print(current.plan.segment.name(), color::YELLOW));
-            current.runner.execute(ctx)
-        };
+        let current = self.current.as_mut().unwrap();
+        ctx.eeg
+            .draw(Drawable::print(current.plan.segment.name(), color::YELLOW));
 
-        let success = match action {
+        let success = match current.runner.execute(ctx) {
             SegmentRunAction::Yield(i) => return Action::Yield(i),
             SegmentRunAction::Success => true,
             SegmentRunAction::Failure => false,

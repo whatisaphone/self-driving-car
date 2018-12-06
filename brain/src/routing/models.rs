@@ -199,17 +199,14 @@ impl RoutePlan {
     ) -> Result<ProvisionalPlanExpansion, ProvisionalExpandError> {
         let mut tail = Vec::new();
         if let Some(ref planner) = self.next {
-            let mut log = Vec::new();
-            let expand_result = {
-                let context = PlanningContext {
-                    game: &scenario.game,
-                    start: self.segment.end(),
-                    ball_prediction: scenario.ball_prediction(),
-                };
-                let mut dump = PlanningDump { log: &mut log };
-                Self::expand_round(&**planner, &context, &mut dump, |s| tail.push(s))
+            let context = PlanningContext {
+                game: &scenario.game,
+                start: self.segment.end(),
+                ball_prediction: scenario.ball_prediction(),
             };
-            match expand_result {
+            let mut log = Vec::new();
+            let mut dump = PlanningDump { log: &mut log };
+            match Self::expand_round(&**planner, &context, &mut dump, |s| tail.push(s)) {
                 Ok(()) => {}
                 Err((planner_name, error)) => {
                     return Err(ProvisionalExpandError {

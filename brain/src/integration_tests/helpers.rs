@@ -377,10 +377,8 @@ fn test_thread(
         enemy_scenario.starting_boost,
     );
 
-    let first_packet = {
-        let rigid_body_tick = physicist.next_flat().unwrap();
-        get_packet_and_inject_rigid_body_tick(rlbot, rigid_body_tick).unwrap()
-    };
+    let rigid_body_tick = physicist.next_flat().unwrap();
+    let first_packet = get_packet_and_inject_rigid_body_tick(rlbot, rigid_body_tick).unwrap();
 
     brain.set_behavior(Fuse::new(behavior(&first_packet)), &mut eeg);
     ready_wait.wait();

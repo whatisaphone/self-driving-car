@@ -164,16 +164,13 @@ impl Behavior for Chain {
             color::GREEN,
         ));
 
-        let action = {
-            let front = match self.children.front_mut() {
-                None => return Action::Return,
-                Some(b) => b,
-            };
-            ctx.eeg.draw(Drawable::print(front.name(), color::YELLOW));
-            front.execute2(ctx)
+        let front = match self.children.front_mut() {
+            None => return Action::Return,
+            Some(b) => b,
         };
+        ctx.eeg.draw(Drawable::print(front.name(), color::YELLOW));
 
-        match action {
+        match front.execute2(ctx) {
             Action::Yield(x) => Action::Yield(x),
             Action::Call(b) => {
                 self.children[0] = b;
