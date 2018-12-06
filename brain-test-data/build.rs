@@ -1,3 +1,5 @@
+#![cfg_attr(feature = "strict", deny(warnings))]
+
 extern crate csv;
 
 use std::{
@@ -82,9 +84,9 @@ fn translate_csv(name: &str, csv: &mut csv::Reader<impl Read>, out: &mut impl Wr
                 writeln!(out, "            Pitch: {},", floatify(&row[i_pitch])).unwrap();
                 writeln!(out, "            Yaw: {},", floatify(&row[i_yaw])).unwrap();
                 writeln!(out, "            Roll: {},", floatify(&row[i_roll])).unwrap();
-                writeln!(out, "            Jump: {},", &row[i_jump]);
-                writeln!(out, "            Boost: {},", &row[i_boost]);
-                writeln!(out, "            Handbrake: {},", &row[i_handbrake]);
+                writeln!(out, "            Jump: {},", &row[i_jump]).unwrap();
+                writeln!(out, "            Boost: {},", &row[i_boost]).unwrap();
+                writeln!(out, "            Handbrake: {},", &row[i_handbrake]).unwrap();
                 writeln!(out, "        }},").unwrap();
             }
             writeln!(out, "    ];\n").unwrap();

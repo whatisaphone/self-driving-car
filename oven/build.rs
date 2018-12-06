@@ -1,3 +1,5 @@
+#![cfg_attr(feature = "strict", deny(warnings))]
+
 extern crate common;
 extern crate csv;
 extern crate nalgebra;
