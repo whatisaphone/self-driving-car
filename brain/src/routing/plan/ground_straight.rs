@@ -1,7 +1,4 @@
-use common::{prelude::*, PrettyPrint};
-use nalgebra::Point2;
-use ordered_float::NotNan;
-use routing::{
+use crate::routing::{
     models::{
         CarState, CarState2D, PlanningContext, PlanningDump, RoutePlan, RoutePlanError,
         RoutePlanner, SegmentPlan,
@@ -9,6 +6,9 @@ use routing::{
     recover::{IsSkidding, NotFacingTarget2D, NotOnFlatGround},
     segments::{Brake, Chain, ForwardDodge, Straight, StraightMode},
 };
+use common::{prelude::*, PrettyPrint};
+use nalgebra::Point2;
+use ordered_float::NotNan;
 use simulate::{Car1Dv2, CarForwardDodge, CarForwardDodge1D};
 
 #[derive(Clone, new)]
@@ -360,12 +360,15 @@ struct StraightDodge {
 
 #[cfg(test)]
 mod integration_tests {
-    use common::prelude::*;
-    use integration_tests::helpers::{TestRunner, TestScenario};
-    use nalgebra::{Point2, Vector3};
-    use routing::{
-        behavior::FollowRoute, plan::ground_straight::GroundStraightPlanner, segments::StraightMode,
+    use crate::{
+        integration_tests::helpers::{TestRunner, TestScenario},
+        routing::{
+            behavior::FollowRoute, plan::ground_straight::GroundStraightPlanner,
+            segments::StraightMode,
+        },
     };
+    use common::prelude::*;
+    use nalgebra::{Point2, Vector3};
 
     #[test]
     fn brake_when_going_too_fast() {

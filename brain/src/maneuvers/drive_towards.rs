@@ -1,12 +1,14 @@
-use behavior::{Action, Behavior};
+use crate::{
+    behavior::{Action, Behavior},
+    eeg::{color, Drawable},
+    mechanics::simple_yaw_diff,
+    strategy::Context,
+};
 use common::{prelude::*, rl};
-use eeg::{color, Drawable};
-use mechanics::simple_yaw_diff;
 use nalgebra::{Point2, Vector2};
 use rlbot;
 use simulate::linear_interpolate;
 use std::f32::consts::PI;
-use strategy::Context;
 
 pub fn drive_towards(ctx: &mut Context, target_loc: Vector2<f32>) -> rlbot::ffi::PlayerInput {
     let me = ctx.me();

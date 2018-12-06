@@ -1,8 +1,10 @@
-use behavior::{Action, Behavior, Priority};
-use eeg::{color, Drawable};
+use crate::{
+    behavior::{Action, Behavior, Priority},
+    eeg::{color, Drawable},
+    strategy::Context,
+};
 use itertools::Itertools;
 use std::{collections::VecDeque, iter};
-use strategy::Context;
 
 /// Run `child` until it returns, then do nothing forever.
 
@@ -120,7 +122,7 @@ pub struct Chain {
 
 macro_rules! chain {
     ($priority:expr, [$($child:expr),+ $(,)*] $(,)*) => {{
-        use behavior::Chain;
+        use crate::behavior::Chain;
         Chain::new($priority, vec![$(Box::new($child)),+])
     }}
 }

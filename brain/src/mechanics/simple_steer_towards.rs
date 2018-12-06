@@ -1,7 +1,7 @@
+use crate::utils::geometry::ExtendF32;
 use common::prelude::*;
 use nalgebra::Vector2;
 use rlbot;
-use utils::geometry::ExtendF32;
 
 pub fn simple_steer_towards(car: &rlbot::ffi::Physics, target_loc: Vector2<f32>) -> f32 {
     simple_yaw_diff(car, target_loc).max(-1.0).min(1.0) * 2.0
@@ -14,13 +14,15 @@ pub fn simple_yaw_diff(car: &rlbot::ffi::Physics, target_loc: Vector2<f32>) -> f
 
 #[cfg(test)]
 mod integration_tests {
-    use behavior::{Action, Behavior};
+    use crate::{
+        behavior::{Action, Behavior},
+        integration_tests::helpers::{TestRunner, TestScenario},
+        mechanics::simple_steer_towards,
+        strategy::Context,
+    };
     use common::prelude::*;
-    use integration_tests::helpers::{TestRunner, TestScenario};
-    use mechanics::simple_steer_towards;
     use nalgebra::{Rotation3, Vector3};
     use rlbot;
-    use strategy::Context;
 
     struct SimpleSteerTowardsBall;
 

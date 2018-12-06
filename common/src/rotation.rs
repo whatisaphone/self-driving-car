@@ -1,5 +1,5 @@
+use crate::prelude::*;
 use nalgebra::{Matrix3, Rotation3, UnitQuaternion};
-use prelude::*;
 
 pub fn convert_quat_to_pyr(quat: &UnitQuaternion<f32>) -> (f32, f32, f32) {
     clamp_rotation_matrix(quat.to_rotation_matrix()).to_unreal_angles()
@@ -24,10 +24,9 @@ fn clamp_rotation_matrix(r: Rotation3<f32>) -> Rotation3<f32> {
 /// much as possible.
 #[cfg(test)]
 mod tests {
+    use crate::{prelude::*, rotation};
     use chip;
     use nalgebra::{Rotation3, UnitQuaternion, Vector3};
-    use prelude::*;
-    use rotation;
 
     const EPS: f32 = 0.05;
 

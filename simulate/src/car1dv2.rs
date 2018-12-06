@@ -1,5 +1,5 @@
+use crate::math::{linear_interpolate_find_index, linear_interpolate_use_index};
 use common::rl;
-use math::{linear_interpolate_find_index, linear_interpolate_use_index};
 use oven::data;
 
 const EPS: f32 = 1e-3;
@@ -335,7 +335,7 @@ struct CurveResult {
 
 #[cfg(test)]
 mod tests {
-    use car1dv2::Car1Dv2;
+    use crate::car1dv2::Car1Dv2;
     use common::rl;
     use oven::data;
 

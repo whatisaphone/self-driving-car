@@ -1,13 +1,15 @@
 #[cfg(test)]
-use behavior::Behavior;
+use crate::behavior::Behavior;
+use crate::{
+    eeg::{color, Drawable, EEG},
+    plan::ball::{BallPredictor, ChipBallPrediction, FrameworkBallPrediction},
+    strategy::{infer_game_mode, Context, Dropshot, Game, Runner2, Soccar},
+    utils::FPSCounter,
+};
 use common::ExtendDuration;
-use eeg::{color, Drawable, EEG};
 use nalgebra::clamp;
-use plan::ball::{BallPredictor, ChipBallPrediction, FrameworkBallPrediction};
 use rlbot;
 use std::time::Instant;
-use strategy::{infer_game_mode, Context, Dropshot, Game, Runner2, Soccar};
-use utils::FPSCounter;
 
 pub struct Brain {
     runner: Runner2,

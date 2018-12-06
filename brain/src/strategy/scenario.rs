@@ -1,13 +1,15 @@
+use crate::{
+    plan::ball::{BallFrame, BallPredictor, BallTrajectory},
+    predict::intercept::NaiveIntercept,
+    strategy::game::Game,
+    utils::{Wall, WallRayCalculator},
+};
 use common::prelude::*;
 use lazycell::LazyCell;
 use ordered_float::NotNan;
-use plan::ball::{BallFrame, BallPredictor, BallTrajectory};
-use predict::intercept::NaiveIntercept;
 use rlbot;
 use simulate::{linear_interpolate, Car1Dv2};
 use std::f32::{self, consts::PI};
-use strategy::game::Game;
-use utils::{Wall, WallRayCalculator};
 
 pub struct Scenario<'a> {
     packet: &'a rlbot::ffi::LiveDataPacket,

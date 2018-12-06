@@ -1,11 +1,13 @@
+use crate::{
+    eeg::{color, Drawable},
+    maneuvers::GetToFlatGround,
+    routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner},
+    strategy::Context,
+};
 use common::{physics::CAR_LOCAL_FORWARD_AXIS_2D, prelude::*};
-use eeg::{color, Drawable};
-use maneuvers::GetToFlatGround;
 use nalgebra::{Point2, Unit, UnitComplex, Vector2};
 use rlbot;
-use routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner};
 use std::f32::consts::PI;
-use strategy::Context;
 
 #[derive(Clone)]
 pub struct SimpleArc {
@@ -212,9 +214,11 @@ impl SegmentRunner for SimpleArcRunner {
 
 #[cfg(test)]
 mod integration_tests {
-    use integration_tests::helpers::{TestRunner, TestScenario};
+    use crate::{
+        integration_tests::helpers::{TestRunner, TestScenario},
+        routing::{segments::SimpleArc, test::segment_plan_tester},
+    };
     use nalgebra::{Point2, Vector2, Vector3};
-    use routing::{segments::SimpleArc, test::segment_plan_tester};
 
     #[test]
     #[ignore(note = "This is a demo, not a test")]

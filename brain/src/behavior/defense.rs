@@ -1,16 +1,18 @@
-use behavior::{
-    defense2::retreat::Retreat, tepid_hit::TepidHit, Action, Behavior, Chain, Priority,
+use crate::{
+    behavior::{
+        defense2::retreat::Retreat, tepid_hit::TepidHit, Action, Behavior, Chain, Priority,
+    },
+    eeg::{color, Drawable},
+    maneuvers::{blocking_angle, BounceShot, GroundedHit},
+    predict::{intercept::NaiveIntercept, naive_ground_intercept_2},
+    routing::{behavior::FollowRoute, plan::GroundIntercept},
+    strategy::{Context, Scenario},
+    utils::{geometry::ExtendF32, Wall, WallRayCalculator},
 };
 use common::prelude::*;
-use eeg::{color, Drawable};
-use maneuvers::{blocking_angle, BounceShot, GroundedHit};
 use nalgebra::{Point2, Point3, Rotation2, Vector2};
 use ordered_float::NotNan;
-use predict::{intercept::NaiveIntercept, naive_ground_intercept_2};
-use routing::{behavior::FollowRoute, plan::GroundIntercept};
 use std::f32::consts::PI;
-use strategy::{Context, Scenario};
-use utils::{geometry::ExtendF32, Wall, WallRayCalculator};
 
 pub struct Defense;
 
@@ -233,12 +235,14 @@ pub fn defensive_hit(
 
 #[cfg(test)]
 mod integration_tests {
-    use behavior::{defense::Defense, runner::PUSHED, HitToOwnCorner};
+    use crate::{
+        behavior::{defense::Defense, runner::PUSHED, HitToOwnCorner},
+        integration_tests::helpers::{TestRunner, TestScenario},
+        strategy::Runner2,
+    };
     use brain_test_data::recordings;
     use common::prelude::*;
-    use integration_tests::helpers::{TestRunner, TestScenario};
     use nalgebra::{Rotation3, Vector3};
-    use strategy::Runner2;
 
     #[test]
     fn bouncing_save() {

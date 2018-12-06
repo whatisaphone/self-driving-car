@@ -1,4 +1,4 @@
-pub use mechanics::{
+pub use crate::mechanics::{
     dodge::Dodge,
     ground_accel_to_loc::GroundAccelToLoc,
     jump_and_turn::JumpAndTurn,

@@ -2,4 +2,4 @@ mod eeg;
 #[allow(dead_code)]
 pub mod recipes;
 
-pub use eeg::eeg::*;
+pub use crate::eeg::eeg::*;

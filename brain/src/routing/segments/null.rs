@@ -1,5 +1,7 @@
-use routing::models::{CarState, SegmentPlan, SegmentRunAction, SegmentRunner};
-use strategy::Context;
+use crate::{
+    routing::models::{CarState, SegmentPlan, SegmentRunAction, SegmentRunner},
+    strategy::Context,
+};
 
 #[derive(Clone, new)]
 pub struct NullSegment {

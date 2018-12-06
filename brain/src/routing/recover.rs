@@ -1,11 +1,13 @@
-use behavior::{Behavior, Predicate, TimeLimit, While};
+use crate::{
+    behavior::{Behavior, Predicate, TimeLimit, While},
+    maneuvers::{DriveTowards, GetToFlatGround},
+    mechanics::SkidRecover,
+    routing::models::{CarState, RoutePlanError},
+    strategy::Context,
+};
 use common::{physics::car_forward_axis, prelude::*};
-use maneuvers::{DriveTowards, GetToFlatGround};
-use mechanics::SkidRecover;
 use nalgebra::Point2;
-use routing::models::{CarState, RoutePlanError};
 use std::f32::consts::PI;
-use strategy::Context;
 
 const SKIDDING_THRESHOLD: f32 = 0.95;
 

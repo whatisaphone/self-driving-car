@@ -1,13 +1,15 @@
-use behavior::{Action, Behavior};
+use crate::{
+    behavior::{Action, Behavior},
+    eeg::{color, Drawable},
+    mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge},
+    predict::{intercept::NaiveIntercept, naive_ground_intercept},
+    rules::SameBallTrajectory,
+    strategy::{Context, Goal},
+    utils::{geometry::ExtendF32, WallRayCalculator},
+};
 use common::{prelude::*, rl};
-use eeg::{color, Drawable};
-use mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge};
 use nalgebra::Point2;
-use predict::{intercept::NaiveIntercept, naive_ground_intercept};
-use rules::SameBallTrajectory;
 use std::f32::consts::PI;
-use strategy::{Context, Goal};
-use utils::{geometry::ExtendF32, WallRayCalculator};
 
 pub struct BounceShot {
     aim_loc: Point2<f32>,
@@ -121,10 +123,12 @@ impl BounceShot {
 
 #[cfg(test)]
 mod integration_tests {
-    use behavior::Repeat;
+    use crate::{
+        behavior::Repeat,
+        integration_tests::helpers::{TestRunner, TestScenario},
+        maneuvers::bounce_shot::BounceShot,
+    };
     use common::{prelude::*, rl};
-    use integration_tests::helpers::{TestRunner, TestScenario};
-    use maneuvers::bounce_shot::BounceShot;
     use nalgebra::{Point2, Rotation3, Vector3};
 
     // `Repeat` is used in these tests so the shot is not aborted by

@@ -1,8 +1,8 @@
+use crate::utils::TotalF32;
 use chip::Ball;
 use common::{math::fractionality, prelude::*, rl};
 use nalgebra::{Point3, Vector3};
 use std::{iter::Cloned, mem, slice::Iter};
-use utils::TotalF32;
 
 const PREDICT_DURATION: f32 = 7.0;
 

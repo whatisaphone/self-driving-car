@@ -1,3 +1,4 @@
+use crate::strategy::Game;
 use common::{prelude::*, rl};
 use nalgebra::{Isometry3, Point2, Vector2, Vector3};
 use ncollide3d::{
@@ -5,7 +6,6 @@ use ncollide3d::{
     shape::Plane,
 };
 use ordered_float::NotNan;
-use strategy::Game;
 
 lazy_static! {
     static ref WALL_RAY_CALCULATOR: WallRayCalculator = WallRayCalculator::new();

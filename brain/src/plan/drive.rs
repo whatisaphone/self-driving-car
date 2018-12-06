@@ -1,11 +1,13 @@
-use behavior::Behavior;
+use crate::{
+    behavior::Behavior,
+    mechanics::{simple_yaw_diff, QuickJumpAndDodge},
+    utils::geometry::ExtendF32,
+};
 use common::{prelude::*, rl};
-use mechanics::{simple_yaw_diff, QuickJumpAndDodge};
 use nalgebra::{Point2, Vector2};
 use rlbot;
 use simulate::Car1Dv2;
 use std::f32::consts::PI;
-use utils::geometry::ExtendF32;
 
 // I'm keeping this value artificially high until I implement smarter routing.
 const GROUND_DODGE_TIME: f32 = 2.0;

@@ -1,4 +1,4 @@
-pub use utils::{
+pub use crate::utils::{
     fps_counter::FPSCounter,
     iter::TotalF32,
     stopwatch::Stopwatch,

@@ -1,10 +1,12 @@
 #[cfg(test)]
 mod integration_tests {
-    use behavior::runner::PUSHED;
+    use crate::{
+        behavior::runner::PUSHED,
+        integration_tests::helpers::{TestRunner, TestScenario},
+        strategy::Runner2,
+    };
     use common::prelude::*;
-    use integration_tests::helpers::{TestRunner, TestScenario};
     use nalgebra::{Rotation3, Vector3};
-    use strategy::Runner2;
 
     #[test]
     #[ignore] // TODO

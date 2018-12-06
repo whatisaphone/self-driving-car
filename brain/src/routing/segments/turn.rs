@@ -1,9 +1,11 @@
+use crate::{
+    eeg::{color, Drawable},
+    routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner},
+    strategy::Context,
+};
 use common::prelude::*;
-use eeg::{color, Drawable};
 use nalgebra::{Point2, UnitComplex, Vector2};
-use routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner};
 use std::f32::consts::PI;
-use strategy::Context;
 
 #[derive(Clone)]
 pub struct Turn {

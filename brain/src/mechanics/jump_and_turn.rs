@@ -1,9 +1,11 @@
-use behavior::{Action, Behavior};
+use crate::{
+    behavior::{Action, Behavior},
+    strategy::Context,
+    utils::Stopwatch,
+};
 use common::physics;
 use nalgebra::UnitQuaternion;
 use rlbot;
-use strategy::Context;
-use utils::Stopwatch;
 
 const MIN_JUMP_TIME: f32 = 6.0 / 120.0;
 const MIN_RELEASE_TIME: f32 = 6.0 / 120.0;

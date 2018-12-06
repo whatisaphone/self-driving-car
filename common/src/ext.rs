@@ -1,8 +1,8 @@
+use crate::physics;
 use nalgebra::{
     Point2, Point3, Quaternion, Real, Rotation3, Unit, UnitComplex, UnitQuaternion, Vector2,
     Vector3,
 };
-use physics;
 use rlbot;
 use std::{error::Error, mem};
 

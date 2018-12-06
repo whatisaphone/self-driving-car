@@ -1,6 +1,8 @@
-use behavior::behavior::{Action, Behavior};
+use crate::{
+    behavior::behavior::{Action, Behavior},
+    strategy::Context,
+};
 use rlbot;
-use strategy::Context;
 
 #[allow(dead_code)]
 pub struct NullBehavior;

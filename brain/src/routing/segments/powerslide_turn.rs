@@ -1,9 +1,11 @@
-use eeg::{color, Drawable};
+use crate::{
+    eeg::{color, Drawable},
+    routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner},
+    strategy::Context,
+};
 use nalgebra::Vector2;
 use rlbot;
-use routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner};
 use simulate::CarPowerslideTurnBlueprint;
-use strategy::Context;
 
 #[derive(Clone)]
 pub struct PowerslideTurn {

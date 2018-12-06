@@ -1,5 +1,7 @@
-use behavior::{Behavior, NullBehavior};
-use strategy::{strategy::Strategy, Context};
+use crate::{
+    behavior::{Behavior, NullBehavior},
+    strategy::{strategy::Strategy, Context},
+};
 
 #[derive(new)]
 pub struct NullStrategy;

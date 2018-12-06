@@ -1,7 +1,9 @@
+use crate::{
+    integration_tests::helpers::{TestRunner, TestScenario},
+    strategy::Runner2,
+};
 use common::prelude::*;
-use integration_tests::helpers::{TestRunner, TestScenario};
 use nalgebra::{Rotation3, Vector3};
-use strategy::Runner2;
 
 #[test]
 #[ignore]
@@ -21,9 +23,11 @@ fn todo() {
 
 #[allow(deprecated)]
 mod template {
-    use integration_tests::helpers::{TestRunner, TestScenario};
+    use crate::{
+        integration_tests::helpers::{TestRunner, TestScenario},
+        strategy::Runner2,
+    };
     use nalgebra::Vector3;
-    use strategy::Runner2;
 
     #[test]
     #[ignore]

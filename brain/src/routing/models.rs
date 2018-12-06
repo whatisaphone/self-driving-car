@@ -1,9 +1,11 @@
+use crate::{
+    plan::ball::BallTrajectory,
+    strategy::{Context, Game, Scenario},
+};
 use common::{physics, prelude::*, rl, PrettyPrint};
 use nalgebra::{Point2, Point3, Unit, UnitComplex, UnitQuaternion, Vector2, Vector3};
-use plan::ball::BallTrajectory;
 use rlbot;
 use std::{fmt, iter};
-use strategy::{Context, Game, Scenario};
 
 #[derive(Clone)]
 pub struct CarState {

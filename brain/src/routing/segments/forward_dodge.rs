@@ -1,10 +1,12 @@
-use behavior::{Action, Behavior, Chain, Priority};
+use crate::{
+    behavior::{Action, Behavior, Chain, Priority},
+    eeg::{color, Drawable},
+    mechanics::Yielder,
+    routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner},
+    strategy::Context,
+};
 use common::prelude::*;
-use eeg::{color, Drawable};
-use mechanics::Yielder;
-use routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner};
 use simulate::CarForwardDodge1D;
-use strategy::Context;
 
 #[derive(Clone, new)]
 pub struct ForwardDodge {

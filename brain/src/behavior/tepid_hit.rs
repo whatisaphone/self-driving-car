@@ -1,13 +1,15 @@
-use behavior::{Action, Behavior, Priority};
+use crate::{
+    behavior::{Action, Behavior, Priority},
+    eeg::{color, Drawable},
+    maneuvers::GroundedHit,
+    plan::hit_angle::{feasible_hit_angle_away, feasible_hit_angle_toward},
+    routing::{behavior::FollowRoute, plan::GroundIntercept},
+    strategy::Context,
+    utils::WallRayCalculator,
+};
 use common::prelude::*;
-use eeg::{color, Drawable};
-use maneuvers::GroundedHit;
 use nalgebra::{Point2, Point3};
-use plan::hit_angle::{feasible_hit_angle_away, feasible_hit_angle_toward};
-use routing::{behavior::FollowRoute, plan::GroundIntercept};
 use std::f32::consts::PI;
-use strategy::Context;
-use utils::WallRayCalculator;
 
 pub struct TepidHit;
 

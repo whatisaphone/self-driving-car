@@ -18,7 +18,7 @@ pub fn time_to_z(z: f32) -> Option<f32> {
 
 #[cfg(test)]
 mod tests {
-    use car_single_jump;
+    use crate::car_single_jump;
     use oven::data;
 
     #[test]

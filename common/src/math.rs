@@ -7,7 +7,7 @@ pub fn fractionality(n: f32) -> f32 {
 
 #[cfg(test)]
 mod tests {
-    use math::fractionality;
+    use crate::math::fractionality;
 
     #[test]
     fn test_fractionality() {

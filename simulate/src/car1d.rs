@@ -1,5 +1,5 @@
+use crate::math::linear_interpolate;
 use common::{math::fractionality, rl};
-use math::linear_interpolate;
 use oven::data;
 
 pub struct Car1D {
@@ -125,7 +125,7 @@ impl Car1D {
 
 #[cfg(test)]
 mod tests {
-    use car1d::Car1D;
+    use crate::car1d::Car1D;
     use common::rl;
 
     const DT: f32 = 1.0 / 60.0;

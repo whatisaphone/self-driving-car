@@ -1,15 +1,21 @@
+use crate::{
+    routing::{
+        models::{
+            CarState, PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner,
+        },
+        plan::{
+            ground_powerslide::GroundSimplePowerslideTurn, higher_order::ChainedPlanner, pathing,
+        },
+        recover::{IsSkidding, NotOnFlatGround},
+        segments::{NullSegment, SimpleArc, Turn},
+    },
+    utils::geometry::circle_point_tangents,
+};
 use chip;
 use common::{prelude::*, rl};
 use nalgebra::Point2;
-use routing::{
-    models::{CarState, PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner},
-    plan::{ground_powerslide::GroundSimplePowerslideTurn, higher_order::ChainedPlanner, pathing},
-    recover::{IsSkidding, NotOnFlatGround},
-    segments::{NullSegment, SimpleArc, Turn},
-};
 use simulate::linear_interpolate;
 use std::f32::consts::PI;
-use utils::geometry::circle_point_tangents;
 
 const SLOWEST_TURNING_SPEED: f32 = 900.0;
 

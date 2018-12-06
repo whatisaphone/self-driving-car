@@ -1,11 +1,13 @@
-use behavior::{Action, Behavior};
+use crate::{
+    behavior::{Action, Behavior},
+    eeg::Drawable,
+    maneuvers::drive_towards,
+    strategy::Context,
+};
 use common::prelude::*;
-use eeg::Drawable;
-use maneuvers::drive_towards;
 use nalgebra::Vector3;
 use rlbot;
 use std::f32::consts::PI;
-use strategy::Context;
 
 pub struct GetToFlatGround;
 

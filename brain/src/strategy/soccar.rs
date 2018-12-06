@@ -1,10 +1,12 @@
-use behavior::{Behavior, Chain, Defense, Offense, Priority};
+use crate::{
+    behavior::{Behavior, Chain, Defense, Offense, Priority},
+    maneuvers::{FiftyFifty, GetToFlatGround},
+    routing::{behavior::FollowRoute, plan::GetDollar},
+    strategy::{scenario::Scenario, strategy::Strategy, Context},
+    utils::Wall,
+};
 use common::prelude::*;
-use maneuvers::{FiftyFifty, GetToFlatGround};
-use routing::{behavior::FollowRoute, plan::GetDollar};
 use std::f32::consts::PI;
-use strategy::{scenario::Scenario, strategy::Strategy, Context};
-use utils::Wall;
 
 #[derive(new)]
 pub struct Soccar;
@@ -102,11 +104,13 @@ fn enemy_can_shoot(ctx: &mut Context) -> bool {
 
 #[cfg(test)]
 mod integration_tests {
-    use behavior::runner::PUSHED;
+    use crate::{
+        behavior::runner::PUSHED,
+        integration_tests::helpers::{TestRunner, TestScenario},
+        strategy::{runner2::BASELINE, Runner2},
+    };
     use common::prelude::*;
-    use integration_tests::helpers::{TestRunner, TestScenario};
     use nalgebra::{Rotation3, Vector3};
-    use strategy::{runner2::BASELINE, Runner2};
 
     #[test]
     fn dont_panic_when_no_intercept() {

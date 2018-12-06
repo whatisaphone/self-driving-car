@@ -7,9 +7,7 @@ extern crate lazy_static;
 extern crate nalgebra;
 extern crate rlbot;
 
-pub use ext::ExtendRLBot;
-pub use polyfill::ExtendDuration;
-pub use pretty::PrettyPrint;
+pub use crate::{ext::ExtendRLBot, polyfill::ExtendDuration, pretty::PrettyPrint};
 
 pub mod ext;
 pub mod math;

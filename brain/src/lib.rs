@@ -24,8 +24,7 @@ extern crate piston_window;
 extern crate rlbot;
 extern crate simulate;
 
-pub use brain::Brain;
-pub use eeg::EEG;
+pub use crate::{brain::Brain, eeg::EEG};
 
 macro_rules! return_some {
     ($rule:expr) => {

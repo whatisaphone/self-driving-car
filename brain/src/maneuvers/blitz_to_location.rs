@@ -1,11 +1,13 @@
-use behavior::{Action, Behavior};
+use crate::{
+    behavior::{Action, Behavior},
+    eeg::{color, Drawable},
+    mechanics::{simple_steer_towards, QuickJumpAndDodge},
+    strategy::Context,
+};
 use common::{prelude::*, rl};
-use eeg::{color, Drawable};
-use mechanics::{simple_steer_towards, QuickJumpAndDodge};
 use nalgebra::Point2;
 use rlbot;
 use std::f32::consts::PI;
-use strategy::Context;
 
 pub struct BlitzToLocation {
     target_loc: Point2<f32>,
@@ -79,8 +81,10 @@ impl Behavior for BlitzToLocation {
 
 #[cfg(test)]
 mod integration_tests {
-    use integration_tests::helpers::{TestRunner, TestScenario};
-    use maneuvers::blitz_to_location::BlitzToLocation;
+    use crate::{
+        integration_tests::helpers::{TestRunner, TestScenario},
+        maneuvers::blitz_to_location::BlitzToLocation,
+    };
     use nalgebra::{Point2, Vector3};
 
     #[test]

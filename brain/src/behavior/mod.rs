@@ -1,4 +1,4 @@
-pub use behavior::{
+pub use crate::behavior::{
     behavior::{Action, Behavior, Priority},
     defense::{defensive_hit, Defense, HitToOwnCorner},
     higher_order::{Chain, Fuse, Predicate, Repeat, TimeLimit, While},

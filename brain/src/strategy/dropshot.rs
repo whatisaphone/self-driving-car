@@ -1,6 +1,8 @@
-use behavior::{Behavior, TepidHit};
-use maneuvers::GetToFlatGround;
-use strategy::{strategy::Strategy, Context};
+use crate::{
+    behavior::{Behavior, TepidHit},
+    maneuvers::GetToFlatGround,
+    strategy::{strategy::Strategy, Context},
+};
 
 #[derive(new)]
 pub struct Dropshot;

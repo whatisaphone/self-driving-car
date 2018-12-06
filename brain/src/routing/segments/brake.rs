@@ -1,7 +1,9 @@
+use crate::{
+    eeg::{color, Drawable},
+    routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner},
+    strategy::Context,
+};
 use common::{prelude::*, rl};
-use eeg::{color, Drawable};
-use routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner};
-use strategy::Context;
 
 #[derive(Clone)]
 pub struct Brake {

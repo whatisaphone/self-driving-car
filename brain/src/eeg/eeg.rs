@@ -1,5 +1,6 @@
 // This file is a hot mess, don't look at it please :)
 
+use crate::strategy::Team;
 use common::{prelude::*, rl, PrettyPrint};
 use crossbeam_channel;
 use graphics::{types::Color, Transformed};
@@ -10,7 +11,6 @@ use piston_window::{
 };
 use rlbot;
 use std::{collections::VecDeque, mem, path::PathBuf, thread};
-use strategy::Team;
 
 pub struct EEG {
     tx: Option<crossbeam_channel::Sender<ThreadMessage>>,
@@ -133,8 +133,8 @@ impl Drawable {
 
 #[allow(dead_code)]
 pub mod color {
+    use crate::strategy::Team;
     use graphics::types::Color;
-    use strategy::Team;
 
     pub const TRANSPARENT: Color = [0.0, 0.0, 0.0, 0.0];
     pub const BLACK: Color = [0.0, 0.0, 0.0, 1.0];

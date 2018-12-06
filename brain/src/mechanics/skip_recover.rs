@@ -1,9 +1,11 @@
-use behavior::{Action, Behavior};
+use crate::{
+    behavior::{Action, Behavior},
+    eeg::{color, Drawable},
+    maneuvers::GetToFlatGround,
+    strategy::Context,
+};
 use common::{physics::CAR_LOCAL_FORWARD_AXIS_2D, prelude::*};
-use eeg::{color, Drawable};
-use maneuvers::GetToFlatGround;
 use nalgebra::{Point2, UnitComplex};
-use strategy::Context;
 
 #[derive(new)]
 pub struct SkidRecover {

@@ -1,6 +1,4 @@
-use common::{physics, prelude::*, rl};
-use nalgebra::Point2;
-use routing::{
+use crate::routing::{
     models::{CarState, RoutePlanner},
     plan::{
         ground_straight::GroundStraightPlanner, ground_turn::PathingUnawareTurnPlanner,
@@ -8,6 +6,8 @@ use routing::{
     },
     segments::StraightMode,
 };
+use common::{physics, prelude::*, rl};
+use nalgebra::Point2;
 
 /// Calculate whether driving straight to `target_loc` would intersect the goal
 /// wall. If so, return the route we should follow to get outside the goal.

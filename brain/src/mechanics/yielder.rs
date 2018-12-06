@@ -1,6 +1,8 @@
-use behavior::{Action, Behavior};
+use crate::{
+    behavior::{Action, Behavior},
+    strategy::Context,
+};
 use rlbot;
-use strategy::Context;
 
 #[derive(new)]
 pub struct Yielder {

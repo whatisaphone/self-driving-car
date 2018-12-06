@@ -8,13 +8,15 @@ extern crate ncollide3d;
 extern crate oven;
 extern crate rlbot;
 
-pub use car::{Car, CarSimulateError};
-pub use car1d::Car1D;
-pub use car1dv2::Car1Dv2;
-pub use car_forward_dodge::{CarForwardDodge, CarForwardDodge1D};
-pub use car_powerslide_turn::{CarPowerslideTurn, CarPowerslideTurnBlueprint};
-pub use collision::ball_car_distance;
-pub use math::linear_interpolate;
+pub use crate::{
+    car::{Car, CarSimulateError},
+    car1d::Car1D,
+    car1dv2::Car1Dv2,
+    car_forward_dodge::{CarForwardDodge, CarForwardDodge1D},
+    car_powerslide_turn::{CarPowerslideTurn, CarPowerslideTurnBlueprint},
+    collision::ball_car_distance,
+    math::linear_interpolate,
+};
 
 macro_rules! some_or_else {
     ($e:expr, $b:block) => {

@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod integration_tests {
+    use crate::integration_tests::helpers::{TestRunner, TestScenario};
     use common::prelude::*;
-    use integration_tests::helpers::{TestRunner, TestScenario};
     use nalgebra::{Rotation3, Vector3};
 
     #[test]

@@ -38,7 +38,7 @@ pub fn linear_interpolate_use_index(ys: &[f32], (i, ratio): FractionalIndex) -> 
 
 #[cfg(test)]
 mod tests {
-    use math;
+    use crate::math;
 
     #[test]
     fn linear_interpolate() {

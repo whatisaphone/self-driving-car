@@ -1,10 +1,12 @@
-use behavior::{defensive_hit, Action, Behavior, Chain, Priority};
+use crate::{
+    behavior::{defensive_hit, Action, Behavior, Chain, Priority},
+    maneuvers::GroundedHit,
+    routing::{behavior::FollowRoute, plan::GroundIntercept},
+    strategy::Context,
+    utils::geometry::ExtendF32,
+};
 use common::prelude::*;
-use maneuvers::GroundedHit;
 use nalgebra::Point2;
-use routing::{behavior::FollowRoute, plan::GroundIntercept};
-use strategy::Context;
-use utils::geometry::ExtendF32;
 
 pub struct FiftyFifty;
 
@@ -50,8 +52,10 @@ pub fn blocking_angle(
 
 #[cfg(test)]
 mod integration_tests {
-    use integration_tests::helpers::{TestRunner, TestScenario};
-    use maneuvers::FiftyFifty;
+    use crate::{
+        integration_tests::helpers::{TestRunner, TestScenario},
+        maneuvers::FiftyFifty,
+    };
     use nalgebra::Vector3;
 
     #[test]

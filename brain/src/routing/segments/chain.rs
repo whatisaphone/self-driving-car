@@ -1,6 +1,8 @@
-use routing::models::{CarState, SegmentPlan, SegmentRunAction, SegmentRunner};
+use crate::{
+    routing::models::{CarState, SegmentPlan, SegmentRunAction, SegmentRunner},
+    strategy::Context,
+};
 use std::collections::VecDeque;
-use strategy::Context;
 
 #[derive(Clone, new)]
 pub struct Chain {

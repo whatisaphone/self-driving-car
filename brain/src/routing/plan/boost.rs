@@ -1,13 +1,15 @@
+use crate::{
+    routing::{
+        models::{PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner},
+        plan::ground_powerslide::GroundPowerslideTurn,
+        recover::{IsSkidding, NotOnFlatGround},
+    },
+    strategy::BoostPickup,
+};
 use common::prelude::*;
 use nalgebra::Point2;
 use ordered_float::NotNan;
-use routing::{
-    models::{PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner},
-    plan::ground_powerslide::GroundPowerslideTurn,
-    recover::{IsSkidding, NotOnFlatGround},
-};
 use std::f32::consts::PI;
-use strategy::BoostPickup;
 
 #[derive(Clone)]
 pub struct GetDollar {

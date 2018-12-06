@@ -1,11 +1,13 @@
-use behavior::{Action, Behavior, Chain, Priority};
+use crate::{
+    behavior::{Action, Behavior, Chain, Priority},
+    maneuvers::{BounceShot, GroundedHit},
+    predict::naive_ground_intercept_2,
+    routing::{behavior::FollowRoute, plan::GroundIntercept},
+    strategy::{Context, Game},
+};
 use common::prelude::*;
-use maneuvers::{BounceShot, GroundedHit};
 use nalgebra::{Point2, Point3};
-use predict::naive_ground_intercept_2;
-use routing::{behavior::FollowRoute, plan::GroundIntercept};
 use std::f32::consts::PI;
-use strategy::{Context, Game};
 
 pub struct Shoot;
 
@@ -71,11 +73,13 @@ impl Behavior for Shoot {
 
 #[cfg(test)]
 mod integration_tests {
-    use behavior::shoot::Shoot;
+    use crate::{
+        behavior::shoot::Shoot,
+        integration_tests::helpers::{TestRunner, TestScenario},
+        strategy::Runner2,
+    };
     use common::prelude::*;
-    use integration_tests::helpers::{TestRunner, TestScenario};
     use nalgebra::{Rotation3, Vector3};
-    use strategy::Runner2;
 
     #[test]
     #[ignore(note = "The great bankruptcy of 2018")]

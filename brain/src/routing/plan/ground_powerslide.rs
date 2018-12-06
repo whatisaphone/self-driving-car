@@ -1,6 +1,4 @@
-use common::{physics::CAR_LOCAL_FORWARD_AXIS_2D, prelude::*};
-use nalgebra::Point2;
-use routing::{
+use crate::routing::{
     models::{PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner},
     plan::{
         ground_straight::GroundStraightPlanner,
@@ -10,6 +8,8 @@ use routing::{
     recover::{IsSkidding, NotFacingTarget2D, NotOnFlatGround},
     segments::{PowerslideTurn, StraightMode},
 };
+use common::{physics::CAR_LOCAL_FORWARD_AXIS_2D, prelude::*};
+use nalgebra::Point2;
 use simulate::CarPowerslideTurn;
 
 #[derive(Clone, new)]

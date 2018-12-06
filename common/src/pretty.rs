@@ -1,5 +1,5 @@
+use crate::physics;
 use nalgebra::{Point2, Point3, Real, Rotation3, Unit, UnitQuaternion, Vector2, Vector3};
-use physics;
 use std::fmt::{self, Formatter};
 
 pub trait PrettyPrint {

@@ -1,8 +1,10 @@
-use behavior::{Action, Behavior, Chain};
-use mechanics::Yielder;
+use crate::{
+    behavior::{Action, Behavior, Chain},
+    mechanics::Yielder,
+    strategy::Context,
+};
 use nalgebra::UnitComplex;
 use rlbot;
-use strategy::Context;
 
 pub struct Dodge {
     angle: UnitComplex<f32>,

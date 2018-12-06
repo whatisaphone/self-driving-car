@@ -1,9 +1,11 @@
 #[cfg(test)]
 mod integration_tests {
+    use crate::{
+        integration_tests::helpers::{TestRunner, TestScenario},
+        strategy::Runner2,
+    };
     use common::prelude::*;
-    use integration_tests::helpers::{TestRunner, TestScenario};
     use nalgebra::{Rotation3, Vector3};
-    use strategy::Runner2;
 
     #[test]
     #[ignore] // TODO (this could be either a bounce dribble or normal dribble)

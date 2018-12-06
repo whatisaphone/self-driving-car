@@ -1,7 +1,9 @@
-use plan::ball::BallPredictor;
+use crate::{
+    plan::ball::BallPredictor,
+    strategy::{game::Game, scenario::Scenario, Team},
+    EEG,
+};
 use rlbot;
-use strategy::{game::Game, scenario::Scenario, Team};
-use EEG;
 
 pub struct Context<'a> {
     pub packet: &'a rlbot::ffi::LiveDataPacket,

@@ -1,14 +1,16 @@
-use behavior::{Action, Behavior, Chain};
+use crate::{
+    behavior::{Action, Behavior, Chain},
+    eeg::{color, Drawable},
+    maneuvers::{drive_towards, GetToFlatGround},
+    mechanics::simple_yaw_diff,
+    plan::drive::get_route_dodge,
+    strategy::Context,
+};
 use common::{prelude::*, rl};
-use eeg::{color, Drawable};
-use maneuvers::{drive_towards, GetToFlatGround};
-use mechanics::simple_yaw_diff;
 use nalgebra::{Point2, Vector2};
-use plan::drive::get_route_dodge;
 use rlbot;
 use simulate::Car1Dv2;
 use std::f32::consts::PI;
-use strategy::Context;
 
 pub struct GroundAccelToLoc {
     target_loc: Vector2<f32>,
@@ -97,9 +99,11 @@ fn estimate_approach(car: &rlbot::ffi::PlayerInfo, distance: f32, time: f32) -> 
 
 #[cfg(test)]
 mod integration_tests {
+    use crate::{
+        integration_tests::helpers::{TestRunner, TestScenario},
+        mechanics::GroundAccelToLoc,
+    };
     use common::prelude::*;
-    use integration_tests::helpers::{TestRunner, TestScenario};
-    use mechanics::GroundAccelToLoc;
     use nalgebra::{Vector2, Vector3};
 
     // This test is ignored because it's finicky and not quite accurate. The

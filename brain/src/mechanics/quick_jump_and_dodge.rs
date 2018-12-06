@@ -1,7 +1,9 @@
-use behavior::{Action, Behavior, Priority};
-use eeg::{color, Drawable};
+use crate::{
+    behavior::{Action, Behavior, Priority},
+    eeg::{color, Drawable},
+    strategy::Context,
+};
 use rlbot;
-use strategy::Context;
 
 pub struct QuickJumpAndDodge {
     start_time: Option<f32>,

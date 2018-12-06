@@ -1,6 +1,5 @@
-use eeg::EEG;
+use crate::{eeg::EEG, strategy::Context};
 use rlbot;
-use strategy::Context;
 
 pub trait Behavior: Send {
     fn name(&self) -> &str;

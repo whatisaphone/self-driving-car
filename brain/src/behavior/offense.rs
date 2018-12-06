@@ -1,7 +1,9 @@
-use behavior::{shoot::Shoot, tepid_hit::TepidHit, Action, Behavior};
+use crate::{
+    behavior::{shoot::Shoot, tepid_hit::TepidHit, Action, Behavior},
+    predict::naive_ground_intercept_2,
+    strategy::Context,
+};
 use common::prelude::*;
-use predict::naive_ground_intercept_2;
-use strategy::Context;
 
 pub struct Offense;
 
@@ -47,11 +49,13 @@ impl Behavior for Offense {
 
 #[cfg(test)]
 mod integration_tests {
-    use behavior::offense::Offense;
+    use crate::{
+        behavior::offense::Offense,
+        integration_tests::helpers::{TestRunner, TestScenario},
+        strategy::Runner2,
+    };
     use common::prelude::*;
-    use integration_tests::helpers::{TestRunner, TestScenario};
     use nalgebra::{Rotation3, Vector3};
-    use strategy::Runner2;
 
     #[test]
     #[ignore] // TODO

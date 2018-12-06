@@ -1,5 +1,9 @@
-use behavior::{Behavior, Fuse, NullBehavior};
-use brain::Brain;
+use crate::{
+    behavior::{Behavior, Fuse, NullBehavior},
+    brain::Brain,
+    eeg::EEG,
+    strategy::Team,
+};
 use brain_test_data::OneVOneScenario;
 use collect::{
     get_packet_and_inject_rigid_body_tick, RecordingPlayerTick, RecordingRigidBodyState,
@@ -7,7 +11,6 @@ use collect::{
 };
 use common::{ext::ExtendRLBot, prelude::*};
 use crossbeam_channel;
-use eeg::EEG;
 use nalgebra::{Point3, Rotation3, UnitQuaternion, Vector3};
 use ordered_float::NotNan;
 use rlbot;
@@ -20,7 +23,6 @@ use std::{
     thread::{self, sleep},
     time::Duration,
 };
-use strategy::Team;
 
 const RECORDING_DISTANCE_THRESHOLD: f32 = 25.0;
 const STATE_SET_DEBOUNCE: i32 = 10;

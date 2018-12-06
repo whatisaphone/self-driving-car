@@ -1,7 +1,11 @@
-use behavior::Behavior;
-use routing::{
-    behavior::FollowRoute,
-    models::{PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner, SegmentPlan},
+use crate::{
+    behavior::Behavior,
+    routing::{
+        behavior::FollowRoute,
+        models::{
+            PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner, SegmentPlan,
+        },
+    },
 };
 
 pub fn segment_plan_tester(plan: impl SegmentPlan + Clone + 'static) -> impl Behavior {

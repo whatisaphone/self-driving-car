@@ -1,7 +1,9 @@
-use behavior::{defense::PushToOwnCorner, higher_order::TryChoose, Action, Behavior, Priority};
+use crate::{
+    behavior::{defense::PushToOwnCorner, higher_order::TryChoose, Action, Behavior, Priority},
+    maneuvers::PanicDefense,
+    strategy::{Context, Scenario},
+};
 use common::prelude::*;
-use maneuvers::PanicDefense;
-use strategy::{Context, Scenario};
 
 pub struct Retreat;
 
@@ -46,9 +48,8 @@ impl Behavior for Retreat {
 
 #[cfg(test)]
 mod integration_tests {
+    use crate::{integration_tests::helpers::TestRunner, strategy::Runner2};
     use brain_test_data::recordings;
-    use integration_tests::helpers::TestRunner;
-    use strategy::Runner2;
 
     #[test]
     #[ignore(note = "The great bankruptcy of 2018")]

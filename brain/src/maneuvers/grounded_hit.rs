@@ -1,19 +1,21 @@
-use behavior::{Action, Behavior, Chain};
+use crate::{
+    behavior::{Action, Behavior, Chain},
+    eeg::Drawable,
+    maneuvers::BounceShot,
+    mechanics::{simple_steer_towards, Dodge, JumpAndTurn},
+    predict::{intercept::NaiveIntercept, naive_ground_intercept},
+    routing::recover::{IsSkidding, NotOnFlatGround},
+    rules::SameBallTrajectory,
+    strategy::{Context, Game},
+};
 use common::{physics, prelude::*, rl};
-use eeg::Drawable;
-use maneuvers::BounceShot;
-use mechanics::{simple_steer_towards, Dodge, JumpAndTurn};
 use nalgebra::{Point2, Point3, UnitComplex, UnitQuaternion};
-use predict::{intercept::NaiveIntercept, naive_ground_intercept};
 use rlbot;
-use routing::recover::{IsSkidding, NotOnFlatGround};
-use rules::SameBallTrajectory;
 use simulate::{
     car_single_jump::{time_to_z, JUMP_MAX_Z},
     linear_interpolate, Car1Dv2, CarSimulateError,
 };
 use std::f32::consts::PI;
-use strategy::{Context, Game};
 
 pub struct GroundedHit<Aim>
 where
@@ -296,9 +298,11 @@ enum Do {
 
 #[cfg(test)]
 mod integration_tests {
+    use crate::{
+        integration_tests::helpers::{TestRunner, TestScenario},
+        maneuvers::grounded_hit::GroundedHit,
+    };
     use common::rl;
-    use integration_tests::helpers::{TestRunner, TestScenario};
-    use maneuvers::grounded_hit::GroundedHit;
     use nalgebra::{Point2, Vector3};
 
     #[test]

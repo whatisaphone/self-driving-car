@@ -1,10 +1,12 @@
+use crate::{
+    eeg::{color, Drawable},
+    mechanics::simple_steer_towards,
+    routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner},
+    strategy::Context,
+};
 use common::prelude::*;
-use eeg::{color, Drawable};
-use mechanics::simple_steer_towards;
 use nalgebra::{Point2, Vector2};
-use routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner};
 use simulate::Car1Dv2;
-use strategy::Context;
 
 #[derive(Clone)]
 pub struct Straight {
