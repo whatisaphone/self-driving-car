@@ -214,7 +214,7 @@ impl RoutePlan {
                         planner_name,
                         error,
                         log,
-                    })
+                    });
                 }
             }
         }

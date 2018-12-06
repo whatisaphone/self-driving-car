@@ -224,7 +224,7 @@ fn calculate_circle_turn(
         None => {
             return Err(RoutePlanError::OtherError(
                 "Turning radius not tight enough",
-            ))
+            ));
         }
     };
     let t1_rot = (start_loc - turn_center).rotation_to(tangent1 - turn_center);
