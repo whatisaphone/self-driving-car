@@ -2,6 +2,7 @@
 name = "brain"
 version = "0.1.0"
 authors = ["John Simon <john@whatisaph.one>"]
+edition = "2018"
 
 [dependencies]
 crossbeam-channel = "0.2.6"

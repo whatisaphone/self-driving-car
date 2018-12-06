@@ -64,7 +64,7 @@ impl FollowRoute {
 
         let mut log = Vec::new();
         let plan = {
-            let mut context = PlanningContext {
+            let context = PlanningContext {
                 game: &ctx.game,
                 start: ctx.me().into(),
                 ball_prediction: ctx.scenario.ball_prediction(),

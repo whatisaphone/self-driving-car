@@ -16,7 +16,7 @@ fn main() {
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
     let mut out = File::create(out_dir.join("recordings.rs")).unwrap();
 
-    writeln!(out, "use models::OneVOneScenario;").unwrap();
+    writeln!(out, "use crate::models::OneVOneScenario;").unwrap();
     writeln!(out).unwrap();
 
     for entry in csv_dir.read_dir().unwrap().map(Result::unwrap) {

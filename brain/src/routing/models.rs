@@ -239,7 +239,7 @@ impl RoutePlan {
 
         match plan.next {
             Some(planner) => {
-                let mut ctx = PlanningContext {
+                let ctx = PlanningContext {
                     game: ctx.game,
                     start: state,
                     ball_prediction: &ctx.ball_prediction.hacky_expensive_slice(duration),

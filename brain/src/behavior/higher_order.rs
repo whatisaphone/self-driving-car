@@ -165,7 +165,7 @@ impl Behavior for Chain {
         ));
 
         let action = {
-            let mut front = match self.children.front_mut() {
+            let front = match self.children.front_mut() {
                 None => return Action::Return,
                 Some(b) => b,
             };

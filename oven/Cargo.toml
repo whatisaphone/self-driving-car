@@ -2,6 +2,7 @@
 name = "oven"
 version = "0.1.0"
 authors = ["John Simon <john@whatisaph.one>"]
+edition = "2018"
 
 [dependencies]
 lazy_static = "1.1.0"
