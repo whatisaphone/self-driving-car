@@ -30,7 +30,7 @@ where
     Aim: Fn(&mut Context, Point3<f32>) -> Result<Point2<f32>, ()> + Send,
 {
     const CONTACT_Z_OFFSET: f32 = -70.0; // This is misguided and should probably go away.
-    pub const MAX_BALL_Z: f32 = 220.0 - Self::CONTACT_Z_OFFSET; // TODO: how high can I jump
+    const MAX_BALL_Z: f32 = 220.0 - Self::CONTACT_Z_OFFSET; // TODO: how high can I jump
 
     pub fn hit_towards(aim: Aim) -> Self {
         Self {
@@ -179,6 +179,7 @@ where
         intercept: &NaiveIntercept<()>,
         aim_loc: Point2<f32>,
     ) -> (Point3<f32>, UnitQuaternion<f32>, UnitComplex<f32>) {
+        // Pitch the nose higher if the target is further away.
         let pitch = linear_interpolate(
             &[1000.0, 5000.0],
             &[PI / 15.0, PI / 4.0],
@@ -206,9 +207,7 @@ where
         target_loc: Point3<f32>,
     ) -> Result<Do, CarSimulateError> {
         let total_time = intercept.time;
-        let jump_duration = time_to_z(target_loc.z)
-            .unwrap()
-            .max(JumpAndTurn::MIN_DURATION);
+        let jump_duration = Self::jump_duration(target_loc.z);
         let drive_time = total_time - jump_duration;
 
         if drive_time < 0.0 {
@@ -262,7 +261,7 @@ where
         target_rot: UnitQuaternion<f32>,
         dodge_angle: UnitComplex<f32>,
     ) -> Action {
-        let jump_time = time_to_z(target_loc.z).unwrap();
+        let jump_time = Self::jump_duration(target_loc.z);
         Action::call(Chain::new(
             self.priority(),
             vec![
@@ -270,6 +269,17 @@ where
                 Box::new(Dodge::new().angle(dodge_angle)),
             ],
         ))
+    }
+
+    fn jump_duration(z: f32) -> f32 {
+        // Avoid a panic in `time_to_z()` from trying to jump too high. Assert that the
+        // error is small before we clamp the value.
+        let leeway = 20.0;
+        assert!(z < JUMP_MAX_Z + leeway);
+        let clamped = z.min(JUMP_MAX_Z);
+
+        // Always leave at least enough time for the jump before the dodge.
+        time_to_z(clamped).unwrap().max(JumpAndTurn::MIN_DURATION)
     }
 }
 
