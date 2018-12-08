@@ -3,6 +3,7 @@ use crate::{
         models::{PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner},
         plan::ground_powerslide::GroundPowerslideTurn,
         recover::{IsSkidding, NotOnFlatGround},
+        segments::JumpAndDodge,
     },
     strategy::BoostPickup,
 };
@@ -45,6 +46,47 @@ impl RoutePlanner for GetDollar {
             None => return Err(RoutePlanError::OtherError("no pickup found")),
         };
 
+        if let Some(plan) = Self::quick_flip(ctx, dump, pickup) {
+            return Ok(plan);
+        }
+
+        self.powerslide_turn(ctx, dump, pickup)
+    }
+}
+
+impl GetDollar {
+    /// If we're super close and not moving, just flip to it. Right now path
+    /// routing is not good enough to do anything smarter.
+    fn quick_flip(
+        ctx: &PlanningContext,
+        _dump: &mut PlanningDump,
+        pickup: &BoostPickup,
+    ) -> Option<RoutePlan> {
+        if ctx.start.vel.norm() >= 500.0 {
+            return None;
+        }
+        let dist = (ctx.start.loc.to_2d() - pickup.loc).norm();
+        if dist >= 750.0 {
+            return None;
+        }
+
+        let direction = ctx
+            .start
+            .forward_axis_2d()
+            .rotation_to(&(pickup.loc - ctx.start.loc.to_2d()).to_axis());
+
+        Some(RoutePlan {
+            segment: Box::new(JumpAndDodge::new(ctx.start.clone(), direction)),
+            next: None,
+        })
+    }
+
+    fn powerslide_turn(
+        &self,
+        ctx: &PlanningContext,
+        dump: &mut PlanningDump,
+        pickup: &BoostPickup,
+    ) -> Result<RoutePlan, RoutePlanError> {
         guard!(
             ctx.start,
             IsSkidding,
@@ -68,9 +110,7 @@ impl RoutePlanner for GetDollar {
 
         GroundPowerslideTurn::new(pickup.loc, self.destination_hint, None).plan(ctx, dump)
     }
-}
 
-impl GetDollar {
     fn chooose_pickup<'a>(
         ctx: &'a PlanningContext,
         destination_hint: Point2<f32>,
