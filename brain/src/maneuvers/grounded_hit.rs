@@ -206,7 +206,9 @@ where
         target_loc: Point3<f32>,
     ) -> Result<Do, CarSimulateError> {
         let total_time = intercept.time;
-        let jump_duration = time_to_z(target_loc.z).unwrap();
+        let jump_duration = time_to_z(target_loc.z)
+            .unwrap()
+            .max(JumpAndTurn::MIN_DURATION);
         let drive_time = total_time - jump_duration;
 
         if drive_time < 0.0 {
@@ -302,8 +304,8 @@ mod integration_tests {
         integration_tests::helpers::{TestRunner, TestScenario},
         maneuvers::grounded_hit::GroundedHit,
     };
-    use common::rl;
-    use nalgebra::{Point2, Vector3};
+    use common::{prelude::*, rl};
+    use nalgebra::{Point2, Rotation3, Vector3};
 
     #[test]
     #[ignore(note = "The great bankruptcy of 2018")]
@@ -320,5 +322,27 @@ mod integration_tests {
             }))
             .run_for_millis(3500);
         assert!(test.has_scored());
+    }
+
+    #[test]
+    fn rolling_hit() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(3962.02, -1981.12, 152.39),
+                ball_vel: Vector3::new(-291.741, 890.49097, -303.581),
+                car_loc: Vector3::new(3821.52, -3021.23, 16.18),
+                car_rot: Rotation3::from_unreal_angles(-0.018183012, 2.1181667, 0.012321899),
+                car_vel: Vector3::new(-644.811, 1099.141, 4.311),
+                ..Default::default()
+            })
+            .behavior(GroundedHit::hit_towards(|_, _| {
+                Ok(Point2::new(0.0, rl::FIELD_MAX_Y))
+            }))
+            .run_for_millis(2000);
+
+        let packet = test.sniff_packet();
+        assert!(packet.GameBall.Physics.vel().y > 1500.0);
+        // We don't score it yet. This test just makes sure we actually hit the ball lol
+        // assert!(test.has_scored());
     }
 }

@@ -7,9 +7,6 @@ use common::physics;
 use nalgebra::UnitQuaternion;
 use rlbot;
 
-const MIN_JUMP_TIME: f32 = 6.0 / 120.0;
-const MIN_RELEASE_TIME: f32 = 6.0 / 120.0;
-
 pub struct JumpAndTurn {
     jump_duration: f32,
     total_duration: f32,
@@ -18,9 +15,13 @@ pub struct JumpAndTurn {
 }
 
 impl JumpAndTurn {
+    const MIN_JUMP_TIME: f32 = 6.0 / 120.0;
+    const MIN_RELEASE_TIME: f32 = 6.0 / 120.0;
+    pub const MIN_DURATION: f32 = Self::MIN_JUMP_TIME + Self::MIN_RELEASE_TIME;
+
     pub fn new(jump_duration: f32, total_duration: f32, target_rot: UnitQuaternion<f32>) -> Self {
-        let jump_duration = jump_duration.max(MIN_JUMP_TIME);
-        let total_duration = total_duration.max(jump_duration + MIN_RELEASE_TIME);
+        let jump_duration = jump_duration.max(Self::MIN_JUMP_TIME);
+        let total_duration = total_duration.max(jump_duration + Self::MIN_RELEASE_TIME);
         Self {
             jump_duration,
             total_duration,
