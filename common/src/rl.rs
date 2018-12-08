@@ -58,3 +58,23 @@ pub const BOOST_DEPLETION: f32 = 100.0 / 3.0;
 
 /// The velocity increase when dodging forward.
 pub const DODGE_FORWARD_IMPULSE: f32 = 500.0;
+
+/// The radius of the full boost pickup's cylindrical hitbox.
+///
+/// Source: https://youtu.be/xgfa-qZyInw?t=31
+pub const BOOST_DOLLAR_RADIUS: f32 = 208.0;
+
+/// The height of the full boost pickup's cylindrical hitbox.
+///
+/// Source: https://youtu.be/xgfa-qZyInw?t=31
+pub const BOOST_DOLLAR_HEIGHT: f32 = 168.0;
+
+/// The radius of the small boost pickup's cylindrical hitbox.
+///
+/// Source: https://youtu.be/xgfa-qZyInw?t=31
+pub const BOOST_PENNY_RADIUS: f32 = 144.0;
+
+/// The height of the small boost pickup's cylindrical hitbox.
+///
+/// Source: https://youtu.be/xgfa-qZyInw?t=31
+pub const BOOST_PENNY_HEIGHT: f32 = 165.0;
