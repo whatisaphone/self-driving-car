@@ -2,12 +2,12 @@
 mod integration_tests {
     use crate::integration_tests::helpers::{TestRunner, TestScenario};
     use common::prelude::*;
-    use nalgebra::Vector3;
+    use nalgebra::{Point3, Vector3};
 
     #[test]
     #[ignore] // This basically works but is inaccurate. See the comment above `air()`.
     fn simple() {
-        let expected_loc = Vector3::new(400.0, 1100.0, 600.0);
+        let expected_loc = Point3::new(400.0, 1100.0, 600.0);
         let test = TestRunner::new()
             .scenario(TestScenario {
                 ball_loc: Vector3::new(1000.0, 0.0, 0.0),
@@ -17,7 +17,7 @@ mod integration_tests {
 
         test.sleep_millis(3000);
         let packet = test.sniff_packet();
-        let car_loc = packet.GameCars[0].Physics.loc();
+        let car_loc = packet.GameCars[0].Physics.locp();
         let distance = (car_loc - expected_loc).norm();
         println!("expected_loc: {:?}", expected_loc);
         println!("car_loc: {:?}", car_loc);

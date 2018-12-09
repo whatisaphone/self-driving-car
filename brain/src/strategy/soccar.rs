@@ -6,6 +6,7 @@ use crate::{
     utils::Wall,
 };
 use common::prelude::*;
+use nalgebra::Point3;
 use std::f32::consts::PI;
 
 #[derive(new)]
@@ -30,7 +31,7 @@ impl Strategy for Soccar {
     fn interrupt(&mut self, ctx: &mut Context, current: &Behavior) -> Option<Box<Behavior>> {
         // Force kickoff behavior
         if current.priority() < Priority::Force
-            && ctx.packet.GameBall.Physics.loc().norm() < 1.0
+            && (ctx.packet.GameBall.Physics.locp() - Point3::origin()).norm() < 1.0
             && ctx.packet.GameBall.Physics.vel().norm() < 1.0
         {
             return Some(Box::new(Chain::new(
@@ -184,7 +185,7 @@ mod integration_tests {
         let packet = test.sniff_packet();
         assert!(packet.GameCars[0].Boost >= 80);
         // Go to the closest boost, don't go off to some distant corner.
-        assert!(packet.GameCars[0].Physics.loc().y.abs() < 2000.0);
+        assert!(packet.GameCars[0].Physics.locp().y.abs() < 2000.0);
     }
 
     #[test]

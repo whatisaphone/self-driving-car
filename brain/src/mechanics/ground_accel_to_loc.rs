@@ -129,7 +129,7 @@ mod integration_tests {
             let packet = test.sniff_packet();
             let diff = (packet.GameCars[0].Physics.locp().to_2d() - target_loc).norm();
             println!("target loc: {:.?}", target_loc);
-            println!("car loc: {:.?}", packet.GameCars[0].Physics.loc());
+            println!("car loc: {:.?}", packet.GameCars[0].Physics.locp());
             println!("diff: {:.0}", diff);
             assert!(diff.abs() < 20.0);
         }

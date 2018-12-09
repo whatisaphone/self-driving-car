@@ -131,7 +131,7 @@ impl PanicDefense {
         if let Phase::Rush { aim_hint, .. } = self.phase {
             let cutoff = me.Physics.vel().y.abs() * 0.75;
             ctx.eeg.draw(Drawable::print(
-                format!("cutoff_distance: {:.0}", me.Physics.loc().y - cutoff),
+                format!("cutoff_distance: {:.0}", me.Physics.locp().y - cutoff),
                 color::GREEN,
             ));
             if ctx
@@ -188,7 +188,7 @@ mod integration_tests {
 
         let packet = test.sniff_packet();
         println!("{:?}", packet.GameCars[0].Physics.vel());
-        assert!(packet.GameCars[0].Physics.loc().y < -4500.0);
+        assert!(packet.GameCars[0].Physics.locp().y < -4500.0);
         assert!(packet.GameCars[0].Physics.vel().norm() < 100.0);
     }
 }

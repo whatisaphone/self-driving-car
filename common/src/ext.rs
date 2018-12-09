@@ -154,7 +154,6 @@ impl ExtendRotation3 for Rotation3<f32> {
 }
 
 pub trait ExtendPhysics {
-    fn loc(&self) -> Vector3<f32>;
     fn locp(&self) -> Point3<f32>;
     fn loc_2d(&self) -> Point2<f32>;
     fn rot(&self) -> Rotation3<f32>;
@@ -172,10 +171,6 @@ pub trait ExtendPhysics {
 }
 
 impl ExtendPhysics for rlbot::ffi::Physics {
-    fn loc(&self) -> Vector3<f32> {
-        Vector3::new(self.Location.X, self.Location.Y, self.Location.Z)
-    }
-
     fn locp(&self) -> Point3<f32> {
         Point3::new(self.Location.X, self.Location.Y, self.Location.Z)
     }
