@@ -2,6 +2,7 @@ use crate::{
     behavior::{Action, Behavior},
     eeg::Drawable,
     maneuvers::drive_towards,
+    routing::{models::CarState, plan::avoid_goal_wall_waypoint},
     strategy::Context,
 };
 use common::prelude::*;
@@ -55,11 +56,21 @@ impl Behavior for GetToFlatGround {
                 ..Default::default()
             })
         } else {
-            let (pitch, yaw, roll) = dom::get_pitch_yaw_roll(
-                ctx.me(),
-                me.Physics.vel().to_2d().to_3d(0.0).to_axis(),
-                Vector3::z_axis(),
-            );
+            let forward = if me.Physics.locp().y.abs() >= ctx.game.field_max_y() {
+                // If we're going to land in the goal, land in a convenient direction to
+                // immediately drive out of the goal towards the ball.
+                let mut start = CarState::from(me);
+                start.loc += start.vel * 1.0;
+                let ball_loc = ctx.packet.GameBall.Physics.loc_2d();
+                let target_loc = avoid_goal_wall_waypoint(&start, ball_loc).unwrap_or(ball_loc);
+                (target_loc - me.Physics.loc_2d())
+            } else {
+                me.Physics.vel().to_2d()
+            }
+            .to_3d(0.0)
+            .to_axis();
+
+            let (pitch, yaw, roll) = dom::get_pitch_yaw_roll(ctx.me(), forward, Vector3::z_axis());
             Action::Yield(rlbot::ffi::PlayerInput {
                 Throttle: 1.0,
                 Pitch: pitch,

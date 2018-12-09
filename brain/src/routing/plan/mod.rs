@@ -1,4 +1,6 @@
-pub use self::{boost::GetDollar, ground_intercept::GroundIntercept};
+pub use self::{
+    boost::GetDollar, ground_intercept::GroundIntercept, pathing::avoid_goal_wall_waypoint,
+};
 
 macro_rules! guard {
     ($start:expr, $predicate:expr, $return:expr $(,)*) => {

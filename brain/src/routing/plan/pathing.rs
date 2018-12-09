@@ -15,7 +15,7 @@ pub fn avoid_plowing_into_goal_wall(
     start: &CarState,
     target_loc: Point2<f32>,
 ) -> Option<Box<RoutePlanner>> {
-    match avoid_plowing_into_goal_wall_waypoint(start, target_loc) {
+    match avoid_goal_wall_waypoint(start, target_loc) {
         None => None,
         Some(waypoint) => Some(ChainedPlanner::chain(vec![
             Box::new(PathingUnawareTurnPlanner::new(waypoint, None)),
@@ -32,10 +32,7 @@ pub fn avoid_plowing_into_goal_wall(
 /// Calculate whether driving straight to `target_loc` would intersect the goal
 /// wall. If so, return the waypoint we should drive to first to avoid
 /// embarrassing ourselves.
-fn avoid_plowing_into_goal_wall_waypoint(
-    start: &CarState,
-    target_loc: Point2<f32>,
-) -> Option<Point2<f32>> {
+pub fn avoid_goal_wall_waypoint(start: &CarState, target_loc: Point2<f32>) -> Option<Point2<f32>> {
     let margin = 125.0;
 
     // Only proceed if we're crossing over the goalline.
