@@ -135,19 +135,17 @@ impl GetDollar {
         pickups.min_by_key(|pickup| {
             let along_dist = (pickup.loc - line_start_loc).dot(&line_span.to_axis());
             let ortho_dist = (pickup.loc - line_start_loc).dot(&line_span.ortho().to_axis());
+
             // Assume an "ideal" position 75% of the way down the line.
-            let along_score = line_span.norm() * 0.75 - along_dist;
-            BoostScore {
-                invalid: along_dist < -250.0 || along_dist >= line_span.norm() + 250.0,
-                score: NotNan::new(along_score.powi(2) + (ortho_dist * 2.0).powi(2)).unwrap(),
-            }
+            let along_penalty = line_span.norm() * 0.75 - along_dist;
+            let ortho_penalty = ortho_dist * 2.0;
+            let detour_penalty = match along_dist {
+                d if d < 0.0 => -d,
+                d if d >= line_span.norm() => d - line_span.norm(),
+                _ => 0.0,
+            };
+            let penalty = along_penalty.powi(2) + ortho_penalty.powi(2) + detour_penalty.powi(2);
+            NotNan::new(penalty).unwrap()
         })
     }
-}
-
-/// Lower is better.
-#[derive(Ord, PartialOrd, Eq, PartialEq)]
-struct BoostScore {
-    invalid: bool,
-    score: NotNan<f32>,
 }
