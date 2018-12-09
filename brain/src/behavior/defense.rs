@@ -333,23 +333,22 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore] // TODO
     fn slow_bouncer() {
-        let test = TestRunner::start(
-            Runner2::soccar(),
-            TestScenario {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
                 ball_loc: Vector3::new(-2849.355, -2856.8281, 1293.4608),
                 ball_vel: Vector3::new(907.1093, -600.48956, 267.59674),
                 car_loc: Vector3::new(1012.88916, -3626.2666, 17.01),
                 car_rot: Rotation3::from_unreal_angles(-0.00958738, -0.8467574, 0.0),
                 car_vel: Vector3::new(131.446, -188.83897, 8.33),
                 ..Default::default()
-            },
-        );
+            })
+            .behavior(Runner2::soccar())
+            .run_for_millis(3000);
 
-        test.sleep_millis(5000);
-
-        assert!(!test.enemy_has_scored());
+        let packet = test.sniff_packet();
+        assert!(packet.GameBall.Physics.locp().x < -2000.0);
+        assert!(packet.GameBall.Physics.vel().x < -1000.0);
     }
 
     #[test]
@@ -429,18 +428,17 @@ mod integration_tests {
     #[test]
     #[ignore] // TODO
     fn retreating_push_to_corner_from_awkward_angle() {
-        let test = TestRunner::start0(TestScenario {
-            ball_loc: Vector3::new(-2365.654, -86.64402, 114.0818),
-            ball_vel: Vector3::new(988.47064, -1082.8477, -115.50357),
-            car_loc: Vector3::new(-2708.0007, -17.896847, 250.98781),
-            car_rot: Rotation3::from_unreal_angles(0.28522456, -0.8319928, -0.05263472),
-            car_vel: Vector3::new(550.82794, -1164.1539, 277.63806),
-            ..Default::default()
-        });
-
-        test.set_behavior(Defense::new());
-
-        test.sleep_millis(2000);
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(-2365.654, -86.64402, 114.0818),
+                ball_vel: Vector3::new(988.47064, -1082.8477, -115.50357),
+                car_loc: Vector3::new(-2708.0007, -17.896847, 250.98781),
+                car_rot: Rotation3::from_unreal_angles(0.28522456, -0.8319928, -0.05263472),
+                car_vel: Vector3::new(550.82794, -1164.1539, 277.63806),
+                ..Default::default()
+            })
+            .behavior(Runner2::soccar())
+            .run_for_millis(2000);
 
         test.examine_eeg(|eeg| {
             assert!(eeg.log.iter().any(|x| x == "redirect to own corner"));

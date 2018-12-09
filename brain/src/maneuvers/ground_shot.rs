@@ -33,22 +33,17 @@ mod integration_tests {
     #[test]
     #[ignore] // TODO
     fn crossing_the_box() {
-        let test = TestRunner::start0(TestScenario {
-            ball_loc: Vector3::new(-726.1142, -673.77716, 118.28892),
-            ball_vel: Vector3::new(1032.4805, 1531.884, -72.43818),
-            car_loc: Vector3::new(-45.566628, -1993.5394, 16.711021),
-            car_rot: Rotation3::from_unreal_angles(-0.010258497, 0.60458016, 0.0013422332),
-            car_vel: Vector3::new(1566.5747, 1017.1486, 13.497895),
-            ..Default::default()
-        });
-        test.set_behavior(Runner2::soccar());
-        test.sleep_millis(3000);
-        test.examine_eeg(|eeg| {
-            assert!(eeg
-                .log
-                .iter()
-                .any(|x| *x == format!("{} GroundShot", PUSHED)));
-        });
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(-726.1142, -673.77716, 118.28892),
+                ball_vel: Vector3::new(1032.4805, 1531.884, -72.43818),
+                car_loc: Vector3::new(-45.566628, -1993.5394, 16.711021),
+                car_rot: Rotation3::from_unreal_angles(-0.010258497, 0.60458016, 0.0013422332),
+                car_vel: Vector3::new(1566.5747, 1017.1486, 13.497895),
+                ..Default::default()
+            })
+            .behavior(Runner2::soccar())
+            .run_for_millis(3500);
         assert!(test.has_scored());
     }
 
@@ -69,7 +64,6 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore] // TODO
     fn easy_open_net() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -81,12 +75,12 @@ mod integration_tests {
                 boost: 0,
                 ..Default::default()
             })
-            .run_for_millis(4000);
+            .behavior(Runner2::soccar())
+            .run_for_millis(5000);
         assert!(test.has_scored());
     }
 
     #[test]
-    #[ignore] // TODO
     fn tight_angle_needs_correction() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -97,6 +91,7 @@ mod integration_tests {
                 car_vel: Vector3::new(1287.4675, -433.82834, -183.28568),
                 ..Default::default()
             })
+            .behavior(Runner2::soccar())
             .run_for_millis(2000);
         assert!(test.has_scored());
     }

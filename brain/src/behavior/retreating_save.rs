@@ -4,39 +4,45 @@ mod integration_tests {
         integration_tests::helpers::{TestRunner, TestScenario},
         strategy::Runner2,
     };
-    use common::prelude::*;
-    use nalgebra::{Rotation3, Vector3};
+    use common::{prelude::*, rl};
+    use nalgebra::{Point2, Rotation3, Vector3};
 
     #[test]
-    #[ignore] // TODO
     fn falling_in_front_of_far_corner() {
-        let test = TestRunner::start0(TestScenario {
-            ball_loc: Vector3::new(882.9138, -5002.2944, 608.2664),
-            ball_vel: Vector3::new(-211.04604, 37.17434, 459.58438),
-            car_loc: Vector3::new(-2512.3357, -2450.706, 17.01),
-            car_rot: Rotation3::from_unreal_angles(-0.009683254, -0.68204623, -0.0000958738),
-            car_vel: Vector3::new(786.13666, -620.0981, 8.309999),
-            ..Default::default()
-        });
-        test.set_behavior(Runner2::soccar());
-        test.sleep_millis(5000);
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(882.9138, -5002.2944, 608.2664),
+                ball_vel: Vector3::new(-211.04604, 37.17434, 459.58438),
+                car_loc: Vector3::new(-2512.3357, -2450.706, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.009683254, -0.68204623, -0.0000958738),
+                car_vel: Vector3::new(786.13666, -620.0981, 8.309999),
+                ..Default::default()
+            })
+            .behavior(Runner2::soccar())
+            .run_for_millis(2500);
 
-        assert!(test.has_scored());
+        assert!(!test.enemy_has_scored());
+        let packet = test.sniff_packet();
+        let own_goal = Point2::new(0.0, -rl::FIELD_MAX_Y);
+        let goal_to_ball_dist = (packet.GameBall.Physics.loc_2d() - own_goal).norm();
+        assert!(goal_to_ball_dist >= 750.0);
+        assert!(packet.GameBall.Physics.vel().norm() >= 1000.0);
     }
 
     #[test]
     #[ignore] // TODO
     fn rolling_quickly() {
-        let test = TestRunner::start0(TestScenario {
-            ball_loc: Vector3::new(2792.5564, 2459.176, 94.02834),
-            ball_vel: Vector3::new(-467.7808, -2086.822, -88.445175),
-            car_loc: Vector3::new(3001.808, 3554.98, 16.99),
-            car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.7710767, 0.0000958738),
-            car_vel: Vector3::new(-379.28546, -1859.9683, 8.41),
-            ..Default::default()
-        });
-        test.set_behavior(Runner2::soccar());
-        test.sleep_millis(5000);
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(2792.5564, 2459.176, 94.02834),
+                ball_vel: Vector3::new(-467.7808, -2086.822, -88.445175),
+                car_loc: Vector3::new(3001.808, 3554.98, 16.99),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.7710767, 0.0000958738),
+                car_vel: Vector3::new(-379.28546, -1859.9683, 8.41),
+                ..Default::default()
+            })
+            .behavior(Runner2::soccar())
+            .run_for_millis(5000);
 
         assert!(test.has_scored());
     }
@@ -93,19 +99,22 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore] // TODO
     fn loft_in_front_of_goal_from_the_side() {
-        let test = TestRunner::start0(TestScenario {
-            ball_loc: Vector3::new(-2288.2634, -4688.248, 93.15),
-            ball_vel: Vector3::new(1281.6293, -1659.181, 0.0),
-            car_loc: Vector3::new(-3077.711, -3389.5276, 17.01),
-            car_rot: Rotation3::from_unreal_angles(-0.00958738, -0.95528656, -0.0000958738),
-            car_vel: Vector3::new(1027.5283, -1455.2512, 8.3),
-            ..Default::default()
-        });
-        test.set_behavior(Runner2::soccar());
-        test.sleep_millis(5000);
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(-2288.2634, -4688.248, 93.15),
+                ball_vel: Vector3::new(1281.6293, -1659.181, 0.0),
+                car_loc: Vector3::new(-3077.711, -3389.5276, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, -0.95528656, -0.0000958738),
+                car_vel: Vector3::new(1027.5283, -1455.2512, 8.3),
+                ..Default::default()
+            })
+            .behavior(Runner2::soccar())
+            .run_for_millis(4000);
 
-        assert!(test.has_scored());
+        assert!(!test.enemy_has_scored());
+        let packet = test.sniff_packet();
+        assert!(packet.GameBall.Physics.locp().x >= 1000.0);
+        assert!(packet.GameBall.Physics.vel().x >= 1000.0);
     }
 }

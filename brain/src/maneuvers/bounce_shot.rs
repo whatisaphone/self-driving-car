@@ -191,21 +191,21 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore] // TODO
     fn long_high_bouncing_save() {
-        let test = TestRunner::start0(TestScenario {
-            ball_loc: Vector3::new(90.25211, -340.07803, 1487.03),
-            ball_vel: Vector3::new(27.551777, -1300.1466, -571.16125),
-            car_loc: Vector3::new(-636.6111, 538.8031, 16.544558),
-            car_rot: Rotation3::from_unreal_angles(-0.01236772, -1.6032016, 0.0000958738),
-            car_vel: Vector3::new(-60.050007, -1915.0122, 15.930969),
-            ..Default::default()
-        });
-        test.set_behavior(Repeat::new(|| {
-            BounceShot::new(Point2::new(rl::FIELD_MAX_X, -rl::FIELD_MAX_Y))
-        }));
+        let corner = Point2::new(rl::FIELD_MAX_X, -rl::FIELD_MAX_Y);
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(90.25211, -340.07803, 1487.03),
+                ball_vel: Vector3::new(27.551777, -1300.1466, -571.16125),
+                car_loc: Vector3::new(-636.6111, 538.8031, 16.544558),
+                car_rot: Rotation3::from_unreal_angles(-0.01236772, -1.6032016, 0.0000958738),
+                car_vel: Vector3::new(-60.050007, -1915.0122, 15.930969),
+                ..Default::default()
+            })
+            .behavior(BounceShot::new(corner))
+            .run_for_millis(2500);
 
-        test.sleep_millis(3000);
-        unimplemented!()
+        let packet = test.sniff_packet();
+        assert!(packet.GameBall.Physics.locp().x >= 1000.0);
     }
 }
