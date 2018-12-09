@@ -96,8 +96,7 @@ where
         }
 
         match self.estimate_approach(ctx, &intercept, target_loc) {
-            Ok(Do::Coast) => self.drive(ctx, target_loc, false),
-            Ok(Do::Boost) => self.drive(ctx, target_loc, true),
+            Ok(Do::Drive(throttle, boost)) => self.drive(ctx, target_loc, throttle, boost),
             Ok(Do::Jump) => self.jump(target_loc, target_rot, dodge_angle),
             Err(error) => {
                 ctx.eeg.log(format!(
@@ -215,43 +214,63 @@ where
             return Ok(Do::Jump);
         }
 
-        // Phase 1: driving forward
-        let mut drive = Car1Dv2::new()
-            .with_speed(ctx.me().Physics.vel().norm())
-            .with_boost(ctx.me().Boost as f32);
-        drive.advance(drive_time, 1.0, true);
-        let drive_start_loc = ctx.me().Physics.loc_2d();
-        let drive_forward = (target_loc.to_2d() - drive_start_loc).to_axis();
-        let drive_end_loc = drive_start_loc + drive_forward.as_ref() * drive.distance();
-        let drive_end_vel = drive_forward.as_ref() * drive.speed();
+        let would_reach = |throttle, boost| {
+            // Phase 1: driving forward
+            let mut drive = Car1Dv2::new()
+                .with_speed(ctx.me().Physics.vel().norm())
+                .with_boost(ctx.me().Boost as f32);
+            drive.advance(drive_time, throttle, boost);
+            let drive_start_loc = ctx.me().Physics.loc_2d();
+            let drive_forward = (target_loc.to_2d() - drive_start_loc).to_axis();
+            let drive_end_loc = drive_start_loc + drive_forward.as_ref() * drive.distance();
+            let drive_end_vel = drive_forward.as_ref() * drive.speed();
 
-        // Phase 2: a jump in which the xy-velocity stays constant
-        let jump_end_loc = drive_end_loc + drive_end_vel * jump_duration;
+            // Phase 2: a jump in which the xy-velocity stays constant
+            let jump_end_loc = drive_end_loc + drive_end_vel * jump_duration;
 
-        // Calculate how far ahead/behind the target location
-        let car_offset = (jump_end_loc - target_loc.to_2d()).dot(&drive_forward);
+            // Calculate how far ahead/behind the target location
+            (jump_end_loc - target_loc.to_2d()).dot(&drive_forward)
+        };
+
+        let coast_offset = would_reach(0.0, false);
+        let blitz_offset = would_reach(1.0, true);
+
+        let (throttle, boost) = if coast_offset > 0.0 {
+            // We're overshooting…
+            (0.0, false)
+        } else if would_reach(1.0, false) > 0.0 {
+            (0.0, false)
+        } else if blitz_offset > 0.0 {
+            (1.0, false)
+        } else {
+            (1.0, true)
+        };
 
         ctx.eeg.print_value("i_ball", intercept.ball_loc);
         ctx.eeg.print_value("target", target_loc);
         ctx.eeg.print_time("drive_time", drive_time);
         ctx.eeg.print_time("total_time", total_time);
         ctx.eeg
-            .print_value("car_offset", format!("{:.0}", car_offset));
+            .print_value("coast_offset", format!("{:.0}", coast_offset));
+        ctx.eeg
+            .print_value("blitz_offset", format!("{:.0}", blitz_offset));
 
-        if car_offset > 0.0 {
-            Ok(Do::Coast)
-        } else {
-            Ok(Do::Boost)
-        }
+        Ok(Do::Drive(throttle, boost))
     }
 
-    fn drive(&self, ctx: &mut Context, target_loc: Point3<f32>, throttle: bool) -> Action {
+    fn drive(
+        &self,
+        ctx: &mut Context,
+        target_loc: Point3<f32>,
+        throttle: f32,
+        boost: bool,
+    ) -> Action {
         let me = ctx.me();
         let steer = simple_steer_towards(&me.Physics, target_loc.to_2d().coords);
         Action::Yield(rlbot::ffi::PlayerInput {
-            Throttle: throttle as i32 as f32,
+            Throttle: throttle,
             Steer: steer,
-            Boost: throttle && me.Physics.vel().norm() < rl::CAR_ALMOST_MAX_SPEED,
+            Boost: boost && me.Physics.vel().norm() < rl::CAR_ALMOST_MAX_SPEED,
             ..Default::default()
         })
     }
@@ -304,8 +323,8 @@ pub fn car_ball_contact_with_pitch(
 }
 
 enum Do {
-    Coast,
-    Boost,
+    /// `(throttle, boost)`
+    Drive(f32, bool),
     Jump,
 }
 
