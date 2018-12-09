@@ -70,7 +70,7 @@ impl Behavior for PanicDefense {
                 ctx.eeg.draw(Drawable::print("Turn", color::GREEN));
                 Action::Yield(rlbot::ffi::PlayerInput {
                     Throttle: 1.0,
-                    Steer: simple_steer_towards(&me.Physics, aim_hint.coords),
+                    Steer: simple_steer_towards(&me.Physics, aim_hint),
                     Handbrake: true,
                     ..Default::default()
                 })

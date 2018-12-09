@@ -74,7 +74,7 @@ impl Behavior for BounceShot {
 
         // TODO: this is not how this works…
         let mut child = GroundAccelToLoc::new(
-            intercept_car_loc.coords,
+            intercept_car_loc,
             ctx.packet.GameInfo.TimeSeconds + intercept.time,
         );
         child.execute2(ctx)
@@ -116,7 +116,10 @@ impl BounceShot {
     }
 
     fn flip(&mut self, ctx: &mut Context) -> Action {
-        let angle = simple_yaw_diff(&ctx.me().Physics, ctx.packet.GameBall.Physics.loc().to_2d());
+        let angle = simple_yaw_diff(
+            &ctx.me().Physics,
+            ctx.packet.GameBall.Physics.locp().to_2d(),
+        );
         Action::call(QuickJumpAndDodge::begin(ctx.packet).angle(angle))
     }
 }

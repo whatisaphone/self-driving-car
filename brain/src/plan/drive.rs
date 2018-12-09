@@ -4,7 +4,7 @@ use crate::{
     utils::geometry::ExtendF32,
 };
 use common::{prelude::*, rl};
-use nalgebra::{Point2, Vector2};
+use nalgebra::Point2;
 use rlbot;
 use simulate::Car1Dv2;
 use std::f32::consts::PI;
@@ -15,8 +15,7 @@ const GROUND_DODGE_TIME: f32 = 2.0;
 pub fn rough_time_drive_to_loc(car: &rlbot::ffi::PlayerInfo, target_loc: Point2<f32>) -> f32 {
     let target_dist = (car.Physics.locp().to_2d() - target_loc).norm();
 
-    let base_time =
-        2.0 / 120.0 + steer_penalty(car, simple_yaw_diff(&car.Physics, target_loc.coords));
+    let base_time = 2.0 / 120.0 + steer_penalty(car, simple_yaw_diff(&car.Physics, target_loc));
 
     let mut sim_car = Car1Dv2::new()
         .with_speed(car.Physics.vel().norm())
@@ -37,7 +36,7 @@ fn steer_penalty(car: &rlbot::ffi::PlayerInfo, desired_aim: f32) -> f32 {
 
 pub fn get_route_dodge(
     car: &rlbot::ffi::PlayerInfo,
-    target_loc: Vector2<f32>,
+    target_loc: Point2<f32>,
 ) -> Option<Box<Behavior>> {
     const DODGE_SPEED_BOOST: f32 = 500.0; // TODO: Literally just guessed this
 
@@ -60,7 +59,7 @@ pub fn get_route_dodge(
         return None; // We can't get any faster.
     }
 
-    let target_dist = (car.Physics.loc().to_2d() - target_loc).norm();
+    let target_dist = (car.Physics.locp().to_2d() - target_loc).norm();
     let dodge_vel = car.Physics.vel().norm() + DODGE_SPEED_BOOST;
     let travel_time = target_dist / dodge_vel;
     if travel_time < GROUND_DODGE_TIME {

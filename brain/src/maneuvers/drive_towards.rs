@@ -5,12 +5,12 @@ use crate::{
     strategy::Context,
 };
 use common::{prelude::*, rl};
-use nalgebra::{Point2, Vector2};
+use nalgebra::Point2;
 use rlbot;
 use simulate::linear_interpolate;
 use std::f32::consts::PI;
 
-pub fn drive_towards(ctx: &mut Context, target_loc: Vector2<f32>) -> rlbot::ffi::PlayerInput {
+pub fn drive_towards(ctx: &mut Context, target_loc: Point2<f32>) -> rlbot::ffi::PlayerInput {
     let me = ctx.me();
 
     let yaw_diff = simple_yaw_diff(&me.Physics, target_loc);
@@ -18,10 +18,8 @@ pub fn drive_towards(ctx: &mut Context, target_loc: Vector2<f32>) -> rlbot::ffi:
 
     ctx.eeg
         .draw(Drawable::print(stringify!(drive_towards), color::YELLOW));
-    ctx.eeg.draw(Drawable::ghost_car_ground(
-        Point2::from(target_loc),
-        me.Physics.rot(),
-    ));
+    ctx.eeg
+        .draw(Drawable::ghost_car_ground(target_loc, me.Physics.rot()));
 
     let handbrake_cutoff = linear_interpolate(
         &[0.0, rl::CAR_NORMAL_SPEED],
@@ -55,6 +53,6 @@ impl Behavior for DriveTowards {
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {
-        Action::Yield(drive_towards(ctx, self.target_loc.coords))
+        Action::Yield(drive_towards(ctx, self.target_loc))
     }
 }

@@ -266,7 +266,7 @@ where
         boost: bool,
     ) -> Action {
         let me = ctx.me();
-        let steer = simple_steer_towards(&me.Physics, target_loc.to_2d().coords);
+        let steer = simple_steer_towards(&me.Physics, target_loc.to_2d());
         Action::Yield(rlbot::ffi::PlayerInput {
             Throttle: throttle,
             Steer: steer,

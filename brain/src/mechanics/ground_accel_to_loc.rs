@@ -7,18 +7,18 @@ use crate::{
     strategy::Context,
 };
 use common::{prelude::*, rl};
-use nalgebra::{Point2, Vector2};
+use nalgebra::Point2;
 use rlbot;
 use simulate::Car1Dv2;
 use std::f32::consts::PI;
 
 pub struct GroundAccelToLoc {
-    target_loc: Vector2<f32>,
+    target_loc: Point2<f32>,
     target_time: f32,
 }
 
 impl GroundAccelToLoc {
-    pub fn new(target_loc: Vector2<f32>, target_time: f32) -> GroundAccelToLoc {
+    pub fn new(target_loc: Point2<f32>, target_time: f32) -> GroundAccelToLoc {
         GroundAccelToLoc {
             target_loc,
             target_time,
@@ -33,7 +33,7 @@ impl Behavior for GroundAccelToLoc {
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {
         let me = ctx.me();
-        let distance = (me.Physics.loc().to_2d() - self.target_loc).norm();
+        let distance = (me.Physics.locp().to_2d() - self.target_loc).norm();
         let time_remaining = self.target_time - ctx.packet.GameInfo.TimeSeconds;
 
         ctx.eeg.draw(Drawable::ghost_car_ground(
@@ -104,7 +104,7 @@ mod integration_tests {
         mechanics::GroundAccelToLoc,
     };
     use common::prelude::*;
-    use nalgebra::{Vector2, Vector3};
+    use nalgebra::{Point2, Vector3};
 
     // This test is ignored because it's finicky and not quite accurate. The
     // issue seems to be that there is more input lag for throttle than for
@@ -114,7 +114,7 @@ mod integration_tests {
     fn verify_arrival_time() {
         let cases = [(-200.0, 500.0, 0), (100.0, 600.0, 50)];
         for &(x, y, boost) in cases.iter() {
-            let target_loc = Vector2::new(x, y);
+            let target_loc = Point2::new(x, y);
             let test = TestRunner::start2(
                 TestScenario {
                     ball_loc: Vector3::new(2000.0, 0.0, 0.0),
@@ -127,7 +127,7 @@ mod integration_tests {
             test.sleep_millis(2000);
 
             let packet = test.sniff_packet();
-            let diff = (packet.GameCars[0].Physics.loc().to_2d() - target_loc).norm();
+            let diff = (packet.GameCars[0].Physics.locp().to_2d() - target_loc).norm();
             println!("target loc: {:.?}", target_loc);
             println!("car loc: {:.?}", packet.GameCars[0].Physics.loc());
             println!("diff: {:.0}", diff);

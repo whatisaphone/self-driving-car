@@ -29,7 +29,7 @@ impl Behavior for BlitzToLocation {
         let distance = (me.Physics.locp().to_2d() - self.target_loc).norm();
         let speed = me.Physics.vel().norm();
 
-        let steer = simple_steer_towards(&me.Physics, self.target_loc.coords);
+        let steer = simple_steer_towards(&me.Physics, self.target_loc);
 
         ctx.eeg.draw(Drawable::ghost_car_ground(
             self.target_loc,

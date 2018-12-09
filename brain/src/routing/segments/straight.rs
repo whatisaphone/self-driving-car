@@ -159,7 +159,7 @@ impl SegmentRunner for StraightRunner {
 
         SegmentRunAction::Yield(rlbot::ffi::PlayerInput {
             Throttle: 1.0,
-            Steer: simple_steer_towards(&me.Physics, target_loc.coords),
+            Steer: simple_steer_towards(&me.Physics, target_loc),
             Boost: true,
             ..Default::default()
         })

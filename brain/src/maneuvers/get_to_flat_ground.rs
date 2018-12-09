@@ -47,7 +47,7 @@ impl Behavior for GetToFlatGround {
                 (me.Physics.locp() + me.Physics.rot() * Vector3::new(500.0, 0.0, 250.0)).to_2d();
             ctx.eeg
                 .draw(Drawable::ghost_car_ground(target_loc, me.Physics.rot()));
-            Action::Yield(drive_towards(ctx, target_loc.coords))
+            Action::Yield(drive_towards(ctx, target_loc))
         } else if me.Physics.ang_vel().norm() >= 5.0 {
             // This is a minor hack for statelessness. We're probably in the middle of a
             // dodge. Just sit tight.
