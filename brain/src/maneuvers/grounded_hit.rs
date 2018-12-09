@@ -130,7 +130,8 @@ where
             return Err(());
         });
 
-        let aim_loc = (self.aim)(ctx, intercept.ball_loc)?;
+        let aim_loc = (self.aim)(ctx, intercept.ball_loc)
+            .map_err(|_| ctx.eeg.log("error getting aim location"))?;
         let (target_loc, _, _) = Self::preliminary_target(ctx, &intercept, aim_loc);
         let ball_max_z = JUMP_MAX_Z + (intercept.ball_loc.z - target_loc.z);
 
