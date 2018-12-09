@@ -61,6 +61,11 @@ impl Behavior for Shoot {
             return Action::Abort;
         }
 
+        // Big shortcoming here: above, we see if there's *any* viable shot along the
+        // ball's trajectory. But this sequence will blitz to the soonest possible
+        // intercept, and GroundedHit will also try to use the soonest possible
+        // intercept, so we might enter this behavior and then immediately abort and
+        // spew a bunch of nonsense logs.
         Action::call(Chain::new(
             Priority::Idle,
             vec![
