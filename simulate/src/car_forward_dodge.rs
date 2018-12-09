@@ -1,7 +1,7 @@
 use common::rl;
 
-const JUMP_TIME: f32 = 2.0 / 120.0; // One frame, and another for input lag
-const WAIT_TIME: f32 = 0.05;
+const JUMP_TIME: f32 = 6.0 / 120.0;
+const WAIT_TIME: f32 = 6.0 / 120.0;
 const LANDING_TIME: f32 = 1.333333;
 const DODGE_IMPULSE: f32 = 500.0;
 

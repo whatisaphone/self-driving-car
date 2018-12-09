@@ -83,13 +83,13 @@ impl ForwardDodgeRunner {
                         Jump: true,
                         ..Default::default()
                     },
-                    1.0 / 120.0,
+                    6.0 / 120.0,
                 )),
                 Box::new(Yielder::new(
                     rlbot::ffi::PlayerInput {
                         ..Default::default()
                     },
-                    plan.dodge.dodge_duration - 1.0 / 120.0,
+                    plan.dodge.dodge_duration - 6.0 / 120.0,
                 )),
             ],
         ));
