@@ -6,7 +6,7 @@ use crate::{
     utils::Wall,
 };
 use common::prelude::*;
-use nalgebra::Point3;
+use nalgebra::Point2;
 use std::f32::consts::PI;
 
 #[derive(new)]
@@ -29,9 +29,11 @@ impl Strategy for Soccar {
     }
 
     fn interrupt(&mut self, ctx: &mut Context, current: &Behavior) -> Option<Box<Behavior>> {
-        // Force kickoff behavior
+        // Force kickoff behavior. We can't rely on the normal routing, because it
+        // doesn't account for boost pads that you pick up on the way, so it dodges and
+        // goes too slow.
         if current.priority() < Priority::Force
-            && (ctx.packet.GameBall.Physics.locp() - Point3::origin()).norm() < 1.0
+            && (ctx.packet.GameBall.Physics.loc_2d() - Point2::origin()).norm() < 1.0
             && ctx.packet.GameBall.Physics.vel().norm() < 1.0
         {
             return Some(Box::new(Chain::new(
