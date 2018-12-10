@@ -291,3 +291,42 @@ pub enum SegmentRunAction {
     Success,
     Failure,
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        routing::models::{CarState, PlanningContext, PlanningDump, RoutePlanner},
+        strategy::Scenario,
+    };
+    use common::prelude::*;
+    use nalgebra::{Point3, UnitComplex, Vector3};
+    use std::{f32::consts::PI, mem};
+
+    #[test]
+    #[ignore(note = "Use this as needed to debug a plan.")]
+    fn debug_plan() {
+        // I'm very lucky that this works.
+        let scenario: Scenario = unsafe { mem::zeroed() };
+        let ball_prediction = unsafe { mem::zeroed() };
+
+        let planner: &RoutePlanner = unsafe { mem::uninitialized() }; // Fill this in.
+        let ctx = PlanningContext {
+            game: &scenario.game,
+            start: CarState {
+                loc: Point3::new(0.0, -4608.0, 17.01),
+                rot: UnitComplex::new(PI / 2.0).around_z_axis(),
+                vel: Vector3::zeros(),
+                boost: 33.0,
+            },
+            ball_prediction: &ball_prediction,
+        };
+        let mut log = Vec::new();
+        let mut dump = PlanningDump { log: &mut log };
+        planner
+            .plan(&ctx, &mut dump)
+            .unwrap()
+            .provisional_expand(&scenario)
+            .ok()
+            .unwrap();
+    }
+}
