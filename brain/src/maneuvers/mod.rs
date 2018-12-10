@@ -2,7 +2,7 @@ pub use crate::maneuvers::{
     blitz_to_location::BlitzToLocation,
     bounce_shot::BounceShot,
     drive_towards::{drive_towards, DriveTowards},
-    fifty_fifty::{blocking_angle, FiftyFifty},
+    fifty_fifty::FiftyFifty,
     get_to_flat_ground::GetToFlatGround,
     grounded_hit::GroundedHit,
     panic_defense::PanicDefense,

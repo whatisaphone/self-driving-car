@@ -3,7 +3,7 @@ use crate::{
         defense2::retreat::Retreat, tepid_hit::TepidHit, Action, Behavior, Chain, Priority,
     },
     eeg::{color, Drawable},
-    maneuvers::{blocking_angle, BounceShot, GroundedHit},
+    maneuvers::{BounceShot, GroundedHit},
     predict::{intercept::NaiveIntercept, naive_ground_intercept_2},
     routing::{behavior::FollowRoute, plan::GroundIntercept},
     strategy::{Context, Scenario},
@@ -231,6 +231,24 @@ pub fn defensive_hit(
         PI / 6.0,
     );
     Ok(intercept_ball_loc.to_2d() - Vector2::unit(target_angle) * 1000.0)
+}
+
+/// Calculate an angle from `ball_loc` to `car_loc`, trying to get between
+/// `ball_loc` and `block_loc`, but not adjusting the approach angle by more
+/// than `max_angle_diff`.
+fn blocking_angle(
+    ball_loc: Point2<f32>,
+    car_loc: Point2<f32>,
+    block_loc: Point2<f32>,
+    max_angle_diff: f32,
+) -> f32 {
+    let naive_angle = ball_loc.coords.angle_to(car_loc.coords);
+    let block_angle = ball_loc.coords.angle_to(block_loc.coords);
+    let adjust = (block_angle - naive_angle)
+        .normalize_angle()
+        .max(-max_angle_diff)
+        .min(max_angle_diff);
+    (naive_angle + adjust).normalize_angle()
 }
 
 #[cfg(test)]

@@ -3,10 +3,7 @@ use crate::{
     maneuvers::GroundedHit,
     routing::{behavior::FollowRoute, plan::GroundIntercept},
     strategy::Context,
-    utils::geometry::ExtendF32,
 };
-use common::prelude::*;
-use nalgebra::Point2;
 
 pub struct FiftyFifty;
 
@@ -30,24 +27,6 @@ impl Behavior for FiftyFifty {
             ],
         ))
     }
-}
-
-/// Calculate an angle from `ball_loc` to `car_loc`, trying to get between
-/// `ball_loc` and `block_loc`, but not adjusting the approach angle by more
-/// than `max_angle_diff`.
-pub fn blocking_angle(
-    ball_loc: Point2<f32>,
-    car_loc: Point2<f32>,
-    block_loc: Point2<f32>,
-    max_angle_diff: f32,
-) -> f32 {
-    let naive_angle = ball_loc.coords.angle_to(car_loc.coords);
-    let block_angle = ball_loc.coords.angle_to(block_loc.coords);
-    let adjust = (block_angle - naive_angle)
-        .normalize_angle()
-        .max(-max_angle_diff)
-        .min(max_angle_diff);
-    (naive_angle + adjust).normalize_angle()
 }
 
 #[cfg(test)]
