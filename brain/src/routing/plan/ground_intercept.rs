@@ -14,7 +14,17 @@ use crate::{
 use common::prelude::*;
 
 #[derive(Clone, new)]
-pub struct GroundIntercept;
+pub struct GroundIntercept {
+    #[new(value = "false")]
+    allow_dodging: bool,
+}
+
+impl GroundIntercept {
+    pub fn allow_dodging(mut self, allow_dodging: bool) -> Self {
+        self.allow_dodging = allow_dodging;
+        self
+    }
+}
 
 impl RoutePlanner for GroundIntercept {
     fn name(&self) -> &'static str {
@@ -55,15 +65,17 @@ impl RoutePlanner for GroundIntercept {
         );
 
         let turn = TurnPlanner::new(guess.ball_loc.to_2d(), None).plan(ctx, dump)?;
-        Ok(ChainedPlanner::join_planner(
-            turn,
-            Some(Box::new(GroundInterceptStraight::new())),
-        ))
+        let straight = GroundInterceptStraight {
+            allow_dodging: self.allow_dodging,
+        };
+        Ok(ChainedPlanner::join_planner(turn, Some(Box::new(straight))))
     }
 }
 
-#[derive(Clone, new)]
-struct GroundInterceptStraight;
+#[derive(Clone)]
+struct GroundInterceptStraight {
+    allow_dodging: bool,
+}
 
 impl RoutePlanner for GroundInterceptStraight {
     fn name(&self) -> &'static str {
@@ -109,6 +121,7 @@ impl RoutePlanner for GroundInterceptStraight {
             end_chop,
             StraightMode::Fake,
         )
+        .allow_dodging(self.allow_dodging)
         .plan(ctx, dump)
     }
 }

@@ -2,6 +2,7 @@ pub use crate::behavior::{
     behavior::{Action, Behavior, Priority},
     defense::{defensive_hit, Defense, HitToOwnCorner},
     higher_order::{Chain, Fuse, Predicate, Repeat, TimeLimit, While},
+    kickoff::Kickoff,
     null::NullBehavior,
     offense::Offense,
     tepid_hit::TepidHit,
@@ -17,6 +18,7 @@ mod defense;
 #[macro_use]
 mod higher_order;
 mod defense2;
+mod kickoff;
 mod null;
 mod offense;
 mod regroup;

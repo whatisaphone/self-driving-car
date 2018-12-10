@@ -6,6 +6,7 @@ use crate::routing::{
     recover::{IsSkidding, NotFacingTarget2D, NotOnFlatGround},
     segments::{Brake, Chain, ForwardDodge, Straight, StraightMode},
 };
+use arrayvec::ArrayVec;
 use common::{prelude::*, PrettyPrint};
 use nalgebra::Point2;
 use ordered_float::NotNan;
@@ -20,6 +21,15 @@ pub struct GroundStraightPlanner {
     /// shoot, position itself, etc.
     end_chop: f32,
     mode: StraightMode,
+    #[new(value = "true")]
+    allow_dodging: bool,
+}
+
+impl GroundStraightPlanner {
+    pub fn allow_dodging(mut self, allow_dodging: bool) -> Self {
+        self.allow_dodging = allow_dodging;
+        self
+    }
 }
 
 impl RoutePlanner for GroundStraightPlanner {
@@ -49,13 +59,19 @@ impl RoutePlanner for GroundStraightPlanner {
             },
         );
 
-        let simple =
+        let mut planners = ArrayVec::<[&RoutePlanner; 4]>::new();
+        let straight =
             StraightSimple::new(self.target_loc, self.target_time, self.end_chop, self.mode);
-        let with_dodge =
-            StraightWithDodge::new(self.target_loc, self.target_time, self.end_chop, self.mode);
+        planners.push(&straight);
 
-        let planners = [&simple as &RoutePlanner, &with_dodge];
-        let plans = planners.iter().map(|p| p.plan(ctx, dump));
+        let with_dodge;
+        if self.allow_dodging {
+            with_dodge =
+                StraightWithDodge::new(self.target_loc, self.target_time, self.end_chop, self.mode);
+            planners.push(&with_dodge);
+        }
+
+        let plans = planners.into_iter().map(|p| p.plan(ctx, dump));
         let plans = at_least_one_ok(plans)?;
         Ok(fastest(plans.into_iter()))
     }

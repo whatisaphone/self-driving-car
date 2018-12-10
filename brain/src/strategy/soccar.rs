@@ -1,5 +1,5 @@
 use crate::{
-    behavior::{Behavior, Chain, Defense, Offense, Priority},
+    behavior::{Behavior, Chain, Defense, Kickoff, Offense, Priority},
     maneuvers::{FiftyFifty, GetToFlatGround},
     routing::{behavior::FollowRoute, plan::GetDollar},
     strategy::{scenario::Scenario, strategy::Strategy, Context},
@@ -38,7 +38,7 @@ impl Strategy for Soccar {
         {
             return Some(Box::new(Chain::new(
                 Priority::Force,
-                vec![Box::new(FiftyFifty::new())],
+                vec![Box::new(Kickoff::new())],
             )));
         }
 

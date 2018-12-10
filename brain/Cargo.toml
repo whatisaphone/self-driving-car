@@ -5,6 +5,7 @@ authors = ["John Simon <john@whatisaph.one>"]
 edition = "2018"
 
 [dependencies]
+arrayvec = "0.4.8"
 crossbeam-channel = "0.2.6"
 derive-new = "0.5.5"
 flatbuffers = "0.5.0"
