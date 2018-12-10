@@ -81,8 +81,8 @@ impl Behavior for PushToOwnCorner {
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {
         let ball_trajectory = WallRayCalculator::calculate(
-            ctx.packet.GameBall.Physics.loc().to_2d(),
-            ctx.packet.GameBall.Physics.loc().to_2d() + ctx.packet.GameBall.Physics.vel().to_2d(),
+            ctx.packet.GameBall.Physics.loc_2d(),
+            ctx.packet.GameBall.Physics.loc_2d() + ctx.packet.GameBall.Physics.vel_2d(),
         );
         let already_cornering = match WallRayCalculator::wall_for_point(ctx.game, ball_trajectory) {
             Wall::OwnGoal => false,
@@ -190,7 +190,7 @@ impl HitToOwnCorner {
         let avoid = ctx.game.own_goal().center_2d;
 
         let me = ctx.me();
-        let me_loc = me.Physics.loc().to_2d();
+        let me_loc = me.Physics.loc_2d();
         let ball_loc = intercept.ball_loc.to_2d();
         let me_to_ball = ball_loc - me_loc;
 
@@ -226,7 +226,7 @@ pub fn defensive_hit(
     let me = ctx.me();
     let target_angle = blocking_angle(
         intercept_ball_loc.to_2d(),
-        me.Physics.loc().to_2d(),
+        me.Physics.loc_2d(),
         ctx.game.own_goal().center_2d,
         PI / 6.0,
     );

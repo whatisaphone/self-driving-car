@@ -39,7 +39,7 @@ pub struct NotOnFlatGround;
 impl NotOnFlatGround {
     pub fn evaluate(&mut self, state: &CarState) -> bool {
         let rot = state.forward_axis();
-        let rot_flat = state.forward_axis().to_2d().to_3d();
+        let rot_flat = rot.to_2d().to_3d();
         rot.angle(&rot_flat) >= 15.0_f32.to_radians()
     }
 }

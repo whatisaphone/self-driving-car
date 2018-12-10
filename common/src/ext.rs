@@ -159,6 +159,7 @@ pub trait ExtendPhysics {
     fn rot(&self) -> Rotation3<f32>;
     fn quat(&self) -> UnitQuaternion<f32>;
     fn vel(&self) -> Vector3<f32>;
+    fn vel_2d(&self) -> Vector2<f32>;
     fn ang_vel(&self) -> Vector3<f32>;
     /// A unit vector in the car's forward direction.
     fn forward_axis(&self) -> Unit<Vector3<f32>>;
@@ -189,6 +190,10 @@ impl ExtendPhysics for rlbot::ffi::Physics {
 
     fn vel(&self) -> Vector3<f32> {
         Vector3::new(self.Velocity.X, self.Velocity.Y, self.Velocity.Z)
+    }
+
+    fn vel_2d(&self) -> Vector2<f32> {
+        Vector2::new(self.Velocity.X, self.Velocity.Y)
     }
 
     fn ang_vel(&self) -> Vector3<f32> {

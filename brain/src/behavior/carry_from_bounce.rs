@@ -27,11 +27,11 @@ impl Behavior for CarryFromBounce {
         });
 
         let theta1 = enemy_goal_center().angle_to(intercept.ball_loc.to_2d());
-        let theta2 = Vector2::zeros().angle_to(packet.GameBall.Physics.vel().to_2d());
+        let theta2 = Vector2::zeros().angle_to(packet.GameBall.Physics.vel_2d());
         let theta = (theta1 + theta2 * 0.2) / 1.2;
         let target_loc =
             intercept.ball_loc.to_2d() + Vector2::new(theta.cos(), theta.sin()) * 200.0;
-        let target_dist = (target_loc - me.Physics.loc().to_2d()).norm();
+        let target_dist = (target_loc - me.Physics.loc_2d()).norm();
 
         eeg.draw(Drawable::print(
             format!("target_dist: {:.0}", target_dist),

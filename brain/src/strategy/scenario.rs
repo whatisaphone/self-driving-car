@@ -152,7 +152,7 @@ impl<'a> Scenario<'a> {
 
 fn blitz_start(car: &rlbot::ffi::PlayerInfo, ball_prediction: &BallTrajectory) -> Car1Dv2 {
     let ball_loc = ball_prediction.start().loc.to_2d();
-    let car_vel = car.Physics.vel().to_2d();
+    let car_vel = car.Physics.vel_2d();
     let car_to_ball = ball_loc - car.Physics.loc_2d();
     let speed_towards_ball = car_vel.dot(&car_to_ball.normalize());
     Car1Dv2::new()
@@ -195,7 +195,7 @@ fn simulate_ball_blitz(
 fn blitz_penalty(car: &rlbot::ffi::PlayerInfo, intercept: &NaiveIntercept) -> f32 {
     let ball_loc = intercept.ball_loc.to_2d();
     let ball_vel = intercept.ball_vel.to_2d();
-    let car_vel = car.Physics.vel().to_2d();
+    let car_vel = car.Physics.vel_2d();
     let car_forward = car.Physics.forward_axis_2d();
     let car_to_ball = ball_loc - car.Physics.loc_2d();
 

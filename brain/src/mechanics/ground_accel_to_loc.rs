@@ -33,7 +33,7 @@ impl Behavior for GroundAccelToLoc {
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {
         let me = ctx.me();
-        let distance = (me.Physics.loc().to_2d() - self.target_loc).norm();
+        let distance = (me.Physics.loc_2d() - self.target_loc).norm();
         let time_remaining = self.target_time - ctx.packet.GameInfo.TimeSeconds;
 
         ctx.eeg.draw(Drawable::ghost_car_ground(
@@ -127,7 +127,7 @@ mod integration_tests {
             test.sleep_millis(2000);
 
             let packet = test.sniff_packet();
-            let diff = (packet.GameCars[0].Physics.loc().to_2d() - target_loc).norm();
+            let diff = (packet.GameCars[0].Physics.loc_2d() - target_loc).norm();
             println!("target loc: {:.?}", target_loc);
             println!("car loc: {:.?}", packet.GameCars[0].Physics.loc());
             println!("diff: {:.0}", diff);

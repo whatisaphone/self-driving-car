@@ -65,7 +65,7 @@ impl Behavior for GetToFlatGround {
                 let target_loc = avoid_goal_wall_waypoint(&start, ball_loc).unwrap_or(ball_loc);
                 (target_loc - me.Physics.loc_2d())
             } else {
-                me.Physics.vel().to_2d()
+                me.Physics.vel_2d()
             }
             .to_3d(0.0)
             .to_axis();

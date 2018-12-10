@@ -27,6 +27,10 @@ impl CarState {
     pub fn right_axis(&self) -> Unit<Vector3<f32>> {
         physics::car_right_axis(self.rot)
     }
+
+    pub fn right_axis_2d(&self) -> Unit<Vector2<f32>> {
+        physics::car_right_axis_2d(self.rot.to_2d())
+    }
 }
 
 impl<'a> From<&'a rlbot::ffi::PlayerInfo> for CarState {

@@ -55,7 +55,7 @@ impl Behavior for BounceShot {
         });
 
         let intercept_car_loc = Self::rough_shooting_spot(&intercept, self.aim_loc);
-        let distance = (ctx.me().Physics.loc().to_2d() - intercept_car_loc).norm();
+        let distance = (ctx.me().Physics.loc_2d() - intercept_car_loc).norm();
 
         ctx.eeg.draw(Drawable::Crosshair(self.aim_loc));
         ctx.eeg.draw(Drawable::GhostBall(intercept.ball_loc));
@@ -116,7 +116,7 @@ impl BounceShot {
     }
 
     fn flip(&mut self, ctx: &mut Context) -> Action {
-        let angle = simple_yaw_diff(&ctx.me().Physics, ctx.packet.GameBall.Physics.loc().to_2d());
+        let angle = simple_yaw_diff(&ctx.me().Physics, ctx.packet.GameBall.Physics.loc_2d());
         Action::call(QuickJumpAndDodge::begin(ctx.packet).angle(angle))
     }
 }

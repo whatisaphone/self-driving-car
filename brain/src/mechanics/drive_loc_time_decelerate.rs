@@ -34,7 +34,7 @@ impl Behavior for DriveLocTimeDecelerate {
 
     fn execute(&mut self, packet: &rlbot::ffi::LiveDataPacket, eeg: &mut EEG) -> Action {
         let me = my_car(packet);
-        let distance = (me.Physics.loc().to_2d() - self.target_loc).norm();
+        let distance = (me.Physics.loc_2d() - self.target_loc).norm();
         let time_remaining = self.target_time - packet.GameInfo.TimeSeconds;
 
         if time_remaining < 2.0 / 120.0 {
@@ -197,7 +197,7 @@ mod integration_tests {
             test.sleep_millis(2000);
 
             let packet = test.sniff_packet();
-            let discrepancy = (packet.GameCars[0].Physics.loc().to_2d() - target_loc).norm();
+            let discrepancy = (packet.GameCars[0].Physics.loc_2d() - target_loc).norm();
             println!("target loc: {:.?}", target_loc);
             println!("car loc: {:.?}", packet.GameCars[0].Physics.loc());
             println!("discrepancy: {:.0}", discrepancy);

@@ -211,8 +211,8 @@ fn calculate_circle_turn(
     target_loc: Point2<f32>,
 ) -> Result<Option<CircleTurn>, RoutePlanError> {
     let start_loc = start.loc.to_2d();
-    let start_forward_axis = start.forward_axis().to_2d();
-    let start_right_axis = start.right_axis().to_2d();
+    let start_forward_axis = start.forward_axis_2d();
+    let start_right_axis = start.right_axis_2d();
 
     // Check if we're already facing the target
     let turn_rot = start_forward_axis.rotation_to(&(target_loc - start_loc).to_axis());
