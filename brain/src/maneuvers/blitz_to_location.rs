@@ -26,7 +26,7 @@ impl Behavior for BlitzToLocation {
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {
         let me = ctx.me();
-        let distance = (me.Physics.locp().to_2d() - self.target_loc).norm();
+        let distance = (me.Physics.loc().to_2d() - self.target_loc).norm();
         let speed = me.Physics.vel().norm();
 
         let steer = simple_steer_towards(&me.Physics, self.target_loc);

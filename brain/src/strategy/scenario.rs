@@ -104,7 +104,7 @@ impl<'a> Scenario<'a> {
                 Some(intercept) => intercept.ball_loc,
                 None => self.ball_prediction().iter().last().unwrap().loc,
             };
-            let me_loc = self.game.me().Physics.locp();
+            let me_loc = self.game.me().Physics.loc();
             let point = WallRayCalculator::calculate(me_loc.to_2d(), intercept_loc.to_2d());
             WallRayCalculator::wall_for_point(self.game, point)
         })
@@ -171,7 +171,7 @@ fn simulate_ball_blitz(
     let mut result = None;
 
     for ball in ball_prediction.iter_step_by(0.125) {
-        let dist_to_ball = (car.Physics.locp() - ball.loc).to_2d().norm();
+        let dist_to_ball = (car.Physics.loc() - ball.loc).to_2d().norm();
         if sim.distance() >= dist_to_ball {
             result = Some(NaiveIntercept {
                 time: ball.t - ball_prediction.start().t,

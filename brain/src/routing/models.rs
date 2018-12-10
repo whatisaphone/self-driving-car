@@ -32,7 +32,7 @@ impl CarState {
 impl<'a> From<&'a rlbot::ffi::PlayerInfo> for CarState {
     fn from(info: &'a rlbot::ffi::PlayerInfo) -> Self {
         Self {
-            loc: info.Physics.locp(),
+            loc: info.Physics.loc(),
             rot: info.Physics.quat(),
             vel: info.Physics.vel(),
             boost: info.Boost as f32,

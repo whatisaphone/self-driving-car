@@ -114,7 +114,7 @@ mod integration_tests {
 
         assert!(!test.enemy_has_scored());
         let packet = test.sniff_packet();
-        assert!(packet.GameBall.Physics.locp().x >= 1000.0);
+        assert!(packet.GameBall.Physics.loc().x >= 1000.0);
         assert!(packet.GameBall.Physics.vel().x >= 1000.0);
     }
 }

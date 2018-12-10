@@ -30,7 +30,7 @@ impl Car {
 
     pub fn from_player_info(player: &rlbot::ffi::PlayerInfo) -> Self {
         Self {
-            loc: player.Physics.locp(),
+            loc: player.Physics.loc(),
             rot: player.Physics.quat(),
             vel: player.Physics.vel(),
             boost: player.Boost as f32,

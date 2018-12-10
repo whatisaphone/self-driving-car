@@ -81,8 +81,8 @@ impl Behavior for PushToOwnCorner {
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {
         let ball_trajectory = WallRayCalculator::calculate(
-            ctx.packet.GameBall.Physics.locp().to_2d(),
-            ctx.packet.GameBall.Physics.locp().to_2d() + ctx.packet.GameBall.Physics.vel().to_2d(),
+            ctx.packet.GameBall.Physics.loc().to_2d(),
+            ctx.packet.GameBall.Physics.loc().to_2d() + ctx.packet.GameBall.Physics.vel().to_2d(),
         );
         let already_cornering = match WallRayCalculator::wall_for_point(ctx.game, ball_trajectory) {
             Wall::OwnGoal => false,
@@ -100,7 +100,7 @@ impl Behavior for PushToOwnCorner {
                 naive_ground_intercept_2(&enemy.into(), ctx.scenario.ball_prediction(), |ball| {
                     let own_goal = ctx.game.own_goal().center_2d;
                     ball.loc.z < GroundedHit::max_ball_z()
-                        && Self::shot_angle(ball.loc, enemy.Physics.locp(), own_goal) < PI / 2.0
+                        && Self::shot_angle(ball.loc, enemy.Physics.loc(), own_goal) < PI / 2.0
                 })
             })
             .min_by_key(|i| NotNan::new(i.time).unwrap());
@@ -190,7 +190,7 @@ impl HitToOwnCorner {
         let avoid = ctx.game.own_goal().center_2d;
 
         let me = ctx.me();
-        let me_loc = me.Physics.locp().to_2d();
+        let me_loc = me.Physics.loc().to_2d();
         let ball_loc = intercept.ball_loc.to_2d();
         let me_to_ball = ball_loc - me_loc;
 
@@ -226,7 +226,7 @@ pub fn defensive_hit(
     let me = ctx.me();
     let target_angle = blocking_angle(
         intercept_ball_loc.to_2d(),
-        me.Physics.locp().to_2d(),
+        me.Physics.loc().to_2d(),
         ctx.game.own_goal().center_2d,
         PI / 6.0,
     );
@@ -365,7 +365,7 @@ mod integration_tests {
             .run_for_millis(3000);
 
         let packet = test.sniff_packet();
-        assert!(packet.GameBall.Physics.locp().x < -2000.0);
+        assert!(packet.GameBall.Physics.loc().x < -2000.0);
         assert!(packet.GameBall.Physics.vel().x < -1000.0);
     }
 
@@ -583,7 +583,7 @@ mod integration_tests {
         test.sleep_millis(2000);
         assert!(!test.enemy_has_scored());
         let packet = test.sniff_packet();
-        assert!(packet.GameBall.Physics.locp().x >= 1000.0);
+        assert!(packet.GameBall.Physics.loc().x >= 1000.0);
         assert!(packet.GameBall.Physics.vel().x >= 500.0);
     }
 
@@ -604,7 +604,7 @@ mod integration_tests {
         test.sleep_millis(4000);
         assert!(!test.enemy_has_scored());
         let packet = test.sniff_packet();
-        assert!(packet.GameBall.Physics.locp().x < 1000.0);
+        assert!(packet.GameBall.Physics.loc().x < 1000.0);
         assert!(packet.GameBall.Physics.vel().x < 500.0);
     }
 

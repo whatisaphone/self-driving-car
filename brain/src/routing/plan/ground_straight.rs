@@ -403,7 +403,7 @@ mod integration_tests {
             .run_for_millis(2000);
 
         let packet = test.sniff_packet();
-        let loc = packet.GameCars[0].Physics.locp();
+        let loc = packet.GameCars[0].Physics.loc();
         assert!(loc.y < 1000.0);
     }
 }

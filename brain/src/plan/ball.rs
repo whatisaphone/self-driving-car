@@ -108,7 +108,7 @@ impl BallPredictor for ChipBallPrediction {
         const DT: f32 = rl::PHYSICS_DT;
 
         let mut ball = Ball::new();
-        ball.set_pos(packet.GameBall.Physics.locp());
+        ball.set_pos(packet.GameBall.Physics.loc());
         ball.set_vel(packet.GameBall.Physics.vel());
         ball.set_omega(packet.GameBall.Physics.ang_vel());
 

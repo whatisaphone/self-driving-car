@@ -17,7 +17,7 @@ mod integration_tests {
 
         test.sleep_millis(3000);
         let packet = test.sniff_packet();
-        let car_loc = packet.GameCars[0].Physics.locp();
+        let car_loc = packet.GameCars[0].Physics.loc();
         let distance = (car_loc - expected_loc).norm();
         println!("expected_loc: {:?}", expected_loc);
         println!("car_loc: {:?}", car_loc);

@@ -101,7 +101,7 @@ impl PanicDefense {
                 if ctx
                     .game
                     .own_goal()
-                    .is_y_within_range(me.Physics.locp().y, ..120.0)
+                    .is_y_within_range(me.Physics.loc().y, ..120.0)
                 {
                     return Some(Phase::Finished);
                 }
@@ -131,13 +131,13 @@ impl PanicDefense {
         if let Phase::Rush { aim_hint, .. } = self.phase {
             let cutoff = me.Physics.vel().y.abs() * 0.75;
             ctx.eeg.draw(Drawable::print(
-                format!("cutoff_distance: {:.0}", me.Physics.locp().y - cutoff),
+                format!("cutoff_distance: {:.0}", me.Physics.loc().y - cutoff),
                 color::GREEN,
             ));
             if ctx
                 .game
                 .own_goal()
-                .is_y_within_range(me.Physics.locp().y, ..cutoff)
+                .is_y_within_range(me.Physics.loc().y, ..cutoff)
             {
                 let target_yaw = ctx.game.own_goal().center_2d.angle_to(aim_hint).angle();
                 return Some(Phase::Turn {
@@ -159,7 +159,7 @@ fn calc_aim_hint(ctx: &mut Context) -> Point2<f32> {
     let sim_ball = ctx.scenario.ball_prediction().at_time(time);
     let sim_ball_loc = match sim_ball {
         Some(b) => b.loc,
-        None => ctx.packet.GameBall.Physics.locp(),
+        None => ctx.packet.GameBall.Physics.loc(),
     };
     Point2::new(sim_ball_loc.x.signum() * 2000.0, own_goal.y)
 }
@@ -188,7 +188,7 @@ mod integration_tests {
 
         let packet = test.sniff_packet();
         println!("{:?}", packet.GameCars[0].Physics.vel());
-        assert!(packet.GameCars[0].Physics.locp().y < -4500.0);
+        assert!(packet.GameCars[0].Physics.loc().y < -4500.0);
         assert!(packet.GameCars[0].Physics.vel().norm() < 100.0);
     }
 }

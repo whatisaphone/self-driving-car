@@ -39,6 +39,6 @@ mod integration_tests {
         test.sleep_millis(5500);
 
         let packet = test.sniff_packet();
-        assert!(packet.GameBall.Physics.locp().x >= 1000.0);
+        assert!(packet.GameBall.Physics.loc().x >= 1000.0);
     }
 }

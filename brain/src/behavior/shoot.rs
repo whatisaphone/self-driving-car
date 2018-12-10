@@ -34,7 +34,7 @@ impl Shoot {
     }
 
     fn aim(ctx: &mut Context, ball_loc: Point3<f32>) -> Result<Point2<f32>, ()> {
-        match Self::viable_shot(ctx.game, ctx.me().Physics.locp(), ball_loc) {
+        match Self::viable_shot(ctx.game, ctx.me().Physics.loc(), ball_loc) {
             Some(Shot(loc)) => Ok(loc),
             None => Err(()),
         }
@@ -53,7 +53,7 @@ impl Behavior for Shoot {
 
         let intercept =
             naive_ground_intercept_2(&me.into(), ctx.scenario.ball_prediction(), |ball| {
-                Self::viable_shot(ctx.game, me.Physics.locp(), ball.loc)
+                Self::viable_shot(ctx.game, me.Physics.loc(), ball.loc)
             });
 
         if intercept.is_none() {

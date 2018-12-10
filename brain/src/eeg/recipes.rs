@@ -6,7 +6,7 @@ use rlbot;
 pub fn draw_ball_prediction(rlbot: &rlbot::RLBot, packet: &rlbot::ffi::LiveDataPacket) {
     use chip::Ball;
     let mut ball = Ball::new();
-    ball.set_pos(packet.GameBall.Physics.locp());
+    ball.set_pos(packet.GameBall.Physics.loc());
     ball.set_vel(packet.GameBall.Physics.vel());
     ball.set_omega(packet.GameBall.Physics.ang_vel());
     let mut prev = ball.pos();

@@ -44,7 +44,7 @@ impl Behavior for GetToFlatGround {
             })
         } else if me.OnGround {
             let target_loc =
-                (me.Physics.locp() + me.Physics.rot() * Vector3::new(500.0, 0.0, 250.0)).to_2d();
+                (me.Physics.loc() + me.Physics.rot() * Vector3::new(500.0, 0.0, 250.0)).to_2d();
             ctx.eeg
                 .draw(Drawable::ghost_car_ground(target_loc, me.Physics.rot()));
             Action::Yield(drive_towards(ctx, target_loc))
@@ -56,7 +56,7 @@ impl Behavior for GetToFlatGround {
                 ..Default::default()
             })
         } else {
-            let forward = if me.Physics.locp().y.abs() >= ctx.game.field_max_y() {
+            let forward = if me.Physics.loc().y.abs() >= ctx.game.field_max_y() {
                 // If we're going to land in the goal, land in a convenient direction to
                 // immediately drive out of the goal towards the ball.
                 let mut start = CarState::from(me);

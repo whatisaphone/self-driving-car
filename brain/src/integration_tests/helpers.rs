@@ -687,7 +687,7 @@ impl BallDirector {
         };
 
         let state = &self.scenario.states[index];
-        let current_loc = packet.GameBall.Physics.locp();
+        let current_loc = packet.GameBall.Physics.loc();
         if (state.loc - current_loc).norm() >= RECORDING_DISTANCE_THRESHOLD {
             let ball_state = rlbot::state::DesiredBallState::new().physics(
                 rlbot::state::DesiredPhysics::new()
@@ -775,7 +775,7 @@ impl CarDirector {
             return;
         }
 
-        let current_loc = packet.GameCars[self.player_index as usize].Physics.locp();
+        let current_loc = packet.GameCars[self.player_index as usize].Physics.loc();
         if (tick.state.loc - current_loc).norm() >= RECORDING_DISTANCE_THRESHOLD {
             let car_state = rlbot::state::DesiredCarState::new().physics(
                 rlbot::state::DesiredPhysics::new()

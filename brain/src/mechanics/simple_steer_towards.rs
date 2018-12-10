@@ -8,7 +8,7 @@ pub fn simple_steer_towards(car: &rlbot::ffi::Physics, target_loc: Point2<f32>) 
 }
 
 pub fn simple_yaw_diff(car: &rlbot::ffi::Physics, target_loc: Point2<f32>) -> f32 {
-    let target_yaw = car.locp().to_2d().coords.angle_to(target_loc.coords);
+    let target_yaw = car.loc().to_2d().coords.angle_to(target_loc.coords);
     (target_yaw - car.rot().yaw()).normalize_angle()
 }
 
@@ -36,7 +36,7 @@ mod integration_tests {
             let ball = ctx.packet.GameBall;
             Action::Yield(rlbot::ffi::PlayerInput {
                 Throttle: 1.0,
-                Steer: simple_steer_towards(&me.Physics, ball.Physics.locp().to_2d()),
+                Steer: simple_steer_towards(&me.Physics, ball.Physics.loc().to_2d()),
                 ..Default::default()
             })
         }
@@ -57,6 +57,6 @@ mod integration_tests {
         test.sleep_millis(2000);
 
         let packet = test.sniff_packet();
-        assert!(packet.GameBall.Physics.locp().x < 2700.0);
+        assert!(packet.GameBall.Physics.loc().x < 2700.0);
     }
 }

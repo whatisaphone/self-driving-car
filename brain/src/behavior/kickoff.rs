@@ -45,7 +45,7 @@ mod integration_tests {
             .run_for_millis(3000);
 
         let packet = test.sniff_packet();
-        let ball_loc = packet.GameBall.Physics.locp();
+        let ball_loc = packet.GameBall.Physics.loc();
         let ball_vel = packet.GameBall.Physics.vel();
         let future = ball_loc + ball_vel * 3.0;
         assert!(future.y >= -5000.0);

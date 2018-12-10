@@ -48,7 +48,7 @@ impl GroundedHit<fn(&mut Context, Point3<f32>) -> Result<Point2<f32>, ()>> {
     /// A preset for `Aim` that hits the ball straight ahead.
     #[allow(dead_code)]
     pub fn opposite_of_self(car: &rlbot::ffi::PlayerInfo, ball: Point3<f32>) -> Point2<f32> {
-        ball.to_2d() + (ball.to_2d() - car.Physics.locp().to_2d())
+        ball.to_2d() + (ball.to_2d() - car.Physics.loc().to_2d())
     }
 }
 
@@ -89,7 +89,7 @@ where
         let steer = me
             .Physics
             .forward_axis_2d()
-            .rotation_to(&(target_loc - me.Physics.locp()).to_2d().to_axis());
+            .rotation_to(&(target_loc - me.Physics.loc()).to_2d().to_axis());
         if steer.angle().abs() >= PI / 6.0 {
             ctx.eeg.log("[GroundedHit] not facing the target");
             return Action::Abort;
@@ -119,7 +119,7 @@ where
         // First pass: get approximate jump height
         let intercept = naive_ground_intercept(
             ctx.scenario.ball_prediction().iter(),
-            me.Physics.locp(),
+            me.Physics.loc(),
             me.Physics.vel(),
             me.Boost as f32,
             |ball| ball.loc.z < Self::MAX_BALL_Z,
@@ -137,7 +137,7 @@ where
         // Second pass: Get a more accurate intercept based on how high we need to jump.
         let intercept = naive_ground_intercept(
             ctx.scenario.ball_prediction().iter(),
-            me.Physics.locp(),
+            me.Physics.loc(),
             me.Physics.vel(),
             me.Boost as f32,
             |ball| ball.loc.z < ball_max_z,
@@ -189,7 +189,7 @@ where
         let (naive_target_loc, target_rot) = car_ball_contact_with_pitch(
             ctx.game,
             intercept.ball_loc,
-            ctx.me().Physics.locp(),
+            ctx.me().Physics.loc(),
             pitch,
         );
         let rough_target_loc = BounceShot::rough_shooting_spot(intercept, aim_loc);

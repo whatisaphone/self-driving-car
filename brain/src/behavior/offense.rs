@@ -24,7 +24,7 @@ impl Behavior for Offense {
         let intercept = naive_ground_intercept_2(
             &me.into(),
             ctx.scenario.ball_prediction().iter_step_by(0.125),
-            |ball| Shoot::viable_shot(ctx.game, me.Physics.locp(), ball.loc),
+            |ball| Shoot::viable_shot(ctx.game, me.Physics.loc(), ball.loc),
         );
 
         if intercept.is_some() {

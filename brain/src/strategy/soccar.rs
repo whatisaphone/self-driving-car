@@ -98,7 +98,7 @@ fn enemy_can_shoot(ctx: &mut Context) -> bool {
         return false;
     }
     ctx.cars(ctx.game.enemy_team).any(|enemy| {
-        let angle_car_ball = enemy.Physics.locp().to_2d().angle_to(ball_loc);
+        let angle_car_ball = enemy.Physics.loc().to_2d().angle_to(ball_loc);
         let angle_ball_goal = ball_loc.angle_to(goal.center_2d);
         let angle_diff = angle_car_ball.rotation_to(&angle_ball_goal).angle().abs();
         angle_diff < PI / 2.0
@@ -187,7 +187,7 @@ mod integration_tests {
         let packet = test.sniff_packet();
         assert!(packet.GameCars[0].Boost >= 80);
         // Go to the closest boost, don't go off to some distant corner.
-        assert!(packet.GameCars[0].Physics.locp().y.abs() < 2000.0);
+        assert!(packet.GameCars[0].Physics.loc().y.abs() < 2000.0);
     }
 
     #[test]

@@ -142,7 +142,7 @@ impl SegmentRunner for StraightRunner {
         }
 
         let me = ctx.me();
-        let me_loc = me.Physics.locp().to_2d();
+        let me_loc = me.Physics.loc().to_2d();
         let start_to_end = self.plan.end_loc - self.plan.start.loc;
         let cur_dist = (me_loc - self.plan.start.loc).dot(&start_to_end.normalize());
 
