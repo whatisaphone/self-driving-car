@@ -1,7 +1,13 @@
 use crate::{
     behavior::{shoot::Shoot, tepid_hit::TepidHit, Action, Behavior},
     predict::naive_ground_intercept_2,
+    routing::{
+        behavior::FollowRoute,
+        plan::{GetDollar, GroundStraightPlanner},
+        StraightMode,
+    },
     strategy::Context,
+    utils::geometry::RayCoordinateSystem,
 };
 use common::prelude::*;
 
@@ -38,13 +44,41 @@ impl Behavior for Offense {
         // TODO: otherwise drive to a point where me.y < ball.y, then slam the ball
         // sideways
 
-        // also for the above, do something sane about possession e.g. if we clearly do
-        // not have possession, probably just run back to defense for now? if we do
-        // have it, maybe we have time to get boost or swing around for a better angle
+        return_some!(slow_play(ctx));
 
         ctx.eeg.log("[Offense] no good hit; going for a tepid hit");
         return Action::call(TepidHit::new());
     }
+}
+
+fn slow_play(ctx: &mut Context) -> Option<Action> {
+    // Only slow play if we have enough time.
+    if ctx.scenario.possession() < 2.0 {
+        return None;
+    }
+
+    // Check if we're already behind the ball; if so, bail.
+    let intercept = some_or_else!(ctx.scenario.me_intercept(), {
+        return None;
+    });
+    let ball_to_goal =
+        RayCoordinateSystem::segment(intercept.ball_loc.to_2d(), ctx.game.enemy_goal().center_2d);
+    if ball_to_goal.project(ctx.me().Physics.loc_2d()) < 0.0 {
+        return None;
+    }
+
+    let mut behind_ball = intercept.ball_loc.to_2d();
+    behind_ball.y += ctx.game.own_goal().center_2d.y.signum() * 2500.0;
+
+    // Swing around behind the ball while getting boost
+    if ctx.me().Boost < 50 {
+        let dollar = GetDollar::new(behind_ball).target_face(intercept.ball_loc.to_2d());
+        return Some(Action::call(FollowRoute::new(dollar)));
+    }
+
+    // Swing around behind the ball for a better hit
+    let straight = GroundStraightPlanner::new(behind_ball, None, 0.0, StraightMode::Asap);
+    return Some(Action::call(FollowRoute::new(straight)));
 }
 
 #[cfg(test)]
@@ -55,7 +89,8 @@ mod integration_tests {
         strategy::Runner2,
     };
     use common::prelude::*;
-    use nalgebra::{Rotation3, Vector3};
+    use nalgebra::{Point3, Rotation3, Vector3};
+    use std::f32::consts::PI;
 
     #[test]
     #[ignore] // TODO
@@ -179,5 +214,27 @@ mod integration_tests {
                 .any(|x| x == "[Offense] no good hit; going for a tepid hit"));
             assert!(eeg.log.iter().any(|x| x == "hitting toward enemy goal"));
         });
+    }
+
+    #[test]
+    fn slow_play_get_boost() {
+        // The setup: we have possession and low boost, and we're on the wrong side of
+        // the ball to hit it towards the enemy goal.
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(800.0, 800.0, 90.0).coords,
+                ball_vel: Vector3::new(2000.0, -1500.0, 0.0),
+                car_loc: Point3::new(-500.0, 200.0, 17.01).coords,
+                car_rot: Rotation3::from_unreal_angles(0.0, -PI / 3.0, 0.0),
+                car_vel: Vector3::new(500.0, -1000.0, 0.0),
+                enemy_loc: Point3::new(-4000.0, 0.0, 17.01).coords,
+                boost: 31,
+                ..Default::default()
+            })
+            .behavior(Runner2::soccar())
+            .run_for_millis(3000);
+
+        let packet = test.sniff_packet();
+        assert!(packet.GameCars[0].Boost > 75);
     }
 }

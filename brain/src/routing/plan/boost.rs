@@ -15,11 +15,20 @@ use std::f32::consts::PI;
 #[derive(Clone)]
 pub struct GetDollar {
     destination_hint: Point2<f32>,
+    target_face: Point2<f32>,
 }
 
 impl GetDollar {
     pub fn new(destination_hint: Point2<f32>) -> Self {
-        Self { destination_hint }
+        Self {
+            destination_hint,
+            target_face: destination_hint,
+        }
+    }
+
+    pub fn target_face(mut self, target_face: Point2<f32>) -> Self {
+        self.target_face = target_face;
+        self
     }
 }
 
@@ -108,7 +117,7 @@ impl GetDollar {
             return Err(RoutePlanError::OtherError("TODO: easier to flip to pad"));
         }
 
-        GroundPowerslideTurn::new(pickup.loc, self.destination_hint, None).plan(ctx, dump)
+        GroundPowerslideTurn::new(pickup.loc, self.target_face, None).plan(ctx, dump)
     }
 
     fn chooose_pickup<'a>(

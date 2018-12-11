@@ -1,4 +1,5 @@
-use nalgebra::Point2;
+use common::prelude::*;
+use nalgebra::{Point2, Unit, Vector2};
 use std::f32::consts::PI;
 
 pub trait ExtendF32 {
@@ -48,5 +49,23 @@ pub fn circle_point_tangents(
         None
     } else {
         Some([Point2::new(x1, y1), Point2::new(x2, y2)])
+    }
+}
+
+pub struct RayCoordinateSystem {
+    origin: Point2<f32>,
+    direction: Unit<Vector2<f32>>,
+}
+
+impl RayCoordinateSystem {
+    pub fn segment(p: Point2<f32>, q: Point2<f32>) -> Self {
+        Self {
+            origin: p,
+            direction: (q - p).to_axis(),
+        }
+    }
+
+    pub fn project(&self, p: Point2<f32>) -> f32 {
+        (p - self.origin).dot(&self.direction)
     }
 }

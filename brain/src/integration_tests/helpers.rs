@@ -530,6 +530,7 @@ pub struct TestScenario {
     pub enemy_rot: Rotation3<f32>,
     pub enemy_vel: Vector3<f32>,
     pub enemy_ang_vel: Vector3<f32>,
+    /// The amount of boost for both players, from 0 to 100.
     pub boost: u8,
 }
 
