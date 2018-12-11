@@ -22,8 +22,12 @@ struct Current {
 
 impl FollowRoute {
     pub fn new(planner: impl RoutePlanner + 'static) -> Self {
+        Self::new_boxed(Box::new(planner))
+    }
+
+    pub fn new_boxed(planner: Box<RoutePlanner>) -> Self {
         Self {
-            planner: Some(Box::new(planner)),
+            planner: Some(planner),
             current: None,
         }
     }

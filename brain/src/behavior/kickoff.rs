@@ -3,6 +3,7 @@ use crate::{
     maneuvers::GroundedHit,
     routing::{
         behavior::FollowRoute,
+        models::RoutePlanner,
         plan::{ChainedPlanner, GroundIntercept, GroundStraightPlanner},
         StraightMode,
     },
@@ -25,31 +26,25 @@ impl Behavior for Kickoff {
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {
-        if is_diagonal_kickoff(ctx) {
+        let approach: Box<RoutePlanner> = if is_diagonal_kickoff(ctx) {
             let target_loc = Point2::new(
                 600.0 * ctx.me().Physics.loc().x.signum(),
                 1000.0 * ctx.me().Physics.loc().y.signum(),
             );
             let straight = GroundStraightPlanner::new(target_loc, None, 0.0, StraightMode::Asap)
                 .allow_dodging(false);
-            let planner =
-                ChainedPlanner::chain(vec![Box::new(straight), Box::new(GroundIntercept::new())]);
-
-            return Action::call(Chain::new(
-                Priority::Idle,
-                vec![
-                    Box::new(FollowRoute::new(planner)),
-                    Box::new(GroundedHit::hit_towards(defensive_hit)),
-                ],
-            ));
-        }
+            Box::new(ChainedPlanner::chain(vec![
+                Box::new(straight),
+                Box::new(GroundIntercept::new()),
+            ]))
+        } else {
+            Box::new(GroundIntercept::new().allow_dodging(false))
+        };
 
         Action::call(Chain::new(
             Priority::Idle,
             vec![
-                Box::new(FollowRoute::new(
-                    GroundIntercept::new().allow_dodging(false),
-                )),
+                Box::new(FollowRoute::new_boxed(approach)),
                 Box::new(GroundedHit::hit_towards(defensive_hit)),
             ],
         ))
