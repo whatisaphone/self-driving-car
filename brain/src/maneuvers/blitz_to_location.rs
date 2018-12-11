@@ -78,32 +78,3 @@ impl Behavior for BlitzToLocation {
         })
     }
 }
-
-#[cfg(test)]
-mod integration_tests {
-    use crate::{
-        integration_tests::helpers::{TestRunner, TestScenario},
-        maneuvers::blitz_to_location::BlitzToLocation,
-    };
-    use nalgebra::{Point2, Vector3};
-
-    #[test]
-    fn kickoff_off_center() {
-        let test = TestRunner::start(
-            BlitzToLocation {
-                target_loc: Point2::origin(),
-            },
-            TestScenario {
-                car_loc: Vector3::new(256.0, -3839.98, 17.01),
-                ..Default::default()
-            },
-        );
-
-        test.sleep_millis(3000);
-
-        // Assert that we touched and moved the ball.
-        let packet = test.sniff_packet();
-        println!("{:?}", packet.GameBall.Physics.Location);
-        assert!(packet.GameBall.Physics.Location.Y.abs() > 1.0);
-    }
-}

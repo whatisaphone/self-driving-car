@@ -28,27 +28,3 @@ impl Behavior for FiftyFifty {
         ))
     }
 }
-
-#[cfg(test)]
-mod integration_tests {
-    use crate::{
-        integration_tests::helpers::{TestRunner, TestScenario},
-        maneuvers::FiftyFifty,
-    };
-    use nalgebra::Vector3;
-
-    #[test]
-    fn kickoff_off_center() {
-        let test = TestRunner::start(
-            FiftyFifty::new(),
-            TestScenario {
-                car_loc: Vector3::new(256.0, -3839.98, 17.01),
-                ..Default::default()
-            },
-        );
-
-        test.sleep_millis(5500);
-
-        assert!(test.has_scored());
-    }
-}
