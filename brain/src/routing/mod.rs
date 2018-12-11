@@ -1,3 +1,5 @@
+pub use self::segments::StraightMode;
+
 pub mod behavior;
 pub mod models;
 pub mod plan;

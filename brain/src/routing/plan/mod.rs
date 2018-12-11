@@ -1,5 +1,6 @@
 pub use self::{
-    boost::GetDollar, ground_intercept::GroundIntercept, pathing::avoid_goal_wall_waypoint,
+    boost::GetDollar, ground_intercept::GroundIntercept, ground_straight::GroundStraightPlanner,
+    higher_order::ChainedPlanner, pathing::avoid_goal_wall_waypoint,
 };
 
 macro_rules! guard {

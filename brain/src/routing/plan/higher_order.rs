@@ -64,11 +64,12 @@ impl ChainedPlanner {
         }
     }
 
-    pub fn chain(planners: Vec<Box<RoutePlanner>>) -> Box<RoutePlanner> {
+    pub fn chain(planners: Vec<Box<RoutePlanner>>) -> Self {
         let mut iter = planners.into_iter();
-        let mut result = iter.next().unwrap();
+        let first = iter.next().unwrap();
+        let mut result = Self::new(first, Some(iter.next().unwrap()));
         for planner in iter {
-            result = Box::new(Self::new(result, Some(planner)));
+            result = Self::new(Box::new(result), Some(planner));
         }
         result
     }
