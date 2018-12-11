@@ -59,13 +59,11 @@ fn start_match(rlbot: &rlbot::RLBot) {
 }
 
 /// Keep running the given function until it doesn't panic.
-fn deny_climate_change<R>(f: impl Fn() -> R) {
+fn deny_climate_change<R>(f: impl Fn() -> R) -> R {
     loop {
-        let result = panic::catch_unwind(panic::AssertUnwindSafe(|| {
-            f();
-        }));
+        let result = panic::catch_unwind(panic::AssertUnwindSafe(|| f()));
         match result {
-            Ok(x) => return x,
+            Ok(x) => break x,
             Err(_) => {
                 println!("Panicked :( Let's try again?");
                 sleep(Duration::from_millis(100));
