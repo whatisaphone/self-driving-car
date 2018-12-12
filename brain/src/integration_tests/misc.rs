@@ -47,7 +47,7 @@ mod template {
     #[ignore]
     fn recording_template() {
         let _test = TestRunner::new()
-            .preview_recording("../logs/play.csv", 100.0, 102.0, 105.0)
+            .preview_recording("../logs/play.csv", 100.0, 2.0, 5.0)
             .starting_boost(25.0)
             .behavior(Runner2::soccar())
             .run_for_millis(7000);

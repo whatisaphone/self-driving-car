@@ -164,9 +164,12 @@ impl TestRunner {
         mut self,
         path: impl AsRef<Path>,
         start_time: f32,
-        ball_release: f32,
-        stop_time: f32,
+        ball_duration: f32,
+        total_duration: f32,
     ) -> Self {
+        let ball_release = start_time + ball_duration;
+        let stop_time = start_time + total_duration;
+
         let ticks: Vec<_> = RecordingTick::parse(File::open(path).unwrap())
             // Sometimes there are bogus rows at the start of the file from
             // before the game was restarted and the time was reset. Skip them.
