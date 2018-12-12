@@ -48,12 +48,16 @@ impl Strategy for Soccar {
                     "enemy can shoot, possession = {:.2}, going for 50/50",
                     ctx.scenario.possession()
                 ));
+                if !GetToFlatGround::on_flat_ground(ctx.me()) {
+                    ctx.eeg.log("... as soon as we land, that is!");
+                    return Some(Box::new(Chain::new(
+                        Priority::Save,
+                        vec![Box::new(GetToFlatGround::new())],
+                    )));
+                }
                 return Some(Box::new(Chain::new(
                     Priority::Save,
-                    vec![
-                        Box::new(GetToFlatGround::new()),
-                        Box::new(FiftyFifty::new()),
-                    ],
+                    vec![Box::new(FiftyFifty::new())],
                 )));
             }
 
