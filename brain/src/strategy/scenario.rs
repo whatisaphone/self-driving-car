@@ -160,41 +160,44 @@ fn blitz_start(car: &rlbot::ffi::PlayerInfo, ball_prediction: &BallTrajectory) -
         .with_boost(car.Boost as f32)
 }
 
-// This is a pretty naive and heavyweight implementation. Basically simulate a
-// "race to the ball" and see if one player gets there much earlier than the
-// other.
+// Basically simulate a "race to the ball" (poorly) and guesstimate where our
+// first possible intercept might be.
 fn simulate_ball_blitz(
     ball_prediction: &BallTrajectory,
     car: &rlbot::ffi::PlayerInfo,
 ) -> Option<NaiveIntercept> {
     let mut sim = blitz_start(car, ball_prediction);
-    let mut result = None;
+    let mut naive_result = None;
 
     for ball in ball_prediction.iter_step_by(0.125) {
         let dist_to_ball = (car.Physics.loc() - ball.loc).to_2d().norm();
         if sim.distance() >= dist_to_ball {
-            result = Some(NaiveIntercept {
-                time: ball.t - ball_prediction.start().t,
-                ball_loc: ball.loc,
-                ball_vel: ball.vel,
-                car_loc: ball.loc,
-                car_speed: ball.vel.norm(),
-                data: (),
-            });
+            naive_result = Some(ball);
             break;
         }
         sim.advance(ball.dt(), 1.0, true);
     }
 
-    if let Some(i) = &mut result {
-        i.time += blitz_penalty(car, &i);
-    }
-    result
+    let naive_result = some_or_else!(naive_result, {
+        return None;
+    });
+    let penalty = blitz_penalty(car, &naive_result);
+    let ball = ball_prediction
+        .at_time(naive_result.t + penalty)
+        .unwrap_or_else(|| ball_prediction.last());
+    Some(NaiveIntercept {
+        time: ball.t - ball_prediction.start().t,
+        ball_loc: ball.loc,
+        ball_vel: ball.vel,
+        car_loc: ball.loc,
+        car_speed: ball.vel.norm(),
+        data: (),
+    })
 }
 
-fn blitz_penalty(car: &rlbot::ffi::PlayerInfo, intercept: &NaiveIntercept) -> f32 {
-    let ball_loc = intercept.ball_loc.to_2d();
-    let ball_vel = intercept.ball_vel.to_2d();
+fn blitz_penalty(car: &rlbot::ffi::PlayerInfo, ball: &BallFrame) -> f32 {
+    let ball_loc = ball.loc.to_2d();
+    let ball_vel = ball.vel.to_2d();
     let car_vel = car.Physics.vel_2d();
     let car_forward = car.Physics.forward_axis_2d();
     let car_to_ball = ball_loc - car.Physics.loc_2d();
