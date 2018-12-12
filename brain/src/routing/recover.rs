@@ -35,9 +35,20 @@ impl RoutePlanError {
                     ResetBehindBall::behind_loc(ball_loc.to_2d()).never_recover(true),
                 ))
             }
-            RoutePlanError::MustBeFacingTarget
-            | RoutePlanError::MovingTooFast
-            | RoutePlanError::OtherError(_) => None,
+            RoutePlanError::MustBeFacingTarget => {
+                if ctx.me().Physics.vel_2d().norm() < 400.0
+                    && ctx.packet.GameBall.Physics.vel_2d().norm() < 400.0
+                {
+                    ctx.eeg
+                        .log("[MustBeFacingTarget] we gotta get things moving!");
+                    let ball_loc = ctx.scenario.ball_prediction().at_time(2.5).unwrap().loc;
+                    return Some(Box::new(
+                        ResetBehindBall::behind_loc(ball_loc.to_2d()).never_recover(true),
+                    ));
+                }
+                None
+            }
+            RoutePlanError::MovingTooFast | RoutePlanError::OtherError(_) => None,
         }
     }
 }
