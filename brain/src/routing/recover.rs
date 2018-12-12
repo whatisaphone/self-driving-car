@@ -40,7 +40,7 @@ impl RoutePlanError {
                 );
                 // TODO: make sure we're not trying to leave the field?
                 let straight = GroundDrive::new(behind_ball);
-                return Some(Box::new(FollowRoute::new(straight)));
+                return Some(Box::new(FollowRoute::new(straight).never_recover()));
             }
             RoutePlanError::MustBeFacingTarget
             | RoutePlanError::MovingTooFast

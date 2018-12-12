@@ -12,6 +12,7 @@ pub struct FollowRoute {
     /// Option dance: This only holds a planner before the first tick.
     planner: Option<Box<RoutePlanner>>,
     current: Option<Current>,
+    never_recover: bool,
 }
 
 struct Current {
@@ -29,7 +30,15 @@ impl FollowRoute {
         Self {
             planner: Some(planner),
             current: None,
+            never_recover: false,
         }
+    }
+
+    /// A hack to prevent stack overflows. Routes created to recover from
+    /// `RoutePlanError` should use this method to prevent recursive recovery.
+    pub fn never_recover(mut self) -> Self {
+        self.never_recover = true;
+        self
     }
 }
 
@@ -119,8 +128,14 @@ impl FollowRoute {
 
         match error.recover(ctx) {
             Some(b) => {
-                ctx.eeg.log("[FollowRoute] Recoverable!");
-                Action::Call(b)
+                if self.never_recover {
+                    ctx.eeg
+                        .log("[FollowRoute] Recoverable, but we are forbidden to do so");
+                    Action::Abort
+                } else {
+                    ctx.eeg.log("[FollowRoute] Recoverable!");
+                    Action::Call(b)
+                }
             }
             None => {
                 ctx.eeg.log("[FollowRoute] Non-recoverable");
