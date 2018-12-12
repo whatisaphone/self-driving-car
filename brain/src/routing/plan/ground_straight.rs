@@ -12,6 +12,8 @@ use nalgebra::Point2;
 use ordered_float::NotNan;
 use simulate::{Car1Dv2, CarForwardDodge, CarForwardDodge1D};
 
+/// Drive straight. Requires the car to already be facing the target (i.e., it
+/// won't steer left or right).
 #[derive(Clone, new)]
 pub struct GroundStraightPlanner {
     target_loc: Point2<f32>,

@@ -174,6 +174,7 @@ pub enum RoutePlanError {
     UnknownIntercept,
     MustBeFacingTarget,
     MovingTooFast,
+    TurningRadiusTooTight,
     OtherError(&'static str),
 }
 
@@ -185,6 +186,7 @@ impl fmt::Debug for RoutePlanError {
             RoutePlanError::UnknownIntercept => write!(f, stringify!(UnknownIntercept)),
             RoutePlanError::MustBeFacingTarget => write!(f, stringify!(MustBeFacingTarget)),
             RoutePlanError::MovingTooFast => write!(f, stringify!(MovingTooFast)),
+            RoutePlanError::TurningRadiusTooTight => write!(f, stringify!(TurningRadiusTooTight)),
             RoutePlanError::OtherError(msg) => write!(f, "{}({:?})", stringify!(OtherError), msg),
         }
     }

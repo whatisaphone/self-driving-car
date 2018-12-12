@@ -1,6 +1,7 @@
 pub use self::{
-    boost::GetDollar, ground_intercept::GroundIntercept, ground_straight::GroundStraightPlanner,
-    higher_order::ChainedPlanner, pathing::avoid_goal_wall_waypoint,
+    boost::GetDollar, ground_drive::GroundDrive, ground_intercept::GroundIntercept,
+    ground_straight::GroundStraightPlanner, higher_order::ChainedPlanner,
+    pathing::avoid_goal_wall_waypoint,
 };
 
 macro_rules! guard {
@@ -12,6 +13,7 @@ macro_rules! guard {
 }
 
 mod boost;
+mod ground_drive;
 mod ground_intercept;
 mod ground_powerslide;
 mod ground_straight;

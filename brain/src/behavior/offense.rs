@@ -3,13 +3,13 @@ use crate::{
     predict::naive_ground_intercept_2,
     routing::{
         behavior::FollowRoute,
-        plan::{GetDollar, GroundStraightPlanner},
-        StraightMode,
+        plan::{GetDollar, GroundDrive},
     },
     strategy::Context,
     utils::geometry::RayCoordinateSystem,
 };
 use common::prelude::*;
+use nalgebra::Point2;
 
 pub struct Offense;
 
@@ -57,27 +57,34 @@ fn slow_play(ctx: &mut Context) -> Option<Action> {
         return None;
     }
 
-    // Check if we're already behind the ball; if so, bail.
     let intercept = some_or_else!(ctx.scenario.me_intercept(), {
         return None;
     });
-    let ball_to_goal =
-        RayCoordinateSystem::segment(intercept.ball_loc.to_2d(), ctx.game.enemy_goal().center_2d);
+    let ball_loc = intercept.ball_loc.to_2d();
+
+    // Check if we're already behind the ball; if so, no special action is needed.
+    let ball_to_goal = RayCoordinateSystem::segment(ball_loc, ctx.game.enemy_goal().center_2d);
     if ball_to_goal.project(ctx.me().Physics.loc_2d()) < 0.0 {
         return None;
     }
 
-    let mut behind_ball = intercept.ball_loc.to_2d();
-    behind_ball.y += ctx.game.own_goal().center_2d.y.signum() * 2500.0;
-
-    // Swing around behind the ball while getting boost
     if ctx.me().Boost < 50 {
-        let dollar = GetDollar::new(behind_ball).target_face(intercept.ball_loc.to_2d());
+        ctx.eeg.log("Getting boost conveniently behind the ball");
+        let behind_ball = Point2::new(
+            ball_loc.x,
+            ball_loc.y + ctx.game.own_goal().center_2d.y.signum() * 2500.0,
+        );
+        let dollar = GetDollar::new(behind_ball).target_face(ball_loc);
         return Some(Action::call(FollowRoute::new(dollar)));
     }
 
-    // Swing around behind the ball for a better hit
-    let straight = GroundStraightPlanner::new(behind_ball, None, 0.0, StraightMode::Asap);
+    ctx.eeg.log("Swing around behind the ball for a better hit");
+    // TODO: make sure we're not trying to leave the field?
+    let behind_ball = Point2::new(
+        ball_loc.x,
+        ball_loc.y + ctx.game.own_goal().center_2d.y.signum() * 2500.0,
+    );
+    let straight = GroundDrive::new(behind_ball);
     return Some(Action::call(FollowRoute::new(straight)));
 }
 
