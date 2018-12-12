@@ -64,37 +64,47 @@ impl Behavior for GroundAccelToLoc {
             ));
         }
 
-        let yaw_diff = simple_yaw_diff(&me.Physics, self.target_loc);
-        let too_fast = estimate_approach(&me, distance, time_remaining - 2.0 / 120.0);
-
         let mut result = drive_towards(ctx, self.target_loc);
+
+        let yaw_diff = simple_yaw_diff(&me.Physics, self.target_loc);
         if yaw_diff.abs() > PI / 8.0 && distance >= 500.0 {
-            // Can't estimate accurately if not facing the right way
-        } else if too_fast {
-            result.Throttle = 0.0;
-        } else {
-            if me.OnGround
-                && yaw_diff.abs() < PI / 4.0
-                && me.Physics.vel().norm() < rl::CAR_ALMOST_MAX_SPEED
-                && me.Boost > 0
-            {
-                result.Boost = true;
-            }
+            // Can't estimate accurately if not facing the right way. Just return the result
+            // with throttle == 1.0.
+            return Action::Yield(result);
         }
 
+        let (throttle, boost) = estimate_approach(&me, distance, time_remaining - 2.0 / 120.0);
+        result.Throttle = throttle;
+        result.Boost = boost
+            && me.OnGround
+            && yaw_diff.abs() < PI / 4.0
+            && me.Physics.vel().norm() < rl::CAR_ALMOST_MAX_SPEED
+            && me.Boost > 0;
         Action::Yield(result)
     }
 }
 
 /// Starting at `origin`, if we go pedal to the metal for `time` seconds, will
 /// we have traveled `distance`?
-fn estimate_approach(car: &rlbot::ffi::PlayerInfo, distance: f32, time: f32) -> bool {
-    let lag_comp = 1.5 / 120.0; // Start a few ticks later to compensate for input lag.
-    let mut sim_car = Car1Dv2::new()
-        .with_speed(car.Physics.vel().norm())
-        .with_boost(car.Boost as f32);
-    sim_car.advance(time - lag_comp, 1.0, true);
-    sim_car.distance() >= distance
+fn estimate_approach(car: &rlbot::ffi::PlayerInfo, distance: f32, time: f32) -> (f32, bool) {
+    let would_reach = |throttle, boost| {
+        let lag_comp = 1.5 / 120.0; // Start a few ticks later to compensate for input lag.
+        let mut sim_car = Car1Dv2::new()
+            .with_speed(car.Physics.vel().norm())
+            .with_boost(car.Boost as f32);
+        sim_car.advance(time - lag_comp, throttle, boost);
+        sim_car.distance() >= distance
+    };
+
+    if would_reach(0.0, false) {
+        (0.0, false) // We're overshooting…
+    } else if would_reach(1.0, false) {
+        (0.0, false)
+    } else if would_reach(1.0, true) {
+        (1.0, false)
+    } else {
+        (1.0, true)
+    }
 }
 
 #[cfg(test)]

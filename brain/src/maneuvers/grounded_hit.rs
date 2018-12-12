@@ -236,8 +236,7 @@ where
         let blitz_offset = would_reach(1.0, true);
 
         let (throttle, boost) = if coast_offset > 0.0 {
-            // We're overshooting…
-            (0.0, false)
+            (0.0, false) // We're overshooting…
         } else if would_reach(1.0, false) > 0.0 {
             (0.0, false)
         } else if blitz_offset > 0.0 {
