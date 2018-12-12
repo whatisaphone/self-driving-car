@@ -87,9 +87,13 @@ fn get_boost(ctx: &mut Context) -> Option<Box<Behavior>> {
                 "enemy_shoot_score_seconds is {:.2}, so let's get boost",
                 ctx.scenario.enemy_shoot_score_seconds(),
             ));
-            return Some(Box::new(FollowRoute::new(GetDollar::new(
-                ctx.game.own_goal().center_2d,
-            ))));
+            let ball_loc = ctx.scenario.ball_prediction().at_time(3.0).unwrap().loc;
+            let behind_ball = Point2::new(
+                ball_loc.x,
+                ball_loc.y + ctx.game.own_goal().center_2d.y.signum() * 2500.0,
+            );
+            let get_dollar = GetDollar::new(behind_ball).target_face(ball_loc.to_2d());
+            return Some(Box::new(FollowRoute::new(get_dollar)));
         }
     }
     return None;
