@@ -1,5 +1,6 @@
 use crate::{
     eeg::{color, Drawable},
+    maneuvers::GetToFlatGround,
     mechanics::simple_steer_towards,
     routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner},
     strategy::Context,
@@ -148,6 +149,11 @@ impl SegmentRunner for StraightRunner {
 
         if cur_dist >= start_to_end.norm() {
             return SegmentRunAction::Success;
+        }
+
+        if !GetToFlatGround::on_flat_ground(me) {
+            ctx.eeg.log("[StraightRunner] Not on flat ground");
+            return SegmentRunAction::Failure;
         }
 
         // Drive to a point slightly in front of us, so we "hug the line" and get back

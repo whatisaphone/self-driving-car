@@ -1,5 +1,6 @@
 use crate::{
     eeg::{color, Drawable},
+    maneuvers::GetToFlatGround,
     routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner},
     strategy::Context,
 };
@@ -85,6 +86,11 @@ impl SegmentRunner for PowerslideTurnRunner {
         let elapsed = now - start_time;
         if elapsed >= self.plan.blueprint.duration {
             return SegmentRunAction::Success;
+        }
+
+        if !GetToFlatGround::on_flat_ground(ctx.me()) {
+            ctx.eeg.log("[PowerslideTurnRunner] Not on flat ground");
+            return SegmentRunAction::Failure;
         }
 
         SegmentRunAction::Yield(rlbot::ffi::PlayerInput {
