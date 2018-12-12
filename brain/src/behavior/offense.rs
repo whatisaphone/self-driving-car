@@ -82,7 +82,7 @@ fn slow_play(ctx: &mut Context) -> Option<Action> {
     // TODO: make sure we're not trying to leave the field?
     let behind_ball = Point2::new(
         ball_loc.x,
-        ball_loc.y + ctx.game.own_goal().center_2d.y.signum() * 2500.0,
+        ball_loc.y + ctx.game.own_goal().center_2d.y.signum() * 1500.0,
     );
     let straight = GroundDrive::new(behind_ball);
     return Some(Action::call(FollowRoute::new(straight)));
