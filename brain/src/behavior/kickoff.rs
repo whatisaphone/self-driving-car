@@ -28,8 +28,8 @@ impl Behavior for Kickoff {
     fn execute2(&mut self, ctx: &mut Context) -> Action {
         let approach: Box<RoutePlanner> = if is_diagonal_kickoff(ctx) {
             let target_loc = Point2::new(
-                600.0 * ctx.me().Physics.loc().x.signum(),
-                1000.0 * ctx.me().Physics.loc().y.signum(),
+                500.0 * ctx.me().Physics.loc().x.signum(),
+                1100.0 * ctx.me().Physics.loc().y.signum(),
             );
             let straight = GroundStraightPlanner::new(target_loc, None, 0.0, StraightMode::Asap)
                 .allow_dodging(false);
