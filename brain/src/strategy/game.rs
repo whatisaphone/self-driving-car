@@ -58,6 +58,10 @@ impl<'a> Game<'a> {
         }
     }
 
+    pub fn is_inside_field(&self, p: Point2<f32>) -> bool {
+        p.x.abs() < self.field_max_x() && p.y.abs() < self.field_max_y()
+    }
+
     pub fn me(&self) -> &rlbot::ffi::PlayerInfo {
         &self.packet.GameCars[self.player_index]
     }

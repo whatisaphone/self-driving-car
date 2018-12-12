@@ -1,6 +1,6 @@
 pub use self::{
     boost::GetDollar, ground_drive::GroundDrive, ground_intercept::GroundIntercept,
-    ground_straight::GroundStraightPlanner, higher_order::ChainedPlanner,
+    ground_straight::GroundStraightPlanner, ground_turn::TurnPlanner, higher_order::ChainedPlanner,
     pathing::avoid_goal_wall_waypoint,
 };
 

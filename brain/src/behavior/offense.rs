@@ -1,10 +1,10 @@
 use crate::{
-    behavior::{shoot::Shoot, tepid_hit::TepidHit, Action, Behavior},
-    predict::naive_ground_intercept_2,
-    routing::{
-        behavior::FollowRoute,
-        plan::{GetDollar, GroundDrive},
+    behavior::{
+        offense2::reset_behind_ball::ResetBehindBall, shoot::Shoot, tepid_hit::TepidHit, Action,
+        Behavior,
     },
+    predict::naive_ground_intercept_2,
+    routing::{behavior::FollowRoute, plan::GetDollar},
     strategy::Context,
     utils::geometry::RayCoordinateSystem,
 };
@@ -69,7 +69,8 @@ fn slow_play(ctx: &mut Context) -> Option<Action> {
     }
 
     if ctx.me().Boost < 50 {
-        ctx.eeg.log("Getting boost conveniently behind the ball");
+        ctx.eeg
+            .log("[Offense] Getting boost conveniently behind the ball");
         let behind_ball = Point2::new(
             ball_loc.x,
             ball_loc.y + ctx.game.own_goal().center_2d.y.signum() * 2500.0,
@@ -78,14 +79,9 @@ fn slow_play(ctx: &mut Context) -> Option<Action> {
         return Some(Action::call(FollowRoute::new(dollar)));
     }
 
-    ctx.eeg.log("Swing around behind the ball for a better hit");
-    // TODO: make sure we're not trying to leave the field?
-    let behind_ball = Point2::new(
-        ball_loc.x,
-        ball_loc.y + ctx.game.own_goal().center_2d.y.signum() * 1500.0,
-    );
-    let straight = GroundDrive::new(behind_ball);
-    return Some(Action::call(FollowRoute::new(straight)));
+    ctx.eeg
+        .log("[Offense] Swing around behind the ball for a better hit");
+    Some(Action::call(ResetBehindBall::behind_loc(ball_loc)))
 }
 
 #[cfg(test)]

@@ -1,12 +1,10 @@
 use crate::{
-    behavior::{Behavior, Predicate, TimeLimit, While},
+    behavior::{
+        offense2::reset_behind_ball::ResetBehindBall, Behavior, Predicate, TimeLimit, While,
+    },
     maneuvers::{DriveTowards, GetToFlatGround},
     mechanics::SkidRecover,
-    routing::{
-        behavior::FollowRoute,
-        models::{CarState, RoutePlanError},
-        plan::GroundDrive,
-    },
+    routing::models::{CarState, RoutePlanError},
     strategy::Context,
 };
 use common::{physics::car_forward_axis, prelude::*};
@@ -32,15 +30,10 @@ impl RoutePlanError {
                 Some(Box::new(TimeLimit::new(1.0, wander)))
             }
             RoutePlanError::TurningRadiusTooTight => {
-                ctx.eeg.log("going behind the ball to try again");
                 let ball_loc = ctx.scenario.ball_prediction().at_time(2.5).unwrap().loc;
-                let behind_ball = Point2::new(
-                    ball_loc.x,
-                    ball_loc.y + ctx.game.own_goal().center_2d.y.signum() * 1500.0,
-                );
-                // TODO: make sure we're not trying to leave the field?
-                let straight = GroundDrive::new(behind_ball);
-                return Some(Box::new(FollowRoute::new(straight).never_recover()));
+                Some(Box::new(
+                    ResetBehindBall::behind_loc(ball_loc.to_2d()).never_recover(true),
+                ))
             }
             RoutePlanError::MustBeFacingTarget
             | RoutePlanError::MovingTooFast

@@ -12,6 +12,15 @@ use nalgebra::Point2;
 #[derive(Clone, new)]
 pub struct GroundDrive {
     target_loc: Point2<f32>,
+    #[new(value = "0.0")]
+    end_chop: f32,
+}
+
+impl GroundDrive {
+    pub fn end_chop(mut self, end_chop: f32) -> Self {
+        self.end_chop = end_chop;
+        self
+    }
 }
 
 impl RoutePlanner for GroundDrive {
@@ -41,7 +50,8 @@ impl RoutePlanner for GroundDrive {
         );
 
         let turn = TurnPlanner::new(self.target_loc, None).plan(ctx, dump)?;
-        let straight = GroundStraightPlanner::new(self.target_loc, None, 0.0, StraightMode::Asap);
+        let straight =
+            GroundStraightPlanner::new(self.target_loc, None, self.end_chop, StraightMode::Asap);
         Ok(ChainedPlanner::join_planner(turn, Some(Box::new(straight))))
     }
 }

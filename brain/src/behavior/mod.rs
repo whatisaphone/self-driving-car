@@ -21,6 +21,7 @@ mod defense2;
 mod kickoff;
 mod null;
 mod offense;
+pub mod offense2;
 mod regroup;
 mod retreating_save;
 pub mod runner;

@@ -36,8 +36,8 @@ impl FollowRoute {
 
     /// A hack to prevent stack overflows. Routes created to recover from
     /// `RoutePlanError` should use this method to prevent recursive recovery.
-    pub fn never_recover(mut self) -> Self {
-        self.never_recover = true;
+    pub fn never_recover(mut self, never_recover: bool) -> Self {
+        self.never_recover = never_recover;
         self
     }
 }
