@@ -5,7 +5,7 @@ use crate::{
     routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner},
     strategy::Context,
 };
-use common::prelude::*;
+use common::{prelude::*, rl};
 use nalgebra::{Point2, Vector2};
 use simulate::Car1Dv2;
 
@@ -166,7 +166,7 @@ impl SegmentRunner for StraightRunner {
         SegmentRunAction::Yield(rlbot::ffi::PlayerInput {
             Throttle: 1.0,
             Steer: simple_steer_towards(&me.Physics, target_loc),
-            Boost: true,
+            Boost: me.Physics.vel().norm() < rl::CAR_ALMOST_MAX_SPEED && me.Boost > 0,
             ..Default::default()
         })
     }
