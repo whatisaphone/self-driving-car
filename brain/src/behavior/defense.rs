@@ -23,7 +23,10 @@ impl Defense {
 
     fn is_between_ball_and_own_goal(ctx: &mut Context) -> bool {
         let goal_loc = ctx.game.own_goal().center_2d;
-        let ball_loc = ctx.packet.GameBall.Physics.loc_2d();
+        let ball_loc = match ctx.scenario.me_intercept() {
+            Some(i) => i.ball_loc.to_2d(),
+            None => ctx.scenario.ball_prediction().last().loc.to_2d(),
+        };
         let goal_to_ball_axis = (ball_loc - goal_loc).to_axis();
 
         let ball_dist = (ball_loc - goal_loc).dot(&goal_to_ball_axis);
@@ -260,7 +263,7 @@ mod integration_tests {
     };
     use brain_test_data::recordings;
     use common::prelude::*;
-    use nalgebra::{Rotation3, Vector3};
+    use nalgebra::{Point2, Rotation3, Vector3};
 
     #[test]
     fn bouncing_save() {
@@ -670,5 +673,28 @@ mod integration_tests {
 
         let packet = test.sniff_packet();
         assert!(packet.GameBall.Physics.Velocity.Y >= 500.0);
+    }
+
+    #[test]
+    fn do_not_own_goal() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(2972.65, -4341.88, 1418.28),
+                ball_vel: Vector3::new(-1411.2909, 212.371, 486.57098),
+                car_loc: Vector3::new(-2043.4099, -1165.84, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.009681773, -0.7725685, 0.00012306236),
+                car_vel: Vector3::new(1125.0809, -1248.741, 8.311),
+                ..Default::default()
+            })
+            .starting_boost(10.0)
+            .behavior(Runner2::soccar())
+            .run_for_millis(4000);
+
+        assert!(!test.enemy_has_scored());
+        let packet = test.sniff_packet();
+        let ball_loc = packet.GameBall.Physics.loc_2d();
+        // Sometimes enemy_has_scored doesn't work since the framework doesn't support
+        // it. Also make sure there wasn't a goal reset.
+        assert!((ball_loc - Point2::origin()).norm() >= 1.0);
     }
 }
