@@ -1,10 +1,8 @@
 use crate::{
-    behavior::{higher_order::TryChoose, Action, Behavior, Chain, Priority},
+    behavior::{Action, Behavior, Chain, Priority},
     maneuvers::{BounceShot, GroundedHit},
-    mechanics::GroundAccelToLoc,
     predict::naive_ground_intercept_2,
     routing::{behavior::FollowRoute, plan::GroundIntercept},
-    rules::SameBallTrajectory,
     strategy::{Context, Game},
 };
 use common::prelude::*;
@@ -58,65 +56,23 @@ impl Behavior for Shoot {
                 Self::viable_shot(ctx.game, me.Physics.loc(), ball.loc)
             });
 
-        let intercept = some_or_else!(intercept, {
+        if intercept.is_none() {
             ctx.eeg.log("[Shoot] no viable shot");
             return Action::Abort;
-        });
+        }
 
         // Big shortcoming here: above, we see if there's *any* viable shot along the
         // ball's trajectory. But this sequence will blitz to the soonest possible
         // intercept, and GroundedHit will also try to use the soonest possible
         // intercept, so we might enter this behavior and then immediately abort and
         // spew a bunch of nonsense logs.
-        //
-        // The temporary workaround is to just drive blindly towards the intercept until
-        // the last moment
-        let shoot = Chain::new(
+        Action::call(Chain::new(
             Priority::Idle,
             vec![
                 Box::new(FollowRoute::new(GroundIntercept::new())),
                 Box::new(GroundedHit::hit_towards(Self::aim)),
             ],
-        );
-        let workaround = Chain::new(
-            Priority::Idle,
-            vec![
-                Box::new(ShotApproachHack {
-                    loc: intercept.car_loc.to_2d(),
-                    time: ctx.packet.GameInfo.TimeSeconds + intercept.time,
-                    same_ball_trajectory: SameBallTrajectory::new(),
-                }),
-                Box::new(GroundedHit::hit_towards(Self::aim)),
-            ],
-        );
-        Action::call(TryChoose::new(
-            Priority::Idle,
-            vec![Box::new(shoot), Box::new(workaround)],
         ))
-    }
-}
-
-struct ShotApproachHack {
-    loc: Point2<f32>,
-    time: f32,
-    same_ball_trajectory: SameBallTrajectory,
-}
-
-impl Behavior for ShotApproachHack {
-    fn name(&self) -> &str {
-        stringify!(ShotApproachHack)
-    }
-
-    fn execute2(&mut self, ctx: &mut Context) -> Action {
-        return_some!(self.same_ball_trajectory.execute(ctx));
-
-        let remaining = self.time - ctx.packet.GameInfo.TimeSeconds;
-        if remaining < 1.0 {
-            return Action::Return;
-        }
-
-        let mut accel = GroundAccelToLoc::new(self.loc, self.time);
-        accel.execute2(ctx)
     }
 }
 
