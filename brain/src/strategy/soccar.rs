@@ -79,6 +79,10 @@ fn get_boost(ctx: &mut Context) -> Option<Box<Behavior>> {
     }
     if ctx.scenario.possession() < -Scenario::POSSESSION_CONTESTABLE {
         if ctx.scenario.enemy_shoot_score_seconds() >= 7.0 {
+            ctx.eeg.log(format!(
+                "enemy_shoot_score_seconds is {:.2}, so let's get boost",
+                ctx.scenario.enemy_shoot_score_seconds(),
+            ));
             return Some(Box::new(FollowRoute::new(GetDollar::new(
                 ctx.game.own_goal().center_2d,
             ))));
