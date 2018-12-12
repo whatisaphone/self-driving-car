@@ -4,7 +4,7 @@ use crate::{
     routing::{
         behavior::FollowRoute,
         models::RoutePlanner,
-        plan::{ChainedPlanner, GroundIntercept, GroundStraightPlanner},
+        plan::{ChainedPlanner, GroundIntercept, GroundStraightPlanner, TurnPlanner},
         StraightMode,
     },
     strategy::Context,
@@ -26,16 +26,23 @@ impl Behavior for Kickoff {
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {
+        if (ctx.packet.GameBall.Physics.loc_2d() - Point2::origin()).norm() >= 1.0 {
+            ctx.eeg.log("[Kickoff] not a kickoff");
+            return Action::Abort;
+        }
+
         let approach: Box<RoutePlanner> = if is_diagonal_kickoff(ctx) {
-            let target_loc = Point2::new(
+            let straight_loc = Point2::new(
                 500.0 * ctx.me().Physics.loc().x.signum(),
-                1100.0 * ctx.me().Physics.loc().y.signum(),
+                900.0 * ctx.me().Physics.loc().y.signum(),
             );
-            let straight = GroundStraightPlanner::new(target_loc, None, 0.0, StraightMode::Asap)
+            let straight = GroundStraightPlanner::new(straight_loc, None, 0.0, StraightMode::Asap)
                 .allow_dodging(false);
+            let turn_loc = Point2::new(100.0 * ctx.me().Physics.loc().x.signum(), 0.0);
+            let turn = TurnPlanner::new(turn_loc, None);
             Box::new(ChainedPlanner::chain(vec![
                 Box::new(straight),
-                Box::new(GroundIntercept::new()),
+                Box::new(turn),
             ]))
         } else if is_off_center_kickoff(ctx) {
             let target_loc = Point2::new(
