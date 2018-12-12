@@ -36,6 +36,10 @@ impl BallTrajectory {
         self.frames.first().unwrap()
     }
 
+    pub fn last(&self) -> &BallFrame {
+        self.frames.last().unwrap()
+    }
+
     pub fn iter(&self) -> impl DoubleEndedIterator<Item = &BallFrame> {
         self.frames.iter()
     }
