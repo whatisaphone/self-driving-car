@@ -106,7 +106,7 @@ fn enemy_can_shoot(ctx: &mut Context) -> bool {
     };
     let ball_loc = intercept.ball_loc.to_2d();
     let goal = ctx.game.own_goal();
-    if (ball_loc - goal.center_2d).norm() >= 3000.0 {
+    if (ball_loc - goal.center_2d).norm() >= 5000.0 {
         return false;
     }
     ctx.cars(ctx.game.enemy_team).any(|enemy| {
