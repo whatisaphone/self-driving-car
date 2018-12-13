@@ -38,7 +38,8 @@ cargo run -p play
 ### Run the bot with the RLBot framework
 
 ```sh
-cargo build && python -c "from rlbot import runner; runner.main()"
+cargo build --release && \
+    ( cd tourney/contents && python -c "from rlbot import runner; runner.main()" )
 ```
 
 ### Run integration tests
@@ -67,12 +68,12 @@ RUST_BACKTRACE=1 \
 ### Build a tournament package
 
 ```sh
-scripts/tourney.sh
+tourney/build.sh
 ```
 
-This will package up a release build in `target/tournament/`. It will also
-modify the local `rlbot.cfg` for quick testing. You can test the build by
-starting Rocket League and then running:
+This will package up a release build in `target/tournament/`. It will also copy
+in a `rlbot.cfg` for quick testing. You can test the build by starting Rocket
+League and then running:
 
 ```sh
 ( cd target/tournament && python -c "from rlbot import runner; runner.main()" )
