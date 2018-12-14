@@ -48,6 +48,8 @@ impl Behavior for Defense {
 
         // If we're already in goal, try to take control of the ball somehow.
         if ctx.scenario.possession() < Scenario::POSSESSION_CONTESTABLE {
+            ctx.eeg
+                .log("[Defense] already in goal; going for a defensive hit");
             Action::call(Chain::new(
                 Priority::Idle,
                 vec![
