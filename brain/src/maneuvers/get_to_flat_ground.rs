@@ -1,7 +1,8 @@
 use crate::{
-    behavior::{Action, Behavior},
+    behavior::{Action, Behavior, Chain, Priority},
     eeg::Drawable,
     maneuvers::drive_towards,
+    mechanics::{Dodge, Yielder},
     routing::{models::CarState, plan::avoid_goal_wall_waypoint},
     strategy::Context,
 };
@@ -42,6 +43,56 @@ impl Behavior for GetToFlatGround {
                 Jump: true,
                 ..Default::default()
             })
+        } else if me.OnGround && me.Physics.forward_axis().angle(&Vector3::z_axis()) < PI / 4.0 {
+            // Our nose is pointed towards the sky. It's quicker to jump down than to drive.
+            if me.Physics.vel().z >= 0.0 || me.Physics.loc().z >= 1000.0 {
+                // Phase one of the reverse dismount: back up so we don't jump into the sky
+                Action::Yield(rlbot::ffi::PlayerInput {
+                    Throttle: -1.0,
+                    ..Default::default()
+                })
+            } else {
+                // Phase two of the reverse dismount: jump. The rotator below will make us land
+                // on our wheels.
+                let mut inputs = Vec::<Box<Behavior>>::with_capacity(3);
+                inputs.push(Box::new(Yielder::new(
+                    rlbot::ffi::PlayerInput {
+                        Pitch: 1.0,
+                        Jump: true,
+                        ..Default::default()
+                    },
+                    0.1,
+                )));
+
+                // How far deep in enemy territory are we?
+                let safe = ctx.game.own_back_wall_center();
+                let danger = ctx.game.enemy_back_wall_center();
+                let me_loc = ctx.me().Physics.loc_2d();
+                let safeness = (me_loc - danger).norm() / (me_loc - safe).norm();
+
+                if safeness < 0.5 {
+                    // We're probably way out of the game. Dodge towards our goal to get back to
+                    // defense quicker.
+                    let angle = (me.Physics.forward_axis().unwrap()
+                        + me.Physics.roof_axis().unwrap())
+                    .to_2d()
+                    .rotation_to(safe - me_loc);
+
+                    // Let go of jump
+                    inputs.push(Box::new(Yielder::new(
+                        rlbot::ffi::PlayerInput {
+                            Pitch: 1.0,
+                            Jump: false,
+                            ..Default::default()
+                        },
+                        0.4,
+                    )));
+                    // Then dodge.
+                    inputs.push(Box::new(Dodge::new().angle(angle)));
+                }
+
+                Action::call(Chain::new(Priority::Idle, inputs))
+            }
         } else if me.OnGround {
             let target_loc =
                 (me.Physics.loc() + me.Physics.rot() * Vector3::new(500.0, 0.0, 250.0)).to_2d();
