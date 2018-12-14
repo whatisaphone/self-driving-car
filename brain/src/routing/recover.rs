@@ -20,33 +20,24 @@ impl RoutePlanError {
                 NotOnFlatGround,
                 GetToFlatGround::new(),
             ))),
-            RoutePlanError::MustNotBeSkidding { recover_target_loc } => Some(Box::new(While::new(
-                IsSkidding,
-                SkidRecover::new(recover_target_loc),
-            ))),
+            RoutePlanError::MustNotBeSkidding { recover_target_loc } => {
+                if let Some(b) = check_easy_flip_recover(ctx) {
+                    return Some(b);
+                }
+
+                Some(Box::new(While::new(
+                    IsSkidding,
+                    SkidRecover::new(recover_target_loc),
+                )))
+            }
             RoutePlanError::UnknownIntercept => {
                 let target_loc = ctx.scenario.ball_prediction().iter().last().unwrap().loc;
                 let wander = DriveTowards::new(target_loc.to_2d());
                 Some(Box::new(TimeLimit::new(1.0, wander)))
             }
             RoutePlanError::TurningRadiusTooTight => {
-                // Check if the ball is roughly in front of us and we can easily just smack it
-                // for free.
-                let ball_loc = ctx
-                    .scenario
-                    .ball_prediction()
-                    .at_time(0.5)
-                    .unwrap()
-                    .loc
-                    .to_2d();
-                let me_loc = ctx.me().Physics.loc_2d();
-                let me_forward = ctx.me().Physics.forward_axis_2d();
-                let me_rotation_to_ball = me_forward.rotation_to(&(ball_loc - me_loc).to_axis());
-                if (me_loc - ball_loc).norm() < 500.0
-                    && me_rotation_to_ball.angle().abs() < PI / 3.0
-                {
-                    let aim = BounceShot::opposite_of_self(ctx.me(), ball_loc);
-                    return Some(Box::new(BounceShot::new(aim)));
+                if let Some(b) = check_easy_flip_recover(ctx) {
+                    return Some(b);
                 }
 
                 let ball_loc = ctx.scenario.ball_prediction().at_time(2.5).unwrap().loc;
@@ -70,6 +61,29 @@ impl RoutePlanError {
             RoutePlanError::MovingTooFast | RoutePlanError::OtherError(_) => None,
         }
     }
+}
+
+/// Check if the ball is roughly in front of us and we can easily just smack it
+/// for free.
+fn check_easy_flip_recover(ctx: &mut Context) -> Option<Box<Behavior>> {
+    let ball_loc = ctx
+        .scenario
+        .ball_prediction()
+        .at_time(0.5)
+        .unwrap()
+        .loc
+        .to_2d();
+    let me_loc = ctx.me().Physics.loc_2d();
+    let me_forward = ctx.me().Physics.forward_axis_2d();
+    let me_rotation_to_ball = me_forward.rotation_to(&(ball_loc - me_loc).to_axis());
+    if (me_loc - ball_loc).norm() < 500.0 && me_rotation_to_ball.angle().abs() < PI / 3.0 {
+        ctx.eeg
+            .log("[check_easy_flip_recover] the ball is right here, I can't resist!");
+        let aim = BounceShot::opposite_of_self(ctx.me(), ball_loc);
+        return Some(Box::new(BounceShot::new(aim)));
+    }
+
+    None
 }
 
 pub struct NotOnFlatGround;
