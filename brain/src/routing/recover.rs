@@ -66,20 +66,21 @@ impl RoutePlanError {
 /// Check if the ball is roughly in front of us and we can easily just smack it
 /// for free.
 fn check_easy_flip_recover(ctx: &mut Context) -> Option<Box<Behavior>> {
-    let ball_loc = ctx
-        .scenario
-        .ball_prediction()
-        .at_time(0.5)
-        .unwrap()
-        .loc
-        .to_2d();
+    let ball = ctx.scenario.ball_prediction().at_time(0.5).unwrap();
     let me_loc = ctx.me().Physics.loc_2d();
     let me_forward = ctx.me().Physics.forward_axis_2d();
-    let me_rotation_to_ball = me_forward.rotation_to(&(ball_loc - me_loc).to_axis());
-    if (me_loc - ball_loc).norm() < 500.0 && me_rotation_to_ball.angle().abs() < PI / 3.0 {
+    let me_rot_to_ball = me_forward.rotation_to(&(ball.loc.to_2d() - me_loc).to_axis());
+    let own_goal_loc = ctx.game.own_goal().center_2d;
+    let me_rot_to_own_goal = me_forward.rotation_to(&(own_goal_loc - me_loc).to_axis());
+    if (me_loc - ball.loc.to_2d()).norm() < 500.0
+        && ball.loc.z < 120.0
+        && ball.vel.z.abs() < 50.0
+        && me_rot_to_ball.angle().abs() < PI / 3.0
+        && me_rot_to_own_goal.angle().abs() >= PI / 3.0
+    {
         ctx.eeg
             .log("[check_easy_flip_recover] the ball is right here, I can't resist!");
-        let aim = BounceShot::opposite_of_self(ctx.me(), ball_loc);
+        let aim = BounceShot::opposite_of_self(ctx.me(), ball.loc.to_2d());
         return Some(Box::new(BounceShot::new(aim)));
     }
 
