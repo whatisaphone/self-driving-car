@@ -1,14 +1,14 @@
 use crate::{
     behavior::{Action, Behavior, Priority},
     eeg::{color, Drawable},
-    maneuvers::GroundedHit,
+    maneuvers::{GroundedHit, GroundedHitAimContext, GroundedHitTarget},
     plan::hit_angle::{feasible_hit_angle_away, feasible_hit_angle_toward},
     routing::{behavior::FollowRoute, plan::GroundIntercept},
     strategy::Context,
     utils::WallRayCalculator,
 };
 use common::prelude::*;
-use nalgebra::{Point2, Point3};
+use nalgebra::Point2;
 use std::f32::consts::PI;
 
 pub struct TepidHit;
@@ -35,9 +35,9 @@ impl Behavior for TepidHit {
     }
 }
 
-fn time_wasting_hit(ctx: &mut Context, intercept_ball_loc: Point3<f32>) -> Result<Point2<f32>, ()> {
-    let me_loc = ctx.me().Physics.loc_2d();
-    let ball_loc = intercept_ball_loc.to_2d();
+fn time_wasting_hit(ctx: &mut GroundedHitAimContext) -> Result<GroundedHitTarget, ()> {
+    let me_loc = ctx.car.Physics.loc_2d();
+    let ball_loc = ctx.intercept_ball_loc.to_2d();
     let offense_aim = ctx.game.enemy_back_wall_center();
     let defense_avoid = ctx.game.own_back_wall_center();
 
@@ -54,7 +54,6 @@ fn time_wasting_hit(ctx: &mut Context, intercept_ball_loc: Point3<f32>) -> Resul
         feasible_hit_angle_away(ball_loc, me_loc, defense_avoid, PI / 6.0)
     };
 
-    Ok(Point2::from(WallRayCalculator::calculate(
-        ball_loc, aim_loc,
-    )))
+    let aim_loc = Point2::from(WallRayCalculator::calculate(ball_loc, aim_loc));
+    Ok(GroundedHitTarget::new(ctx.intercept_time, aim_loc))
 }

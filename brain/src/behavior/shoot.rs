@@ -1,6 +1,6 @@
 use crate::{
     behavior::{Action, Behavior, Chain, Priority},
-    maneuvers::{BounceShot, GroundedHit},
+    maneuvers::{BounceShot, GroundedHit, GroundedHitAimContext, GroundedHitTarget},
     predict::naive_ground_intercept_2,
     routing::{behavior::FollowRoute, plan::GroundIntercept},
     strategy::{Context, Game},
@@ -33,9 +33,9 @@ impl Shoot {
         return None;
     }
 
-    fn aim(ctx: &mut Context, ball_loc: Point3<f32>) -> Result<Point2<f32>, ()> {
-        match Self::viable_shot(ctx.game, ctx.me().Physics.loc(), ball_loc) {
-            Some(Shot(loc)) => Ok(loc),
+    fn aim(ctx: &mut GroundedHitAimContext) -> Result<GroundedHitTarget, ()> {
+        match Self::viable_shot(ctx.game, ctx.car.Physics.loc(), ctx.intercept_ball_loc) {
+            Some(Shot(loc)) => Ok(GroundedHitTarget::new(ctx.intercept_time, loc)),
             None => Err(()),
         }
     }

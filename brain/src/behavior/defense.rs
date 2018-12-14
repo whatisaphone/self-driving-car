@@ -3,7 +3,7 @@ use crate::{
         defense2::retreat::Retreat, tepid_hit::TepidHit, Action, Behavior, Chain, Priority,
     },
     eeg::{color, Drawable},
-    maneuvers::{BounceShot, GroundedHit},
+    maneuvers::{BounceShot, GroundedHit, GroundedHitAimContext, GroundedHitTarget},
     predict::{intercept::NaiveIntercept, naive_ground_intercept_2},
     routing::{behavior::FollowRoute, plan::GroundIntercept},
     strategy::{Context, Scenario},
@@ -224,18 +224,15 @@ impl HitToOwnCorner {
 
 /// For `GroundedHit::hit_towards`, calculate an aim location which puts us
 /// between the ball and our own goal.
-pub fn defensive_hit(
-    ctx: &mut Context,
-    intercept_ball_loc: Point3<f32>,
-) -> Result<Point2<f32>, ()> {
-    let me = ctx.me();
+pub fn defensive_hit(ctx: &mut GroundedHitAimContext) -> Result<GroundedHitTarget, ()> {
     let target_angle = blocking_angle(
-        intercept_ball_loc.to_2d(),
-        me.Physics.loc_2d(),
+        ctx.intercept_ball_loc.to_2d(),
+        ctx.car.Physics.loc_2d(),
         ctx.game.own_goal().center_2d,
         PI / 6.0,
     );
-    Ok(intercept_ball_loc.to_2d() - Vector2::unit(target_angle) * 1000.0)
+    let aim_loc = ctx.intercept_ball_loc.to_2d() - Vector2::unit(target_angle) * 1000.0;
+    Ok(GroundedHitTarget::new(ctx.intercept_time, aim_loc))
 }
 
 /// Calculate an angle from `ball_loc` to `car_loc`, trying to get between

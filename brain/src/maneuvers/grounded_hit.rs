@@ -7,6 +7,7 @@ use crate::{
     routing::recover::{IsSkidding, NotOnFlatGround},
     rules::SameBallTrajectory,
     strategy::{Context, Game},
+    EEG,
 };
 use common::{physics, prelude::*, rl};
 use nalgebra::{Point2, Point3, UnitQuaternion};
@@ -19,7 +20,7 @@ use std::f32::consts::PI;
 
 pub struct GroundedHit<Aim>
 where
-    Aim: Fn(&mut Context, Point3<f32>) -> Result<Point2<f32>, ()> + Send,
+    Aim: Fn(&mut GroundedHitAimContext) -> Result<GroundedHitTarget, ()> + Send,
 {
     aim: Aim,
     same_ball_trajectory: SameBallTrajectory,
@@ -27,7 +28,7 @@ where
 
 impl<Aim> GroundedHit<Aim>
 where
-    Aim: Fn(&mut Context, Point3<f32>) -> Result<Point2<f32>, ()> + Send,
+    Aim: Fn(&mut GroundedHitAimContext) -> Result<GroundedHitTarget, ()> + Send,
 {
     const CONTACT_Z_OFFSET: f32 = -70.0; // This is misguided and should probably go away.
     const MAX_BALL_Z: f32 = 220.0 - Self::CONTACT_Z_OFFSET; // TODO: how high can I jump
@@ -40,7 +41,7 @@ where
     }
 }
 
-impl GroundedHit<fn(&mut Context, Point3<f32>) -> Result<Point2<f32>, ()>> {
+impl GroundedHit<fn(&mut GroundedHitAimContext) -> Result<GroundedHitTarget, ()>> {
     pub fn max_ball_z() -> f32 {
         Self::MAX_BALL_Z
     }
@@ -54,7 +55,7 @@ impl GroundedHit<fn(&mut Context, Point3<f32>) -> Result<Point2<f32>, ()>> {
 
 impl<Aim> Behavior for GroundedHit<Aim>
 where
-    Aim: Fn(&mut Context, Point3<f32>) -> Result<Point2<f32>, ()> + Send,
+    Aim: Fn(&mut GroundedHitAimContext) -> Result<GroundedHitTarget, ()> + Send,
 {
     fn name(&self) -> &str {
         stringify!(GroundedHit)
@@ -78,13 +79,20 @@ where
             Err(()) => return Action::Abort,
         };
 
-        let (target_loc, target_rot) = match self.target_loc(ctx, &intercept) {
+        let (intercept_time, target_loc, target_rot) = match self.target_loc(ctx, &intercept) {
             Ok(x) => x,
             Err(()) => {
                 ctx.eeg.log("[GroundedHit] error finding target_loc");
                 return Action::Abort;
             }
         };
+
+        let intercept_ball_loc = ctx
+            .scenario
+            .ball_prediction()
+            .at_time(intercept_time)
+            .map(|f| f.loc)
+            .unwrap_or(intercept.ball_loc);
 
         let steer = me
             .Physics
@@ -95,9 +103,9 @@ where
             return Action::Abort;
         }
 
-        match self.estimate_approach(ctx, &intercept, target_loc) {
+        match self.estimate_approach(ctx, intercept_time, intercept_ball_loc, target_loc) {
             Ok(Do::Drive(throttle, boost)) => self.drive(ctx, target_loc, throttle, boost),
-            Ok(Do::Jump) => self.jump(ctx, &intercept, target_loc, target_rot),
+            Ok(Do::Jump) => self.jump(ctx, intercept_ball_loc, target_loc, target_rot),
             Err(error) => {
                 ctx.eeg.log(format!(
                     "[GroundedHit] can't estimate approach: {:?}",
@@ -111,7 +119,7 @@ where
 
 impl<Aim> GroundedHit<Aim>
 where
-    Aim: Fn(&mut Context, Point3<f32>) -> Result<Point2<f32>, ()> + Send,
+    Aim: Fn(&mut GroundedHitAimContext) -> Result<GroundedHitTarget, ()> + Send,
 {
     fn intercept_loc(&mut self, ctx: &mut Context) -> Result<NaiveIntercept, ()> {
         let me = ctx.me();
@@ -129,9 +137,16 @@ where
             return Err(());
         });
 
-        let aim_loc = (self.aim)(ctx, intercept.ball_loc)
-            .map_err(|_| ctx.eeg.log("error getting aim location"))?;
-        let (target_loc, _target_rot) = Self::preliminary_target(ctx, &intercept, aim_loc);
+        let mut aim_context = GroundedHitAimContext {
+            car: me,
+            game: ctx.game,
+            intercept_time: intercept.time,
+            intercept_ball_loc: intercept.ball_loc,
+            eeg: ctx.eeg,
+        };
+        let target =
+            (self.aim)(&mut aim_context).map_err(|_| ctx.eeg.log("error getting aim location"))?;
+        let (target_loc, _target_rot) = Self::preliminary_target(ctx, &intercept, target.aim_loc);
         let ball_max_z = JUMP_MAX_Z + (intercept.ball_loc.z - target_loc.z);
 
         // Second pass: Get a more accurate intercept based on how high we need to jump.
@@ -154,28 +169,35 @@ where
         &mut self,
         ctx: &mut Context,
         intercept: &NaiveIntercept,
-    ) -> Result<(Point3<f32>, UnitQuaternion<f32>), ()> {
+    ) -> Result<(f32, Point3<f32>, UnitQuaternion<f32>), ()> {
         let me = ctx.me();
-        let aim_loc = (self.aim)(ctx, intercept.ball_loc)?;
+        let mut aim_context = GroundedHitAimContext {
+            car: me,
+            game: &ctx.game,
+            intercept_time: intercept.time,
+            intercept_ball_loc: intercept.ball_loc,
+            eeg: ctx.eeg,
+        };
+        let target = (self.aim)(&mut aim_context)?;
 
-        let (target_loc, target_rot) = Self::preliminary_target(ctx, intercept, aim_loc);
+        let (target_loc, target_rot) = Self::preliminary_target(ctx, intercept, target.aim_loc);
 
         // TODO: iteratively find contact point which hits the ball towards aim_loc
 
         ctx.eeg.print_time("intercept_time", intercept.time);
         ctx.eeg
             .print_value("intercept_loc_z", format!("{:.0}", intercept.ball_loc.z));
-        ctx.eeg.draw(Drawable::Crosshair(aim_loc));
+        ctx.eeg.draw(Drawable::Crosshair(target.aim_loc));
         ctx.eeg.draw(Drawable::GhostBall(intercept.ball_loc));
         ctx.eeg
             .draw(Drawable::GhostCar(target_loc, me.Physics.rot()));
 
-        Ok((target_loc, target_rot))
+        Ok((target.intercept_time, target_loc, target_rot))
     }
 
     fn preliminary_target(
         ctx: &mut Context,
-        intercept: &NaiveIntercept<()>,
+        intercept: &NaiveIntercept,
         aim_loc: Point2<f32>,
     ) -> (Point3<f32>, UnitQuaternion<f32>) {
         // Pitch the nose higher if the target is further away.
@@ -199,10 +221,11 @@ where
     fn estimate_approach(
         &mut self,
         ctx: &mut Context,
-        intercept: &NaiveIntercept,
+        intercept_time: f32,
+        intercept_ball_loc: Point3<f32>,
         target_loc: Point3<f32>,
     ) -> Result<Do, CarSimulateError> {
-        let total_time = intercept.time;
+        let total_time = intercept_time;
         let jump_duration = Self::jump_duration(target_loc.z);
         let drive_time = total_time - jump_duration;
 
@@ -241,7 +264,7 @@ where
             (1.0, true)
         };
 
-        ctx.eeg.print_value("i_ball", intercept.ball_loc);
+        ctx.eeg.print_value("i_ball", intercept_ball_loc);
         ctx.eeg.print_value("target", target_loc);
         ctx.eeg.print_time("drive_time", drive_time);
         ctx.eeg.print_time("total_time", total_time);
@@ -273,7 +296,7 @@ where
     fn jump(
         &self,
         ctx: &mut Context,
-        intercept: &NaiveIntercept,
+        intercept_ball_loc: Point3<f32>,
         target_loc: Point3<f32>,
         target_rot: UnitQuaternion<f32>,
     ) -> Action {
@@ -283,7 +306,7 @@ where
 
         let me_forward = ctx.me().Physics.forward_axis_2d();
         let dodge_angle =
-            me_forward.rotation_to(&(intercept.ball_loc.to_2d() - dodge_loc).to_axis());
+            me_forward.rotation_to(&(intercept_ball_loc.to_2d() - dodge_loc).to_axis());
 
         Action::call(Chain::new(
             self.priority(),
@@ -325,6 +348,20 @@ pub fn car_ball_contact_with_pitch(
     (car_loc, car_rot)
 }
 
+pub struct GroundedHitAimContext<'a> {
+    pub car: &'a rlbot::ffi::PlayerInfo,
+    pub game: &'a Game<'a>,
+    pub intercept_time: f32,
+    pub intercept_ball_loc: Point3<f32>,
+    pub eeg: &'a mut EEG,
+}
+
+#[derive(new)]
+pub struct GroundedHitTarget {
+    intercept_time: f32,
+    aim_loc: Point2<f32>,
+}
+
 enum Do {
     /// `(throttle, boost)`
     Drive(f32, bool),
@@ -335,7 +372,7 @@ enum Do {
 mod integration_tests {
     use crate::{
         integration_tests::helpers::{TestRunner, TestScenario},
-        maneuvers::grounded_hit::GroundedHit,
+        maneuvers::grounded_hit::{GroundedHit, GroundedHitTarget},
     };
     use common::{prelude::*, rl};
     use nalgebra::{Point2, Rotation3, Vector3};
@@ -350,8 +387,11 @@ mod integration_tests {
                 car_loc: Vector3::new(0.0, 0.0, 17.01),
                 ..Default::default()
             })
-            .behavior(GroundedHit::hit_towards(|_, _| {
-                Ok(Point2::new(0.0, rl::FIELD_MAX_Y))
+            .behavior(GroundedHit::hit_towards(|ctx| {
+                Ok(GroundedHitTarget::new(
+                    ctx.intercept_time,
+                    Point2::new(0.0, rl::FIELD_MAX_Y),
+                ))
             }))
             .run_for_millis(3500);
         assert!(test.has_scored());
@@ -368,8 +408,11 @@ mod integration_tests {
                 car_vel: Vector3::new(-644.811, 1099.141, 4.311),
                 ..Default::default()
             })
-            .behavior(GroundedHit::hit_towards(|_, _| {
-                Ok(Point2::new(0.0, rl::FIELD_MAX_Y))
+            .behavior(GroundedHit::hit_towards(|ctx| {
+                Ok(GroundedHitTarget::new(
+                    ctx.intercept_time,
+                    Point2::new(0.0, rl::FIELD_MAX_Y),
+                ))
             }))
             .run_for_millis(2000);
 
