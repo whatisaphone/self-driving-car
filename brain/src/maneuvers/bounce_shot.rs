@@ -19,6 +19,7 @@ pub struct BounceShot {
 impl BounceShot {
     pub const MAX_BALL_Z: f32 = 110.0;
 
+    #[allow(dead_code)] // Can I finally delete this?
     pub fn new(aim_loc: Point2<f32>) -> Self {
         Self {
             aim_loc,

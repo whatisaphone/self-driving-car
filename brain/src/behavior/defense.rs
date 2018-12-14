@@ -4,7 +4,7 @@ use crate::{
     },
     eeg::{color, Drawable},
     maneuvers::{BounceShot, GroundedHit, GroundedHitAimContext, GroundedHitTarget},
-    predict::{intercept::NaiveIntercept, naive_ground_intercept_2},
+    predict::naive_ground_intercept_2,
     routing::{behavior::FollowRoute, plan::GroundIntercept},
     strategy::{Context, Scenario},
     utils::{geometry::ExtendF32, Wall, WallRayCalculator},
@@ -185,28 +185,22 @@ impl Behavior for HitToOwnCorner {
     fn execute2(&mut self, ctx: &mut Context) -> Action {
         ctx.eeg.log("redirect to own corner");
 
-        let intercept =
-            naive_ground_intercept_2(&ctx.me().into(), ctx.scenario.ball_prediction(), |ball| {
-                ball.loc.z < Self::MAX_BALL_Z
-            });
-
-        match intercept {
-            None => Action::Return,
-            Some(intercept) => match Self::aim_loc(ctx, &intercept) {
-                Err(()) => Action::Return,
-                Ok(aim_loc) => Action::call(BounceShot::new(aim_loc)),
-            },
-        }
+        Action::call(Chain::new(
+            Priority::Idle,
+            vec![
+                Box::new(FollowRoute::new(GroundIntercept::new())),
+                Box::new(GroundedHit::hit_towards(Self::aim)),
+            ],
+        ))
     }
 }
 
 impl HitToOwnCorner {
-    fn aim_loc(ctx: &mut Context, intercept: &NaiveIntercept) -> Result<Point2<f32>, ()> {
+    fn aim(ctx: &mut GroundedHitAimContext) -> Result<GroundedHitTarget, ()> {
         let avoid = ctx.game.own_goal().center_2d;
 
-        let me = ctx.me();
-        let me_loc = me.Physics.loc_2d();
-        let ball_loc = intercept.ball_loc.to_2d();
+        let me_loc = ctx.car.Physics.loc_2d();
+        let ball_loc = ctx.intercept_ball_loc.to_2d();
         let me_to_ball = ball_loc - me_loc;
 
         let ltr_dir = Rotation2::new(PI / 6.0) * me_to_ball;
@@ -227,7 +221,7 @@ impl HitToOwnCorner {
                 ctx.eeg.log("avoiding the own goal");
                 Err(())
             }
-            _ => Ok(result),
+            _ => Ok(GroundedHitTarget::new(ctx.intercept_time, result)),
         }
     }
 }
