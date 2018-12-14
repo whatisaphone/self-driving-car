@@ -3,7 +3,7 @@ use crate::{
     maneuvers::{BounceShot, GroundedHit, GroundedHitAimContext, GroundedHitTarget},
     predict::naive_ground_intercept_2,
     routing::{behavior::FollowRoute, plan::GroundIntercept},
-    strategy::{Context, Game},
+    strategy::{Context, Game, Scenario},
 };
 use common::prelude::*;
 use nalgebra::{Point2, Point3};
@@ -34,10 +34,17 @@ impl Shoot {
     }
 
     fn aim(ctx: &mut GroundedHitAimContext) -> Result<GroundedHitTarget, ()> {
-        match Self::viable_shot(ctx.game, ctx.car.Physics.loc(), ctx.intercept_ball_loc) {
+        match Self::aim_calc(ctx.game, ctx.scenario, ctx.car) {
             Some(Shot(loc)) => Ok(GroundedHitTarget::new(ctx.intercept_time, loc)),
             None => Err(()),
         }
+    }
+
+    fn aim_calc(game: &Game, scenario: &Scenario, car: &rlbot::ffi::PlayerInfo) -> Option<Shot> {
+        naive_ground_intercept_2(&car.into(), scenario.ball_prediction(), |ball| {
+            Self::viable_shot(game, car.Physics.loc(), ball.loc)
+        })
+        .map(|i| i.data)
     }
 }
 
@@ -49,23 +56,12 @@ impl Behavior for Shoot {
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {
-        let me = ctx.me();
-
-        let intercept =
-            naive_ground_intercept_2(&me.into(), ctx.scenario.ball_prediction(), |ball| {
-                Self::viable_shot(ctx.game, me.Physics.loc(), ball.loc)
-            });
-
+        let intercept = Self::aim_calc(ctx.game, &ctx.scenario, ctx.me());
         if intercept.is_none() {
             ctx.eeg.log("[Shoot] no viable shot");
             return Action::Abort;
         }
 
-        // Big shortcoming here: above, we see if there's *any* viable shot along the
-        // ball's trajectory. But this sequence will blitz to the soonest possible
-        // intercept, and GroundedHit will also try to use the soonest possible
-        // intercept, so we might enter this behavior and then immediately abort and
-        // spew a bunch of nonsense logs.
         Action::call(Chain::new(
             Priority::Idle,
             vec![
@@ -237,6 +233,23 @@ mod integration_tests {
             .starting_boost(12.0)
             .behavior(Runner2::soccar())
             .run_for_millis(3000);
+
+        assert!(test.has_scored());
+    }
+
+    #[test]
+    fn high_lobbed_shot() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(2966.91, 2058.1199, 1604.51),
+                ball_vel: Vector3::new(-395.271, 175.991, -694.71094),
+                car_loc: Vector3::new(3739.39, 938.52997, 15.82),
+                car_rot: Rotation3::from_unreal_angles(0.007055527, 2.3592541, -0.018111816),
+                car_vel: Vector3::new(-938.84094, 909.071, 25.890999),
+                ..Default::default()
+            })
+            .behavior(Runner2::soccar())
+            .run_for_millis(3500);
 
         assert!(test.has_scored());
     }

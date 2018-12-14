@@ -6,7 +6,7 @@ use crate::{
     predict::{intercept::NaiveIntercept, naive_ground_intercept},
     routing::recover::{IsSkidding, NotOnFlatGround},
     rules::SameBallTrajectory,
-    strategy::{Context, Game},
+    strategy::{Context, Game, Scenario},
     EEG,
 };
 use common::{physics, prelude::*, rl};
@@ -138,8 +138,9 @@ where
         });
 
         let mut aim_context = GroundedHitAimContext {
-            car: me,
             game: ctx.game,
+            scenario: &ctx.scenario,
+            car: me,
             intercept_time: intercept.time,
             intercept_ball_loc: intercept.ball_loc,
             eeg: ctx.eeg,
@@ -172,8 +173,9 @@ where
     ) -> Result<(f32, Point3<f32>, UnitQuaternion<f32>), ()> {
         let me = ctx.me();
         let mut aim_context = GroundedHitAimContext {
-            car: me,
             game: &ctx.game,
+            scenario: &ctx.scenario,
+            car: me,
             intercept_time: intercept.time,
             intercept_ball_loc: intercept.ball_loc,
             eeg: ctx.eeg,
@@ -348,9 +350,10 @@ pub fn car_ball_contact_with_pitch(
     (car_loc, car_rot)
 }
 
-pub struct GroundedHitAimContext<'a> {
+pub struct GroundedHitAimContext<'a, 'b> {
+    pub game: &'a Game<'b>,
+    pub scenario: &'a Scenario<'b>,
     pub car: &'a rlbot::ffi::PlayerInfo,
-    pub game: &'a Game<'a>,
     pub intercept_time: f32,
     pub intercept_ball_loc: Point3<f32>,
     pub eeg: &'a mut EEG,
