@@ -28,6 +28,7 @@ pub trait Behavior: Send {
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub enum Priority {
     Idle,
+    Defense,
     Save,
     Force,
 }

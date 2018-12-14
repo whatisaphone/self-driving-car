@@ -56,14 +56,19 @@ impl Strategy for Soccar {
                     vec![Box::new(FiftyFifty::new())],
                 )));
             }
+        }
 
+        if current.priority() < Priority::Defense
+            && enemy_can_shoot(ctx)
+            && GetToFlatGround::on_flat_ground(ctx.me())
+        {
             if ctx.scenario.possession() < -Scenario::POSSESSION_CONTESTABLE {
                 ctx.eeg.log(format!(
                     "enemy can shoot, possession = {:.2}, going to defense",
                     ctx.scenario.possession()
                 ));
                 return Some(Box::new(Chain::new(
-                    Priority::Save,
+                    Priority::Defense,
                     vec![Box::new(Defense::new())],
                 )));
             }
