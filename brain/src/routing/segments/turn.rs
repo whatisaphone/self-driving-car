@@ -1,5 +1,6 @@
 use crate::{
     eeg::{color, Drawable},
+    maneuvers::GetToFlatGround,
     routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner},
     strategy::Context,
 };
@@ -119,6 +120,11 @@ impl SegmentRunner for Turner {
         let me = ctx.me();
         let me_loc = me.Physics.loc_2d();
         let me_forward = me.Physics.forward_axis_2d();
+
+        if !GetToFlatGround::on_flat_ground(me) {
+            ctx.eeg.log("[Turner] Not on flat ground");
+            return SegmentRunAction::Failure;
+        }
 
         // Check two end conditions to decrease the chances that silly things happen.
 
