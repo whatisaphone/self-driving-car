@@ -2,7 +2,7 @@ use crate::{
     behavior::{
         offense2::reset_behind_ball::ResetBehindBall, Behavior, Predicate, TimeLimit, While,
     },
-    maneuvers::{DriveTowards, GetToFlatGround},
+    maneuvers::{BounceShot, DriveTowards, GetToFlatGround},
     mechanics::SkidRecover,
     routing::models::{CarState, RoutePlanError},
     strategy::Context,
@@ -30,6 +30,25 @@ impl RoutePlanError {
                 Some(Box::new(TimeLimit::new(1.0, wander)))
             }
             RoutePlanError::TurningRadiusTooTight => {
+                // Check if the ball is roughly in front of us and we can easily just smack it
+                // for free.
+                let ball_loc = ctx
+                    .scenario
+                    .ball_prediction()
+                    .at_time(0.5)
+                    .unwrap()
+                    .loc
+                    .to_2d();
+                let me_loc = ctx.me().Physics.loc_2d();
+                let me_forward = ctx.me().Physics.forward_axis_2d();
+                let me_rotation_to_ball = me_forward.rotation_to(&(ball_loc - me_loc).to_axis());
+                if (me_loc - ball_loc).norm() < 500.0
+                    && me_rotation_to_ball.angle().abs() < PI / 3.0
+                {
+                    let aim = BounceShot::opposite_of_self(ctx.me(), ball_loc);
+                    return Some(Box::new(BounceShot::new(aim)));
+                }
+
                 let ball_loc = ctx.scenario.ball_prediction().at_time(2.5).unwrap().loc;
                 Some(Box::new(
                     ResetBehindBall::behind_loc(ball_loc.to_2d()).never_recover(true),

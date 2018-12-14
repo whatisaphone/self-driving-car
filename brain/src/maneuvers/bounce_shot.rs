@@ -96,6 +96,12 @@ impl BounceShot {
         Point2::from(WallRayCalculator::calc_ray(ball_loc, aim_angle))
     }
 
+    /// Calculate the easiest possible hit, directly opposite the ball from the
+    /// player.
+    pub fn opposite_of_self(car: &rlbot::ffi::PlayerInfo, ball: Point2<f32>) -> Point2<f32> {
+        ball + (ball - car.Physics.loc_2d())
+    }
+
     /// Roughly where should the car be when it makes contact with the ball, in
     /// order to shoot at `aim_loc`?
     pub fn rough_shooting_spot(intercept: &NaiveIntercept, aim_loc: Point2<f32>) -> Point2<f32> {
