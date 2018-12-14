@@ -124,6 +124,7 @@ mod integration_tests {
         integration_tests::helpers::{TestRunner, TestScenario},
         strategy::{runner2::BASELINE, Runner2},
     };
+    use brain_test_data::recordings;
     use common::prelude::*;
     use nalgebra::{Rotation3, Vector3};
 
@@ -216,5 +217,16 @@ mod integration_tests {
 
         let packet = test.sniff_packet();
         assert!(packet.GameBall.Physics.Location.X < -1000.0);
+    }
+
+    #[test]
+    fn clear_defensive_ball() {
+        let test = TestRunner::new()
+            .one_v_one(&*recordings::CLEAR_DEFENSIVE_BALL, 53.0)
+            .behavior(Runner2::soccar())
+            .run_for_millis(2000);
+
+        let packet = test.sniff_packet();
+        assert!(packet.GameBall.Physics.Location.X >= 1500.0);
     }
 }

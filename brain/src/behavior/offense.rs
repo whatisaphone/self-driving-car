@@ -3,9 +3,10 @@ use crate::{
         offense2::reset_behind_ball::ResetBehindBall, shoot::Shoot, tepid_hit::TepidHit, Action,
         Behavior,
     },
+    plan::ball::BallFrame,
     predict::naive_ground_intercept_2,
     routing::{behavior::FollowRoute, plan::GetDollar},
-    strategy::Context,
+    strategy::{Context, Game},
     utils::geometry::RayCoordinateSystem,
 };
 use common::prelude::*;
@@ -25,15 +26,7 @@ impl Behavior for Offense {
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {
-        let me = ctx.me();
-
-        let intercept = naive_ground_intercept_2(
-            &me.into(),
-            ctx.scenario.ball_prediction().iter_step_by(0.125),
-            |ball| Shoot::viable_shot(ctx.game, me.Physics.loc(), ball.loc),
-        );
-
-        if intercept.is_some() {
+        if can_we_shoot(ctx) {
             ctx.eeg.log("[Offense] Taking the shot!");
             return Action::call(Shoot::new());
         }
@@ -49,6 +42,29 @@ impl Behavior for Offense {
         ctx.eeg.log("[Offense] no good hit; going for a tepid hit");
         return Action::call(TepidHit::new());
     }
+}
+
+fn can_we_shoot(ctx: &mut Context) -> bool {
+    let me = ctx.me();
+
+    if playing_goalie(ctx.game, ctx.scenario.ball_prediction().start()) {
+        return false;
+    }
+
+    let intercept = naive_ground_intercept_2(
+        &me.into(),
+        ctx.scenario.ball_prediction().iter_step_by(0.125),
+        |ball| Shoot::viable_shot(ctx.game, me.Physics.loc(), ball.loc),
+    );
+
+    intercept.is_some()
+}
+
+fn playing_goalie(game: &Game, ball: &BallFrame) -> bool {
+    let safe = game.own_goal().center_2d;
+    let danger = game.enemy_goal().center_2d;
+    let defensiveness = (ball.loc.to_2d() - danger).norm() / (ball.loc.to_2d() - safe).norm();
+    defensiveness >= 5.0
 }
 
 fn slow_play(ctx: &mut Context) -> Option<Action> {
