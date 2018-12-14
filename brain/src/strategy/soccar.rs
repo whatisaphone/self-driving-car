@@ -42,19 +42,15 @@ impl Strategy for Soccar {
             )));
         }
 
-        if current.priority() < Priority::Save && enemy_can_shoot(ctx) {
+        if current.priority() < Priority::Save
+            && enemy_can_shoot(ctx)
+            && GetToFlatGround::on_flat_ground(ctx.me())
+        {
             if ctx.scenario.possession().abs() < Scenario::POSSESSION_CONTESTABLE {
                 ctx.eeg.log(format!(
                     "enemy can shoot, possession = {:.2}, going for 50/50",
                     ctx.scenario.possession()
                 ));
-                if !GetToFlatGround::on_flat_ground(ctx.me()) {
-                    ctx.eeg.log("... as soon as we land, that is!");
-                    return Some(Box::new(Chain::new(
-                        Priority::Save,
-                        vec![Box::new(GetToFlatGround::new())],
-                    )));
-                }
                 return Some(Box::new(Chain::new(
                     Priority::Save,
                     vec![Box::new(FiftyFifty::new())],
@@ -66,13 +62,6 @@ impl Strategy for Soccar {
                     "enemy can shoot, possession = {:.2}, going to defense",
                     ctx.scenario.possession()
                 ));
-                if !GetToFlatGround::on_flat_ground(ctx.me()) {
-                    ctx.eeg.log("... as soon as we land, that is!");
-                    return Some(Box::new(Chain::new(
-                        Priority::Save,
-                        vec![Box::new(GetToFlatGround::new())],
-                    )));
-                }
                 return Some(Box::new(Chain::new(
                     Priority::Save,
                     vec![Box::new(Defense::new())],
