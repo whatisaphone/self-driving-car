@@ -23,6 +23,7 @@ impl Defense {
 
     fn is_between_ball_and_own_goal(ctx: &mut Context) -> bool {
         let goal_loc = ctx.game.own_goal().center_2d;
+        let me_loc = ctx.me().Physics.loc_2d();
         let ball_loc = match ctx.scenario.me_intercept() {
             Some(i) => i.ball_loc.to_2d(),
             None => ctx.scenario.ball_prediction().last().loc.to_2d(),
@@ -30,8 +31,17 @@ impl Defense {
         let goal_to_ball_axis = (ball_loc - goal_loc).to_axis();
 
         let ball_dist = (ball_loc - goal_loc).dot(&goal_to_ball_axis);
-        let me_dist = (ctx.me().Physics.loc_2d() - goal_loc).dot(&goal_to_ball_axis);
-        ball_dist > me_dist
+        let me_dist = (me_loc - goal_loc).dot(&goal_to_ball_axis);
+        if ball_dist <= me_dist {
+            return false;
+        }
+
+        let defending_angle = (ball_loc - goal_loc).rotation_to(me_loc - goal_loc);
+        if defending_angle.angle().abs() >= PI / 3.0 {
+            return false;
+        }
+
+        return true;
     }
 }
 
