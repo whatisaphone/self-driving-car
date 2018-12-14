@@ -5,7 +5,7 @@ use crate::{
     plan::hit_angle::{feasible_hit_angle_away, feasible_hit_angle_toward},
     routing::{behavior::FollowRoute, plan::GroundIntercept},
     strategy::Context,
-    utils::WallRayCalculator,
+    utils::{Wall, WallRayCalculator},
 };
 use common::prelude::*;
 use nalgebra::Point2;
@@ -55,5 +55,12 @@ fn time_wasting_hit(ctx: &mut GroundedHitAimContext) -> Result<GroundedHitTarget
     };
 
     let aim_loc = Point2::from(WallRayCalculator::calculate(ball_loc, aim_loc));
-    Ok(GroundedHitTarget::new(ctx.intercept_time, aim_loc))
+
+    match WallRayCalculator::wall_for_point(ctx.game, aim_loc) {
+        Wall::OwnGoal => {
+            ctx.eeg.log("[TepidHit] refusing to own goal");
+            return Err(());
+        }
+        _ => Ok(GroundedHitTarget::new(ctx.intercept_time, aim_loc)),
+    }
 }
