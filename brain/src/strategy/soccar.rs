@@ -106,7 +106,7 @@ fn enemy_can_shoot(ctx: &mut Context) -> bool {
     };
     let ball_loc = intercept.ball_loc.to_2d();
     let goal = ctx.game.own_goal();
-    if (ball_loc - goal.center_2d).norm() >= 5000.0 {
+    if (ball_loc - goal.center_2d).norm() >= 7500.0 {
         return false;
     }
     ctx.cars(ctx.game.enemy_team).any(|enemy| {
@@ -228,5 +228,16 @@ mod integration_tests {
 
         let packet = test.sniff_packet();
         assert!(packet.GameBall.Physics.Location.X >= 1500.0);
+    }
+
+    #[test]
+    fn dont_allow_long_shot() {
+        let test = TestRunner::new()
+            .one_v_one(&*recordings::DONT_ALLOW_LONG_SHOT, 282.5)
+            .starting_boost(0.0)
+            .behavior(Runner2::soccar())
+            .run_for_millis(7000);
+
+        assert!(!test.enemy_has_scored());
     }
 }
