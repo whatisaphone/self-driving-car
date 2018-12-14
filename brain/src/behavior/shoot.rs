@@ -222,4 +222,22 @@ mod integration_tests {
         test.sleep_millis(4000);
         assert!(test.has_scored());
     }
+
+    #[test]
+    fn low_boost_shot() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(1847.84, 1641.52, 503.91998),
+                ball_vel: Vector3::new(-796.701, 953.001, 192.491),
+                car_loc: Vector3::new(2106.05, 1107.9299, 176.58),
+                car_rot: Rotation3::from_unreal_angles(0.6417668, 2.9078417, 0.24533166),
+                car_vel: Vector3::new(-695.61096, 573.141, -247.531),
+                ..Default::default()
+            })
+            .starting_boost(12.0)
+            .behavior(Runner2::soccar())
+            .run_for_millis(3000);
+
+        assert!(test.has_scored());
+    }
 }

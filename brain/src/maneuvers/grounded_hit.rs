@@ -9,7 +9,7 @@ use crate::{
     strategy::{Context, Game},
 };
 use common::{physics, prelude::*, rl};
-use nalgebra::{Point2, Point3, UnitComplex, UnitQuaternion};
+use nalgebra::{Point2, Point3, UnitQuaternion};
 use rlbot;
 use simulate::{
     car_single_jump::{time_to_z, JUMP_MAX_Z},
@@ -78,7 +78,7 @@ where
             Err(()) => return Action::Abort,
         };
 
-        let (target_loc, target_rot, dodge_angle) = match self.target_loc(ctx, &intercept) {
+        let (target_loc, target_rot) = match self.target_loc(ctx, &intercept) {
             Ok(x) => x,
             Err(()) => {
                 ctx.eeg.log("[GroundedHit] error finding target_loc");
@@ -97,7 +97,7 @@ where
 
         match self.estimate_approach(ctx, &intercept, target_loc) {
             Ok(Do::Drive(throttle, boost)) => self.drive(ctx, target_loc, throttle, boost),
-            Ok(Do::Jump) => self.jump(target_loc, target_rot, dodge_angle),
+            Ok(Do::Jump) => self.jump(ctx, &intercept, target_loc, target_rot),
             Err(error) => {
                 ctx.eeg.log(format!(
                     "[GroundedHit] can't estimate approach: {:?}",
@@ -131,7 +131,7 @@ where
 
         let aim_loc = (self.aim)(ctx, intercept.ball_loc)
             .map_err(|_| ctx.eeg.log("error getting aim location"))?;
-        let (target_loc, _, _) = Self::preliminary_target(ctx, &intercept, aim_loc);
+        let (target_loc, _target_rot) = Self::preliminary_target(ctx, &intercept, aim_loc);
         let ball_max_z = JUMP_MAX_Z + (intercept.ball_loc.z - target_loc.z);
 
         // Second pass: Get a more accurate intercept based on how high we need to jump.
@@ -154,12 +154,11 @@ where
         &mut self,
         ctx: &mut Context,
         intercept: &NaiveIntercept,
-    ) -> Result<(Point3<f32>, UnitQuaternion<f32>, UnitComplex<f32>), ()> {
+    ) -> Result<(Point3<f32>, UnitQuaternion<f32>), ()> {
         let me = ctx.me();
         let aim_loc = (self.aim)(ctx, intercept.ball_loc)?;
 
-        let (target_loc, target_rot, dodge_angle) =
-            Self::preliminary_target(ctx, intercept, aim_loc);
+        let (target_loc, target_rot) = Self::preliminary_target(ctx, intercept, aim_loc);
 
         // TODO: iteratively find contact point which hits the ball towards aim_loc
 
@@ -171,14 +170,14 @@ where
         ctx.eeg
             .draw(Drawable::GhostCar(target_loc, me.Physics.rot()));
 
-        Ok((target_loc, target_rot, dodge_angle))
+        Ok((target_loc, target_rot))
     }
 
     fn preliminary_target(
         ctx: &mut Context,
         intercept: &NaiveIntercept<()>,
         aim_loc: Point2<f32>,
-    ) -> (Point3<f32>, UnitQuaternion<f32>, UnitComplex<f32>) {
+    ) -> (Point3<f32>, UnitQuaternion<f32>) {
         // Pitch the nose higher if the target is further away.
         let pitch = linear_interpolate(
             &[1000.0, 5000.0],
@@ -194,10 +193,7 @@ where
         );
         let rough_target_loc = BounceShot::rough_shooting_spot(intercept, aim_loc);
         let target_loc = rough_target_loc.to_3d(naive_target_loc.z);
-        let dodge_angle = (target_loc.to_2d() - ctx.me().Physics.loc_2d())
-            .to_axis()
-            .rotation_to(&(intercept.ball_loc.to_2d() - target_loc.to_2d()).to_axis());
-        (target_loc, target_rot, dodge_angle)
+        (target_loc, target_rot)
     }
 
     fn estimate_approach(
@@ -276,11 +272,19 @@ where
 
     fn jump(
         &self,
+        ctx: &mut Context,
+        intercept: &NaiveIntercept,
         target_loc: Point3<f32>,
         target_rot: UnitQuaternion<f32>,
-        dodge_angle: UnitComplex<f32>,
     ) -> Action {
+        // Simulate the jump to predict our exact location at the peak.
         let jump_time = Self::jump_duration(target_loc.z);
+        let dodge_loc = ctx.me().Physics.loc_2d() + ctx.me().Physics.vel_2d() * jump_time;
+
+        let me_forward = ctx.me().Physics.forward_axis_2d();
+        let dodge_angle =
+            me_forward.rotation_to(&(intercept.ball_loc.to_2d() - dodge_loc).to_axis());
+
         Action::call(Chain::new(
             self.priority(),
             vec![
