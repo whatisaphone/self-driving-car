@@ -1,7 +1,7 @@
 use crate::{
     behavior::{Action, Behavior},
     eeg::{color, Drawable},
-    maneuvers::BlitzToLocation,
+    maneuvers::{BlitzToLocation, GetToFlatGround},
     mechanics::simple_steer_towards,
     plan::drive::rough_time_drive_to_loc,
     rules::SameBallTrajectory,
@@ -49,6 +49,11 @@ impl Behavior for PanicDefense {
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {
         return_some!(self.same_ball_trajectory.execute(ctx));
+
+        if !GetToFlatGround::on_flat_ground(ctx.me()) {
+            ctx.eeg.log("[PanicDefense] not on flat ground");
+            return Action::Abort;
+        }
 
         if let Some(phase) = self.next_phase(ctx) {
             self.phase = phase;
