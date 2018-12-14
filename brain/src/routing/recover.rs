@@ -2,8 +2,8 @@ use crate::{
     behavior::{
         offense2::reset_behind_ball::ResetBehindBall, Behavior, Predicate, TimeLimit, While,
     },
-    maneuvers::{BounceShot, DriveTowards, GetToFlatGround},
-    mechanics::SkidRecover,
+    maneuvers::{DriveTowards, GetToFlatGround},
+    mechanics::{QuickJumpAndDodge, SkidRecover},
     routing::models::{CarState, RoutePlanError},
     strategy::Context,
 };
@@ -69,6 +69,7 @@ fn check_easy_flip_recover(ctx: &mut Context) -> Option<Box<Behavior>> {
     let ball = ctx.scenario.ball_prediction().at_time(0.5).unwrap();
     let me_loc = ctx.me().Physics.loc_2d();
     let me_forward = ctx.me().Physics.forward_axis_2d();
+
     let me_rot_to_ball = me_forward.rotation_to(&(ball.loc.to_2d() - me_loc).to_axis());
     let own_goal_loc = ctx.game.own_goal().center_2d;
     let me_rot_to_own_goal = me_forward.rotation_to(&(own_goal_loc - me_loc).to_axis());
@@ -80,8 +81,9 @@ fn check_easy_flip_recover(ctx: &mut Context) -> Option<Box<Behavior>> {
     {
         ctx.eeg
             .log("[check_easy_flip_recover] the ball is right here, I can't resist!");
-        let aim = BounceShot::opposite_of_self(ctx.me(), ball.loc.to_2d());
-        return Some(Box::new(BounceShot::new(aim)));
+        let dodge =
+            me_forward.rotation_to(&(ball.loc.to_2d() - ctx.me().Physics.loc_2d()).to_axis());
+        return Some(Box::new(QuickJumpAndDodge::new().angle(dodge.angle())));
     }
 
     None
