@@ -6,7 +6,7 @@ use crate::{
     strategy::Context,
 };
 use common::prelude::*;
-use nalgebra::Vector3;
+use nalgebra::{Vector2, Vector3};
 use rlbot;
 use std::f32::consts::PI;
 
@@ -59,12 +59,12 @@ impl Behavior for GetToFlatGround {
             let forward = if me.Physics.loc().y.abs() >= ctx.game.field_max_y() {
                 // If we're going to land in the goal, land in a convenient direction to
                 // immediately drive out of the goal towards the ball.
-                let mut start = CarState::from(me);
-                start.loc += start.vel * 1.0;
-                let ball_loc = ctx.packet.GameBall.Physics.loc_2d();
-                let target_loc = avoid_goal_wall_waypoint(&start, ball_loc).unwrap_or(ball_loc);
-                (target_loc - me.Physics.loc_2d())
+                face_the_ball(ctx)
+            } else if me.Physics.vel_2d().norm() < 500.0 {
+                // If we're not moving much, we have no momentum to conserve, so face the ball.
+                face_the_ball(ctx)
             } else {
+                // Conserve our momentum (i.e. don't skid on landing)
                 me.Physics.vel_2d()
             }
             .to_3d(0.0)
@@ -80,4 +80,13 @@ impl Behavior for GetToFlatGround {
             })
         }
     }
+}
+
+fn face_the_ball(ctx: &mut Context) -> Vector2<f32> {
+    let me = ctx.me();
+    let mut start = CarState::from(me);
+    start.loc += start.vel * 1.0;
+    let ball_loc = ctx.packet.GameBall.Physics.loc_2d();
+    let target_loc = avoid_goal_wall_waypoint(&start, ball_loc).unwrap_or(ball_loc);
+    target_loc - me.Physics.loc_2d()
 }
