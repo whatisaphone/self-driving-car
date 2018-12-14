@@ -1,5 +1,5 @@
 use common::{prelude::*, rl};
-use nalgebra::{Point2, Point3, Vector3};
+use nalgebra::{Point2, Point3, Unit, Vector2, Vector3};
 use rlbot;
 use std::ops::RangeTo;
 
@@ -158,6 +158,8 @@ impl Team {
 
 pub struct Goal {
     pub center_2d: Point2<f32>,
+    pub normal_2d: Unit<Vector2<f32>>,
+    pub max_x: f32,
 }
 
 impl Goal {
@@ -215,16 +217,24 @@ impl Vehicle {
 
 lazy_static! {
     static ref SOCCAR_GOAL_BLUE: Goal = Goal {
-        center_2d: Point2::new(0.0, -rl::FIELD_MAX_Y)
+        center_2d: Point2::new(0.0, -rl::FIELD_MAX_Y),
+        normal_2d: Vector2::y_axis(),
+        max_x: rl::GOALPOST_X,
     };
     static ref SOCCAR_GOAL_ORANGE: Goal = Goal {
-        center_2d: Point2::new(0.0, rl::FIELD_MAX_Y)
+        center_2d: Point2::new(0.0, rl::FIELD_MAX_Y),
+        normal_2d: -Vector2::y_axis(),
+        max_x: rl::GOALPOST_X,
     };
     static ref HOOPS_GOAL_BLUE: Goal = Goal {
-        center_2d: Point2::new(0.0, -3586.0)
+        center_2d: Point2::new(0.0, -3586.0),
+        normal_2d: Vector2::y_axis(),
+        max_x: rl::GOALPOST_X,
     };
     static ref HOOPS_GOAL_ORANGE: Goal = Goal {
-        center_2d: Point2::new(0.0, 3586.0)
+        center_2d: Point2::new(0.0, 3586.0),
+        normal_2d: -Vector2::y_axis(),
+        max_x: rl::GOALPOST_X,
     };
     static ref OCTANE: Vehicle = Vehicle {
         // Source:

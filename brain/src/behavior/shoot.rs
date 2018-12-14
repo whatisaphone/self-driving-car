@@ -1,7 +1,7 @@
 use crate::{
     behavior::{Action, Behavior, Chain, Priority},
     maneuvers::{BounceShot, GroundedHit, GroundedHitAimContext, GroundedHitTarget},
-    predict::naive_ground_intercept_2,
+    predict::{intercept::NaiveIntercept, naive_ground_intercept_2},
     routing::{behavior::FollowRoute, plan::GroundIntercept},
     strategy::{Context, Game, Scenario},
 };
@@ -22,33 +22,46 @@ impl Shoot {
             return None;
         }
 
-        // Evaluate a direct shot.
-        let aim_loc = BounceShot::aim_loc(game.enemy_goal(), car_loc.to_2d(), ball_loc.to_2d());
+        let goal = game.enemy_goal();
+        let aim_loc = BounceShot::aim_loc(goal, car_loc.to_2d(), ball_loc.to_2d());
+
         let car_to_ball = ball_loc.to_2d() - car_loc.to_2d();
         let ball_to_goal = aim_loc - ball_loc.to_2d();
-        if car_to_ball.rotation_to(ball_to_goal).angle().abs() < PI / 6.0 {
-            return Some(Shot(aim_loc));
+        if car_to_ball.rotation_to(ball_to_goal).angle().abs() >= PI / 6.0 {
+            return None;
         }
 
-        return None;
+        let goal_angle = (ball_loc.to_2d() - aim_loc)
+            .to_axis()
+            .rotation_to(&goal.normal_2d);
+        if goal_angle.angle().abs() >= PI * (5.0 / 12.0) {
+            return None;
+        }
+
+        Some(Shot { aim_loc })
     }
 
     fn aim(ctx: &mut GroundedHitAimContext) -> Result<GroundedHitTarget, ()> {
         match Self::aim_calc(ctx.game, ctx.scenario, ctx.car) {
-            Some(Shot(loc)) => Ok(GroundedHitTarget::new(ctx.intercept_time, loc)),
+            Some(i) => Ok(GroundedHitTarget::new(i.time, i.data.aim_loc)),
             None => Err(()),
         }
     }
 
-    fn aim_calc(game: &Game, scenario: &Scenario, car: &rlbot::ffi::PlayerInfo) -> Option<Shot> {
+    fn aim_calc(
+        game: &Game,
+        scenario: &Scenario,
+        car: &rlbot::ffi::PlayerInfo,
+    ) -> Option<NaiveIntercept<Shot>> {
         naive_ground_intercept_2(&car.into(), scenario.ball_prediction(), |ball| {
             Self::viable_shot(game, car.Physics.loc(), ball.loc)
         })
-        .map(|i| i.data)
     }
 }
 
-pub struct Shot(Point2<f32>);
+pub struct Shot {
+    aim_loc: Point2<f32>,
+}
 
 impl Behavior for Shoot {
     fn name(&self) -> &str {
