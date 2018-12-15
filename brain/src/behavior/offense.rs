@@ -6,7 +6,7 @@ use crate::{
     plan::ball::BallFrame,
     predict::naive_ground_intercept_2,
     routing::{behavior::FollowRoute, plan::GetDollar},
-    strategy::{Context, Game},
+    strategy::{Context, Game, Scenario},
     utils::geometry::RayCoordinateSystem,
 };
 use common::prelude::*;
@@ -51,13 +51,31 @@ fn can_we_shoot(ctx: &mut Context) -> bool {
         return false;
     }
 
-    let intercept = naive_ground_intercept_2(
+    let naive_intercept = some_or_else!(ctx.scenario.me_intercept(), {
+        return false;
+    });
+
+    let shoot_intercept = naive_ground_intercept_2(
         &me.into(),
         ctx.scenario.ball_prediction().iter_step_by(0.125),
         |ball| Shoot::viable_shot(ctx.game, me.Physics.loc(), ball.loc),
     );
 
-    intercept.is_some()
+    let shoot_intercept = some_or_else!(shoot_intercept, {
+        return false;
+    });
+
+    // Don't just sit there for days waiting for the ball to roll. The more
+    // possession we have, the longer we're willing to wait.
+    if shoot_intercept.time
+        >= naive_intercept.time + ctx.scenario.possession() - Scenario::POSSESSION_CONTESTABLE
+    {
+        ctx.eeg
+            .log("[can_we_shoot] we can shoot, but not soon enough");
+        return false;
+    }
+
+    true
 }
 
 fn playing_goalie(game: &Game, ball: &BallFrame) -> bool {
