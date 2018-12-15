@@ -7,7 +7,7 @@ use crate::{
     strategy::Context,
 };
 use common::prelude::*;
-use nalgebra::{Vector2, Vector3};
+use nalgebra::{Unit, Vector2, Vector3};
 use rlbot;
 use std::f32::consts::PI;
 
@@ -64,7 +64,7 @@ impl Behavior for GetToFlatGround {
                     0.1,
                 )));
 
-                if safeness(ctx) < 0.5 {
+                if defensiveness(ctx) < 0.5 {
                     // We're probably way out of the game. Dodge towards our goal to get back to
                     // defense quicker.
                     let angle = (me.Physics.forward_axis().unwrap()
@@ -101,23 +101,7 @@ impl Behavior for GetToFlatGround {
                 ..Default::default()
             })
         } else {
-            let forward = if me.Physics.loc().y.abs() >= ctx.game.field_max_y() {
-                // If we're going to land in the goal, land in a convenient direction to
-                // immediately drive out of the goal towards the ball.
-                face_the_ball(ctx)
-            } else if me.Physics.vel_2d().norm() < 500.0 {
-                // If we're not moving much, we have no momentum to conserve, so face the ball.
-                face_the_ball(ctx)
-            } else if safeness(ctx) >= 7.0 {
-                // If we're playing defense, forget momentum, try to stay ready to challenge the
-                // ball.
-                face_the_ball(ctx)
-            } else {
-                // Conserve our momentum (i.e. don't skid on landing)
-                me.Physics.vel_2d()
-            }
-            .to_3d(0.0)
-            .to_axis();
+            let forward = choose_facing(ctx);
 
             let (pitch, yaw, roll) = dom::get_pitch_yaw_roll(ctx.me(), forward, Vector3::z_axis());
             Action::Yield(rlbot::ffi::PlayerInput {
@@ -131,8 +115,30 @@ impl Behavior for GetToFlatGround {
     }
 }
 
+fn choose_facing(ctx: &mut Context) -> Unit<Vector3<f32>> {
+    let me = ctx.me();
+
+    if me.Physics.loc().y.abs() >= ctx.game.field_max_y() {
+        // If we're going to land in the goal, land in a convenient direction to
+        // immediately drive out of the goal towards the ball.
+        face_the_ball(ctx)
+    } else if me.Physics.vel_2d().norm() < 500.0 {
+        // If we're not moving much, we have no momentum to conserve, so face the ball.
+        face_the_ball(ctx)
+    } else if defensiveness(ctx) >= 7.0 {
+        // If we're playing defense, forget momentum, try to stay ready to challenge the
+        // ball.
+        face_the_ball(ctx)
+    } else {
+        // Conserve our momentum (i.e. don't skid on landing)
+        me.Physics.vel_2d()
+    }
+    .to_3d(0.0)
+    .to_axis()
+}
+
 /// How far deep in enemy territory are we?
-fn safeness(ctx: &mut Context) -> f32 {
+fn defensiveness(ctx: &mut Context) -> f32 {
     let safe = ctx.game.own_back_wall_center();
     let danger = ctx.game.enemy_back_wall_center();
     let me_loc = ctx.me().Physics.loc_2d();
