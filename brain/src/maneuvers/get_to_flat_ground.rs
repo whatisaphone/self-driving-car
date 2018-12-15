@@ -64,19 +64,13 @@ impl Behavior for GetToFlatGround {
                     0.1,
                 )));
 
-                // How far deep in enemy territory are we?
-                let safe = ctx.game.own_back_wall_center();
-                let danger = ctx.game.enemy_back_wall_center();
-                let me_loc = ctx.me().Physics.loc_2d();
-                let safeness = (me_loc - danger).norm() / (me_loc - safe).norm();
-
-                if safeness < 0.5 {
+                if safeness(ctx) < 0.5 {
                     // We're probably way out of the game. Dodge towards our goal to get back to
                     // defense quicker.
                     let angle = (me.Physics.forward_axis().unwrap()
                         + me.Physics.roof_axis().unwrap())
                     .to_2d()
-                    .rotation_to(safe - me_loc);
+                    .rotation_to(ctx.game.own_back_wall_center() - ctx.me().Physics.loc_2d());
 
                     // Let go of jump
                     inputs.push(Box::new(Yielder::new(
@@ -114,6 +108,10 @@ impl Behavior for GetToFlatGround {
             } else if me.Physics.vel_2d().norm() < 500.0 {
                 // If we're not moving much, we have no momentum to conserve, so face the ball.
                 face_the_ball(ctx)
+            } else if safeness(ctx) >= 7.0 {
+                // If we're playing defense, forget momentum, try to stay ready to challenge the
+                // ball.
+                face_the_ball(ctx)
             } else {
                 // Conserve our momentum (i.e. don't skid on landing)
                 me.Physics.vel_2d()
@@ -133,11 +131,25 @@ impl Behavior for GetToFlatGround {
     }
 }
 
+/// How far deep in enemy territory are we?
+fn safeness(ctx: &mut Context) -> f32 {
+    let safe = ctx.game.own_back_wall_center();
+    let danger = ctx.game.enemy_back_wall_center();
+    let me_loc = ctx.me().Physics.loc_2d();
+    (me_loc - danger).norm() / (me_loc - safe).norm()
+}
+
 fn face_the_ball(ctx: &mut Context) -> Vector2<f32> {
     let me = ctx.me();
     let mut start = CarState::from(me);
     start.loc += start.vel * 1.0;
-    let ball_loc = ctx.packet.GameBall.Physics.loc_2d();
+    let ball_loc = ctx
+        .scenario
+        .ball_prediction()
+        .at_time(0.5)
+        .unwrap()
+        .loc
+        .to_2d();
     let target_loc = avoid_goal_wall_waypoint(&start, ball_loc).unwrap_or(ball_loc);
     target_loc - me.Physics.loc_2d()
 }
