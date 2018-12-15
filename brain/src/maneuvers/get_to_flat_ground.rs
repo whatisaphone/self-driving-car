@@ -80,7 +80,7 @@ impl Behavior for GetToFlatGround {
                             Jump: false,
                             ..Default::default()
                         },
-                        0.4,
+                        0.25,
                     )));
                     // Then dodge.
                     inputs.push(Box::new(Dodge::new().angle(angle)));
