@@ -79,7 +79,8 @@ where
             Err(()) => return Action::Abort,
         };
 
-        let (intercept_time, target_loc, target_rot) = match self.target_loc(ctx, &intercept) {
+        let (intercept_time, target_loc, target_rot, dodge) = match self.target_loc(ctx, &intercept)
+        {
             Ok(x) => x,
             Err(()) => {
                 ctx.eeg.log("[GroundedHit] error finding target_loc");
@@ -105,7 +106,7 @@ where
 
         match self.estimate_approach(ctx, intercept_time, intercept_ball_loc, target_loc) {
             Ok(Do::Drive(throttle, boost)) => self.drive(ctx, target_loc, throttle, boost),
-            Ok(Do::Jump) => self.jump(ctx, intercept_ball_loc, target_loc, target_rot),
+            Ok(Do::Jump) => self.jump(ctx, intercept_ball_loc, target_loc, target_rot, dodge),
             Err(error) => {
                 ctx.eeg.log(format!(
                     "[GroundedHit] can't estimate approach: {:?}",
@@ -147,7 +148,7 @@ where
         };
         let target =
             (self.aim)(&mut aim_context).map_err(|_| ctx.eeg.log("error getting aim location"))?;
-        let (target_loc, _target_rot) = Self::preliminary_target(ctx, &intercept, &target);
+        let (target_loc, _target_rot, _dodge) = Self::preliminary_target(ctx, &intercept, &target);
         let ball_max_z = JUMP_MAX_Z + (intercept.ball_loc.z - target_loc.z);
 
         // Second pass: Get a more accurate intercept based on how high we need to jump.
@@ -170,7 +171,7 @@ where
         &mut self,
         ctx: &mut Context,
         intercept: &NaiveIntercept,
-    ) -> Result<(f32, Point3<f32>, UnitQuaternion<f32>), ()> {
+    ) -> Result<(f32, Point3<f32>, UnitQuaternion<f32>, bool), ()> {
         let me = ctx.me();
         let mut aim_context = GroundedHitAimContext {
             game: &ctx.game,
@@ -182,7 +183,7 @@ where
         };
         let target = (self.aim)(&mut aim_context)?;
 
-        let (target_loc, target_rot) = Self::preliminary_target(ctx, intercept, &target);
+        let (target_loc, target_rot, dodge) = Self::preliminary_target(ctx, intercept, &target);
 
         // TODO: iteratively find contact point which hits the ball towards aim_loc
 
@@ -194,14 +195,14 @@ where
         ctx.eeg
             .draw(Drawable::GhostCar(target_loc, me.Physics.rot()));
 
-        Ok((target.intercept_time, target_loc, target_rot))
+        Ok((target.intercept_time, target_loc, target_rot, dodge))
     }
 
     fn preliminary_target(
         ctx: &mut Context,
         intercept: &NaiveIntercept,
         target: &GroundedHitTarget,
-    ) -> (Point3<f32>, UnitQuaternion<f32>) {
+    ) -> (Point3<f32>, UnitQuaternion<f32>, bool) {
         // Pitch the nose higher if the target is further away.
         let pitch = linear_interpolate(
             &[1000.0, 5000.0],
@@ -222,7 +223,7 @@ where
             }
             GroundedHitTargetAdjust::StraightOn => naive_target_loc,
         };
-        (target_loc, target_rot)
+        (target_loc, target_rot, target.dodge)
     }
 
     fn estimate_approach(
@@ -306,6 +307,7 @@ where
         intercept_ball_loc: Point3<f32>,
         target_loc: Point3<f32>,
         target_rot: UnitQuaternion<f32>,
+        dodge: bool,
     ) -> Action {
         // Simulate the jump to predict our exact location at the peak.
         let jump_time = Self::jump_duration(target_loc.z);
@@ -314,6 +316,10 @@ where
         let me_forward = ctx.me().Physics.forward_axis_2d();
         let dodge_angle =
             me_forward.rotation_to(&(intercept_ball_loc.to_2d() - dodge_loc).to_axis());
+
+        if !dodge {
+            return Action::Return;
+        }
 
         Action::call(Chain::new(
             self.priority(),
@@ -369,6 +375,15 @@ pub struct GroundedHitTarget {
     intercept_time: f32,
     adjust: GroundedHitTargetAdjust,
     aim_loc: Point2<f32>,
+    #[new(value = "true")]
+    dodge: bool,
+}
+
+impl GroundedHitTarget {
+    pub fn dodge(mut self, dodge: bool) -> Self {
+        self.dodge = dodge;
+        self
+    }
 }
 
 pub enum GroundedHitTargetAdjust {

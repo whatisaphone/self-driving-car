@@ -61,10 +61,19 @@ fn time_wasting_hit(ctx: &mut GroundedHitAimContext) -> Result<GroundedHitTarget
             ctx.eeg.log("[TepidHit] refusing to own goal");
             return Err(());
         }
-        _ => Ok(GroundedHitTarget::new(
-            ctx.intercept_time,
-            GroundedHitTargetAdjust::RoughAim,
-            aim_loc,
-        )),
+        _ => {}
     }
+
+    Ok(GroundedHitTarget::new(
+        ctx.intercept_time,
+        GroundedHitTargetAdjust::RoughAim,
+        aim_loc,
+    )
+    .dodge(!is_enemy_corner(ctx)))
+}
+
+fn is_enemy_corner(ctx: &mut GroundedHitAimContext) -> bool {
+    ctx.intercept_ball_loc.x.abs() >= 1500.0
+        && (ctx.game.enemy_goal().center_2d.y - ctx.intercept_ball_loc.y).abs() < 2500.0
+        && ctx.intercept_ball_loc.z < 130.0
 }
