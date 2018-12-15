@@ -242,11 +242,13 @@ pub fn defensive_hit(ctx: &mut GroundedHitAimContext) -> Result<GroundedHitTarge
         PI / 6.0,
     );
     let aim_loc = ctx.intercept_ball_loc.to_2d() - Vector2::unit(target_angle) * 1000.0;
-    Ok(GroundedHitTarget::new(
-        ctx.intercept_time,
-        GroundedHitTargetAdjust::StraightOn,
-        aim_loc,
-    ))
+    let dist_defense = (ctx.game.own_goal().center_2d - ctx.car.Physics.loc_2d()).norm();
+    let adjust = if dist_defense < 2500.0 {
+        GroundedHitTargetAdjust::StraightOn
+    } else {
+        GroundedHitTargetAdjust::RoughAim
+    };
+    Ok(GroundedHitTarget::new(ctx.intercept_time, adjust, aim_loc))
 }
 
 /// Calculate an angle from `ball_loc` to `car_loc`, trying to get between
