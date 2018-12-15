@@ -40,7 +40,12 @@ impl Defense {
 
         let defending_angle = (ball_loc - goal_loc).rotation_to(me_loc - goal_loc);
         if defending_angle.angle().abs() >= PI / 3.0 {
-            return false;
+            // If we're in net, chances are our angle of defense is fine already. e.g. we
+            // might be opposite the desired angle, which would be 180° away according to
+            // the math, but is a perfectly fine place to be.
+            if (me_loc.y - goal_loc.y).abs() >= 500.0 {
+                return false;
+            }
         }
 
         return true;
