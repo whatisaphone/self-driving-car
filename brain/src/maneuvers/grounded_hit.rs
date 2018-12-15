@@ -312,6 +312,10 @@ where
         // Simulate the jump to predict our exact location at the peak.
         let jump_time = Self::jump_duration(target_loc.z);
         let dodge_loc = ctx.me().Physics.loc_2d() + ctx.me().Physics.vel_2d() * jump_time;
+        // If we're on a slanted wall, we're pretty much screwed, but try to compensate
+        // anyway.
+        let dodge_loc = dodge_loc
+            + ctx.me().Physics.roof_axis().unwrap().to_2d() * (target_loc.z - rl::OCTANE_NEUTRAL_Z);
 
         let me_forward = ctx.me().Physics.forward_axis_2d();
         let dodge_angle =
