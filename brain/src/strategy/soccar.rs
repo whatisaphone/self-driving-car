@@ -1,12 +1,13 @@
 use crate::{
     behavior::{Behavior, Chain, Defense, Kickoff, Offense, Priority},
     maneuvers::{FiftyFifty, GetToFlatGround},
+    plan::telepathy,
     routing::{behavior::FollowRoute, plan::GetDollar},
     strategy::{scenario::Scenario, strategy::Strategy, Context},
     utils::Wall,
 };
 use common::prelude::*;
-use nalgebra::Point2;
+use nalgebra::{Point2, Vector2};
 use std::f32::consts::PI;
 
 #[derive(new)]
@@ -88,12 +89,17 @@ fn get_boost(ctx: &mut Context) -> Option<Box<Behavior>> {
                 "enemy_shoot_score_seconds is {:.2}, so let's get boost",
                 ctx.scenario.enemy_shoot_score_seconds(),
             ));
-            let ball_loc = ctx.scenario.ball_prediction().at_time(3.0).unwrap().loc;
-            let behind_ball = Point2::new(
-                ball_loc.x,
-                ball_loc.y + ctx.game.own_goal().center_2d.y.signum() * 2500.0,
-            );
-            let get_dollar = GetDollar::new(behind_ball).target_face(ball_loc.to_2d());
+
+            let future_loc = ctx.scenario.ball_prediction().at_time(3.0).unwrap().loc;
+            let behind_ball = Vector2::new(0.0, ctx.game.own_goal().center_2d.y.signum() * 2500.0);
+            let opponent_hit = telepathy::predict_enemy_hit_direction(ctx)
+                .map(|dir| dir.unwrap() * 2500.0)
+                .unwrap_or(Vector2::zeros());
+            let hint = future_loc.to_2d() + behind_ball + opponent_hit;
+            ctx.eeg
+                .log_pretty("get_boost", "opponent_hit", opponent_hit);
+            ctx.eeg.log_pretty("get_boost", "hint", hint);
+            let get_dollar = GetDollar::new(hint).target_face(future_loc.to_2d());
             return Some(Box::new(FollowRoute::new(get_dollar)));
         }
     }

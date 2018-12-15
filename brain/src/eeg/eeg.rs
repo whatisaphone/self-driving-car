@@ -71,6 +71,10 @@ impl EEG {
         }
     }
 
+    pub fn log_pretty(&mut self, logger: &str, name: &str, value: impl PrettyPrint) {
+        self.log(format!("[{}] {} = {}", logger, name, value.pretty()))
+    }
+
     pub fn show(&mut self, packet: &rlbot::ffi::LiveDataPacket) {
         let drawables = mem::replace(&mut self.draw_list.drawables, Vec::new());
         self.tx
