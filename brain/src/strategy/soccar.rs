@@ -8,6 +8,7 @@ use crate::{
 };
 use common::prelude::*;
 use nalgebra::{Point2, Vector2};
+use simulate::linear_interpolate;
 use std::f32::consts::PI;
 
 #[derive(new)]
@@ -113,14 +114,17 @@ fn enemy_can_shoot(ctx: &mut Context) -> bool {
     };
     let ball_loc = intercept.ball_loc.to_2d();
     let goal = ctx.game.own_goal();
-    if (ball_loc - goal.center_2d).norm() >= 7500.0 {
+    let dist_ball_to_goal = (ball_loc - goal.center_2d).norm();
+    if dist_ball_to_goal >= 7500.0 {
         return false;
     }
     ctx.cars(ctx.game.enemy_team).any(|enemy| {
         let angle_car_ball = enemy.Physics.loc_2d().angle_to(ball_loc);
         let angle_ball_goal = ball_loc.angle_to(goal.center_2d);
         let angle_diff = angle_car_ball.rotation_to(&angle_ball_goal).angle().abs();
-        angle_diff < PI / 2.0
+        let max_angle_diff =
+            linear_interpolate(&[2500.0, 7500.0], &[PI / 2.0, PI / 4.0], dist_ball_to_goal);
+        angle_diff < max_angle_diff
     })
 }
 
