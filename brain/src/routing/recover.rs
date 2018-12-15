@@ -5,7 +5,7 @@ use crate::{
     maneuvers::{DriveTowards, GetToFlatGround},
     mechanics::{QuickJumpAndDodge, SkidRecover},
     routing::models::{CarState, RoutePlanError},
-    strategy::Context,
+    strategy::{Context, Scenario},
 };
 use common::{physics::car_forward_axis, prelude::*};
 use nalgebra::Point2;
@@ -148,5 +148,17 @@ impl Predicate for IsSkidding {
             }
         }
         false
+    }
+}
+
+pub struct WeDontWinTheRace;
+
+impl Predicate for WeDontWinTheRace {
+    fn name(&self) -> &str {
+        stringify!(WeDontWinTheRace)
+    }
+
+    fn evaluate(&mut self, ctx: &mut Context) -> bool {
+        ctx.scenario.possession() < Scenario::POSSESSION_CONTESTABLE
     }
 }
