@@ -161,14 +161,14 @@ impl Behavior for PushToOwnCorner {
                 ctx.eeg.log("Can't reach ball");
                 Action::Abort
             }
-            (Some(me), Some(enemy)) => {
-                if me.time < enemy.time - 3.0 {
+            (Some(_), Some(_)) => {
+                if ctx.scenario.possession() >= 3.0 {
                     ctx.eeg.log("we have all the time in the world");
                     Action::Abort
-                } else if me.time < enemy.time - Scenario::POSSESSION_CONTESTABLE {
+                } else if ctx.scenario.possession() >= Scenario::POSSESSION_CONTESTABLE {
                     ctx.eeg.log("Swatting ball away from enemy");
                     Action::call(HitToOwnCorner::new())
-                } else if me.time < enemy.time + Scenario::POSSESSION_CONTESTABLE {
+                } else if ctx.scenario.possession() >= -Scenario::POSSESSION_CONTESTABLE {
                     ctx.eeg.log("Defensive race");
                     Action::call(HitToOwnCorner::new())
                 } else {
