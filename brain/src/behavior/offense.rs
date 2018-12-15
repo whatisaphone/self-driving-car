@@ -129,7 +129,7 @@ fn readjust_for_shot(ctx: &mut Context, intercept_time: f32) -> Option<Action> {
     let ball_loc = ctx
         .scenario
         .ball_prediction()
-        .at_time(intercept_time + 2.0)
+        .at_time(intercept_time + 2.5)
         .unwrap_or_else(|| ctx.scenario.ball_prediction().last())
         .loc
         .to_2d();

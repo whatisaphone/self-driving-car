@@ -50,10 +50,8 @@ impl Behavior for ResetBehindBall {
 
 impl ResetBehindBall {
     fn get_sane_drive_loc(&self, ctx: &mut Context) -> Point2<f32> {
-        let mut target_loc = Point2::new(
-            self.loc.x,
-            self.loc.y + ctx.game.own_goal().center_2d.y.signum() * self.distance,
-        );
+        let mut target_loc =
+            self.loc + (self.loc - ctx.game.enemy_goal().center_2d).normalize() * self.distance;
 
         if !ctx.game.is_inside_field(target_loc) {
             ctx.eeg
