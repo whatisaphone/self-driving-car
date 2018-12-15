@@ -69,11 +69,23 @@ fn time_wasting_hit(ctx: &mut GroundedHitAimContext) -> Result<GroundedHitTarget
         GroundedHitTargetAdjust::RoughAim,
         aim_loc,
     )
-    .dodge(!is_enemy_corner(ctx)))
+    .dodge(!is_chippable(ctx, aim_loc)))
 }
 
-fn is_enemy_corner(ctx: &mut GroundedHitAimContext) -> bool {
-    ctx.intercept_ball_loc.x.abs() >= 1500.0
-        && (ctx.game.enemy_goal().center_2d.y - ctx.intercept_ball_loc.y).abs() < 2500.0
+fn is_chippable(ctx: &mut GroundedHitAimContext, aim_loc: Point2<f32>) -> bool {
+    let shot_angle = ctx
+        .car
+        .Physics
+        .forward_axis_2d()
+        .rotation_to(&(aim_loc - ctx.car.Physics.loc_2d()).to_axis())
+        .angle()
+        .abs();
+
+    // Target a pretty specific scenario in the enemy corner, where you roll the
+    // ball around the side wall without jumping so you can quickly recover and dish
+    // it in.
+    ctx.intercept_ball_loc.x.abs() >= 3000.0
+        && (ctx.game.enemy_goal().center_2d.y - ctx.intercept_ball_loc.y).abs() < 2000.0
         && ctx.intercept_ball_loc.z < 130.0
+        && shot_angle < PI / 4.0
 }
