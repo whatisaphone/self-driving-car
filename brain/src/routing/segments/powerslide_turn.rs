@@ -84,7 +84,9 @@ impl SegmentRunner for PowerslideTurnRunner {
         let now = ctx.packet.GameInfo.TimeSeconds;
         let start_time = *self.start_time.get_or_insert(now);
         let elapsed = now - start_time;
-        if elapsed >= self.plan.blueprint.duration {
+        // Crudely account for recovery time with a fudge factor
+        let duration = self.plan.blueprint.duration * 0.5;
+        if elapsed >= duration {
             return SegmentRunAction::Success;
         }
 
