@@ -53,6 +53,8 @@ fn can_we_shoot(ctx: &mut Context) -> bool {
     let me = ctx.me();
 
     if playing_goalie(ctx.game, ctx.scenario.ball_prediction().start()) {
+        ctx.eeg
+            .log("[can_we_shoot] playing goalie, so not shooting");
         return false;
     }
 
@@ -67,6 +69,7 @@ fn can_we_shoot(ctx: &mut Context) -> bool {
     );
 
     let shoot_intercept = some_or_else!(shoot_intercept, {
+        ctx.eeg.log("[can_we_shoot] no shootable intercept");
         return false;
     });
 
