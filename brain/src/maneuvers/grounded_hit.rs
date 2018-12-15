@@ -147,7 +147,7 @@ where
         };
         let target =
             (self.aim)(&mut aim_context).map_err(|_| ctx.eeg.log("error getting aim location"))?;
-        let (target_loc, _target_rot) = Self::preliminary_target(ctx, &intercept, target.aim_loc);
+        let (target_loc, _target_rot) = Self::preliminary_target(ctx, &intercept, &target);
         let ball_max_z = JUMP_MAX_Z + (intercept.ball_loc.z - target_loc.z);
 
         // Second pass: Get a more accurate intercept based on how high we need to jump.
@@ -182,7 +182,7 @@ where
         };
         let target = (self.aim)(&mut aim_context)?;
 
-        let (target_loc, target_rot) = Self::preliminary_target(ctx, intercept, target.aim_loc);
+        let (target_loc, target_rot) = Self::preliminary_target(ctx, intercept, &target);
 
         // TODO: iteratively find contact point which hits the ball towards aim_loc
 
@@ -200,13 +200,13 @@ where
     fn preliminary_target(
         ctx: &mut Context,
         intercept: &NaiveIntercept,
-        aim_loc: Point2<f32>,
+        target: &GroundedHitTarget,
     ) -> (Point3<f32>, UnitQuaternion<f32>) {
         // Pitch the nose higher if the target is further away.
         let pitch = linear_interpolate(
             &[1000.0, 5000.0],
             &[PI / 15.0, PI / 4.0],
-            (aim_loc - intercept.ball_loc.to_2d()).norm(),
+            (target.aim_loc - intercept.ball_loc.to_2d()).norm(),
         );
         // Just do something hacky for now
         let (naive_target_loc, target_rot) = car_ball_contact_with_pitch(
@@ -215,8 +215,13 @@ where
             ctx.me().Physics.loc(),
             pitch,
         );
-        let rough_target_loc = BounceShot::rough_shooting_spot(intercept, aim_loc);
-        let target_loc = rough_target_loc.to_3d(naive_target_loc.z);
+        let target_loc = match target.adjust {
+            GroundedHitTargetAdjust::RoughAim => {
+                let rough = BounceShot::rough_shooting_spot(intercept, target.aim_loc);
+                rough.to_3d(naive_target_loc.z)
+            }
+            GroundedHitTargetAdjust::StraightOn => naive_target_loc,
+        };
         (target_loc, target_rot)
     }
 
@@ -362,7 +367,13 @@ pub struct GroundedHitAimContext<'a, 'b> {
 #[derive(new)]
 pub struct GroundedHitTarget {
     intercept_time: f32,
+    adjust: GroundedHitTargetAdjust,
     aim_loc: Point2<f32>,
+}
+
+pub enum GroundedHitTargetAdjust {
+    StraightOn,
+    RoughAim,
 }
 
 enum Do {
@@ -375,7 +386,10 @@ enum Do {
 mod integration_tests {
     use crate::{
         integration_tests::helpers::{TestRunner, TestScenario},
-        maneuvers::grounded_hit::{GroundedHit, GroundedHitTarget},
+        maneuvers::{
+            grounded_hit::{GroundedHit, GroundedHitTarget},
+            GroundedHitTargetAdjust,
+        },
     };
     use common::{prelude::*, rl};
     use nalgebra::{Point2, Rotation3, Vector3};
@@ -393,6 +407,7 @@ mod integration_tests {
             .behavior(GroundedHit::hit_towards(|ctx| {
                 Ok(GroundedHitTarget::new(
                     ctx.intercept_time,
+                    GroundedHitTargetAdjust::RoughAim,
                     Point2::new(0.0, rl::FIELD_MAX_Y),
                 ))
             }))
@@ -414,6 +429,7 @@ mod integration_tests {
             .behavior(GroundedHit::hit_towards(|ctx| {
                 Ok(GroundedHitTarget::new(
                     ctx.intercept_time,
+                    GroundedHitTargetAdjust::RoughAim,
                     Point2::new(0.0, rl::FIELD_MAX_Y),
                 ))
             }))

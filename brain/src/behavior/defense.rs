@@ -3,7 +3,9 @@ use crate::{
         defense2::retreat::Retreat, tepid_hit::TepidHit, Action, Behavior, Chain, Priority,
     },
     eeg::{color, Drawable},
-    maneuvers::{BounceShot, GroundedHit, GroundedHitAimContext, GroundedHitTarget},
+    maneuvers::{
+        BounceShot, GroundedHit, GroundedHitAimContext, GroundedHitTarget, GroundedHitTargetAdjust,
+    },
     predict::naive_ground_intercept_2,
     routing::{behavior::FollowRoute, plan::GroundIntercept},
     strategy::{Context, Scenario},
@@ -221,7 +223,11 @@ impl HitToOwnCorner {
                 ctx.eeg.log("avoiding the own goal");
                 Err(())
             }
-            _ => Ok(GroundedHitTarget::new(ctx.intercept_time, result)),
+            _ => Ok(GroundedHitTarget::new(
+                ctx.intercept_time,
+                GroundedHitTargetAdjust::RoughAim,
+                result,
+            )),
         }
     }
 }
@@ -236,7 +242,11 @@ pub fn defensive_hit(ctx: &mut GroundedHitAimContext) -> Result<GroundedHitTarge
         PI / 6.0,
     );
     let aim_loc = ctx.intercept_ball_loc.to_2d() - Vector2::unit(target_angle) * 1000.0;
-    Ok(GroundedHitTarget::new(ctx.intercept_time, aim_loc))
+    Ok(GroundedHitTarget::new(
+        ctx.intercept_time,
+        GroundedHitTargetAdjust::StraightOn,
+        aim_loc,
+    ))
 }
 
 /// Calculate an angle from `ball_loc` to `car_loc`, trying to get between
@@ -699,5 +709,17 @@ mod integration_tests {
         // Sometimes enemy_has_scored doesn't work since the framework doesn't support
         // it. Also make sure there wasn't a goal reset.
         assert!((ball_loc - Point2::origin()).norm() >= 1.0);
+    }
+
+    #[test]
+    fn low_boost_block_goal() {
+        let test = TestRunner::new()
+            .one_v_one(&*recordings::BLOCK_GOAL_WITH_NO_BOOST, 61.5)
+            .starting_boost(0.0)
+            .enemy_starting_boost(50.0)
+            .behavior(Runner2::soccar())
+            .run_for_millis(2500);
+
+        assert!(!test.enemy_has_scored());
     }
 }

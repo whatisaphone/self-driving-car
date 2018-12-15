@@ -4,7 +4,9 @@ pub use crate::maneuvers::{
     drive_towards::{drive_towards, DriveTowards},
     fifty_fifty::FiftyFifty,
     get_to_flat_ground::GetToFlatGround,
-    grounded_hit::{GroundedHit, GroundedHitAimContext, GroundedHitTarget},
+    grounded_hit::{
+        GroundedHit, GroundedHitAimContext, GroundedHitTarget, GroundedHitTargetAdjust,
+    },
     panic_defense::PanicDefense,
 };
 

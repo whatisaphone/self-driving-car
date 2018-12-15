@@ -1,7 +1,7 @@
 use crate::{
     behavior::{Action, Behavior, Priority},
     eeg::{color, Drawable},
-    maneuvers::{GroundedHit, GroundedHitAimContext, GroundedHitTarget},
+    maneuvers::{GroundedHit, GroundedHitAimContext, GroundedHitTarget, GroundedHitTargetAdjust},
     plan::hit_angle::{feasible_hit_angle_away, feasible_hit_angle_toward},
     routing::{behavior::FollowRoute, plan::GroundIntercept},
     strategy::Context,
@@ -61,6 +61,10 @@ fn time_wasting_hit(ctx: &mut GroundedHitAimContext) -> Result<GroundedHitTarget
             ctx.eeg.log("[TepidHit] refusing to own goal");
             return Err(());
         }
-        _ => Ok(GroundedHitTarget::new(ctx.intercept_time, aim_loc)),
+        _ => Ok(GroundedHitTarget::new(
+            ctx.intercept_time,
+            GroundedHitTargetAdjust::RoughAim,
+            aim_loc,
+        )),
     }
 }

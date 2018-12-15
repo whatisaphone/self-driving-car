@@ -1,6 +1,8 @@
 use crate::{
     behavior::{Action, Behavior, Chain, Priority},
-    maneuvers::{BounceShot, GroundedHit, GroundedHitAimContext, GroundedHitTarget},
+    maneuvers::{
+        BounceShot, GroundedHit, GroundedHitAimContext, GroundedHitTarget, GroundedHitTargetAdjust,
+    },
     predict::{intercept::NaiveIntercept, naive_ground_intercept_2},
     routing::{behavior::FollowRoute, plan::GroundIntercept},
     strategy::{Context, Game, Scenario},
@@ -43,7 +45,11 @@ impl Shoot {
 
     fn aim(ctx: &mut GroundedHitAimContext) -> Result<GroundedHitTarget, ()> {
         match Self::aim_calc(ctx.game, ctx.scenario, ctx.car) {
-            Some(i) => Ok(GroundedHitTarget::new(i.time, i.data.aim_loc)),
+            Some(i) => Ok(GroundedHitTarget::new(
+                i.time,
+                GroundedHitTargetAdjust::RoughAim,
+                i.data.aim_loc,
+            )),
             None => Err(()),
         }
     }
