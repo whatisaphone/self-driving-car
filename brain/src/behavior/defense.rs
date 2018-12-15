@@ -254,7 +254,9 @@ pub fn defensive_hit(ctx: &mut GroundedHitAimContext) -> Result<GroundedHitTarge
     );
     let aim_loc = ctx.intercept_ball_loc.to_2d() - Vector2::unit(target_angle) * 4000.0;
     let dist_defense = (ctx.game.own_goal().center_2d - ctx.car.Physics.loc_2d()).norm();
-    let adjust = if dist_defense < 2500.0 {
+    let defense_angle = (ctx.intercept_ball_loc.to_2d() - ctx.game.own_goal().center_2d)
+        .rotation_to(ctx.intercept_ball_loc.to_2d() - ctx.car.Physics.loc_2d());
+    let adjust = if dist_defense < 2500.0 && defense_angle.angle().abs() < PI / 3.0 {
         GroundedHitTargetAdjust::StraightOn
     } else {
         GroundedHitTargetAdjust::RoughAim
@@ -732,6 +734,18 @@ mod integration_tests {
             .enemy_starting_boost(50.0)
             .behavior(Runner2::soccar())
             .run_for_millis(2500);
+
+        assert!(!test.enemy_has_scored());
+    }
+
+    #[test]
+    fn inconvenient_angle_hit_to_the_side() {
+        let test = TestRunner::new()
+            .one_v_one(&*recordings::INCONVENIENT_ANGLE_HIT_TO_THE_SIDE, 419.5)
+            .starting_boost(0.0)
+            .enemy_starting_boost(0.0)
+            .behavior(Runner2::soccar())
+            .run_for_millis(5000);
 
         assert!(!test.enemy_has_scored());
     }
