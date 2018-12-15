@@ -682,7 +682,7 @@ mod integration_tests {
             .one_v_one(&*recordings::DEFENSIVE_CONFIDENCE, 24.0)
             .starting_boost(65.0)
             .behavior(Runner2::soccar())
-            .run_for_millis(3000);
+            .run_for_millis(3500);
 
         let packet = test.sniff_packet();
         assert!(packet.GameBall.Physics.Velocity.Y >= 500.0);
