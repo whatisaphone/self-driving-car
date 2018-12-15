@@ -6,7 +6,8 @@ use crate::{
     },
     strategy::Context,
 };
-use nalgebra::Point2;
+use common::prelude::*;
+use nalgebra::{Point2, Vector2};
 
 pub struct ResetBehindBall {
     loc: Point2<f32>,
@@ -55,8 +56,29 @@ impl ResetBehindBall {
 
         if !ctx.game.is_inside_field(target_loc) {
             ctx.eeg
+                .log("[ResetBehindBall] loc outside field; trying straight back from reference");
+            target_loc = self.loc
+                + Vector2::new(
+                    0.0,
+                    ctx.game.own_goal().center_2d.y.signum() * self.distance,
+                );
+        }
+
+        if !ctx.game.is_inside_field(target_loc) {
+            ctx.eeg
+                .log("[ResetBehindBall] loc outside field; trying straight back from self");
+            target_loc = ctx.me().Physics.loc_2d()
+                + Vector2::new(
+                    0.0,
+                    ctx.game.own_goal().center_2d.y.signum() * self.distance,
+                );
+        }
+
+        if !ctx.game.is_inside_field(target_loc) {
+            ctx.eeg
                 .log("[ResetBehindBall] loc outside field; going to goal instead");
-            return ctx.game.own_goal().center_2d;
+            return ctx.game.own_goal().center_2d
+                + Vector2::new(0.0, ctx.game.own_goal().center_2d.y.signum() * 250.0);
         }
 
         let margin = 250.0;
