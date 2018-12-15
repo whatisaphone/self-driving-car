@@ -3,14 +3,14 @@ use crate::{
         offense2::reset_behind_ball::ResetBehindBall, shoot::Shoot, tepid_hit::TepidHit, Action,
         Behavior,
     },
-    plan::ball::BallFrame,
+    plan::{ball::BallFrame, telepathy},
     predict::naive_ground_intercept_2,
     routing::{behavior::FollowRoute, plan::GetDollar},
     strategy::{Context, Game, Scenario},
     utils::geometry::RayCoordinateSystem,
 };
 use common::prelude::*;
-use nalgebra::Point2;
+use nalgebra::{Point2, Vector2};
 use std::f32::consts::PI;
 
 pub struct Offense;
@@ -39,6 +39,10 @@ impl Behavior for Offense {
         // sideways
 
         return_some!(slow_play(ctx));
+
+        if let Some(b) = get_boost(ctx) {
+            return Action::Call(b);
+        }
 
         ctx.eeg.log("[Offense] no good hit; going for a tepid hit");
         return Action::call(TepidHit::new());
@@ -147,6 +151,33 @@ fn readjust_for_shot(ctx: &mut Context, intercept_time: f32) -> Option<Action> {
     return Some(Action::call(
         ResetBehindBall::behind_loc(ball_loc).distance(2000.0),
     ));
+}
+
+fn get_boost(ctx: &mut Context) -> Option<Box<Behavior>> {
+    if ctx.me().Boost > 50 {
+        return None;
+    }
+    if ctx.scenario.possession() < -Scenario::POSSESSION_CONTESTABLE {
+        if ctx.scenario.enemy_shoot_score_seconds() >= 7.0 {
+            ctx.eeg.log(format!(
+                "enemy_shoot_score_seconds is {:.2}, so let's get boost",
+                ctx.scenario.enemy_shoot_score_seconds(),
+            ));
+
+            let future_loc = ctx.scenario.ball_prediction().at_time(3.0).unwrap().loc;
+            let behind_ball = Vector2::new(0.0, ctx.game.own_goal().center_2d.y.signum() * 2500.0);
+            let opponent_hit = telepathy::predict_enemy_hit_direction(ctx)
+                .map(|dir| dir.unwrap() * 2500.0)
+                .unwrap_or(Vector2::zeros());
+            let hint = future_loc.to_2d() + behind_ball + opponent_hit;
+            ctx.eeg
+                .log_pretty("get_boost", "opponent_hit", opponent_hit);
+            ctx.eeg.log_pretty("get_boost", "hint", hint);
+            let get_dollar = GetDollar::new(hint).target_face(future_loc.to_2d());
+            return Some(Box::new(FollowRoute::new(get_dollar)));
+        }
+    }
+    return None;
 }
 
 #[cfg(test)]
