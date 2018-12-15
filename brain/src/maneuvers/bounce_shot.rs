@@ -7,7 +7,7 @@ use crate::{
     strategy::{Context, Goal},
     utils::{geometry::ExtendF32, WallRayCalculator},
 };
-use common::{prelude::*, rl};
+use common::prelude::*;
 use nalgebra::Point2;
 use std::f32::consts::PI;
 
@@ -101,7 +101,7 @@ impl BounceShot {
     /// order to shoot at `aim_loc`?
     pub fn rough_shooting_spot(intercept: &NaiveIntercept, aim_loc: Point2<f32>) -> Point2<f32> {
         // This is not the greatest guess
-        let guess_final_ball_speed = f32::min(intercept.car_speed * 1.25, rl::CAR_MAX_SPEED);
+        let guess_final_ball_speed = 1700.0;
         let ball_to_aim = aim_loc - intercept.ball_loc.to_2d();
         if ball_to_aim.norm() < 0.1 {
             warn!("[rough_shooting_spot] ball_loc == aim_loc; bailing");
