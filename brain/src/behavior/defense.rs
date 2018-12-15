@@ -157,7 +157,10 @@ impl Behavior for PushToOwnCorner {
                 Action::Abort
             }
             (Some(me), Some(enemy)) => {
-                if me.time < enemy.time - Scenario::POSSESSION_CONTESTABLE {
+                if me.time < enemy.time - 3.0 {
+                    ctx.eeg.log("we have all the time in the world");
+                    Action::Abort
+                } else if me.time < enemy.time - Scenario::POSSESSION_CONTESTABLE {
                     ctx.eeg.log("Swatting ball away from enemy");
                     Action::call(HitToOwnCorner::new())
                 } else if me.time < enemy.time + Scenario::POSSESSION_CONTESTABLE {
