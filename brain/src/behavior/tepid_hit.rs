@@ -81,6 +81,11 @@ fn is_chippable(ctx: &mut GroundedHitAimContext, aim_loc: Point2<f32>) -> bool {
         .angle()
         .abs();
 
+    let goalward_angle = (ctx.intercept_ball_loc.to_2d() - ctx.car.Physics.loc_2d())
+        .rotation_to(ctx.game.enemy_goal().center_2d - ctx.intercept_ball_loc.to_2d())
+        .angle()
+        .abs();
+
     // Target a pretty specific scenario in the enemy corner, where you roll the
     // ball around the side wall without jumping so you can quickly recover and dish
     // it in.
@@ -88,4 +93,5 @@ fn is_chippable(ctx: &mut GroundedHitAimContext, aim_loc: Point2<f32>) -> bool {
         && (ctx.game.enemy_goal().center_2d.y - ctx.intercept_ball_loc.y).abs() < 2000.0
         && ctx.intercept_ball_loc.z < 130.0
         && shot_angle < PI / 4.0
+        && goalward_angle < PI / 2.0
 }
