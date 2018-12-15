@@ -199,7 +199,7 @@ impl Behavior for HitToOwnCorner {
         ctx.eeg.log("redirect to own corner");
 
         Action::call(Chain::new(
-            Priority::Idle,
+            Priority::Striking,
             vec![
                 Box::new(FollowRoute::new(GroundIntercept::new())),
                 Box::new(GroundedHit::hit_towards(Self::aim)),

@@ -82,7 +82,7 @@ impl Behavior for Shoot {
         }
 
         Action::call(Chain::new(
-            Priority::Idle,
+            Priority::Striking,
             vec![
                 Box::new(FollowRoute::new(GroundIntercept::new())),
                 Box::new(GroundedHit::hit_towards(Self::aim)),

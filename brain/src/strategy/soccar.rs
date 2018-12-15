@@ -40,7 +40,7 @@ impl Strategy for Soccar {
             )));
         }
 
-        if current.priority() < Priority::Save
+        if current.priority() < Priority::Striking
             && enemy_can_shoot(ctx)
             && GetToFlatGround::on_flat_ground(ctx.me())
         {
@@ -50,7 +50,7 @@ impl Strategy for Soccar {
                     ctx.scenario.possession()
                 ));
                 return Some(Box::new(Chain::new(
-                    Priority::Save,
+                    Priority::Striking,
                     vec![Box::new(FiftyFifty::new())],
                 )));
             }
