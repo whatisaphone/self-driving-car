@@ -20,7 +20,7 @@ pub struct Scenario<'a> {
     enemy_intercept: LazyCell<Option<(&'a rlbot::ffi::PlayerInfo, NaiveIntercept)>>,
     possession: LazyCell<f32>,
     push_wall: LazyCell<Wall>,
-    impending_concede: LazyCell<Option<&'a BallFrame>>,
+    impending_concede: LazyCell<Option<BallFrame>>,
     enemy_shoot_score_seconds: LazyCell<f32>,
 }
 
@@ -112,12 +112,15 @@ impl<'a> Scenario<'a> {
 
     /// If nobody touches the ball, will it end up in our goal?
     #[allow(dead_code)]
-    pub fn impending_concede(&'a self) -> Option<&'a BallFrame> {
-        *self.impending_concede.borrow_with(|| {
-            self.ball_prediction()
-                .iter()
-                .find(|ball| self.game.own_goal().ball_is_scored(ball.loc))
-        })
+    pub fn impending_concede(&self) -> Option<&BallFrame> {
+        self.impending_concede
+            .borrow_with(|| {
+                self.ball_prediction()
+                    .iter()
+                    .find(|ball| self.game.own_goal().ball_is_scored(ball.loc))
+                    .map(Clone::clone)
+            })
+            .as_ref()
     }
 
     /// If the enemy can shoot, guesstimate the number of seconds before the

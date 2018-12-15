@@ -8,7 +8,7 @@ use crate::{
     },
     predict::naive_ground_intercept_2,
     routing::{behavior::FollowRoute, plan::GroundIntercept},
-    strategy::{Context, Scenario},
+    strategy::{Context, Goal, Scenario},
     utils::{geometry::ExtendF32, Wall, WallRayCalculator},
 };
 use common::prelude::*;
@@ -89,6 +89,11 @@ impl PushToOwnCorner {
         let angle_ball_goal = ball_loc.coords.to_2d().angle_to(aim_loc.coords);
         (angle_me_ball - angle_ball_goal).normalize_angle().abs()
     }
+
+    fn goal_angle(ball_loc: Point3<f32>, goal: &Goal) -> f32 {
+        let goal_to_ball_axis = (ball_loc.to_2d() - goal.center_2d).to_axis();
+        goal_to_ball_axis.rotation_to(&goal.normal_2d).angle().abs()
+    }
 }
 
 impl Behavior for PushToOwnCorner {
@@ -97,14 +102,11 @@ impl Behavior for PushToOwnCorner {
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {
-        let ball_trajectory = WallRayCalculator::calculate(
-            ctx.packet.GameBall.Physics.loc_2d(),
-            ctx.packet.GameBall.Physics.loc_2d() + ctx.packet.GameBall.Physics.vel_2d(),
-        );
-        let already_cornering = match WallRayCalculator::wall_for_point(ctx.game, ball_trajectory) {
-            Wall::OwnGoal => false,
-            _ => true,
-        };
+        let impending_concede_soon = ctx
+            .scenario
+            .impending_concede()
+            .map(|f| f.t < 5.0)
+            .unwrap_or_default();
 
         let me_intercept =
             naive_ground_intercept_2(&ctx.me().into(), ctx.scenario.ball_prediction(), |ball| {
@@ -118,6 +120,7 @@ impl Behavior for PushToOwnCorner {
                     let own_goal = ctx.game.own_goal().center_2d;
                     ball.loc.z < GroundedHit::max_ball_z()
                         && Self::shot_angle(ball.loc, enemy.Physics.loc(), own_goal) < PI / 3.0
+                        && Self::goal_angle(ball.loc, ctx.game.own_goal()) < PI / 3.0
                 })
             })
             .min_by_key(|i| NotNan::new(i.time).unwrap());
@@ -141,7 +144,7 @@ impl Behavior for PushToOwnCorner {
 
         match (me_intercept, enemy_shootable_intercept) {
             (_, None) => {
-                if already_cornering {
+                if !impending_concede_soon {
                     ctx.eeg.log("Safe for now");
                     Action::Return
                 } else {
