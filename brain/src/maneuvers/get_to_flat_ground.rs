@@ -107,8 +107,11 @@ impl Behavior for GetToFlatGround {
             // Boost towards the ground if we're floating helplessly
             let (forward, boost);
             if ctx.me().Boost > 0 {
-                let down_amount =
-                    linear_interpolate(&[500.0, 1000.0], &[0.0, 1.0], me.Physics.loc().z);
+                let down_amount = linear_interpolate(
+                    &[500.0, 1000.0],
+                    &[0.0, 1.0],
+                    me.Physics.loc().z + me.Physics.vel().z.max(0.0) * 1.0,
+                );
                 forward = facing.rotation_to(&-Vector3::z_axis()).powf(down_amount) * facing;
 
                 let nose_down_angle = me
