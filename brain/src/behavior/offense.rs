@@ -135,7 +135,7 @@ fn readjust_for_shot(ctx: &mut Context, intercept_time: f32) -> Option<Action> {
         .to_2d();
 
     // We failed to shoot above, but if we adjust, maybe we can shoot
-    if ball_loc.x.abs() >= 2000.0 {
+    if ball_loc.x.abs() >= 2000.0 || ball_loc.y.abs() >= 3000.0 {
         return None;
     }
 
