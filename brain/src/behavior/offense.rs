@@ -11,6 +11,7 @@ use crate::{
 };
 use common::prelude::*;
 use nalgebra::Point2;
+use std::f32::consts::PI;
 
 pub struct Offense;
 
@@ -96,6 +97,10 @@ fn slow_play(ctx: &mut Context) -> Option<Action> {
     });
     let ball_loc = intercept.ball_loc.to_2d();
 
+    if let Some(adjust) = readjust_for_shot(ctx, intercept.time) {
+        return Some(adjust);
+    }
+
     // Check if we're already behind the ball; if so, no special action is needed.
     let ball_to_goal = RayCoordinateSystem::segment(ball_loc, ctx.game.enemy_goal().center_2d);
     if ball_to_goal.project(ctx.me().Physics.loc_2d()) < 0.0 {
@@ -115,7 +120,33 @@ fn slow_play(ctx: &mut Context) -> Option<Action> {
 
     ctx.eeg
         .log("[Offense] Swing around behind the ball for a better hit");
-    Some(Action::call(ResetBehindBall::behind_loc(ball_loc)))
+    Some(Action::call(
+        ResetBehindBall::behind_loc(ball_loc).distance(2000.0),
+    ))
+}
+
+fn readjust_for_shot(ctx: &mut Context, intercept_time: f32) -> Option<Action> {
+    let ball_loc = ctx
+        .scenario
+        .ball_prediction()
+        .at_time(intercept_time + 2.0)
+        .unwrap_or_else(|| ctx.scenario.ball_prediction().last())
+        .loc
+        .to_2d();
+
+    // We failed to shoot above, but if we adjust, maybe we can shoot
+    if ball_loc.x.abs() >= 2000.0 {
+        return None;
+    }
+
+    if ctx.game.enemy_goal().shot_angle_2d(ball_loc) >= PI / 4.0 {
+        return None;
+    }
+
+    ctx.eeg.log("[Offense] re-adjust for a possible shot");
+    return Some(Action::call(
+        ResetBehindBall::behind_loc(ball_loc).distance(2000.0),
+    ));
 }
 
 #[cfg(test)]
@@ -273,5 +304,23 @@ mod integration_tests {
 
         let packet = test.sniff_packet();
         assert!(packet.GameCars[0].Boost > 75);
+    }
+
+    #[test]
+    fn swing_around_and_shoot() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(-480.59, -2596.8699, 200.25),
+                ball_vel: Vector3::new(439.35098, 703.78094, -100.480995),
+                car_loc: Vector3::new(-1425.59, -2333.4, 110.53),
+                car_rot: Rotation3::from_unreal_angles(0.4016184, 2.0482836, 0.02543525),
+                car_vel: Vector3::new(-233.431, 1108.031, -368.221),
+                ..Default::default()
+            })
+            .starting_boost(70.0)
+            .behavior(Runner2::soccar())
+            .run_for_millis(7000);
+
+        assert!(test.has_scored());
     }
 }

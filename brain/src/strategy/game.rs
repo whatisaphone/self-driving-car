@@ -197,6 +197,11 @@ impl Goal {
         // This is just an estimate, it doesn't take into account ball radius, etc.
         self.is_y_within_range(ball_loc.y, ..0.0)
     }
+
+    pub fn shot_angle_2d(&self, ball_loc: Point2<f32>) -> f32 {
+        let goal_to_ball_axis = (ball_loc - self.center_2d).to_axis();
+        goal_to_ball_axis.rotation_to(&self.normal_2d).angle().abs()
+    }
 }
 
 pub struct BoostPickup {
