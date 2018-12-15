@@ -9,6 +9,7 @@ use crate::{
 use common::prelude::*;
 use nalgebra::{Unit, Vector2, Vector3};
 use rlbot;
+use simulate::linear_interpolate;
 use std::f32::consts::PI;
 
 pub struct GetToFlatGround;
@@ -101,7 +102,25 @@ impl Behavior for GetToFlatGround {
                 ..Default::default()
             })
         } else {
-            let forward = choose_facing(ctx);
+            let facing = choose_facing(ctx);
+
+            // Boost towards the ground if we're floating helplessly
+            let (forward, boost);
+            if ctx.me().Boost > 0 {
+                let down_amount =
+                    linear_interpolate(&[500.0, 1000.0], &[0.0, 1.0], me.Physics.loc().z);
+                forward = facing.rotation_to(&-Vector3::z_axis()).powf(down_amount) * facing;
+
+                let nose_down_angle = me
+                    .Physics
+                    .forward_axis()
+                    .rotation_to(&-Vector3::z_axis())
+                    .angle();
+                boost = down_amount > 0.0 && nose_down_angle < PI / 3.0;
+            } else {
+                forward = facing;
+                boost = false;
+            }
 
             let (pitch, yaw, roll) = dom::get_pitch_yaw_roll(ctx.me(), forward, Vector3::z_axis());
             Action::Yield(rlbot::ffi::PlayerInput {
@@ -109,6 +128,7 @@ impl Behavior for GetToFlatGround {
                 Pitch: pitch,
                 Yaw: yaw,
                 Roll: roll,
+                Boost: boost,
                 ..Default::default()
             })
         }
