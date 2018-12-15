@@ -73,11 +73,15 @@ fn can_we_shoot(ctx: &mut Context) -> bool {
         return false;
     });
 
+    let naive_intercept = if naive_intercept.time < shoot_intercept.time {
+        naive_intercept.time
+    } else {
+        shoot_intercept.time
+    };
+
     // Don't just sit there for days waiting for the ball to roll. The more
     // possession we have, the longer we're willing to wait.
-    if shoot_intercept.time
-        >= naive_intercept.time + ctx.scenario.possession() - Scenario::POSSESSION_CONTESTABLE
-    {
+    if shoot_intercept.time >= naive_intercept + 2.0 {
         ctx.eeg
             .log("[can_we_shoot] we can shoot, but not soon enough");
         return false;
