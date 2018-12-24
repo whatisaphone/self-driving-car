@@ -3,6 +3,7 @@ use crate::{
     strategy::Context,
 };
 use derive_new::new;
+use nameof::name_of_type;
 use std::collections::VecDeque;
 
 #[derive(Clone, new)]
@@ -12,7 +13,7 @@ pub struct Chain {
 
 impl SegmentPlan for Chain {
     fn name(&self) -> &str {
-        stringify!(Chain)
+        name_of_type!(Chain)
     }
 
     fn start(&self) -> CarState {

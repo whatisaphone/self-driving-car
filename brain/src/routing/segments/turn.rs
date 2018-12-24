@@ -6,6 +6,7 @@ use crate::{
 };
 use common::prelude::*;
 use nalgebra::{Point2, UnitComplex, Vector2};
+use nameof::name_of_type;
 use std::f32::consts::PI;
 
 #[derive(Clone)]
@@ -63,7 +64,7 @@ impl Turn {
 
 impl SegmentPlan for Turn {
     fn name(&self) -> &str {
-        stringify!(Turn)
+        name_of_type!(Turn)
     }
 
     fn start(&self) -> CarState {

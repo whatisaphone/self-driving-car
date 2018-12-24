@@ -5,6 +5,7 @@ use crate::{
 };
 use common::physics;
 use nalgebra::UnitQuaternion;
+use nameof::name_of_type;
 use rlbot;
 
 pub struct JumpAndTurn {
@@ -33,7 +34,7 @@ impl JumpAndTurn {
 
 impl Behavior for JumpAndTurn {
     fn name(&self) -> &str {
-        stringify!(JumpAndTurn)
+        name_of_type!(JumpAndTurn)
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {

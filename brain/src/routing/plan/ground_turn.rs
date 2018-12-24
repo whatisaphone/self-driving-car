@@ -15,6 +15,7 @@ use chip;
 use common::{prelude::*, rl};
 use derive_new::new;
 use nalgebra::Point2;
+use nameof::name_of_type;
 use simulate::linear_interpolate;
 use std::f32::consts::PI;
 
@@ -28,7 +29,7 @@ pub struct TurnPlanner {
 
 impl RoutePlanner for TurnPlanner {
     fn name(&self) -> &'static str {
-        stringify!(TurnPlanner)
+        name_of_type!(TurnPlanner)
     }
 
     fn plan(
@@ -63,7 +64,7 @@ pub struct PathingUnawareTurnPlanner {
 
 impl RoutePlanner for PathingUnawareTurnPlanner {
     fn name(&self) -> &'static str {
-        stringify!(PathingUnawareTurnPlanner)
+        name_of_type!(PathingUnawareTurnPlanner)
     }
 
     fn plan(
@@ -110,7 +111,7 @@ pub struct SimpleTurnPlanner {
 
 impl RoutePlanner for SimpleTurnPlanner {
     fn name(&self) -> &'static str {
-        stringify!(SimpleTurnPlanner)
+        name_of_type!(SimpleTurnPlanner)
     }
 
     fn plan(
@@ -155,7 +156,7 @@ struct ArcTowards {
 #[allow(dead_code)]
 impl RoutePlanner for ArcTowards {
     fn name(&self) -> &'static str {
-        stringify!(ArcTowards)
+        name_of_type!(ArcTowards)
     }
 
     fn plan(

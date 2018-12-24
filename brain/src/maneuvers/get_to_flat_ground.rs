@@ -8,6 +8,7 @@ use crate::{
 };
 use common::prelude::*;
 use nalgebra::{Unit, Vector2, Vector3};
+use nameof::name_of_type;
 use rlbot;
 use simulate::linear_interpolate;
 use std::f32::consts::PI;
@@ -28,7 +29,7 @@ impl GetToFlatGround {
 
 impl Behavior for GetToFlatGround {
     fn name(&self) -> &str {
-        stringify!(GetToFlatGround)
+        name_of_type!(GetToFlatGround)
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {

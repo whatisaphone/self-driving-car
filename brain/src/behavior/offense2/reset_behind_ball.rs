@@ -8,6 +8,7 @@ use crate::{
 };
 use common::prelude::*;
 use nalgebra::{Point2, Vector2};
+use nameof::name_of_type;
 
 pub struct ResetBehindBall {
     loc: Point2<f32>,
@@ -37,7 +38,7 @@ impl ResetBehindBall {
 
 impl Behavior for ResetBehindBall {
     fn name(&self) -> &str {
-        stringify!(ResetBehindBall)
+        name_of_type!(ResetBehindBall)
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {

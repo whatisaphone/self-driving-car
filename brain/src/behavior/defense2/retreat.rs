@@ -7,6 +7,7 @@ use crate::{
     strategy::{Context, Scenario},
 };
 use common::prelude::*;
+use nameof::name_of_type;
 
 pub struct Retreat;
 
@@ -32,7 +33,7 @@ impl Retreat {
 
 impl Behavior for Retreat {
     fn name(&self) -> &str {
-        stringify!(Retreat)
+        name_of_type!(Retreat)
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {

@@ -9,6 +9,7 @@ use crate::routing::{
 };
 use derive_new::new;
 use nalgebra::Point2;
+use nameof::name_of_type;
 
 #[derive(Clone, new)]
 pub struct GroundDrive {
@@ -26,7 +27,7 @@ impl GroundDrive {
 
 impl RoutePlanner for GroundDrive {
     fn name(&self) -> &'static str {
-        stringify!(GroundDrive)
+        name_of_type!(GroundDrive)
     }
 
     fn plan(

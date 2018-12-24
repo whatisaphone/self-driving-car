@@ -3,6 +3,7 @@ use crate::{
     eeg::{color, Drawable},
     strategy::Context,
 };
+use nameof::name_of_type;
 use rlbot;
 
 pub struct QuickJumpAndDodge {
@@ -51,7 +52,7 @@ impl QuickJumpAndDodge {
 
 impl Behavior for QuickJumpAndDodge {
     fn name(&self) -> &str {
-        stringify!(QuickJumpAndDodge)
+        name_of_type!(QuickJumpAndDodge)
     }
 
     fn priority(&self) -> Priority {

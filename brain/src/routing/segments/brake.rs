@@ -5,6 +5,7 @@ use crate::{
 };
 use common::{prelude::*, rl};
 use derive_new::new;
+use nameof::name_of_type;
 
 #[derive(Clone)]
 pub struct Brake {
@@ -29,7 +30,7 @@ impl Brake {
 
 impl SegmentPlan for Brake {
     fn name(&self) -> &str {
-        stringify!(Brake)
+        name_of_type!(Brake)
     }
 
     fn start(&self) -> CarState {

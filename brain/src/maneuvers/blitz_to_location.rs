@@ -6,6 +6,7 @@ use crate::{
 };
 use common::{prelude::*, rl};
 use nalgebra::Point2;
+use nameof::name_of_type;
 use rlbot;
 use std::f32::consts::PI;
 
@@ -21,7 +22,7 @@ impl BlitzToLocation {
 
 impl Behavior for BlitzToLocation {
     fn name(&self) -> &str {
-        stringify!(BlitzToLocation)
+        name_of_type!(BlitzToLocation)
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {

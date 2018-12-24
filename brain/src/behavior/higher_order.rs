@@ -4,6 +4,7 @@ use crate::{
     strategy::Context,
 };
 use itertools::Itertools;
+use nameof::name_of_type;
 use std::{collections::VecDeque, iter};
 
 /// Run `child` until it returns, then do nothing forever.
@@ -20,7 +21,7 @@ impl Fuse {
 
 impl Behavior for Fuse {
     fn name(&self) -> &str {
-        stringify!(Fuse)
+        name_of_type!(Fuse)
     }
 
     fn execute2(&mut self, _ctx: &mut Context) -> Action {
@@ -96,7 +97,7 @@ impl TimeLimit {
 
 impl Behavior for TimeLimit {
     fn name(&self) -> &str {
-        stringify!(TimeLimit)
+        name_of_type!(TimeLimit)
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {
@@ -137,7 +138,7 @@ impl Chain {
     }
 
     fn name<'a>(children: impl Iterator<Item = &'a Box<Behavior>>) -> String {
-        iter::once(stringify!(Chain))
+        iter::once(name_of_type!(Chain))
             .chain(iter::once(" ("))
             .chain(children.map(|b| b.name()).intersperse(", "))
             .chain(iter::once(")"))
@@ -214,7 +215,7 @@ impl TryChoose {
     }
 
     fn name<'a>(children: impl Iterator<Item = &'a Box<Behavior>>) -> String {
-        iter::once(stringify!(TryChoose))
+        iter::once(name_of_type!(TryChoose))
             .chain(iter::once(" ("))
             .chain(children.map(|b| b.name()).intersperse(", "))
             .chain(iter::once(")"))

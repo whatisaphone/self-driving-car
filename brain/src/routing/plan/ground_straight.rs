@@ -10,6 +10,7 @@ use arrayvec::ArrayVec;
 use common::{prelude::*, PrettyPrint};
 use derive_new::new;
 use nalgebra::Point2;
+use nameof::name_of_type;
 use ordered_float::NotNan;
 use simulate::{Car1Dv2, CarForwardDodge, CarForwardDodge1D};
 
@@ -37,7 +38,7 @@ impl GroundStraightPlanner {
 
 impl RoutePlanner for GroundStraightPlanner {
     fn name(&self) -> &'static str {
-        stringify!(GroundStraightPlanner)
+        name_of_type!(GroundStraightPlanner)
     }
 
     fn plan(
@@ -111,7 +112,7 @@ struct StraightSimple {
 
 impl RoutePlanner for StraightSimple {
     fn name(&self) -> &'static str {
-        stringify!(StraightSimple)
+        name_of_type!(StraightSimple)
     }
 
     fn plan(
@@ -195,7 +196,7 @@ struct StraightWithDodge {
 
 impl RoutePlanner for StraightWithDodge {
     fn name(&self) -> &'static str {
-        stringify!(StraightWithDodge)
+        name_of_type!(StraightWithDodge)
     }
 
     fn plan(

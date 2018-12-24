@@ -9,6 +9,7 @@ use crate::{
 };
 use common::prelude::*;
 use nalgebra::Point2;
+use nameof::name_of_type;
 use std::f32::consts::PI;
 
 pub struct BounceShot {
@@ -30,7 +31,7 @@ impl BounceShot {
 
 impl Behavior for BounceShot {
     fn name(&self) -> &str {
-        stringify!(BounceShot)
+        name_of_type!(BounceShot)
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {

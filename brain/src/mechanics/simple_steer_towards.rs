@@ -22,13 +22,14 @@ mod integration_tests {
     };
     use common::prelude::*;
     use nalgebra::{Rotation3, Vector3};
+    use nameof::name_of_type;
     use rlbot;
 
     struct SimpleSteerTowardsBall;
 
     impl Behavior for SimpleSteerTowardsBall {
         fn name(&self) -> &'static str {
-            stringify!(SimpleSteerTowardsBall)
+            name_of_type!(SimpleSteerTowardsBall)
         }
 
         fn execute2(&mut self, ctx: &mut Context) -> Action {

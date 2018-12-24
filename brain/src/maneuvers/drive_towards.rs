@@ -6,6 +6,7 @@ use crate::{
 };
 use common::{prelude::*, rl};
 use nalgebra::Point2;
+use nameof::{name_of, name_of_type};
 use rlbot;
 use simulate::linear_interpolate;
 use std::f32::consts::PI;
@@ -17,7 +18,7 @@ pub fn drive_towards(ctx: &mut Context, target_loc: Point2<f32>) -> rlbot::ffi::
     let steer = yaw_diff.max(-1.0).min(1.0) * 2.0;
 
     ctx.eeg
-        .draw(Drawable::print(stringify!(drive_towards), color::YELLOW));
+        .draw(Drawable::print(name_of!(drive_towards), color::YELLOW));
     ctx.eeg
         .draw(Drawable::ghost_car_ground(target_loc, me.Physics.rot()));
 
@@ -49,7 +50,7 @@ impl DriveTowards {
 
 impl Behavior for DriveTowards {
     fn name(&self) -> &str {
-        stringify!(DriveTowards)
+        name_of_type!(DriveTowards)
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {

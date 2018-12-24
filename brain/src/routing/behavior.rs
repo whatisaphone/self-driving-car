@@ -7,6 +7,7 @@ use crate::{
     },
     strategy::Context,
 };
+use nameof::name_of_type;
 
 pub struct FollowRoute {
     /// Option dance: This only holds a planner before the first tick.
@@ -44,7 +45,7 @@ impl FollowRoute {
 
 impl Behavior for FollowRoute {
     fn name(&self) -> &str {
-        stringify!(FollowRoute)
+        name_of_type!(FollowRoute)
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {

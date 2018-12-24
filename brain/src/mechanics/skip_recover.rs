@@ -7,6 +7,7 @@ use crate::{
 use common::{physics::CAR_LOCAL_FORWARD_AXIS_2D, prelude::*};
 use derive_new::new;
 use nalgebra::{Point2, UnitComplex};
+use nameof::name_of_type;
 
 #[derive(new)]
 pub struct SkidRecover {
@@ -15,7 +16,7 @@ pub struct SkidRecover {
 
 impl Behavior for SkidRecover {
     fn name(&self) -> &str {
-        stringify!(SkidRecover)
+        name_of_type!(SkidRecover)
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {

@@ -4,6 +4,7 @@ use crate::{
     strategy::Context,
 };
 use nalgebra::UnitComplex;
+use nameof::name_of_type;
 use rlbot;
 
 pub struct Dodge {
@@ -26,7 +27,7 @@ impl Dodge {
 
 impl Behavior for Dodge {
     fn name(&self) -> &str {
-        stringify!(Dodge)
+        name_of_type!(Dodge)
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {

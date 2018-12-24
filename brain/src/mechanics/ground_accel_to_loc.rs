@@ -8,6 +8,7 @@ use crate::{
 };
 use common::{prelude::*, rl};
 use nalgebra::Point2;
+use nameof::name_of_type;
 use rlbot;
 use simulate::Car1Dv2;
 use std::f32::consts::PI;
@@ -28,7 +29,7 @@ impl GroundAccelToLoc {
 
 impl Behavior for GroundAccelToLoc {
     fn name(&self) -> &str {
-        stringify!(GroundAccelToLoc)
+        name_of_type!(GroundAccelToLoc)
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {

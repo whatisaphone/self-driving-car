@@ -13,6 +13,7 @@ use crate::{
 };
 use common::prelude::*;
 use derive_new::new;
+use nameof::name_of_type;
 
 #[derive(Clone, new)]
 pub struct GroundIntercept {
@@ -29,7 +30,7 @@ impl GroundIntercept {
 
 impl RoutePlanner for GroundIntercept {
     fn name(&self) -> &'static str {
-        stringify!(GroundIntercept)
+        name_of_type!(GroundIntercept)
     }
 
     fn plan(
@@ -76,7 +77,7 @@ struct GroundInterceptStraight {
 
 impl RoutePlanner for GroundInterceptStraight {
     fn name(&self) -> &'static str {
-        stringify!(GroundInterceptStraight)
+        name_of_type!(GroundInterceptStraight)
     }
 
     fn plan(

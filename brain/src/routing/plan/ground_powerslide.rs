@@ -11,6 +11,7 @@ use crate::routing::{
 use common::{physics::CAR_LOCAL_FORWARD_AXIS_2D, prelude::*};
 use derive_new::new;
 use nalgebra::Point2;
+use nameof::name_of_type;
 use simulate::CarPowerslideTurn;
 
 #[derive(Clone, new)]
@@ -22,7 +23,7 @@ pub struct GroundPowerslideTurn {
 
 impl RoutePlanner for GroundPowerslideTurn {
     fn name(&self) -> &'static str {
-        stringify!(GroundPowerslideTurn)
+        name_of_type!(GroundPowerslideTurn)
     }
 
     fn plan(
@@ -51,7 +52,7 @@ pub struct GroundSimplePowerslideTurn {
 
 impl RoutePlanner for GroundSimplePowerslideTurn {
     fn name(&self) -> &'static str {
-        stringify!(GroundSimplePowerslideTurn)
+        name_of_type!(GroundSimplePowerslideTurn)
     }
 
     fn plan(
@@ -103,7 +104,7 @@ struct GroundPowerslideEssence {
 
 impl RoutePlanner for GroundPowerslideEssence {
     fn name(&self) -> &'static str {
-        stringify!(GroundPowerslideEssence)
+        name_of_type!(GroundPowerslideEssence)
     }
 
     fn plan(

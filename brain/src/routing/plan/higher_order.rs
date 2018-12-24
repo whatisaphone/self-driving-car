@@ -2,6 +2,7 @@ use crate::routing::models::{
     PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner,
 };
 use derive_new::new;
+use nameof::name_of_type;
 
 /// Exhaust `head`, then advance to `next`.
 #[derive(Clone)]
@@ -17,7 +18,7 @@ impl StaticPlanner {
 
 impl RoutePlanner for StaticPlanner {
     fn name(&self) -> &'static str {
-        stringify!(StaticPlanner)
+        name_of_type!(StaticPlanner)
     }
 
     fn plan(
@@ -38,7 +39,7 @@ pub struct ChainedPlanner {
 
 impl RoutePlanner for ChainedPlanner {
     fn name(&self) -> &'static str {
-        stringify!(ChainedPlanner)
+        name_of_type!(ChainedPlanner)
     }
 
     fn plan(

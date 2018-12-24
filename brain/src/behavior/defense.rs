@@ -13,6 +13,7 @@ use crate::{
 };
 use common::prelude::*;
 use nalgebra::{Point2, Point3, Rotation2, Vector2};
+use nameof::name_of_type;
 use ordered_float::NotNan;
 use std::f32::consts::PI;
 
@@ -54,7 +55,7 @@ impl Defense {
 
 impl Behavior for Defense {
     fn name(&self) -> &str {
-        stringify!(Defense)
+        name_of_type!(Defense)
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {
@@ -100,7 +101,7 @@ impl PushToOwnCorner {
 
 impl Behavior for PushToOwnCorner {
     fn name(&self) -> &str {
-        stringify!(PushToOwnCorner)
+        name_of_type!(PushToOwnCorner)
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {
@@ -189,7 +190,7 @@ impl HitToOwnCorner {
 
 impl Behavior for HitToOwnCorner {
     fn name(&self) -> &str {
-        stringify!(HitToOwnCorner)
+        name_of_type!(HitToOwnCorner)
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {

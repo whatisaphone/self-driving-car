@@ -11,6 +11,7 @@ use crate::{
 };
 use common::prelude::*;
 use nalgebra::Point2;
+use nameof::name_of_type;
 
 pub struct Kickoff;
 
@@ -22,7 +23,7 @@ impl Kickoff {
 
 impl Behavior for Kickoff {
     fn name(&self) -> &str {
-        stringify!(Kickoff)
+        name_of_type!(Kickoff)
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {

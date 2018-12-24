@@ -2,6 +2,7 @@ use crate::{
     behavior::behavior::{Action, Behavior},
     strategy::Context,
 };
+use nameof::name_of_type;
 use rlbot;
 
 #[allow(dead_code)]
@@ -16,7 +17,7 @@ impl NullBehavior {
 
 impl Behavior for NullBehavior {
     fn name(&self) -> &str {
-        stringify!(NullBehavior)
+        name_of_type!(NullBehavior)
     }
 
     fn execute2(&mut self, _ctx: &mut Context) -> Action {

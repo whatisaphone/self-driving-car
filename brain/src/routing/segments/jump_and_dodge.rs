@@ -8,6 +8,7 @@ use crate::{
 use common::prelude::*;
 use derive_new::new;
 use nalgebra::UnitComplex;
+use nameof::name_of_type;
 
 const JUMP_TIME: f32 = 6.0 / 120.0;
 const WAIT_TIME: f32 = 6.0 / 120.0;
@@ -22,7 +23,7 @@ pub struct JumpAndDodge {
 
 impl SegmentPlan for JumpAndDodge {
     fn name(&self) -> &str {
-        stringify!(JumpAndDodge)
+        name_of_type!(JumpAndDodge)
     }
 
     fn start(&self) -> CarState {

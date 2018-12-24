@@ -9,6 +9,7 @@ use crate::{
 };
 use common::prelude::*;
 use nalgebra::Point2;
+use nameof::name_of_type;
 use std::f32::consts::PI;
 
 pub struct TepidHit;
@@ -21,7 +22,7 @@ impl TepidHit {
 
 impl Behavior for TepidHit {
     fn name(&self) -> &str {
-        stringify!(TepidHit)
+        name_of_type!(TepidHit)
     }
 
     fn execute2(&mut self, _ctx: &mut Context) -> Action {

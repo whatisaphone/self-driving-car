@@ -4,6 +4,7 @@ use crate::{
     routing::{behavior::FollowRoute, plan::GroundIntercept, recover::WeDontWinTheRace},
     strategy::Context,
 };
+use nameof::name_of_type;
 
 pub struct FiftyFifty;
 
@@ -15,7 +16,7 @@ impl FiftyFifty {
 
 impl Behavior for FiftyFifty {
     fn name(&self) -> &str {
-        stringify!(FiftyFifty)
+        name_of_type!(FiftyFifty)
     }
 
     fn execute2(&mut self, _ctx: &mut Context) -> Action {

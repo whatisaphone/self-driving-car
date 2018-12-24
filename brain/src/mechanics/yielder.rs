@@ -3,6 +3,7 @@ use crate::{
     strategy::Context,
 };
 use derive_new::new;
+use nameof::name_of_type;
 use rlbot;
 
 #[derive(new)]
@@ -15,7 +16,7 @@ pub struct Yielder {
 
 impl Behavior for Yielder {
     fn name(&self) -> &str {
-        stringify!(Yielder)
+        name_of_type!(Yielder)
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {

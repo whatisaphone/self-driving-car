@@ -10,6 +10,7 @@ use crate::{
 use common::{physics::car_forward_axis, prelude::*};
 use derive_new::new;
 use nalgebra::Point2;
+use nameof::name_of_type;
 use std::f32::consts::PI;
 
 const SKIDDING_THRESHOLD: f32 = 0.95;
@@ -102,7 +103,7 @@ impl NotOnFlatGround {
 
 impl Predicate for NotOnFlatGround {
     fn name(&self) -> &str {
-        stringify!(NotOnFlatGround)
+        name_of_type!(NotOnFlatGround)
     }
 
     fn evaluate(&mut self, ctx: &'_ mut Context) -> bool {
@@ -138,7 +139,7 @@ impl NotFacingTarget2D {
 
 impl Predicate for IsSkidding {
     fn name(&self) -> &str {
-        stringify!(IsSkidding)
+        name_of_type!(IsSkidding)
     }
 
     fn evaluate(&mut self, ctx: &mut Context) -> bool {
@@ -156,7 +157,7 @@ pub struct WeDontWinTheRace;
 
 impl Predicate for WeDontWinTheRace {
     fn name(&self) -> &str {
-        stringify!(WeDontWinTheRace)
+        name_of_type!(WeDontWinTheRace)
     }
 
     fn evaluate(&mut self, ctx: &mut Context) -> bool {

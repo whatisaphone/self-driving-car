@@ -9,6 +9,7 @@ use crate::{
 };
 use common::prelude::*;
 use nalgebra::{Point2, Point3};
+use nameof::name_of_type;
 use std::f32::consts::PI;
 
 pub struct Shoot;
@@ -71,7 +72,7 @@ pub struct Shot {
 
 impl Behavior for Shoot {
     fn name(&self) -> &str {
-        stringify!(Shoot)
+        name_of_type!(Shoot)
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {

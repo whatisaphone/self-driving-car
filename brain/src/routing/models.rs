@@ -181,12 +181,12 @@ pub enum RoutePlanError {
 impl fmt::Debug for RoutePlanError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            RoutePlanError::MustBeOnFlatGround => write!(f, stringify!(MustBeOnFlatGround)),
-            RoutePlanError::MustNotBeSkidding { .. } => write!(f, stringify!(MustNotBeSkidding)),
-            RoutePlanError::UnknownIntercept => write!(f, stringify!(UnknownIntercept)),
-            RoutePlanError::MustBeFacingTarget => write!(f, stringify!(MustBeFacingTarget)),
-            RoutePlanError::MovingTooFast => write!(f, stringify!(MovingTooFast)),
-            RoutePlanError::TurningRadiusTooTight => write!(f, stringify!(TurningRadiusTooTight)),
+            RoutePlanError::MustBeOnFlatGround => f.write_str(stringify!(MustBeOnFlatGround)),
+            RoutePlanError::MustNotBeSkidding { .. } => f.write_str(stringify!(MustNotBeSkidding)),
+            RoutePlanError::UnknownIntercept => f.write_str(stringify!(UnknownIntercept)),
+            RoutePlanError::MustBeFacingTarget => f.write_str(stringify!(MustBeFacingTarget)),
+            RoutePlanError::MovingTooFast => f.write_str(stringify!(MovingTooFast)),
+            RoutePlanError::TurningRadiusTooTight => f.write_str(stringify!(TurningRadiusTooTight)),
             RoutePlanError::OtherError(msg) => write!(f, "{}({:?})", stringify!(OtherError), msg),
         }
     }

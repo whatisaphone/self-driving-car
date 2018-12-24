@@ -3,6 +3,7 @@ use crate::{
     strategy::Context,
 };
 use derive_new::new;
+use nameof::name_of_type;
 
 #[derive(Clone, new)]
 pub struct NullSegment {
@@ -11,7 +12,7 @@ pub struct NullSegment {
 
 impl SegmentPlan for NullSegment {
     fn name(&self) -> &str {
-        stringify!(NullSegment)
+        name_of_type!(NullSegment)
     }
 
     fn start(&self) -> CarState {

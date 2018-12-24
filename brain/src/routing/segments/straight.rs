@@ -7,6 +7,7 @@ use crate::{
 };
 use common::{prelude::*, rl};
 use nalgebra::{Point2, Vector2};
+use nameof::name_of_type;
 use simulate::Car1Dv2;
 
 #[derive(Clone)]
@@ -88,7 +89,7 @@ impl Straight {
 
 impl SegmentPlan for Straight {
     fn name(&self) -> &str {
-        stringify!(Straight)
+        name_of_type!(Straight)
     }
 
     fn start(&self) -> CarState {

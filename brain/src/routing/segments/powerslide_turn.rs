@@ -5,6 +5,7 @@ use crate::{
     strategy::Context,
 };
 use nalgebra::Vector2;
+use nameof::name_of_type;
 use rlbot;
 use simulate::CarPowerslideTurnBlueprint;
 
@@ -22,7 +23,7 @@ impl PowerslideTurn {
 
 impl SegmentPlan for PowerslideTurn {
     fn name(&self) -> &str {
-        stringify!(PowerslideTurn)
+        name_of_type!(PowerslideTurn)
     }
 
     fn start(&self) -> CarState {

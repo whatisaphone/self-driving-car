@@ -3,6 +3,7 @@ use crate::{
     eeg::{color, Drawable},
     strategy::{strategy::Strategy, Context},
 };
+use nameof::name_of_type;
 use rlbot;
 
 pub const BASELINE: &str = "baseline:";
@@ -43,7 +44,7 @@ impl Runner2 {
 
 impl Behavior for Runner2 {
     fn name(&self) -> &str {
-        stringify!(Runner2)
+        name_of_type!(Runner2)
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {

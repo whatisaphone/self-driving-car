@@ -11,6 +11,7 @@ use crate::{
 };
 use common::prelude::*;
 use nalgebra::{Point2, Vector2};
+use nameof::name_of_type;
 use std::f32::consts::PI;
 
 pub struct Offense;
@@ -23,7 +24,7 @@ impl Offense {
 
 impl Behavior for Offense {
     fn name(&self) -> &str {
-        stringify!(Offense)
+        name_of_type!(Offense)
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {

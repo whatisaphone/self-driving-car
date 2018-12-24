@@ -9,6 +9,7 @@ use crate::{
 };
 use common::prelude::*;
 use nalgebra::Point2;
+use nameof::name_of_type;
 use ordered_float::NotNan;
 use std::f32::consts::PI;
 
@@ -34,7 +35,7 @@ impl GetDollar {
 
 impl RoutePlanner for GetDollar {
     fn name(&self) -> &'static str {
-        stringify!(GetDollar)
+        name_of_type!(GetDollar)
     }
 
     fn plan(

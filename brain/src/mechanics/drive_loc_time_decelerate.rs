@@ -29,7 +29,7 @@ impl DriveLocTimeDecelerate {
 
 impl Behavior for DriveLocTimeDecelerate {
     fn name(&self) -> &str {
-        stringify!(DriveLocTimeDecelerate)
+        name_of_type!(DriveLocTimeDecelerate)
     }
 
     fn execute(&mut self, packet: &rlbot::ffi::LiveDataPacket, eeg: &mut EEG) -> Action {

@@ -7,6 +7,7 @@ use crate::{
 };
 use common::prelude::*;
 use derive_new::new;
+use nameof::name_of_type;
 use simulate::CarForwardDodge1D;
 
 #[derive(Clone, new)]
@@ -17,7 +18,7 @@ pub struct ForwardDodge {
 
 impl SegmentPlan for ForwardDodge {
     fn name(&self) -> &str {
-        stringify!(ForwardDodge)
+        name_of_type!(ForwardDodge)
     }
 
     fn start(&self) -> CarState {

@@ -10,6 +10,7 @@ use crate::{
 };
 use common::prelude::*;
 use nalgebra::Point2;
+use nameof::name_of_type;
 use rlbot;
 
 pub struct PanicDefense {
@@ -44,7 +45,7 @@ impl PanicDefense {
 
 impl Behavior for PanicDefense {
     fn name(&self) -> &str {
-        stringify!(PanicDefense)
+        name_of_type!(PanicDefense)
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {
