@@ -23,7 +23,7 @@ impl FPSCounter {
 
     pub fn tick(&mut self, time: f32) {
         if !self.times.is_empty() && time < *self.times.back().unwrap() {
-            warn!("Why is time moving backwards?");
+            log::warn!("Why is time moving backwards?");
             self.times.clear();
             self.ready = false;
         }

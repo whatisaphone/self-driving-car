@@ -4,6 +4,7 @@ use crate::{
     strategy::Context,
 };
 use common::{prelude::*, rl};
+use derive_new::new;
 
 #[derive(Clone)]
 pub struct Brake {
@@ -15,7 +16,7 @@ impl Brake {
     pub fn new(start: CarState2D, mut target_speed: f32) -> Self {
         let start_speed = start.vel.norm();
         if target_speed >= start_speed {
-            warn!("[Brake] target speed is faster than start speed");
+            log::warn!("[Brake] target speed is faster than start speed");
             target_speed = start_speed;
         }
 

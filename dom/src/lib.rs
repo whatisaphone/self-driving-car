@@ -6,9 +6,6 @@ Rust translation of some code from DomNomNom's [RocketBot].
 
 #![cfg_attr(feature = "strict", deny(warnings))]
 
-extern crate common;
-extern crate nalgebra;
-
 pub use crate::{student_agents::get_pitch_yaw_roll, vector_math::to_rotation_matrix};
 
 mod student_agents;

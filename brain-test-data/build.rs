@@ -1,7 +1,5 @@
 #![cfg_attr(feature = "strict", deny(warnings))]
 
-extern crate csv;
-
 use std::{
     env,
     fs::File,
@@ -17,6 +15,7 @@ fn main() {
     let mut out = File::create(out_dir.join("recordings.rs")).unwrap();
 
     writeln!(out, "use crate::models::OneVOneScenario;").unwrap();
+    writeln!(out, "use lazy_static::lazy_static;").unwrap();
     writeln!(out).unwrap();
 
     for entry in csv_dir.read_dir().unwrap().map(Result::unwrap) {
@@ -157,6 +156,7 @@ fn translate_csv(name: &str, csv: &mut csv::Reader<impl Read>, out: &mut impl Wr
 
     writeln!(out, "mod {} {{", name).unwrap();
     writeln!(out, "    use collect::RecordingRigidBodyState;").unwrap();
+    writeln!(out, "    use lazy_static::lazy_static;").unwrap();
     writeln!(
         out,
         "    use nalgebra::{{Point3, Quaternion, UnitQuaternion, Vector3}};",

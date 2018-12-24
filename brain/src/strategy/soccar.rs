@@ -5,6 +5,7 @@ use crate::{
     utils::Wall,
 };
 use common::prelude::*;
+use derive_new::new;
 use nalgebra::Point2;
 use simulate::linear_interpolate;
 use std::f32::consts::PI;

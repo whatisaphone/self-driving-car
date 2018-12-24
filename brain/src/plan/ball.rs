@@ -1,6 +1,7 @@
 use crate::utils::TotalF32;
 use chip::Ball;
 use common::{math::fractionality, prelude::*, rl};
+use derive_new::new;
 use nalgebra::{Point3, Vector3};
 use std::{iter::Cloned, mem, slice::Iter};
 

@@ -26,6 +26,7 @@ fn clamp_rotation_matrix(r: Rotation3<f32>) -> Rotation3<f32> {
 mod tests {
     use crate::{prelude::*, rotation};
     use chip;
+    use lazy_static::lazy_static;
     use nalgebra::{Rotation3, UnitQuaternion, Vector3};
 
     const EPS: f32 = 0.05;

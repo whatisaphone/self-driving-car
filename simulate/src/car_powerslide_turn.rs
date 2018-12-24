@@ -2,6 +2,7 @@ use common::{
     physics::{car_forward_axis_2d, CAR_LOCAL_FORWARD_AXIS_2D},
     prelude::*,
 };
+use lazy_static::lazy_static;
 use nalgebra::{Point2, UnitComplex, Vector2};
 use oven::data;
 

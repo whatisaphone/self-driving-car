@@ -7,6 +7,7 @@ use crate::{
         },
     },
 };
+use derive_new::new;
 
 pub fn segment_plan_tester(plan: impl SegmentPlan + Clone + 'static) -> impl Behavior {
     FollowRoute::new(CookedPlanner::new(plan))

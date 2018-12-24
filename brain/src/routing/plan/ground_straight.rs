@@ -8,6 +8,7 @@ use crate::routing::{
 };
 use arrayvec::ArrayVec;
 use common::{prelude::*, PrettyPrint};
+use derive_new::new;
 use nalgebra::Point2;
 use ordered_float::NotNan;
 use simulate::{Car1Dv2, CarForwardDodge, CarForwardDodge1D};

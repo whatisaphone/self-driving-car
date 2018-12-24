@@ -10,6 +10,7 @@ use crate::{
     EEG,
 };
 use common::{physics, prelude::*, rl};
+use derive_new::new;
 use nalgebra::{Point2, Point3, UnitQuaternion};
 use rlbot;
 use simulate::{

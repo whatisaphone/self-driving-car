@@ -1,4 +1,5 @@
 use common::{prelude::*, rl};
+use lazy_static::lazy_static;
 use nalgebra::{Point2, Point3, Unit, Vector2, Vector3};
 use rlbot;
 use std::ops::RangeTo;

@@ -1,5 +1,6 @@
 //! Various mathematical truths about Rocket League.
 
+use lazy_static::lazy_static;
 use nalgebra::{Unit, UnitComplex, UnitQuaternion, Vector2, Vector3};
 
 lazy_static! {

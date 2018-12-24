@@ -8,6 +8,7 @@ use crate::{
     strategy::{Context, Scenario},
 };
 use common::{physics::car_forward_axis, prelude::*};
+use derive_new::new;
 use nalgebra::Point2;
 use std::f32::consts::PI;
 

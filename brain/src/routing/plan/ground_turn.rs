@@ -13,6 +13,7 @@ use crate::{
 };
 use chip;
 use common::{prelude::*, rl};
+use derive_new::new;
 use nalgebra::Point2;
 use simulate::linear_interpolate;
 use std::f32::consts::PI;

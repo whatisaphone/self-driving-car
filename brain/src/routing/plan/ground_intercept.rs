@@ -12,6 +12,7 @@ use crate::{
     },
 };
 use common::prelude::*;
+use derive_new::new;
 
 #[derive(Clone, new)]
 pub struct GroundIntercept {

@@ -44,7 +44,7 @@ impl SameBallTrajectory {
         let frame = match ctx.scenario.ball_prediction().at_time(rel_time) {
             Some(f) => f,
             None => {
-                warn!("game time not in prediction range");
+                log::warn!("game time not in prediction range");
                 ctx.scenario.ball_prediction().start()
             }
         };

@@ -1,6 +1,7 @@
 use crate::routing::models::{
     PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner,
 };
+use derive_new::new;
 
 /// Exhaust `head`, then advance to `next`.
 #[derive(Clone)]

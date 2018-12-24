@@ -6,6 +6,7 @@ use crate::{
     strategy::Context,
 };
 use common::prelude::*;
+use derive_new::new;
 use simulate::CarForwardDodge1D;
 
 #[derive(Clone, new)]

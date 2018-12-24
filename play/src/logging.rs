@@ -1,4 +1,5 @@
 use env_logger::{Color, Formatter};
+use lazy_static::lazy_static;
 use log::{Level, Record};
 use std::{
     io::{self, Write},

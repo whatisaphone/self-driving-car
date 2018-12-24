@@ -2,6 +2,7 @@ use crate::{
     behavior::{Behavior, NullBehavior},
     strategy::{strategy::Strategy, Context},
 };
+use derive_new::new;
 
 #[derive(new)]
 pub struct NullStrategy;

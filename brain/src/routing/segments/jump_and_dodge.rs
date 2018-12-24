@@ -6,6 +6,7 @@ use crate::{
     strategy::Context,
 };
 use common::prelude::*;
+use derive_new::new;
 use nalgebra::UnitComplex;
 
 const JUMP_TIME: f32 = 6.0 / 120.0;

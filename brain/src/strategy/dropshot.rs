@@ -3,6 +3,7 @@ use crate::{
     maneuvers::GetToFlatGround,
     strategy::{strategy::Strategy, Context},
 };
+use derive_new::new;
 
 #[derive(new)]
 pub struct Dropshot;

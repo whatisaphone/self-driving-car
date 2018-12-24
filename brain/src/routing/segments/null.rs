@@ -2,6 +2,7 @@ use crate::{
     routing::models::{CarState, SegmentPlan, SegmentRunAction, SegmentRunner},
     strategy::Context,
 };
+use derive_new::new;
 
 #[derive(Clone, new)]
 pub struct NullSegment {

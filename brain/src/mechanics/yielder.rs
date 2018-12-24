@@ -2,6 +2,7 @@ use crate::{
     behavior::{Action, Behavior},
     strategy::Context,
 };
+use derive_new::new;
 use rlbot;
 
 #[derive(new)]

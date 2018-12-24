@@ -1,9 +1,5 @@
 #![cfg_attr(feature = "strict", deny(warnings))]
 
-extern crate common;
-extern crate csv;
-extern crate nalgebra;
-
 use common::prelude::*;
 use nalgebra::{UnitComplex, UnitQuaternion};
 use std::{
@@ -108,6 +104,7 @@ fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) 
         .collect::<Vec<_>>();
 
     writeln!(w, "pub mod {} {{", name).unwrap();
+    writeln!(w, "    use lazy_static::lazy_static;\n").unwrap();
     writeln!(w, "    use nalgebra::{{Point2, Vector2}};\n").unwrap();
     write_array!("TIME", "f32", time.iter().map(|x| x.to_source()));
     write_array!("TIME_REV", "f32", time.iter().rev().map(|x| x.to_source()));

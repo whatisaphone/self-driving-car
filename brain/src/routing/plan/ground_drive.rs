@@ -7,6 +7,7 @@ use crate::routing::{
     recover::{IsSkidding, NotOnFlatGround},
     segments::StraightMode,
 };
+use derive_new::new;
 use nalgebra::Point2;
 
 #[derive(Clone, new)]

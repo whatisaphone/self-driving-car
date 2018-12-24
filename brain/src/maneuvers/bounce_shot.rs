@@ -104,7 +104,7 @@ impl BounceShot {
         let guess_final_ball_speed = 1700.0;
         let ball_to_aim = aim_loc - intercept.ball_loc.to_2d();
         if ball_to_aim.norm() < 0.1 {
-            warn!("[rough_shooting_spot] ball_loc == aim_loc; bailing");
+            log::warn!("[rough_shooting_spot] ball_loc == aim_loc; bailing");
             // This happened in a Dropshot game when WallRayCalculator was still using the
             // standard Soccar mesh. It's a degenerate case, but we at least shouldn't start
             // spewing NaN everywhere.

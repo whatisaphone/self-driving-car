@@ -1,29 +1,5 @@
 #![cfg_attr(feature = "strict", deny(warnings))]
 
-#[cfg(test)]
-extern crate brain_test_data;
-extern crate chip;
-extern crate collect;
-extern crate common;
-extern crate crossbeam_channel;
-#[macro_use]
-extern crate derive_new;
-#[cfg(test)]
-extern crate flatbuffers;
-extern crate graphics;
-extern crate itertools;
-#[macro_use]
-extern crate lazy_static;
-extern crate lazycell;
-#[macro_use]
-extern crate log;
-extern crate nalgebra;
-extern crate ncollide3d;
-extern crate ordered_float;
-extern crate piston_window;
-extern crate rlbot;
-extern crate simulate;
-
 pub use crate::{brain::Brain, eeg::EEG};
 
 macro_rules! return_some {

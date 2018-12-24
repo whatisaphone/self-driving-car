@@ -9,6 +9,7 @@ use crate::routing::{
     segments::{PowerslideTurn, StraightMode},
 };
 use common::{physics::CAR_LOCAL_FORWARD_AXIS_2D, prelude::*};
+use derive_new::new;
 use nalgebra::Point2;
 use simulate::CarPowerslideTurn;
 

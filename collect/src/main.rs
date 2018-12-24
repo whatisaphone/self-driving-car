@@ -1,11 +1,5 @@
 #![cfg_attr(feature = "strict", deny(warnings))]
 
-extern crate common;
-extern crate csv;
-extern crate flatbuffers;
-extern crate nalgebra;
-extern crate rlbot;
-
 use crate::{
     collector2::Collector,
     rlbot_ext::get_packet_and_inject_rigid_body_tick,

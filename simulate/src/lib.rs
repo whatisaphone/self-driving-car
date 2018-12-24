@@ -1,13 +1,5 @@
 #![cfg_attr(feature = "strict", deny(warnings))]
 
-extern crate common;
-#[macro_use]
-extern crate lazy_static;
-extern crate nalgebra;
-extern crate ncollide3d;
-extern crate oven;
-extern crate rlbot;
-
 pub use crate::{
     car::{Car, CarSimulateError},
     car1d::Car1D,

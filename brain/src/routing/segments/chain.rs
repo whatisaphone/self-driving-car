@@ -2,6 +2,7 @@ use crate::{
     routing::models::{CarState, SegmentPlan, SegmentRunAction, SegmentRunner},
     strategy::Context,
 };
+use derive_new::new;
 use std::collections::VecDeque;
 
 #[derive(Clone, new)]

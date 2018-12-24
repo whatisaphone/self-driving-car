@@ -1,15 +1,5 @@
 #![cfg_attr(feature = "strict", deny(warnings))]
 
-extern crate brain;
-extern crate chrono;
-extern crate collect;
-extern crate log;
-#[macro_use]
-extern crate lazy_static;
-extern crate common;
-extern crate env_logger;
-extern crate rlbot;
-
 use brain::{Brain, EEG};
 use chrono::Local;
 use collect::{get_packet_and_inject_rigid_body_tick, Collector};
