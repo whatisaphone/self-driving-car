@@ -34,10 +34,9 @@ impl Strategy for Soccar {
             && (ctx.packet.GameBall.Physics.loc_2d() - Point2::origin()).norm() < 1.0
             && ctx.packet.GameBall.Physics.vel().norm() < 1.0
         {
-            return Some(Box::new(Chain::new(
-                Priority::Force,
-                vec![Box::new(Kickoff::new())],
-            )));
+            return Some(Box::new(Chain::new(Priority::Force, vec![Box::new(
+                Kickoff::new(),
+            )])));
         }
 
         if current.priority() < Priority::Striking
@@ -49,10 +48,9 @@ impl Strategy for Soccar {
                     "enemy can shoot, possession = {:.2}, going for 50/50",
                     ctx.scenario.possession()
                 ));
-                return Some(Box::new(Chain::new(
-                    Priority::Striking,
-                    vec![Box::new(FiftyFifty::new())],
-                )));
+                return Some(Box::new(Chain::new(Priority::Striking, vec![Box::new(
+                    FiftyFifty::new(),
+                )])));
             }
         }
 
@@ -65,10 +63,9 @@ impl Strategy for Soccar {
                     "enemy can shoot, possession = {:.2}, going to defense",
                     ctx.scenario.possession()
                 ));
-                return Some(Box::new(Chain::new(
-                    Priority::Defense,
-                    vec![Box::new(Defense::new())],
-                )));
+                return Some(Box::new(Chain::new(Priority::Defense, vec![Box::new(
+                    Defense::new(),
+                )])));
             }
         }
 

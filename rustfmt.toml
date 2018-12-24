@@ -3,4 +3,6 @@ format_macro_matchers = true
 merge_imports = true
 use_field_init_shorthand = true
 use_try_shorthand = true
+format_doc_comments = true
 wrap_comments = true
+overflow_delimited_expr = true

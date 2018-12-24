@@ -56,13 +56,9 @@ impl RoutePlanner for GroundIntercept {
 
         dump.log_pretty(self, "guess ball loc", guess.ball_loc.to_2d());
 
-        guard!(
-            ctx.start,
-            IsSkidding,
-            RoutePlanError::MustNotBeSkidding {
-                recover_target_loc: guess.car_loc.to_2d(),
-            },
-        );
+        guard!(ctx.start, IsSkidding, RoutePlanError::MustNotBeSkidding {
+            recover_target_loc: guess.car_loc.to_2d(),
+        });
 
         let turn = TurnPlanner::new(guess.ball_loc.to_2d(), None).plan(ctx, dump)?;
         let straight = GroundInterceptStraight {
@@ -106,13 +102,9 @@ impl RoutePlanner for GroundInterceptStraight {
 
         dump.log_pretty(self, "guess.ball_loc", guess.ball_loc.to_2d());
 
-        guard!(
-            ctx.start,
-            IsSkidding,
-            RoutePlanError::MustNotBeSkidding {
-                recover_target_loc: guess.car_loc.to_2d(),
-            },
-        );
+        guard!(ctx.start, IsSkidding, RoutePlanError::MustNotBeSkidding {
+            recover_target_loc: guess.car_loc.to_2d(),
+        });
 
         let end_chop = 0.5;
         GroundStraightPlanner::new(

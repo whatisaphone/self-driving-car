@@ -61,38 +61,35 @@ struct ForwardDodgeRunner {
 
 impl ForwardDodgeRunner {
     pub fn new(plan: ForwardDodge) -> Self {
-        let behavior = Box::new(Chain::new(
-            Priority::Idle,
-            vec![
-                Box::new(Yielder::new(
-                    rlbot::ffi::PlayerInput {
-                        Jump: true,
-                        ..Default::default()
-                    },
-                    plan.dodge.jump_duration,
-                )),
-                Box::new(Yielder::new(
-                    rlbot::ffi::PlayerInput {
-                        ..Default::default()
-                    },
-                    plan.dodge.wait_duration,
-                )),
-                Box::new(Yielder::new(
-                    rlbot::ffi::PlayerInput {
-                        Pitch: -1.0,
-                        Jump: true,
-                        ..Default::default()
-                    },
-                    6.0 / 120.0,
-                )),
-                Box::new(Yielder::new(
-                    rlbot::ffi::PlayerInput {
-                        ..Default::default()
-                    },
-                    plan.dodge.dodge_duration - 6.0 / 120.0,
-                )),
-            ],
-        ));
+        let behavior = Box::new(Chain::new(Priority::Idle, vec![
+            Box::new(Yielder::new(
+                rlbot::ffi::PlayerInput {
+                    Jump: true,
+                    ..Default::default()
+                },
+                plan.dodge.jump_duration,
+            )),
+            Box::new(Yielder::new(
+                rlbot::ffi::PlayerInput {
+                    ..Default::default()
+                },
+                plan.dodge.wait_duration,
+            )),
+            Box::new(Yielder::new(
+                rlbot::ffi::PlayerInput {
+                    Pitch: -1.0,
+                    Jump: true,
+                    ..Default::default()
+                },
+                6.0 / 120.0,
+            )),
+            Box::new(Yielder::new(
+                rlbot::ffi::PlayerInput {
+                    ..Default::default()
+                },
+                plan.dodge.dodge_duration - 6.0 / 120.0,
+            )),
+        ]));
         Self { behavior }
     }
 }

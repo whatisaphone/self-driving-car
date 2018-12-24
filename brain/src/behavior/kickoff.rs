@@ -59,13 +59,10 @@ impl Behavior for Kickoff {
             Box::new(GroundIntercept::new().allow_dodging(false))
         };
 
-        Action::call(Chain::new(
-            Priority::Idle,
-            vec![
-                Box::new(FollowRoute::new_boxed(approach)),
-                Box::new(GroundedHit::hit_towards(defensive_hit)),
-            ],
-        ))
+        Action::call(Chain::new(Priority::Idle, vec![
+            Box::new(FollowRoute::new_boxed(approach)),
+            Box::new(GroundedHit::hit_towards(defensive_hit)),
+        ]))
     }
 }
 

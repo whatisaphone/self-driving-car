@@ -169,13 +169,9 @@ impl RoutePlanner for ArcTowards {
             NotOnFlatGround,
             RoutePlanError::MustBeOnFlatGround,
         );
-        guard!(
-            ctx.start,
-            IsSkidding,
-            RoutePlanError::MustNotBeSkidding {
-                recover_target_loc: self.target_loc,
-            },
-        );
+        guard!(ctx.start, IsSkidding, RoutePlanError::MustNotBeSkidding {
+            recover_target_loc: self.target_loc,
+        });
 
         let turn_radius =
             1.0 / chip::max_curvature(ctx.start.vel.norm().max(SLOWEST_TURNING_SPEED));

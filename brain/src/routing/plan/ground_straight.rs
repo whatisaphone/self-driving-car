@@ -53,13 +53,9 @@ impl RoutePlanner for GroundStraightPlanner {
             NotOnFlatGround,
             RoutePlanError::MustBeOnFlatGround,
         );
-        guard!(
-            ctx.start,
-            IsSkidding,
-            RoutePlanError::MustNotBeSkidding {
-                recover_target_loc: self.target_loc,
-            },
-        );
+        guard!(ctx.start, IsSkidding, RoutePlanError::MustNotBeSkidding {
+            recover_target_loc: self.target_loc,
+        });
 
         let mut planners = ArrayVec::<[&RoutePlanner; 4]>::new();
         let straight =
@@ -127,13 +123,9 @@ impl RoutePlanner for StraightSimple {
             NotOnFlatGround,
             RoutePlanError::MustBeOnFlatGround,
         );
-        guard!(
-            ctx.start,
-            IsSkidding,
-            RoutePlanError::MustNotBeSkidding {
-                recover_target_loc: self.target_loc,
-            },
-        );
+        guard!(ctx.start, IsSkidding, RoutePlanError::MustNotBeSkidding {
+            recover_target_loc: self.target_loc,
+        });
         guard!(
             ctx.start,
             NotFacingTarget2D::new(self.target_loc),
@@ -215,13 +207,9 @@ impl RoutePlanner for StraightWithDodge {
             NotOnFlatGround,
             RoutePlanError::MustBeOnFlatGround,
         );
-        guard!(
-            ctx.start,
-            IsSkidding,
-            RoutePlanError::MustNotBeSkidding {
-                recover_target_loc: self.target_loc,
-            },
-        );
+        guard!(ctx.start, IsSkidding, RoutePlanError::MustNotBeSkidding {
+            recover_target_loc: self.target_loc,
+        });
         guard!(
             ctx.start,
             NotFacingTarget2D::new(self.target_loc),

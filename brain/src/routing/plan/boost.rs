@@ -96,13 +96,9 @@ impl GetDollar {
         dump: &mut PlanningDump,
         pickup: &BoostPickup,
     ) -> Result<RoutePlan, RoutePlanError> {
-        guard!(
-            ctx.start,
-            IsSkidding,
-            RoutePlanError::MustNotBeSkidding {
-                recover_target_loc: pickup.loc,
-            },
-        );
+        guard!(ctx.start, IsSkidding, RoutePlanError::MustNotBeSkidding {
+            recover_target_loc: pickup.loc,
+        });
 
         if (pickup.loc - ctx.start.loc.to_2d()).norm() < 500.0
             && ctx.start.vel.to_2d().norm() < 100.0

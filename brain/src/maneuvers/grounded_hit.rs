@@ -325,13 +325,10 @@ where
             return Action::Return;
         }
 
-        Action::call(Chain::new(
-            self.priority(),
-            vec![
-                Box::new(JumpAndTurn::new(jump_time - 0.05, jump_time, target_rot)),
-                Box::new(Dodge::new().angle(dodge_angle)),
-            ],
-        ))
+        Action::call(Chain::new(self.priority(), vec![
+            Box::new(JumpAndTurn::new(jump_time - 0.05, jump_time, target_rot)),
+            Box::new(Dodge::new().angle(dodge_angle)),
+        ]))
     }
 
     fn jump_duration(z: f32) -> f32 {

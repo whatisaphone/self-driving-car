@@ -25,13 +25,10 @@ impl Behavior for TepidHit {
     }
 
     fn execute2(&mut self, _ctx: &mut Context) -> Action {
-        return Action::call(chain!(
-            Priority::Idle,
-            [
-                FollowRoute::new(GroundIntercept::new()),
-                GroundedHit::hit_towards(time_wasting_hit),
-            ],
-        ));
+        return Action::call(chain!(Priority::Idle, [
+            FollowRoute::new(GroundIntercept::new()),
+            GroundedHit::hit_towards(time_wasting_hit),
+        ]));
     }
 }
 

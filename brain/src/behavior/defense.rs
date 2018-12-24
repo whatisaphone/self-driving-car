@@ -67,13 +67,10 @@ impl Behavior for Defense {
         if ctx.scenario.possession() < Scenario::POSSESSION_CONTESTABLE {
             ctx.eeg
                 .log("[Defense] already in goal; going for a defensive hit");
-            Action::call(Chain::new(
-                Priority::Idle,
-                vec![
-                    Box::new(FollowRoute::new(GroundIntercept::new())),
-                    Box::new(GroundedHit::hit_towards(defensive_hit)),
-                ],
-            ))
+            Action::call(Chain::new(Priority::Idle, vec![
+                Box::new(FollowRoute::new(GroundIntercept::new())),
+                Box::new(GroundedHit::hit_towards(defensive_hit)),
+            ]))
         } else {
             Action::call(TepidHit::new())
         }
@@ -198,13 +195,10 @@ impl Behavior for HitToOwnCorner {
     fn execute2(&mut self, ctx: &mut Context) -> Action {
         ctx.eeg.log("redirect to own corner");
 
-        Action::call(Chain::new(
-            Priority::Striking,
-            vec![
-                Box::new(FollowRoute::new(GroundIntercept::new())),
-                Box::new(GroundedHit::hit_towards(Self::aim)),
-            ],
-        ))
+        Action::call(Chain::new(Priority::Striking, vec![
+            Box::new(FollowRoute::new(GroundIntercept::new())),
+            Box::new(GroundedHit::hit_towards(Self::aim)),
+        ]))
     }
 }
 
@@ -338,17 +332,14 @@ mod integration_tests {
 
     #[test]
     fn redirect_away_from_goal() {
-        let test = TestRunner::start(
-            Runner2::soccar(),
-            TestScenario {
-                ball_loc: Vector3::new(-2667.985, 779.3049, 186.92154),
-                ball_vel: Vector3::new(760.02606, -1394.5569, -368.39642),
-                car_loc: Vector3::new(-2920.1282, 1346.1251, 17.01),
-                car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.1758921, 0.0),
-                car_vel: Vector3::new(688.0767, -1651.0865, 8.181303),
-                ..Default::default()
-            },
-        );
+        let test = TestRunner::start(Runner2::soccar(), TestScenario {
+            ball_loc: Vector3::new(-2667.985, 779.3049, 186.92154),
+            ball_vel: Vector3::new(760.02606, -1394.5569, -368.39642),
+            car_loc: Vector3::new(-2920.1282, 1346.1251, 17.01),
+            car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.1758921, 0.0),
+            car_vel: Vector3::new(688.0767, -1651.0865, 8.181303),
+            ..Default::default()
+        });
 
         // This result is just *okay*
         test.sleep_millis(100);
@@ -364,18 +355,15 @@ mod integration_tests {
     #[test]
     #[ignore] // TODO
     fn last_second_save() {
-        let test = TestRunner::start(
-            Runner2::soccar(),
-            TestScenario {
-                ball_loc: Vector3::new(-1150.811, -1606.0569, 102.36157),
-                ball_vel: Vector3::new(484.87906, -1624.8169, 32.10115),
-                car_loc: Vector3::new(-1596.7955, -1039.2034, 17.0),
-                car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.4007162, 0.0000958738),
-                car_vel: Vector3::new(242.38637, -1733.6719, 8.41),
-                boost: 0,
-                ..Default::default()
-            },
-        );
+        let test = TestRunner::start(Runner2::soccar(), TestScenario {
+            ball_loc: Vector3::new(-1150.811, -1606.0569, 102.36157),
+            ball_vel: Vector3::new(484.87906, -1624.8169, 32.10115),
+            car_loc: Vector3::new(-1596.7955, -1039.2034, 17.0),
+            car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.4007162, 0.0000958738),
+            car_vel: Vector3::new(242.38637, -1733.6719, 8.41),
+            boost: 0,
+            ..Default::default()
+        });
 
         test.sleep_millis(3000);
         assert!(!test.enemy_has_scored());
@@ -503,17 +491,14 @@ mod integration_tests {
     #[test]
     #[ignore(note = "The great bankruptcy of 2018")]
     fn push_from_corner_to_corner() {
-        let test = TestRunner::start(
-            HitToOwnCorner::new(),
-            TestScenario {
-                ball_loc: Vector3::new(1620.9868, -4204.8145, 93.14),
-                ball_vel: Vector3::new(-105.58675, 298.33023, 0.0),
-                car_loc: Vector3::new(3361.587, -4268.589, 16.258373),
-                car_rot: Rotation3::from_unreal_angles(-0.0066152923, 1.5453898, -0.005752428),
-                car_vel: Vector3::new(89.86856, 1188.811, 7.4339933),
-                ..Default::default()
-            },
-        );
+        let test = TestRunner::start(HitToOwnCorner::new(), TestScenario {
+            ball_loc: Vector3::new(1620.9868, -4204.8145, 93.14),
+            ball_vel: Vector3::new(-105.58675, 298.33023, 0.0),
+            car_loc: Vector3::new(3361.587, -4268.589, 16.258373),
+            car_rot: Rotation3::from_unreal_angles(-0.0066152923, 1.5453898, -0.005752428),
+            car_vel: Vector3::new(89.86856, 1188.811, 7.4339933),
+            ..Default::default()
+        });
 
         test.sleep_millis(2000);
         test.examine_eeg(|eeg| {
@@ -528,18 +513,15 @@ mod integration_tests {
     #[test]
     #[ignore] // TODO
     fn push_from_corner_to_corner_2() {
-        let test = TestRunner::start(
-            Runner2::soccar(),
-            TestScenario {
-                ball_loc: Vector3::new(2517.809, -4768.475, 93.13),
-                ball_vel: Vector3::new(-318.6226, 490.17892, 0.0),
-                car_loc: Vector3::new(3742.2703, -3277.4558, 16.954643),
-                car_rot: Rotation3::from_unreal_angles(-0.009108011, 2.528288, -0.0015339808),
-                car_vel: Vector3::new(-462.4023, 288.65112, 9.278907),
-                boost: 10,
-                ..Default::default()
-            },
-        );
+        let test = TestRunner::start(Runner2::soccar(), TestScenario {
+            ball_loc: Vector3::new(2517.809, -4768.475, 93.13),
+            ball_vel: Vector3::new(-318.6226, 490.17892, 0.0),
+            car_loc: Vector3::new(3742.2703, -3277.4558, 16.954643),
+            car_rot: Rotation3::from_unreal_angles(-0.009108011, 2.528288, -0.0015339808),
+            car_vel: Vector3::new(-462.4023, 288.65112, 9.278907),
+            boost: 10,
+            ..Default::default()
+        });
 
         test.sleep_millis(2000);
         test.examine_eeg(|eeg| {
@@ -578,18 +560,15 @@ mod integration_tests {
     #[test]
     #[ignore] // TODO
     fn slow_rolling_save() {
-        let test = TestRunner::start(
-            Runner2::soccar(),
-            TestScenario {
-                ball_loc: Vector3::new(1455.9731, -4179.0796, 93.15),
-                ball_vel: Vector3::new(-474.48724, -247.0518, 0.0),
-                car_loc: Vector3::new(2522.638, -708.08484, 17.01),
-                car_rot: Rotation3::from_unreal_angles(-0.00958738, 2.6835077, 0.0),
-                car_vel: Vector3::new(-1433.151, 800.56586, 8.33),
-                boost: 0,
-                ..Default::default()
-            },
-        );
+        let test = TestRunner::start(Runner2::soccar(), TestScenario {
+            ball_loc: Vector3::new(1455.9731, -4179.0796, 93.15),
+            ball_vel: Vector3::new(-474.48724, -247.0518, 0.0),
+            car_loc: Vector3::new(2522.638, -708.08484, 17.01),
+            car_rot: Rotation3::from_unreal_angles(-0.00958738, 2.6835077, 0.0),
+            car_vel: Vector3::new(-1433.151, 800.56586, 8.33),
+            boost: 0,
+            ..Default::default()
+        });
 
         test.sleep_millis(5000);
         assert!(!test.enemy_has_scored());
@@ -599,17 +578,14 @@ mod integration_tests {
 
     #[test]
     fn slow_retreating_save() {
-        let test = TestRunner::start(
-            Runner2::soccar(),
-            TestScenario {
-                ball_loc: Vector3::new(1446.3031, -2056.4917, 213.57251),
-                ball_vel: Vector3::new(-1024.0333, -1593.1566, -244.15135),
-                car_loc: Vector3::new(314.3022, -1980.4884, 17.01),
-                car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.7653242, 0.0),
-                car_vel: Vector3::new(-268.87683, -1383.9724, 8.309999),
-                ..Default::default()
-            },
-        );
+        let test = TestRunner::start(Runner2::soccar(), TestScenario {
+            ball_loc: Vector3::new(1446.3031, -2056.4917, 213.57251),
+            ball_vel: Vector3::new(-1024.0333, -1593.1566, -244.15135),
+            car_loc: Vector3::new(314.3022, -1980.4884, 17.01),
+            car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.7653242, 0.0),
+            car_vel: Vector3::new(-268.87683, -1383.9724, 8.309999),
+            ..Default::default()
+        });
 
         test.sleep_millis(2000);
         assert!(!test.enemy_has_scored());
@@ -620,17 +596,14 @@ mod integration_tests {
 
     #[test]
     fn fast_retreating_save() {
-        let test = TestRunner::start(
-            Runner2::soccar(),
-            TestScenario {
-                ball_loc: Vector3::new(63.619453, -336.2556, 93.03),
-                ball_vel: Vector3::new(-189.17311, -1918.067, 0.0),
-                car_loc: Vector3::new(-103.64991, 955.411, 16.99),
-                car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.5927514, 0.0),
-                car_vel: Vector3::new(-57.26778, -2296.9263, 8.53),
-                ..Default::default()
-            },
-        );
+        let test = TestRunner::start(Runner2::soccar(), TestScenario {
+            ball_loc: Vector3::new(63.619453, -336.2556, 93.03),
+            ball_vel: Vector3::new(-189.17311, -1918.067, 0.0),
+            car_loc: Vector3::new(-103.64991, 955.411, 16.99),
+            car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.5927514, 0.0),
+            car_vel: Vector3::new(-57.26778, -2296.9263, 8.53),
+            ..Default::default()
+        });
 
         test.sleep_millis(4000);
         assert!(!test.enemy_has_scored());

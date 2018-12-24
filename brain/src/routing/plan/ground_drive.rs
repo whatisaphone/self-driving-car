@@ -41,13 +41,9 @@ impl RoutePlanner for GroundDrive {
             NotOnFlatGround,
             RoutePlanError::MustBeOnFlatGround,
         );
-        guard!(
-            ctx.start,
-            IsSkidding,
-            RoutePlanError::MustNotBeSkidding {
-                recover_target_loc: self.target_loc,
-            },
-        );
+        guard!(ctx.start, IsSkidding, RoutePlanError::MustNotBeSkidding {
+            recover_target_loc: self.target_loc,
+        });
 
         let turn = TurnPlanner::new(self.target_loc, None).plan(ctx, dump)?;
         let straight =

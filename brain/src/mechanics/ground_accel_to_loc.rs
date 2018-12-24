@@ -58,10 +58,10 @@ impl Behavior for GroundAccelToLoc {
         // A bit sloppy reasoning here
         if let Some(dodge) = get_route_dodge(me, self.target_loc) {
             // Dodge, then continue with `self`
-            return Action::call(Chain::new(
-                self.priority(),
-                vec![dodge, Box::new(Self { ..*self })],
-            ));
+            return Action::call(Chain::new(self.priority(), vec![
+                dodge,
+                Box::new(Self { ..*self }),
+            ]));
         }
 
         let mut result = drive_towards(ctx, self.target_loc);

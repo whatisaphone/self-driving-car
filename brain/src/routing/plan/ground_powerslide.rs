@@ -65,13 +65,9 @@ impl RoutePlanner for GroundSimplePowerslideTurn {
             NotOnFlatGround,
             RoutePlanError::MustBeOnFlatGround,
         );
-        guard!(
-            ctx.start,
-            IsSkidding,
-            RoutePlanError::MustNotBeSkidding {
-                recover_target_loc: self.target_face,
-            },
-        );
+        guard!(ctx.start, IsSkidding, RoutePlanError::MustNotBeSkidding {
+            recover_target_loc: self.target_face,
+        });
 
         let throttle = 1.0;
         let munged_start_loc = ctx.start.loc.to_2d() + ctx.start.vel.to_2d() * 0.5;
@@ -123,13 +119,9 @@ impl RoutePlanner for GroundPowerslideEssence {
             NotOnFlatGround,
             RoutePlanError::MustBeOnFlatGround,
         );
-        guard!(
-            ctx.start,
-            IsSkidding,
-            RoutePlanError::MustNotBeSkidding {
-                recover_target_loc: self.target_loc,
-            },
-        );
+        guard!(ctx.start, IsSkidding, RoutePlanError::MustNotBeSkidding {
+            recover_target_loc: self.target_loc,
+        });
         guard!(
             ctx.start,
             NotFacingTarget2D::new(self.target_loc),
