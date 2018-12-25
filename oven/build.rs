@@ -36,6 +36,7 @@ fn main() {
             .unwrap()
             .replace(".", "_");
         let legacy = basename == "jump";
+        let legacy2 = basename == "throttle_frames";
         let r = csv::ReaderBuilder::new()
             .has_headers(!legacy)
             .from_reader(file);
@@ -43,12 +44,12 @@ fn main() {
         if legacy {
             compile_csv_legacy(&basename, r, &mut out);
         } else {
-            compile_csv(&basename, r, &mut out);
+            compile_csv(&basename, r, &mut out, legacy2);
         }
     }
 }
 
-fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) {
+fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write, legacy: bool) {
     let rows: Vec<_> = csv.records().map(Result::unwrap).collect();
     let headers = csv.headers().unwrap();
 
@@ -70,7 +71,7 @@ fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) 
         };
     }
 
-    let time = if headers.iter().any(|h| h == "time") {
+    let time = if !legacy {
         col!("time")
             .map(|x| x.parse::<f32>().unwrap())
             .collect::<Vec<_>>()
