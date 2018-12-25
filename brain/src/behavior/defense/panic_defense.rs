@@ -145,7 +145,12 @@ impl PanicDefense {
                 .own_goal()
                 .is_y_within_range(me.Physics.loc().y, ..cutoff)
             {
-                let target_yaw = ctx.game.own_goal().center_2d.angle_to(aim_hint).angle();
+                let target_yaw = ctx
+                    .game
+                    .own_goal()
+                    .center_2d
+                    .coords
+                    .angle_to(aim_hint.coords);
                 return Some(Phase::Turn {
                     aim_hint: calc_aim_hint(ctx),
                     start_time: ctx.packet.GameInfo.TimeSeconds,

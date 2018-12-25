@@ -4,7 +4,7 @@ use crate::{
         strike::FiftyFifty, Kickoff,
     },
     strategy::{scenario::Scenario, strategy::Strategy, Behavior, Context, Priority},
-    utils::Wall,
+    utils::{geometry::ExtendF32, Wall},
 };
 use common::prelude::*;
 use derive_new::new;
@@ -86,9 +86,9 @@ fn enemy_can_shoot(ctx: &mut Context) -> bool {
         return false;
     }
     ctx.cars(ctx.game.enemy_team).any(|enemy| {
-        let angle_car_ball = enemy.Physics.loc_2d().angle_to(ball_loc);
-        let angle_ball_goal = ball_loc.angle_to(goal.center_2d);
-        let angle_diff = angle_car_ball.rotation_to(&angle_ball_goal).angle().abs();
+        let angle_car_ball = enemy.Physics.loc_2d().coords.angle_to(ball_loc.coords);
+        let angle_ball_goal = ball_loc.coords.angle_to(goal.center_2d.coords);
+        let angle_diff = (angle_car_ball - angle_ball_goal).normalize_angle().abs();
         let max_angle_diff =
             linear_interpolate(&[2500.0, 7500.0], &[PI / 2.0, PI / 4.0], dist_ball_to_goal);
         angle_diff < max_angle_diff

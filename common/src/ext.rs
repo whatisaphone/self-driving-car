@@ -16,7 +16,6 @@ pub trait ExtendVector2<N: Real> {
     where
         Self: Sized;
     fn to_3d(&self, z: N) -> Vector3<N>;
-    fn uc_angle_to(&self, other: Self) -> UnitComplex<N>;
     fn angle_to(&self, other: Self) -> N;
     fn rotation_to(&self, other: Self) -> UnitComplex<N>;
 }
@@ -37,12 +36,6 @@ impl<N: Real> ExtendVector2<N> for Vector2<N> {
 
     fn to_3d(&self, z: N) -> Vector3<N> {
         Vector3::new(self.x, self.y, z)
-    }
-
-    // This treats `Vector`s as `Point`s. It should be deprecated.
-    fn uc_angle_to(&self, other: Self) -> UnitComplex<N> {
-        let diff = other - self;
-        UnitComplex::new(N::atan2(diff.y, diff.x))
     }
 
     // This treats `Vector`s as `Point`s. It should be deprecated.
@@ -75,16 +68,10 @@ impl ExtendVector3 for Vector3<f32> {
 }
 
 pub trait ExtendPoint2<N: Real> {
-    fn angle_to(&self, other: Self) -> UnitComplex<N>;
     fn to_3d(&self, z: N) -> Point3<N>;
 }
 
 impl<N: Real> ExtendPoint2<N> for Point2<N> {
-    fn angle_to(&self, other: Self) -> UnitComplex<N> {
-        let diff = other - self;
-        UnitComplex::new(N::atan2(diff.y, diff.x))
-    }
-
     fn to_3d(&self, z: N) -> Point3<N> {
         Point3::new(self.x, self.y, z)
     }
@@ -101,17 +88,12 @@ impl<N: Real> ExtendPoint3<N> for Point3<N> {
 }
 
 pub trait ExtendUnitComplex {
-    fn unit(&self) -> Vector2<f32>;
     /// Convert this complex number (representing a 2D rotation) into a unit
     /// quaternion representing a 3D rotation around the z-axis.
     fn around_z_axis(&self) -> UnitQuaternion<f32>;
 }
 
 impl ExtendUnitComplex for UnitComplex<f32> {
-    fn unit(&self) -> Vector2<f32> {
-        Vector2::new(self.cos_angle(), self.sin_angle())
-    }
-
     fn around_z_axis(&self) -> UnitQuaternion<f32> {
         UnitQuaternion::from_axis_angle(&Vector3::z_axis(), self.angle())
     }
