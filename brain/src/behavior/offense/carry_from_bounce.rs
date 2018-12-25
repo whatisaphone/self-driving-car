@@ -37,7 +37,7 @@ impl Behavior for CarryFromBounce {
             format!("target_dist: {:.0}", target_dist),
             color::GREEN,
         ));
-        eeg.draw(Drawable::GhostBall(intercept.ball_loc));
+        eeg.draw(Drawable::ghost_ball(intercept.ball_loc));
 
         if !me.OnGround {
             eeg.draw(Drawable::print("I'm scared", color::RED));

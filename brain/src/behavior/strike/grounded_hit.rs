@@ -194,7 +194,7 @@ where
         ctx.eeg
             .print_value("intercept_loc_z", format!("{:.0}", intercept.ball_loc.z));
         ctx.eeg.draw(Drawable::Crosshair(target.aim_loc));
-        ctx.eeg.draw(Drawable::GhostBall(intercept.ball_loc));
+        ctx.eeg.draw(Drawable::ghost_ball(intercept.ball_loc));
         ctx.eeg
             .draw(Drawable::GhostCar(target_loc, me.Physics.rot()));
 

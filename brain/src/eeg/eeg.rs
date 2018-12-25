@@ -116,8 +116,7 @@ impl DrawList {
 
 #[derive(Clone)]
 pub enum Drawable {
-    GhostBall(Point3<f32>),
-    GhostBall2(Point3<f32>, Color),
+    GhostBall(Point3<f32>, Color),
     GhostCar(Point3<f32>, Rotation3<f32>),
     Crosshair(Point2<f32>),
     Line(Point2<f32>, Point2<f32>, Color),
@@ -126,6 +125,10 @@ pub enum Drawable {
 }
 
 impl Drawable {
+    pub fn ghost_ball(loc: Point3<f32>) -> Drawable {
+        Drawable::GhostBall(loc, color::WHITE)
+    }
+
     pub fn ghost_car_ground(loc: Point2<f32>, rot: Rotation3<f32>) -> Drawable {
         Drawable::GhostCar(loc.to_3d(rl::OCTANE_NEUTRAL_Z), rot)
     }
@@ -283,15 +286,7 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
 
                     for drawable in drawables.into_iter() {
                         match drawable {
-                            Drawable::GhostBall(loc) => {
-                                Ellipse::new_border(color::WHITE, OUTLINE_RADIUS).draw(
-                                    ball_rect,
-                                    &Default::default(),
-                                    transform.trans(loc.x as f64, loc.y as f64),
-                                    g,
-                                );
-                            }
-                            Drawable::GhostBall2(loc, color) => {
+                            Drawable::GhostBall(loc, color) => {
                                 Ellipse::new_border(color, OUTLINE_RADIUS).draw(
                                     ball_rect,
                                     &Default::default(),

@@ -134,7 +134,7 @@ impl Behavior for PushToOwnCorner {
         if let Some(ref i) = me_intercept {
             ctx.eeg
                 .log(format!("[Defense] me_intercept: {:.2}", i.time));
-            ctx.eeg.draw(Drawable::GhostBall2(
+            ctx.eeg.draw(Drawable::GhostBall(
                 i.ball_loc,
                 color::for_team(ctx.game.team),
             ));
@@ -142,7 +142,7 @@ impl Behavior for PushToOwnCorner {
         if let Some(ref i) = enemy_shootable_intercept {
             ctx.eeg
                 .log(format!("[Defense] enemy_shoot_intercept: {:.2}", i.time));
-            ctx.eeg.draw(Drawable::GhostBall2(
+            ctx.eeg.draw(Drawable::GhostBall(
                 i.ball_loc,
                 color::for_team(ctx.game.enemy_team),
             ));
