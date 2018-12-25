@@ -288,7 +288,7 @@ mod integration_tests {
             runner::PUSHED,
         },
         integration_tests::helpers::{TestRunner, TestScenario},
-        strategy::Runner2,
+        strategy::Runner,
     };
     use brain_test_data::recordings;
     use common::prelude::*;
@@ -306,7 +306,7 @@ mod integration_tests {
         });
 
         let start_time = test.sniff_packet().GameInfo.TimeSeconds;
-        test.set_behavior(Runner2::soccar());
+        test.set_behavior(Runner::soccar());
 
         let mut max_z = 0.0_f32;
         loop {
@@ -339,7 +339,7 @@ mod integration_tests {
 
     #[test]
     fn redirect_away_from_goal() {
-        let test = TestRunner::start(Runner2::soccar(), TestScenario {
+        let test = TestRunner::start(Runner::soccar(), TestScenario {
             ball_loc: Vector3::new(-2667.985, 779.3049, 186.92154),
             ball_vel: Vector3::new(760.02606, -1394.5569, -368.39642),
             car_loc: Vector3::new(-2920.1282, 1346.1251, 17.01),
@@ -362,7 +362,7 @@ mod integration_tests {
     #[test]
     #[ignore] // TODO
     fn last_second_save() {
-        let test = TestRunner::start(Runner2::soccar(), TestScenario {
+        let test = TestRunner::start(Runner::soccar(), TestScenario {
             ball_loc: Vector3::new(-1150.811, -1606.0569, 102.36157),
             ball_vel: Vector3::new(484.87906, -1624.8169, 32.10115),
             car_loc: Vector3::new(-1596.7955, -1039.2034, 17.0),
@@ -387,7 +387,7 @@ mod integration_tests {
                 car_vel: Vector3::new(131.446, -188.83897, 8.33),
                 ..Default::default()
             })
-            .behavior(Runner2::soccar())
+            .behavior(Runner::soccar())
             .run_for_millis(3000);
 
         let packet = test.sniff_packet();
@@ -408,7 +408,7 @@ mod integration_tests {
                 boost: 0,
                 ..Default::default()
             })
-            .behavior(Runner2::soccar())
+            .behavior(Runner::soccar())
             .run_for_millis(3000);
 
         let packet = test.sniff_packet();
@@ -481,7 +481,7 @@ mod integration_tests {
                 car_vel: Vector3::new(550.82794, -1164.1539, 277.63806),
                 ..Default::default()
             })
-            .behavior(Runner2::soccar())
+            .behavior(Runner::soccar())
             .run_for_millis(2000);
 
         test.examine_eeg(|eeg| {
@@ -520,7 +520,7 @@ mod integration_tests {
     #[test]
     #[ignore] // TODO
     fn push_from_corner_to_corner_2() {
-        let test = TestRunner::start(Runner2::soccar(), TestScenario {
+        let test = TestRunner::start(Runner::soccar(), TestScenario {
             ball_loc: Vector3::new(2517.809, -4768.475, 93.13),
             ball_vel: Vector3::new(-318.6226, 490.17892, 0.0),
             car_loc: Vector3::new(3742.2703, -3277.4558, 16.954643),
@@ -551,7 +551,7 @@ mod integration_tests {
                 car_vel: Vector3::new(947.339, -565.98175, 15.669456),
                 ..Default::default()
             })
-            .behavior(Runner2::soccar())
+            .behavior(Runner::soccar())
             .run_for_millis(2000);
 
         test.examine_eeg(|eeg| {
@@ -567,7 +567,7 @@ mod integration_tests {
     #[test]
     #[ignore] // TODO
     fn slow_rolling_save() {
-        let test = TestRunner::start(Runner2::soccar(), TestScenario {
+        let test = TestRunner::start(Runner::soccar(), TestScenario {
             ball_loc: Vector3::new(1455.9731, -4179.0796, 93.15),
             ball_vel: Vector3::new(-474.48724, -247.0518, 0.0),
             car_loc: Vector3::new(2522.638, -708.08484, 17.01),
@@ -585,7 +585,7 @@ mod integration_tests {
 
     #[test]
     fn slow_retreating_save() {
-        let test = TestRunner::start(Runner2::soccar(), TestScenario {
+        let test = TestRunner::start(Runner::soccar(), TestScenario {
             ball_loc: Vector3::new(1446.3031, -2056.4917, 213.57251),
             ball_vel: Vector3::new(-1024.0333, -1593.1566, -244.15135),
             car_loc: Vector3::new(314.3022, -1980.4884, 17.01),
@@ -603,7 +603,7 @@ mod integration_tests {
 
     #[test]
     fn fast_retreating_save() {
-        let test = TestRunner::start(Runner2::soccar(), TestScenario {
+        let test = TestRunner::start(Runner::soccar(), TestScenario {
             ball_loc: Vector3::new(63.619453, -336.2556, 93.03),
             ball_vel: Vector3::new(-189.17311, -1918.067, 0.0),
             car_loc: Vector3::new(-103.64991, 955.411, 16.99),
@@ -624,7 +624,7 @@ mod integration_tests {
         let test = TestRunner::new()
             .one_v_one(&*recordings::JUMP_SAVE_FROM_INSIDE_GOAL, 106.0)
             .starting_boost(0.0)
-            .behavior(Runner2::soccar())
+            .behavior(Runner::soccar())
             .run();
         test.sleep_millis(3000);
         assert!(!test.enemy_has_scored());
@@ -643,7 +643,7 @@ mod integration_tests {
                 ..Default::default()
             })
             .starting_boost(0.0)
-            .behavior(Runner2::soccar())
+            .behavior(Runner::soccar())
             .run();
         test.sleep_millis(6000);
 
@@ -658,7 +658,7 @@ mod integration_tests {
         let test = TestRunner::new()
             .one_v_one(&*recordings::CLEAR_AROUND_GOAL_WALL, 327.0)
             .starting_boost(100.0)
-            .behavior(Runner2::soccar())
+            .behavior(Runner::soccar())
             .run();
         test.sleep_millis(3000);
 
@@ -676,7 +676,7 @@ mod integration_tests {
         let test = TestRunner::new()
             .one_v_one(&*recordings::DEFENSIVE_CONFIDENCE, 24.0)
             .starting_boost(65.0)
-            .behavior(Runner2::soccar())
+            .behavior(Runner::soccar())
             .run_for_millis(3500);
 
         let packet = test.sniff_packet();
@@ -695,7 +695,7 @@ mod integration_tests {
                 ..Default::default()
             })
             .starting_boost(10.0)
-            .behavior(Runner2::soccar())
+            .behavior(Runner::soccar())
             .run_for_millis(4000);
 
         assert!(!test.enemy_has_scored());
@@ -712,7 +712,7 @@ mod integration_tests {
             .one_v_one(&*recordings::BLOCK_GOAL_WITH_NO_BOOST, 61.5)
             .starting_boost(0.0)
             .enemy_starting_boost(50.0)
-            .behavior(Runner2::soccar())
+            .behavior(Runner::soccar())
             .run_for_millis(2500);
 
         assert!(!test.enemy_has_scored());
@@ -724,7 +724,7 @@ mod integration_tests {
             .one_v_one(&*recordings::INCONVENIENT_ANGLE_HIT_TO_THE_SIDE, 419.5)
             .starting_boost(0.0)
             .enemy_starting_boost(0.0)
-            .behavior(Runner2::soccar())
+            .behavior(Runner::soccar())
             .run_for_millis(5000);
 
         assert!(!test.enemy_has_scored());

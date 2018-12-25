@@ -2,7 +2,7 @@
 mod integration_tests {
     use crate::{
         integration_tests::helpers::{TestRunner, TestScenario},
-        strategy::Runner2,
+        strategy::Runner,
     };
     use common::prelude::*;
     use nalgebra::{Rotation3, Vector3};
@@ -18,7 +18,7 @@ mod integration_tests {
                 car_vel: Vector3::new(63.52187, -1216.5942, 40.226746),
                 ..Default::default()
             })
-            .behavior(Runner2::soccar())
+            .behavior(Runner::soccar())
             .run_for_millis(2000);
 
         let packet = test.sniff_packet();
@@ -35,7 +35,7 @@ mod integration_tests {
             car_vel: Vector3::new(-1254.4124, 211.01375, 8.24),
             ..Default::default()
         });
-        test.set_behavior(Runner2::soccar());
+        test.set_behavior(Runner::soccar());
         test.sleep_millis(5500);
 
         let packet = test.sniff_packet();

@@ -7,12 +7,12 @@ use rlbot;
 
 pub const BASELINE: &str = "baseline:";
 
-pub struct Runner2 {
+pub struct Runner {
     strategy: Box<Strategy>,
     current: Option<Box<Behavior>>,
 }
 
-impl Runner2 {
+impl Runner {
     pub fn new(strategy: impl Strategy + 'static) -> Self {
         Self {
             strategy: Box::new(strategy),
@@ -41,9 +41,9 @@ impl Runner2 {
     }
 }
 
-impl Behavior for Runner2 {
+impl Behavior for Runner {
     fn name(&self) -> &str {
-        name_of_type!(Runner2)
+        name_of_type!(Runner)
     }
 
     fn execute2(&mut self, ctx: &mut Context) -> Action {
@@ -51,7 +51,7 @@ impl Behavior for Runner2 {
     }
 }
 
-impl Runner2 {
+impl Runner {
     fn exec(&mut self, depth: u32, ctx: &mut Context) -> rlbot::ffi::PlayerInput {
         if depth > 5 {
             ctx.eeg.log("infinite loop?");

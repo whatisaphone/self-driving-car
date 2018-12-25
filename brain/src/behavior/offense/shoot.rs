@@ -97,7 +97,7 @@ mod integration_tests {
     use crate::{
         behavior::offense::Shoot,
         integration_tests::helpers::{TestRunner, TestScenario},
-        strategy::Runner2,
+        strategy::Runner,
     };
     use common::prelude::*;
     use nalgebra::{Rotation3, Vector3};
@@ -113,7 +113,7 @@ mod integration_tests {
                 car_vel: Vector3::new(590.5667, 116.87245, 5.3080044),
                 ..Default::default()
             })
-            .behavior(Runner2::soccar())
+            .behavior(Runner::soccar())
             .run_for_millis(6000);
 
         assert!(test.has_scored());
@@ -146,7 +146,7 @@ mod integration_tests {
                 car_vel: Vector3::new(-917.587, 322.66766, 8.34),
                 ..Default::default()
             })
-            .behavior(Runner2::soccar())
+            .behavior(Runner::soccar())
             .run_for_millis(7000);
         assert!(test.has_scored());
     }
@@ -218,7 +218,7 @@ mod integration_tests {
                 car_vel: Vector3::new(216.59224, 1339.4177, 8.41),
                 ..Default::default()
             })
-            .behavior(Runner2::soccar())
+            .behavior(Runner::soccar())
             .run_for_millis(6000);
         assert!(test.has_scored());
     }
@@ -234,7 +234,7 @@ mod integration_tests {
             car_vel: Vector3::new(64.24027, 1407.491, 8.309999),
             ..Default::default()
         });
-        test.set_behavior(Runner2::soccar());
+        test.set_behavior(Runner::soccar());
         test.sleep_millis(4000);
         assert!(test.has_scored());
     }
@@ -251,7 +251,7 @@ mod integration_tests {
                 ..Default::default()
             })
             .starting_boost(12.0)
-            .behavior(Runner2::soccar())
+            .behavior(Runner::soccar())
             .run_for_millis(3000);
 
         assert!(test.has_scored());
@@ -268,7 +268,7 @@ mod integration_tests {
                 car_vel: Vector3::new(-938.84094, 909.071, 25.890999),
                 ..Default::default()
             })
-            .behavior(Runner2::soccar())
+            .behavior(Runner::soccar())
             .run_for_millis(3500);
 
         assert!(test.has_scored());

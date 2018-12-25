@@ -2,7 +2,7 @@
 mod integration_tests {
     use crate::{
         integration_tests::helpers::{TestRunner, TestScenario},
-        strategy::Runner2,
+        strategy::Runner,
     };
     use common::prelude::*;
     use nalgebra::{Rotation3, Vector3};
@@ -18,7 +18,7 @@ mod integration_tests {
                 car_vel: Vector3::new(-1351.3594, 345.7535, 108.78551),
                 ..Default::default()
             })
-            .behavior(Runner2::soccar())
+            .behavior(Runner::soccar())
             .run_for_millis(4000);
 
         assert!(test.has_scored());
@@ -36,7 +36,7 @@ mod integration_tests {
                 car_vel: Vector3::new(-855.45123, 459.4182, 14.042989),
                 ..Default::default()
             })
-            .behavior(Runner2::soccar())
+            .behavior(Runner::soccar())
             .run_for_millis(5000);
 
         unimplemented!();
@@ -53,7 +53,7 @@ mod integration_tests {
                 car_vel: Vector3::new(1083.5627, 572.17487, 8.241),
                 ..Default::default()
             })
-            .behavior(Runner2::soccar())
+            .behavior(Runner::soccar())
             .run_for_millis(3500);
         assert!(test.has_scored());
     }

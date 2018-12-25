@@ -2,7 +2,7 @@
 mod integration_tests {
     use crate::{
         integration_tests::helpers::{TestRunner, TestScenario},
-        strategy::Runner2,
+        strategy::Runner,
     };
     use common::prelude::*;
     use nalgebra::{Rotation3, Vector3};
@@ -18,7 +18,7 @@ mod integration_tests {
             car_vel: Vector3::new(-1999.5629, 569.28217, 8.3),
             ..Default::default()
         });
-        test.set_behavior(Runner2::soccar());
+        test.set_behavior(Runner::soccar());
         test.sleep_millis(5000);
 
         assert!(test.has_scored());

@@ -1,6 +1,6 @@
 use crate::{
     integration_tests::helpers::{TestRunner, TestScenario},
-    strategy::Runner2,
+    strategy::Runner,
 };
 use common::prelude::*;
 use nalgebra::{Rotation3, Vector3};
@@ -17,7 +17,7 @@ fn todo() {
         car_vel: Vector3::new(-896.0074, -1726.876, 8.375226),
         ..Default::default()
     });
-    test.set_behavior(Runner2::soccar());
+    test.set_behavior(Runner::soccar());
     unimplemented!();
 }
 
@@ -25,7 +25,7 @@ fn todo() {
 mod template {
     use crate::{
         integration_tests::helpers::{TestRunner, TestScenario},
-        strategy::Runner2,
+        strategy::Runner,
     };
     use nalgebra::Vector3;
 
@@ -38,7 +38,7 @@ mod template {
                 ..TestScenario::from_recorded_row("../logs/play.csv", 10.0)
             })
             .starting_boost(25.0)
-            .behavior(Runner2::soccar())
+            .behavior(Runner::soccar())
             .run_for_millis(7000);
         unimplemented!();
     }
@@ -49,7 +49,7 @@ mod template {
         let _test = TestRunner::new()
             .preview_recording("../logs/play.csv", 100.0, 2.0, 5.0)
             .starting_boost(25.0)
-            .behavior(Runner2::soccar())
+            .behavior(Runner::soccar())
             .run_for_millis(7000);
         unimplemented!();
     }

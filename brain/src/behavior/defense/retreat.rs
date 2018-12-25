@@ -73,7 +73,7 @@ fn reset_behind_ball(ctx: &mut Context) -> Option<Box<Behavior>> {
 
 #[cfg(test)]
 mod integration_tests {
-    use crate::{integration_tests::helpers::TestRunner, strategy::Runner2};
+    use crate::{integration_tests::helpers::TestRunner, strategy::Runner};
     use brain_test_data::recordings;
 
     #[test]
@@ -82,7 +82,7 @@ mod integration_tests {
         let test = TestRunner::new()
             .one_v_one(&*recordings::RETREATING_HIT_TO_OWN_CORNER, 104.5)
             .starting_boost(74.0)
-            .behavior(Runner2::soccar())
+            .behavior(Runner::soccar())
             .run_for_millis(4500);
 
         let packet = test.sniff_packet();

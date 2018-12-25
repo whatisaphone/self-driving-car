@@ -3,7 +3,7 @@ use crate::strategy::Behavior;
 use crate::{
     eeg::{color, Drawable, EEG},
     plan::ball::{BallPredictor, ChipBallPrediction, FrameworkBallPrediction},
-    strategy::{infer_game_mode, Context, Dropshot, Game, Runner2, Soccar},
+    strategy::{infer_game_mode, Context, Dropshot, Game, Runner, Soccar},
     utils::FPSCounter,
 };
 use common::ExtendDuration;
@@ -12,14 +12,14 @@ use rlbot;
 use std::time::Instant;
 
 pub struct Brain {
-    runner: Runner2,
+    runner: Runner,
     ball_predictor: Box<BallPredictor>,
     player_index: Option<i32>,
     fps_counter: FPSCounter,
 }
 
 impl Brain {
-    fn new(runner: Runner2, ball_predictor: impl BallPredictor + 'static) -> Self {
+    fn new(runner: Runner, ball_predictor: impl BallPredictor + 'static) -> Self {
         Self {
             runner,
             ball_predictor: Box::new(ball_predictor),
@@ -34,32 +34,32 @@ impl Brain {
     }
 
     pub fn soccar() -> Self {
-        Self::new(Runner2::new(Soccar::new()), ChipBallPrediction::new())
+        Self::new(Runner::new(Soccar::new()), ChipBallPrediction::new())
     }
 
     pub fn dropshot(rlbot: &'static rlbot::RLBot) -> Self {
         Self::new(
-            Runner2::new(Dropshot::new()),
+            Runner::new(Dropshot::new()),
             FrameworkBallPrediction::new(rlbot),
         )
     }
 
     pub fn hoops(rlbot: &'static rlbot::RLBot) -> Self {
         Self::new(
-            Runner2::new(Soccar::new()),
+            Runner::new(Soccar::new()),
             FrameworkBallPrediction::new(rlbot),
         )
     }
 
     #[cfg(test)]
     pub fn with_behavior(behavior: impl Behavior + 'static) -> Self {
-        Self::new(Runner2::with_current(behavior), ChipBallPrediction::new())
+        Self::new(Runner::with_current(behavior), ChipBallPrediction::new())
     }
 
     #[cfg(test)]
     pub fn set_behavior(&mut self, behavior: impl Behavior + 'static, eeg: &mut EEG) {
         eeg.log(format!("! {}", behavior.name()));
-        self.runner = Runner2::with_current(behavior);
+        self.runner = Runner::with_current(behavior);
     }
 
     pub fn set_player_index(&mut self, player_index: i32) {

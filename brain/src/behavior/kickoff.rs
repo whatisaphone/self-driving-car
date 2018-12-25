@@ -80,7 +80,7 @@ fn is_diagonal_kickoff(ctx: &mut Context) -> bool {
 mod integration_tests {
     use crate::{
         integration_tests::helpers::{TestRunner, TestScenario},
-        strategy::Runner2,
+        strategy::Runner,
     };
     use brain_test_data::recordings;
     use common::prelude::*;
@@ -92,7 +92,7 @@ mod integration_tests {
         let test = TestRunner::new()
             .one_v_one(&*recordings::KICKOFF_CENTER, 107.0)
             .starting_boost(33.0)
-            .behavior(Runner2::soccar())
+            .behavior(Runner::soccar())
             .run_for_millis(2500);
 
         let packet = test.sniff_packet();
@@ -108,7 +108,7 @@ mod integration_tests {
                 ..Default::default()
             })
             .starting_boost(33.0)
-            .behavior(Runner2::soccar())
+            .behavior(Runner::soccar())
             .run_for_millis(2500);
 
         let packet = test.sniff_packet();
@@ -125,7 +125,7 @@ mod integration_tests {
                 ..Default::default()
             })
             .starting_boost(33.0)
-            .behavior(Runner2::soccar())
+            .behavior(Runner::soccar())
             .run_for_millis(2500);
 
         let packet = test.sniff_packet();
