@@ -1,11 +1,11 @@
 use crate::{
-    behavior::Behavior,
     routing::{
         behavior::FollowRoute,
         models::{
             PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner, SegmentPlan,
         },
     },
+    strategy::Behavior,
 };
 use derive_new::new;
 

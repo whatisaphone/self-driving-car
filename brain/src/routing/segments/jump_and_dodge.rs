@@ -1,8 +1,8 @@
 use crate::{
-    behavior::{higher_order::Chain, movement::Yielder, Action, Behavior, Priority},
+    behavior::{higher_order::Chain, movement::Yielder},
     eeg::{color, Drawable},
     routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner},
-    strategy::Context,
+    strategy::{Action, Behavior, Context, Priority},
 };
 use common::prelude::*;
 use derive_new::new;

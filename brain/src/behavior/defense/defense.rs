@@ -7,12 +7,11 @@ use crate::{
             BounceShot, GroundedHit, GroundedHitAimContext, GroundedHitTarget,
             GroundedHitTargetAdjust,
         },
-        Action, Behavior, Priority,
     },
     eeg::{color, Drawable},
     predict::naive_ground_intercept_2,
     routing::{behavior::FollowRoute, plan::GroundIntercept},
-    strategy::{Context, Goal, Scenario},
+    strategy::{Action, Behavior, Context, Goal, Priority, Scenario},
     utils::{geometry::ExtendF32, Wall, WallRayCalculator},
 };
 use common::prelude::*;

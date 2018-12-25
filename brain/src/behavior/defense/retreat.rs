@@ -3,9 +3,8 @@ use crate::{
         defense::{PanicDefense, PushToOwnCorner},
         higher_order::TryChoose,
         offense::ResetBehindBall,
-        Action, Behavior, Priority,
     },
-    strategy::{Context, Scenario},
+    strategy::{Action, Behavior, Context, Priority, Scenario},
 };
 use common::prelude::*;
 use nameof::name_of_type;

@@ -1,6 +1,6 @@
 use crate::{
-    behavior::{higher_order::Chain, movement::yielder::Yielder, Action, Behavior},
-    strategy::Context,
+    behavior::{higher_order::Chain, movement::yielder::Yielder},
+    strategy::{Action, Behavior, Context},
 };
 use nalgebra::UnitComplex;
 use nameof::name_of_type;

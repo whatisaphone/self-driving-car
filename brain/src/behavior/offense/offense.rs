@@ -1,12 +1,9 @@
 use crate::{
-    behavior::{
-        offense::{ResetBehindBall, Shoot, TepidHit},
-        Action, Behavior,
-    },
+    behavior::offense::{ResetBehindBall, Shoot, TepidHit},
     plan::{ball::BallFrame, telepathy},
     predict::naive_ground_intercept_2,
     routing::{behavior::FollowRoute, plan::GetDollar},
-    strategy::{Context, Game, Scenario},
+    strategy::{Action, Behavior, Context, Game, Scenario},
     utils::geometry::RayCoordinateSystem,
 };
 use common::prelude::*;

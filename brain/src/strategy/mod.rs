@@ -1,4 +1,5 @@
 pub use crate::strategy::{
+    behavior::{Action, Behavior, Priority},
     context::Context,
     dropshot::Dropshot,
     game::{infer_game_mode, BoostPickup, Game, Goal, Team, Vehicle},
@@ -7,6 +8,7 @@ pub use crate::strategy::{
     soccar::Soccar,
 };
 
+mod behavior;
 mod context;
 mod dropshot;
 mod game;

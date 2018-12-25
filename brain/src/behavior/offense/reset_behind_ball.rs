@@ -1,10 +1,9 @@
 use crate::{
-    behavior::{Action, Behavior},
     routing::{
         behavior::FollowRoute,
         plan::{ChainedPlanner, GroundDrive, TurnPlanner},
     },
-    strategy::Context,
+    strategy::{Action, Behavior, Context},
 };
 use common::prelude::*;
 use nalgebra::{Point2, Vector2};

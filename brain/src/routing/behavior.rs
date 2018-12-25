@@ -1,11 +1,10 @@
 use crate::{
-    behavior::{Action, Behavior},
     eeg::{color, Drawable},
     routing::models::{
         PlanningContext, PlanningDump, ProvisionalPlanExpansion, RoutePlan, RoutePlanError,
         RoutePlanner, SegmentRunAction, SegmentRunner,
     },
-    strategy::Context,
+    strategy::{Action, Behavior, Context},
 };
 use nameof::name_of_type;
 

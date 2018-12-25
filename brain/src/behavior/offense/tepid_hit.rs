@@ -1,12 +1,11 @@
 use crate::{
-    behavior::{
-        strike::{GroundedHit, GroundedHitAimContext, GroundedHitTarget, GroundedHitTargetAdjust},
-        Action, Behavior, Priority,
+    behavior::strike::{
+        GroundedHit, GroundedHitAimContext, GroundedHitTarget, GroundedHitTargetAdjust,
     },
     eeg::{color, Drawable},
     plan::hit_angle::{feasible_hit_angle_away, feasible_hit_angle_toward},
     routing::{behavior::FollowRoute, plan::GroundIntercept},
-    strategy::Context,
+    strategy::{Action, Behavior, Context, Priority},
     utils::{Wall, WallRayCalculator},
 };
 use common::prelude::*;

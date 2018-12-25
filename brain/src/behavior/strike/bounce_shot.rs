@@ -1,12 +1,9 @@
 use crate::{
-    behavior::{
-        movement::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge},
-        Action, Behavior,
-    },
+    behavior::movement::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge},
     eeg::{color, Drawable},
     predict::{intercept::NaiveIntercept, naive_ground_intercept},
     rules::SameBallTrajectory,
-    strategy::{Context, Goal},
+    strategy::{Action, Behavior, Context, Goal},
     utils::{geometry::ExtendF32, WallRayCalculator},
 };
 use common::prelude::*;

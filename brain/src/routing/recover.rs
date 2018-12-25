@@ -3,10 +3,9 @@ use crate::{
         higher_order::{Predicate, TimeLimit, While},
         movement::{DriveTowards, GetToFlatGround, QuickJumpAndDodge, SkidRecover},
         offense::ResetBehindBall,
-        Behavior,
     },
     routing::models::{CarState, RoutePlanError},
-    strategy::{Context, Scenario},
+    strategy::{Behavior, Context, Scenario},
 };
 use common::{physics::car_forward_axis, prelude::*};
 use derive_new::new;

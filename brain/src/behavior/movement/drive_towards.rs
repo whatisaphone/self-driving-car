@@ -1,7 +1,7 @@
 use crate::{
-    behavior::{movement::simple_steer_towards::simple_yaw_diff, Action, Behavior},
+    behavior::movement::simple_steer_towards::simple_yaw_diff,
     eeg::{color, Drawable},
-    strategy::Context,
+    strategy::{Action, Behavior, Context},
 };
 use common::{prelude::*, rl};
 use nalgebra::Point2;

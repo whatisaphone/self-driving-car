@@ -1,4 +1,4 @@
-use crate::{behavior::Behavior, strategy::Context};
+use crate::strategy::{Behavior, Context};
 
 pub trait Strategy: Send {
     fn baseline(&mut self, ctx: &mut Context) -> Box<Behavior>;

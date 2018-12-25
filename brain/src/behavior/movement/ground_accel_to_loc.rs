@@ -2,11 +2,10 @@ use crate::{
     behavior::{
         higher_order::Chain,
         movement::{drive_towards, simple_yaw_diff, GetToFlatGround},
-        Action, Behavior,
     },
     eeg::{color, Drawable},
     plan::drive::get_route_dodge,
-    strategy::Context,
+    strategy::{Action, Behavior, Context},
 };
 use common::{prelude::*, rl};
 use nalgebra::Point2;

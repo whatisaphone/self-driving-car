@@ -1,6 +1,6 @@
 use crate::{
-    behavior::{movement::GetToFlatGround, offense::TepidHit, Behavior},
-    strategy::{strategy::Strategy, Context},
+    behavior::{movement::GetToFlatGround, offense::TepidHit},
+    strategy::{strategy::Strategy, Behavior, Context},
 };
 use derive_new::new;
 

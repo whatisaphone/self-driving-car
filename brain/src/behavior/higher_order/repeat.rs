@@ -1,7 +1,6 @@
 use crate::{
-    behavior::{Action, Behavior},
     eeg::{color, Drawable},
-    strategy::Context,
+    strategy::{Action, Behavior, Context},
 };
 
 /// Run `behavior` forever

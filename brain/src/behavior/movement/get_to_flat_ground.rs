@@ -2,11 +2,10 @@ use crate::{
     behavior::{
         higher_order::Chain,
         movement::{dodge::Dodge, drive_towards::drive_towards, yielder::Yielder},
-        Action, Behavior, Priority,
     },
     eeg::Drawable,
     routing::{models::CarState, plan::avoid_goal_wall_waypoint},
-    strategy::Context,
+    strategy::{Action, Behavior, Context, Priority},
 };
 use common::prelude::*;
 use nalgebra::{Unit, Vector2, Vector3};

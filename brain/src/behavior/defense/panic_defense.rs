@@ -1,12 +1,9 @@
 use crate::{
-    behavior::{
-        movement::{simple_steer_towards, BlitzToLocation, GetToFlatGround},
-        Action, Behavior,
-    },
+    behavior::movement::{simple_steer_towards, BlitzToLocation, GetToFlatGround},
     eeg::{color, Drawable},
     plan::drive::rough_time_drive_to_loc,
     rules::SameBallTrajectory,
-    strategy::Context,
+    strategy::{Action, Behavior, Context},
     utils::geometry::ExtendF32,
 };
 use common::prelude::*;

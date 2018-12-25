@@ -3,10 +3,9 @@ use crate::{
         defense::defensive_hit,
         higher_order::{Chain, While},
         strike::GroundedHit,
-        Action, Behavior, Priority,
     },
     routing::{behavior::FollowRoute, plan::GroundIntercept, recover::WeDontWinTheRace},
-    strategy::Context,
+    strategy::{Action, Behavior, Context, Priority},
 };
 use nameof::name_of_type;
 

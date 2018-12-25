@@ -1,11 +1,8 @@
 use crate::{
-    behavior::{
-        higher_order::{Fuse, NullBehavior},
-        Behavior,
-    },
+    behavior::higher_order::{Fuse, NullBehavior},
     brain::Brain,
     eeg::EEG,
-    strategy::Team,
+    strategy::{Behavior, Team},
 };
 use brain_test_data::OneVOneScenario;
 use collect::{

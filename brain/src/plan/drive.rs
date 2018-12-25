@@ -1,8 +1,6 @@
 use crate::{
-    behavior::{
-        movement::{simple_yaw_diff, QuickJumpAndDodge},
-        Behavior,
-    },
+    behavior::movement::{simple_yaw_diff, QuickJumpAndDodge},
+    strategy::Behavior,
     utils::geometry::ExtendF32,
 };
 use common::{prelude::*, rl};

@@ -1,7 +1,6 @@
 use crate::{
-    behavior::{Action, Behavior, Priority},
     eeg::{color, Drawable},
-    strategy::Context,
+    strategy::{Action, Behavior, Context, Priority},
 };
 
 /// Run `child` while `predicate` holds true.

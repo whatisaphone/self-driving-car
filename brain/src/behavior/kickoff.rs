@@ -1,15 +1,12 @@
 use crate::{
-    behavior::{
-        defense::defensive_hit, higher_order::Chain, strike::GroundedHit, Action, Behavior,
-        Priority,
-    },
+    behavior::{defense::defensive_hit, higher_order::Chain, strike::GroundedHit},
     routing::{
         behavior::FollowRoute,
         models::RoutePlanner,
         plan::{ChainedPlanner, GroundIntercept, GroundStraightPlanner, TurnPlanner},
         StraightMode,
     },
-    strategy::Context,
+    strategy::{Action, Behavior, Context, Priority},
 };
 use common::prelude::*;
 use nalgebra::Point2;

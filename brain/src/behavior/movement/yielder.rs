@@ -1,7 +1,4 @@
-use crate::{
-    behavior::{Action, Behavior},
-    strategy::Context,
-};
+use crate::strategy::{Action, Behavior, Context};
 use derive_new::new;
 use nameof::name_of_type;
 use rlbot;

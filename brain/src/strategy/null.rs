@@ -1,6 +1,6 @@
 use crate::{
-    behavior::{higher_order::NullBehavior, Behavior},
-    strategy::{strategy::Strategy, Context},
+    behavior::higher_order::NullBehavior,
+    strategy::{strategy::Strategy, Behavior, Context},
 };
 use derive_new::new;
 

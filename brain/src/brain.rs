@@ -1,5 +1,5 @@
 #[cfg(test)]
-use crate::behavior::Behavior;
+use crate::strategy::Behavior;
 use crate::{
     eeg::{color, Drawable, EEG},
     plan::ball::{BallPredictor, ChipBallPrediction, FrameworkBallPrediction},

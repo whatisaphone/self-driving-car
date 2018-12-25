@@ -1,7 +1,6 @@
 use crate::{
-    behavior::{Action, Behavior, Priority},
     eeg::{color, Drawable},
-    strategy::Context,
+    strategy::{Action, Behavior, Context, Priority},
 };
 use nameof::name_of_type;
 use rlbot;

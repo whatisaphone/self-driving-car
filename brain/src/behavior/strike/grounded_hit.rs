@@ -3,13 +3,12 @@ use crate::{
         higher_order::Chain,
         movement::{simple_steer_towards, Dodge, JumpAndTurn},
         strike::BounceShot,
-        Action, Behavior,
     },
     eeg::Drawable,
     predict::{intercept::NaiveIntercept, naive_ground_intercept},
     routing::recover::{IsSkidding, NotOnFlatGround},
     rules::SameBallTrajectory,
-    strategy::{Context, Game, Scenario},
+    strategy::{Action, Behavior, Context, Game, Scenario},
     EEG,
 };
 use common::{physics, prelude::*, rl};

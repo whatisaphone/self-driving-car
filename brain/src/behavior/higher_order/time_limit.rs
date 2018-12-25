@@ -1,7 +1,4 @@
-use crate::{
-    behavior::{Action, Behavior},
-    strategy::Context,
-};
+use crate::strategy::{Action, Behavior, Context};
 use nameof::name_of_type;
 
 /// Execute `child` for at most `limit` seconds, then return.

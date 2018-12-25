@@ -1,6 +1,5 @@
 use crate::{
-    behavior::{Action, Behavior},
-    strategy::Context,
+    strategy::{Action, Behavior, Context},
     utils::Stopwatch,
 };
 use common::physics;

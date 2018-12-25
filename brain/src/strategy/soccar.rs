@@ -1,9 +1,9 @@
 use crate::{
     behavior::{
         defense::Defense, higher_order::Chain, movement::GetToFlatGround, offense::Offense,
-        strike::FiftyFifty, Behavior, Kickoff, Priority,
+        strike::FiftyFifty, Kickoff,
     },
-    strategy::{scenario::Scenario, strategy::Strategy, Context},
+    strategy::{scenario::Scenario, strategy::Strategy, Behavior, Context, Priority},
     utils::Wall,
 };
 use common::prelude::*;

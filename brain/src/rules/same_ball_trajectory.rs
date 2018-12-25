@@ -1,4 +1,4 @@
-use crate::{behavior::Action, strategy::Context};
+use crate::strategy::{Action, Context};
 use nalgebra::Point3;
 
 const ERROR_THRESHOLD: f32 = 25.0;

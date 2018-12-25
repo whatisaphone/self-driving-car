@@ -5,11 +5,10 @@ use crate::{
             BounceShot, GroundedHit, GroundedHitAimContext, GroundedHitTarget,
             GroundedHitTargetAdjust,
         },
-        Action, Behavior, Priority,
     },
     predict::{intercept::NaiveIntercept, naive_ground_intercept_2},
     routing::{behavior::FollowRoute, plan::GroundIntercept},
-    strategy::{Context, Game, Scenario},
+    strategy::{Action, Behavior, Context, Game, Priority, Scenario},
 };
 use common::prelude::*;
 use nalgebra::{Point2, Point3};

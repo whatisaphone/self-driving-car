@@ -1,9 +1,5 @@
-pub use self::{
-    behavior::{Action, Behavior, Priority},
-    kickoff::Kickoff,
-};
+pub use self::kickoff::Kickoff;
 
-mod behavior;
 pub mod defense;
 #[macro_use]
 pub mod higher_order;

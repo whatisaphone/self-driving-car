@@ -1,12 +1,9 @@
 use crate::{
-    behavior::{
-        movement::{
-            quick_jump_and_dodge::QuickJumpAndDodge, simple_steer_towards::simple_steer_towards,
-        },
-        Action, Behavior,
+    behavior::movement::{
+        quick_jump_and_dodge::QuickJumpAndDodge, simple_steer_towards::simple_steer_towards,
     },
     eeg::{color, Drawable},
-    strategy::Context,
+    strategy::{Action, Behavior, Context},
 };
 use common::{prelude::*, rl};
 use nalgebra::Point2;
