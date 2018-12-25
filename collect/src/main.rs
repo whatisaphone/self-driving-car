@@ -1,13 +1,13 @@
 #![cfg_attr(feature = "strict", deny(warnings))]
 
 use crate::{
-    collector2::Collector,
+    collector::Collector,
     rlbot_ext::get_packet_and_inject_rigid_body_tick,
     scenarios::{Scenario, ScenarioStepResult},
 };
 use std::{error::Error, fs::File, thread::sleep, time::Duration};
 
-mod collector2;
+mod collector;
 mod rlbot_ext;
 mod scenarios;
 
