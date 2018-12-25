@@ -189,6 +189,7 @@ fn get_boost(ctx: &mut Context) -> Option<Box<Behavior>> {
 mod integration_tests {
     use crate::{
         behavior::offense::Offense,
+        eeg::Event,
         integration_tests::helpers::{TestRunner, TestScenario},
         strategy::Runner,
     };
@@ -301,22 +302,20 @@ mod integration_tests {
     #[test]
     #[ignore(note = "The great bankruptcy of 2018")]
     fn tepid_hit_from_own_goal() {
-        let test = TestRunner::start0(TestScenario {
-            ball_loc: Vector3::new(2869.6829, -4145.095, 97.65185),
-            ball_vel: Vector3::new(-327.0853, 243.21877, -42.864605),
-            car_loc: Vector3::new(286.2713, -5031.399, 16.99),
-            car_rot: Rotation3::from_unreal_angles(-0.00958738, 0.59949887, 0.0),
-            car_vel: Vector3::new(1251.7024, 854.6698, 8.411),
-            ..Default::default()
-        });
-        test.set_behavior(Runner::soccar());
-        test.sleep_millis(100);
-        test.examine_eeg(|eeg| {
-            assert!(eeg
-                .log
-                .iter()
-                .any(|x| x == "[Offense] no good hit; going for a tepid hit"));
-            assert!(eeg.log.iter().any(|x| x == "hitting toward enemy goal"));
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(2869.6829, -4145.095, 97.65185),
+                ball_vel: Vector3::new(-327.0853, 243.21877, -42.864605),
+                car_loc: Vector3::new(286.2713, -5031.399, 16.99),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, 0.59949887, 0.0),
+                car_vel: Vector3::new(1251.7024, 854.6698, 8.411),
+                ..Default::default()
+            })
+            .behavior(Runner::soccar())
+            .run_for_millis(100);
+
+        test.examine_events(|events| {
+            assert!(events.contains(&Event::TepidHitTowardEnemyGoal));
         });
     }
 

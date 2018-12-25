@@ -2,7 +2,7 @@ use crate::{
     behavior::strike::{
         GroundedHit, GroundedHitAimContext, GroundedHitTarget, GroundedHitTargetAdjust,
     },
-    eeg::{color, Drawable},
+    eeg::{color, Drawable, Event},
     plan::hit_angle::{feasible_hit_angle_away, feasible_hit_angle_toward},
     routing::{behavior::FollowRoute, plan::GroundIntercept},
     strategy::{Action, Behavior, Context, Priority},
@@ -44,10 +44,12 @@ fn time_wasting_hit(ctx: &mut GroundedHitAimContext) -> Result<GroundedHitTarget
     let naive_defense = (ball_loc - me_loc).rotation_to(defense_avoid - me_loc);
 
     let aim_loc = if naive_offense.angle().abs() < naive_defense.angle().abs() {
+        ctx.eeg.track(Event::TepidHitTowardEnemyGoal);
         ctx.eeg
             .draw(Drawable::print("toward enemy goal", color::GREEN));
         feasible_hit_angle_toward(ball_loc, me_loc, offense_aim, PI / 6.0)
     } else {
+        ctx.eeg.track(Event::TepidHitAwayFromOwnGoal);
         ctx.eeg
             .draw(Drawable::print("away from own goal", color::GREEN));
         feasible_hit_angle_away(ball_loc, me_loc, defense_avoid, PI / 6.0)

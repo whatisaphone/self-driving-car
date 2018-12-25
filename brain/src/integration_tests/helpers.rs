@@ -1,7 +1,7 @@
 use crate::{
     behavior::higher_order::{Fuse, NullBehavior},
     brain::Brain,
-    eeg::EEG,
+    eeg::{Event, EEG},
     strategy::{Behavior, Team},
 };
 use brain_test_data::OneVOneScenario;
@@ -16,6 +16,7 @@ use nalgebra::{Point3, Rotation3, UnitQuaternion, Vector3};
 use ordered_float::NotNan;
 use rlbot;
 use std::{
+    collections::HashSet,
     f32::consts::PI,
     fs::File,
     panic,
@@ -287,7 +288,7 @@ impl RunningTest {
         rx.recv().unwrap()
     }
 
-    pub fn examine_eeg(&self, f: impl Fn(&EEG) + Send + 'static) {
+    fn examine_eeg(&self, f: impl Fn(&EEG) + Send + 'static) {
         let (tx, rx) = crossbeam_channel::bounded(1);
         self.messages.send(Message::ExamineEEG(Box::new(move |eeg| {
             let unwind = panic::catch_unwind(panic::AssertUnwindSafe(|| f(eeg)));
@@ -297,6 +298,10 @@ impl RunningTest {
             Ok(()) => {}
             Err(unwind) => panic::resume_unwind(unwind),
         };
+    }
+
+    pub fn examine_events(&self, f: impl Fn(&HashSet<Event>) + Send + 'static) {
+        self.examine_eeg(move |eeg| f(eeg.events.as_ref().unwrap()));
     }
 }
 
@@ -356,7 +361,7 @@ fn test_thread(
 
     rlbot.start_match(match_settings).unwrap();
 
-    let mut eeg = EEG::new();
+    let mut eeg = EEG::new().with_tracked_events();
     let mut brain = Brain::with_behavior(NullBehavior::new());
     brain.set_player_index(0);
 

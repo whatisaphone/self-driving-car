@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod integration_tests {
     use crate::{
-        behavior::runner::PUSHED,
         integration_tests::helpers::{TestRunner, TestScenario},
         strategy::Runner,
     };
@@ -11,22 +10,18 @@ mod integration_tests {
     #[test]
     #[ignore] // TODO
     fn crossing_the_midfield() {
-        let test = TestRunner::start0(TestScenario {
-            ball_loc: Vector3::new(-1794.4557, -681.9332, 99.93823),
-            ball_vel: Vector3::new(-619.51764, 1485.6294, -12.806913),
-            car_loc: Vector3::new(-3472.8125, -1983.225, 16.937647),
-            car_rot: Rotation3::from_unreal_angles(-0.009779127, 2.4388378, -0.0011504856),
-            car_vel: Vector3::new(-1599.1952, 1223.4504, 9.51471),
-            ..Default::default()
-        });
-        test.set_behavior(Runner::soccar());
-        test.sleep_millis(4000);
-        test.examine_eeg(|eeg| {
-            assert!(eeg
-                .log
-                .iter()
-                .any(|x| *x == format!("{} GroundShot", PUSHED)));
-        });
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(-1794.4557, -681.9332, 99.93823),
+                ball_vel: Vector3::new(-619.51764, 1485.6294, -12.806913),
+                car_loc: Vector3::new(-3472.8125, -1983.225, 16.937647),
+                car_rot: Rotation3::from_unreal_angles(-0.009779127, 2.4388378, -0.0011504856),
+                car_vel: Vector3::new(-1599.1952, 1223.4504, 9.51471),
+                ..Default::default()
+            })
+            .behavior(Runner::soccar())
+            .run_for_millis(4000);
+
         assert!(test.has_scored());
     }
 

@@ -8,7 +8,7 @@ use crate::{
             GroundedHitTargetAdjust,
         },
     },
-    eeg::{color, Drawable},
+    eeg::{color, Drawable, Event},
     predict::naive_ground_intercept_2,
     routing::{behavior::FollowRoute, plan::GroundIntercept},
     strategy::{Action, Behavior, Context, Goal, Priority, Scenario},
@@ -62,6 +62,8 @@ impl Behavior for Defense {
     }
 
     fn execute(&mut self, ctx: &mut Context) -> Action {
+        ctx.eeg.track(Event::Defense);
+
         // If we're not between the ball and our goal, get there.
         if !Self::is_between_ball_and_own_goal(ctx) {
             return Action::call(Retreat::new());
@@ -197,7 +199,7 @@ impl Behavior for HitToOwnCorner {
     }
 
     fn execute(&mut self, ctx: &mut Context) -> Action {
-        ctx.eeg.log("redirect to own corner");
+        ctx.eeg.track(Event::HitToOwnCorner);
 
         Action::call(Chain::new(Priority::Striking, vec![
             Box::new(FollowRoute::new(GroundIntercept::new())),
@@ -283,10 +285,8 @@ fn blocking_angle(
 #[cfg(test)]
 mod integration_tests {
     use crate::{
-        behavior::{
-            defense::{defense::HitToOwnCorner, Defense},
-            runner::PUSHED,
-        },
+        behavior::defense::{defense::HitToOwnCorner, Defense},
+        eeg::Event,
         integration_tests::helpers::{TestRunner, TestScenario},
         strategy::Runner,
     };
@@ -320,12 +320,11 @@ mod integration_tests {
             }
         }
 
-        test.examine_eeg(|eeg| {
-            assert!(PUSHED == ">");
-            assert!(eeg.log.iter().any(|x| x == "baseline: Defense"));
-            assert!(eeg.log.iter().any(|x| x == "redirect to own corner"));
-            assert!(!eeg.log.iter().any(|x| x == "push from right to left"));
-            assert!(eeg.log.iter().any(|x| x == "push from left to right"));
+        test.examine_events(|events| {
+            assert!(events.contains(&Event::Defense));
+            assert!(events.contains(&Event::HitToOwnCorner));
+            assert!(events.contains(&Event::PushFromLeftToRight));
+            assert!(!events.contains(&Event::PushFromRightToLeft));
         });
 
         let packet = test.sniff_packet();
@@ -350,12 +349,11 @@ mod integration_tests {
 
         // This result is just *okay*
         test.sleep_millis(100);
-        test.examine_eeg(|eeg| {
-            assert!(PUSHED == ">");
-            assert!(eeg.log.iter().any(|x| x == "baseline: Defense"));
-            assert!(eeg.log.iter().any(|x| x == "redirect to own corner"));
-            assert!(!eeg.log.iter().any(|x| x == "push from right to left"));
-            assert!(eeg.log.iter().any(|x| x == "push from left to right"));
+        test.examine_events(|events| {
+            assert!(events.contains(&Event::Defense));
+            assert!(events.contains(&Event::HitToOwnCorner));
+            assert!(events.contains(&Event::PushFromLeftToRight));
+            assert!(!events.contains(&Event::PushFromRightToLeft));
         });
     }
 
@@ -431,10 +429,10 @@ mod integration_tests {
             .behavior(Defense::new())
             .run_for_millis(1500);
 
-        test.examine_eeg(|eeg| {
-            assert!(eeg.log.iter().any(|x| x == "redirect to own corner"));
-            assert!(!eeg.log.iter().any(|x| x == "push from left to right"));
-            assert!(eeg.log.iter().any(|x| x == "push from right to left"));
+        test.examine_events(|events| {
+            assert!(events.contains(&Event::HitToOwnCorner));
+            assert!(events.contains(&Event::PushFromRightToLeft));
+            assert!(!events.contains(&Event::PushFromLeftToRight));
         });
 
         let packet = test.sniff_packet();
@@ -458,10 +456,10 @@ mod integration_tests {
 
         test.sleep_millis(2000);
 
-        test.examine_eeg(|eeg| {
-            assert!(eeg.log.iter().any(|x| x == "redirect to own corner"));
-            assert!(!eeg.log.iter().any(|x| x == "push from right to left"));
-            assert!(eeg.log.iter().any(|x| x == "push from left to right"));
+        test.examine_events(|events| {
+            assert!(events.contains(&Event::HitToOwnCorner));
+            assert!(events.contains(&Event::PushFromLeftToRight));
+            assert!(!events.contains(&Event::PushFromRightToLeft));
         });
 
         let packet = test.sniff_packet();
@@ -484,10 +482,10 @@ mod integration_tests {
             .behavior(Runner::soccar())
             .run_for_millis(2000);
 
-        test.examine_eeg(|eeg| {
-            assert!(eeg.log.iter().any(|x| x == "redirect to own corner"));
-            assert!(!eeg.log.iter().any(|x| x == "push from right to left"));
-            assert!(eeg.log.iter().any(|x| x == "push from left to right"));
+        test.examine_events(|events| {
+            assert!(events.contains(&Event::HitToOwnCorner));
+            assert!(events.contains(&Event::PushFromLeftToRight));
+            assert!(!events.contains(&Event::PushFromRightToLeft));
         });
 
         let packet = test.sniff_packet();
@@ -508,10 +506,10 @@ mod integration_tests {
         });
 
         test.sleep_millis(2000);
-        test.examine_eeg(|eeg| {
-            assert!(eeg.log.iter().any(|x| x == "redirect to own corner"));
-            assert!(eeg.log.iter().any(|x| x == "push from right to left"));
-            assert!(!eeg.log.iter().any(|x| x == "push from left to right"));
+        test.examine_events(|events| {
+            assert!(events.contains(&Event::HitToOwnCorner));
+            assert!(events.contains(&Event::PushFromRightToLeft));
+            assert!(!events.contains(&Event::PushFromLeftToRight));
         });
         let packet = test.sniff_packet();
         assert!(packet.GameBall.Physics.vel().norm() >= 2000.0);
@@ -531,10 +529,10 @@ mod integration_tests {
         });
 
         test.sleep_millis(2000);
-        test.examine_eeg(|eeg| {
-            assert!(eeg.log.iter().any(|x| x == "redirect to own corner"));
-            assert!(eeg.log.iter().any(|x| x == "push from right to left"));
-            assert!(!eeg.log.iter().any(|x| x == "push from left to right"));
+        test.examine_events(|events| {
+            assert!(events.contains(&Event::HitToOwnCorner));
+            assert!(events.contains(&Event::PushFromRightToLeft));
+            assert!(!events.contains(&Event::PushFromLeftToRight));
         });
         let packet = test.sniff_packet();
         assert!(packet.GameBall.Physics.vel().norm() >= 2000.0);
@@ -554,10 +552,10 @@ mod integration_tests {
             .behavior(Runner::soccar())
             .run_for_millis(2000);
 
-        test.examine_eeg(|eeg| {
-            assert!(eeg.log.iter().any(|x| x == "redirect to own corner"));
-            assert!(eeg.log.iter().any(|x| x == "push from right to left"));
-            assert!(!eeg.log.iter().any(|x| x == "push from left to right"));
+        test.examine_events(|events| {
+            assert!(events.contains(&Event::HitToOwnCorner));
+            assert!(events.contains(&Event::PushFromRightToLeft));
+            assert!(!events.contains(&Event::PushFromLeftToRight));
         });
         let packet = test.sniff_packet();
         println!("{:?}", packet.GameBall.Physics.vel());

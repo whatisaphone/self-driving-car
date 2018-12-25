@@ -10,14 +10,27 @@ use piston_window::{
     PistonWindow, Position, Rectangle, TextureSettings, WindowSettings,
 };
 use rlbot;
-use std::{collections::VecDeque, mem, path::PathBuf, thread};
+use std::{collections::HashSet, mem, path::PathBuf, thread};
 
 pub struct EEG {
     tx: Option<crossbeam_channel::Sender<ThreadMessage>>,
     join_handle: Option<thread::JoinHandle<()>>,
     current_packet_time: f32,
     draw_list: DrawList,
-    pub log: VecDeque<String>,
+    pub events: Option<HashSet<Event>>,
+}
+
+#[derive(Eq, PartialEq, Hash)]
+pub enum Event {
+    Defense,
+    HitToOwnCorner,
+    PushFromLeftToRight,
+    PushFromRightToLeft,
+    Offense,
+    BounceShot,
+    TepidHitTowardEnemyGoal,
+    TepidHitAwayFromOwnGoal,
+    PanicDefense,
 }
 
 impl EEG {
@@ -30,8 +43,13 @@ impl EEG {
             join_handle: Some(join_handle),
             current_packet_time: 0.0,
             draw_list: DrawList::new(),
-            log: VecDeque::new(),
+            events: None,
         }
+    }
+
+    pub fn with_tracked_events(mut self) -> Self {
+        self.events = Some(HashSet::new());
+        self
     }
 }
 
@@ -60,20 +78,17 @@ impl EEG {
     }
 
     pub fn log(&mut self, message: impl Into<String>) {
-        let message = message.into();
-
-        println!("{:>8.3} {}", self.current_packet_time, message);
-
-        self.log.push_back(message);
-
-        // Limit RAM usage
-        while self.log.len() > 250 {
-            self.log.pop_front();
-        }
+        println!("{:>8.3} {}", self.current_packet_time, message.into());
     }
 
     pub fn log_pretty(&mut self, logger: &str, name: &str, value: impl PrettyPrint) {
         self.log(format!("[{}] {} = {}", logger, name, value.pretty()))
+    }
+
+    pub fn track(&mut self, event: Event) {
+        if let Some(ref mut events) = self.events {
+            events.insert(event);
+        }
     }
 
     pub fn show(&mut self, packet: &rlbot::ffi::LiveDataPacket) {

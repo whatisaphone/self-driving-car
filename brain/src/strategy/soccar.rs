@@ -98,9 +98,9 @@ fn enemy_can_shoot(ctx: &mut Context) -> bool {
 #[cfg(test)]
 mod integration_tests {
     use crate::{
-        behavior::runner::PUSHED,
+        eeg::Event,
         integration_tests::helpers::{TestRunner, TestScenario},
-        strategy::{runner::BASELINE, Runner},
+        strategy::Runner,
     };
     use brain_test_data::recordings;
     use common::prelude::*;
@@ -108,26 +108,21 @@ mod integration_tests {
 
     #[test]
     fn dont_panic_when_no_intercept() {
-        let test = TestRunner::start0(TestScenario {
-            ball_loc: Vector3::new(-1185.1904, 1242.3097, 133.98555),
-            ball_vel: Vector3::new(-1743.6543, 1205.1072, -55.04102),
-            car_loc: Vector3::new(492.75253, 567.8963, 17.01),
-            car_rot: Rotation3::from_unreal_angles(-0.00958738, -3.1036267, 0.0),
-            car_vel: Vector3::new(-1369.871, 12.749782, 8.351),
-            ..Default::default()
-        });
-        test.set_behavior(Runner::soccar());
-        test.sleep_millis(100);
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(-1185.1904, 1242.3097, 133.98555),
+                ball_vel: Vector3::new(-1743.6543, 1205.1072, -55.04102),
+                car_loc: Vector3::new(492.75253, 567.8963, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, -3.1036267, 0.0),
+                car_vel: Vector3::new(-1369.871, 12.749782, 8.351),
+                ..Default::default()
+            })
+            .behavior(Runner::soccar())
+            .run_for_millis(100);
 
-        test.examine_eeg(|eeg| {
-            assert!(!eeg
-                .log
-                .iter()
-                .any(|x| *x == format!("{} PanicDefense", PUSHED)));
-            assert!(eeg
-                .log
-                .iter()
-                .any(|x| *x == format!("{} Offense", BASELINE)));
+        test.examine_events(|events| {
+            assert!(!events.contains(&Event::PanicDefense));
+            assert!(events.contains(&Event::Offense));
         });
     }
 

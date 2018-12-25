@@ -1,6 +1,6 @@
 use crate::{
     behavior::movement::{simple_steer_towards, BlitzToLocation, GetToFlatGround},
-    eeg::{color, Drawable},
+    eeg::{color, Drawable, Event},
     plan::drive::rough_time_drive_to_loc,
     rules::SameBallTrajectory,
     strategy::{Action, Behavior, Context},
@@ -47,6 +47,8 @@ impl Behavior for PanicDefense {
     }
 
     fn execute(&mut self, ctx: &mut Context) -> Action {
+        ctx.eeg.track(Event::PanicDefense);
+
         return_some!(self.same_ball_trajectory.execute(ctx));
 
         if !GetToFlatGround::on_flat_ground(ctx.me()) {

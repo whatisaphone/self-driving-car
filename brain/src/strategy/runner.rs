@@ -5,8 +5,6 @@ use crate::{
 use nameof::name_of_type;
 use rlbot;
 
-pub const BASELINE: &str = "baseline:";
-
 pub struct Runner {
     strategy: Box<Strategy>,
     current: Option<Box<Behavior>>,
@@ -83,8 +81,7 @@ impl Runner {
         if self.current.is_none() {
             self.current = Some(self.strategy.baseline(ctx));
             ctx.eeg.log(format!(
-                "{} {}",
-                BASELINE,
+                "baseline: {}",
                 self.current.as_ref().unwrap().name()
             ));
         }
