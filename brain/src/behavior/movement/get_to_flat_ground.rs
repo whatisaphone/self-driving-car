@@ -178,8 +178,7 @@ fn face_the_ball(ctx: &mut Context) -> Vector2<f32> {
     let ball_loc = ctx
         .scenario
         .ball_prediction()
-        .at_time(0.5)
-        .unwrap()
+        .at_time_or_last(0.5)
         .loc
         .to_2d();
     let target_loc = avoid_goal_wall_waypoint(&start, ball_loc).unwrap_or(ball_loc);

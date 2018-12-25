@@ -33,7 +33,7 @@ impl RoutePlanError {
                 )))
             }
             RoutePlanError::UnknownIntercept => {
-                let target_loc = ctx.scenario.ball_prediction().iter().last().unwrap().loc;
+                let target_loc = ctx.scenario.ball_prediction().last().loc;
                 let wander = DriveTowards::new(target_loc.to_2d());
                 Some(Box::new(TimeLimit::new(1.0, wander)))
             }
@@ -42,7 +42,7 @@ impl RoutePlanError {
                     return Some(b);
                 }
 
-                let ball_loc = ctx.scenario.ball_prediction().at_time(2.5).unwrap().loc;
+                let ball_loc = ctx.scenario.ball_prediction().at_time_or_last(2.5).loc;
                 Some(Box::new(
                     ResetBehindBall::behind_loc(ball_loc.to_2d()).never_recover(true),
                 ))
@@ -53,7 +53,7 @@ impl RoutePlanError {
                 {
                     ctx.eeg
                         .log("[MustBeFacingTarget] we gotta get things moving!");
-                    let ball_loc = ctx.scenario.ball_prediction().at_time(2.5).unwrap().loc;
+                    let ball_loc = ctx.scenario.ball_prediction().at_time_or_last(2.5).loc;
                     return Some(Box::new(
                         ResetBehindBall::behind_loc(ball_loc.to_2d()).never_recover(true),
                     ));
@@ -68,7 +68,7 @@ impl RoutePlanError {
 /// Check if the ball is roughly in front of us and we can easily just smack it
 /// for free.
 fn check_easy_flip_recover(ctx: &mut Context) -> Option<Box<Behavior>> {
-    let ball = ctx.scenario.ball_prediction().at_time(0.5).unwrap();
+    let ball = ctx.scenario.ball_prediction().at_time_or_last(0.5);
     let me_loc = ctx.me().Physics.loc_2d();
     let me_forward = ctx.me().Physics.forward_axis_2d();
 

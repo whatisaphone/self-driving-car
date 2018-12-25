@@ -90,6 +90,10 @@ impl BallTrajectory {
         }
         Some(&self.frames[i])
     }
+
+    pub fn at_time_or_last(&self, t: f32) -> &BallFrame {
+        self.at_time(t).unwrap_or_else(|| self.last())
+    }
 }
 
 impl<'a> IntoIterator for &'a BallTrajectory {

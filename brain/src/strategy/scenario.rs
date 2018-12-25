@@ -102,7 +102,7 @@ impl<'a> Scenario<'a> {
         *self.push_wall.borrow_with(|| {
             let intercept_loc = match self.me_intercept() {
                 Some(intercept) => intercept.ball_loc,
-                None => self.ball_prediction().iter().last().unwrap().loc,
+                None => self.ball_prediction().last().loc,
             };
             let me_loc = self.game.me().Physics.loc();
             let point = WallRayCalculator::calculate(me_loc.to_2d(), intercept_loc.to_2d());
@@ -185,9 +185,7 @@ fn simulate_ball_blitz(
         return None;
     });
     let penalty = blitz_penalty(car, &naive_result);
-    let ball = ball_prediction
-        .at_time(naive_result.t + penalty)
-        .unwrap_or_else(|| ball_prediction.last());
+    let ball = ball_prediction.at_time_or_last(naive_result.t + penalty);
     Some(NaiveIntercept {
         time: ball.t - ball_prediction.start().t,
         ball_loc: ball.loc,

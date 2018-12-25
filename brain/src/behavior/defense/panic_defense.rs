@@ -167,12 +167,8 @@ fn calc_aim_hint(ctx: &mut Context) -> Point2<f32> {
     // When we reach goal, which half of the field will the ball be on?
     let own_goal = ctx.game.own_goal().center_2d;
     let time = rough_time_drive_to_loc(ctx.me(), own_goal);
-    let sim_ball = ctx.scenario.ball_prediction().at_time(time);
-    let sim_ball_loc = match sim_ball {
-        Some(b) => b.loc,
-        None => ctx.packet.GameBall.Physics.loc(),
-    };
-    Point2::new(sim_ball_loc.x.signum() * 2000.0, own_goal.y)
+    let ball = ctx.scenario.ball_prediction().at_time_or_last(time).loc;
+    Point2::new(ball.x.signum() * 2000.0, own_goal.y)
 }
 
 #[cfg(test)]

@@ -64,8 +64,7 @@ fn reset_behind_ball(ctx: &mut Context) -> Option<Box<Behavior>> {
     let ball = ctx
         .scenario
         .ball_prediction()
-        .at_time(me_intercept.time + 2.5)
-        .unwrap_or_else(|| ctx.scenario.ball_prediction().last());
+        .at_time_or_last(me_intercept.time + 2.5);
     Some(Box::new(
         ResetBehindBall::behind_loc(ball.loc.to_2d()).distance(2000.0),
     ))

@@ -138,8 +138,7 @@ fn readjust_for_shot(ctx: &mut Context, intercept_time: f32) -> Option<Action> {
     let ball_loc = ctx
         .scenario
         .ball_prediction()
-        .at_time(intercept_time + 2.5)
-        .unwrap_or_else(|| ctx.scenario.ball_prediction().last())
+        .at_time_or_last(intercept_time + 2.5)
         .loc
         .to_2d();
 
@@ -170,7 +169,7 @@ fn get_boost(ctx: &mut Context) -> Option<Box<Behavior>> {
             ctx.scenario.enemy_shoot_score_seconds(),
         ));
 
-        let future_loc = ctx.scenario.ball_prediction().at_time(3.0).unwrap().loc;
+        let future_loc = ctx.scenario.ball_prediction().at_time_or_last(3.0).loc;
         let behind_ball = Vector2::new(0.0, ctx.game.own_goal().center_2d.y.signum() * 2500.0);
         let opponent_hit = telepathy::predict_enemy_hit_direction(ctx)
             .map(|dir| dir.unwrap() * 2500.0)

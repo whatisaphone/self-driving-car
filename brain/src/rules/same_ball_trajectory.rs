@@ -29,7 +29,7 @@ impl SameBallTrajectory {
     }
 
     fn update_snapshot(&mut self, ctx: &mut Context) {
-        let frame = ctx.scenario.ball_prediction().at_time(0.1).unwrap();
+        let frame = ctx.scenario.ball_prediction().at_time_or_last(0.1);
         self.prediction = Some(Prediction {
             t: ctx.packet.GameInfo.TimeSeconds + frame.t,
             loc: frame.loc,
