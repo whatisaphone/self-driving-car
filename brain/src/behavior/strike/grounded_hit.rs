@@ -4,12 +4,11 @@ use crate::{
         movement::{simple_steer_towards, Dodge, JumpAndTurn},
         strike::BounceShot,
     },
-    eeg::Drawable,
+    eeg::{Drawable, EEG},
     predict::{intercept::NaiveIntercept, naive_ground_intercept},
     routing::recover::{IsSkidding, NotOnFlatGround},
     rules::SameBallTrajectory,
     strategy::{Action, Behavior, Context, Game, Scenario},
-    EEG,
 };
 use common::{physics, prelude::*, rl};
 use derive_new::new;

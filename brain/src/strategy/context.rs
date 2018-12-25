@@ -1,7 +1,7 @@
 use crate::{
+    eeg::EEG,
     plan::ball::BallPredictor,
     strategy::{game::Game, scenario::Scenario, Team},
-    EEG,
 };
 use rlbot;
 
