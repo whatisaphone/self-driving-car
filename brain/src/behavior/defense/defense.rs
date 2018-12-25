@@ -296,17 +296,19 @@ mod integration_tests {
 
     #[test]
     fn bouncing_save() {
-        let test = TestRunner::start0(TestScenario {
-            ball_loc: Vector3::new(-3143.9788, -241.96017, 1023.1816),
-            ball_vel: Vector3::new(717.56323, -1200.3536, 331.91443),
-            car_loc: Vector3::new(-4009.9998, -465.8022, 86.914),
-            car_rot: Rotation3::from_unreal_angles(-0.629795, -0.7865487, 0.5246214),
-            car_vel: Vector3::new(982.8443, -1059.1908, -935.80194),
-            ..Default::default()
-        });
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(-3143.9788, -241.96017, 1023.1816),
+                ball_vel: Vector3::new(717.56323, -1200.3536, 331.91443),
+                car_loc: Vector3::new(-4009.9998, -465.8022, 86.914),
+                car_rot: Rotation3::from_unreal_angles(-0.629795, -0.7865487, 0.5246214),
+                car_vel: Vector3::new(982.8443, -1059.1908, -935.80194),
+                ..Default::default()
+            })
+            .behavior(Runner::soccar())
+            .run();
 
         let start_time = test.sniff_packet().GameInfo.TimeSeconds;
-        test.set_behavior(Runner::soccar());
 
         let mut max_z = 0.0_f32;
         loop {
@@ -338,17 +340,19 @@ mod integration_tests {
 
     #[test]
     fn redirect_away_from_goal() {
-        let test = TestRunner::start(Runner::soccar(), TestScenario {
-            ball_loc: Vector3::new(-2667.985, 779.3049, 186.92154),
-            ball_vel: Vector3::new(760.02606, -1394.5569, -368.39642),
-            car_loc: Vector3::new(-2920.1282, 1346.1251, 17.01),
-            car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.1758921, 0.0),
-            car_vel: Vector3::new(688.0767, -1651.0865, 8.181303),
-            ..Default::default()
-        });
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(-2667.985, 779.3049, 186.92154),
+                ball_vel: Vector3::new(760.02606, -1394.5569, -368.39642),
+                car_loc: Vector3::new(-2920.1282, 1346.1251, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.1758921, 0.0),
+                car_vel: Vector3::new(688.0767, -1651.0865, 8.181303),
+                ..Default::default()
+            })
+            .behavior(Runner::soccar())
+            .run_for_millis(100);
 
         // This result is just *okay*
-        test.sleep_millis(100);
         test.examine_events(|events| {
             assert!(events.contains(&Event::Defense));
             assert!(events.contains(&Event::HitToOwnCorner));
@@ -360,17 +364,19 @@ mod integration_tests {
     #[test]
     #[ignore] // TODO
     fn last_second_save() {
-        let test = TestRunner::start(Runner::soccar(), TestScenario {
-            ball_loc: Vector3::new(-1150.811, -1606.0569, 102.36157),
-            ball_vel: Vector3::new(484.87906, -1624.8169, 32.10115),
-            car_loc: Vector3::new(-1596.7955, -1039.2034, 17.0),
-            car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.4007162, 0.0000958738),
-            car_vel: Vector3::new(242.38637, -1733.6719, 8.41),
-            boost: 0,
-            ..Default::default()
-        });
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(-1150.811, -1606.0569, 102.36157),
+                ball_vel: Vector3::new(484.87906, -1624.8169, 32.10115),
+                car_loc: Vector3::new(-1596.7955, -1039.2034, 17.0),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.4007162, 0.0000958738),
+                car_vel: Vector3::new(242.38637, -1733.6719, 8.41),
+                boost: 0,
+                ..Default::default()
+            })
+            .behavior(Runner::soccar())
+            .run_for_millis(3000);
 
-        test.sleep_millis(3000);
         assert!(!test.enemy_has_scored());
     }
 
@@ -443,18 +449,17 @@ mod integration_tests {
     #[test]
     #[ignore] // TODO
     fn retreating_push_to_corner_from_awkward_side() {
-        let test = TestRunner::start0(TestScenario {
-            ball_loc: Vector3::new(1948.3385, 1729.5826, 97.89405),
-            ball_vel: Vector3::new(185.58005, -1414.3043, -5.051092),
-            car_loc: Vector3::new(896.22095, 1962.7969, 15.68419),
-            car_rot: Rotation3::from_unreal_angles(-0.0131347105, -2.0592732, -0.010450244),
-            car_vel: Vector3::new(-660.1856, -1449.2916, -3.7354965),
-            ..Default::default()
-        });
-
-        test.set_behavior(Defense::new());
-
-        test.sleep_millis(2000);
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(1948.3385, 1729.5826, 97.89405),
+                ball_vel: Vector3::new(185.58005, -1414.3043, -5.051092),
+                car_loc: Vector3::new(896.22095, 1962.7969, 15.68419),
+                car_rot: Rotation3::from_unreal_angles(-0.0131347105, -2.0592732, -0.010450244),
+                car_vel: Vector3::new(-660.1856, -1449.2916, -3.7354965),
+                ..Default::default()
+            })
+            .behavior(Defense::new())
+            .run_for_millis(2000);
 
         test.examine_events(|events| {
             assert!(events.contains(&Event::HitToOwnCorner));
@@ -496,16 +501,18 @@ mod integration_tests {
     #[test]
     #[ignore(note = "The great bankruptcy of 2018")]
     fn push_from_corner_to_corner() {
-        let test = TestRunner::start(HitToOwnCorner::new(), TestScenario {
-            ball_loc: Vector3::new(1620.9868, -4204.8145, 93.14),
-            ball_vel: Vector3::new(-105.58675, 298.33023, 0.0),
-            car_loc: Vector3::new(3361.587, -4268.589, 16.258373),
-            car_rot: Rotation3::from_unreal_angles(-0.0066152923, 1.5453898, -0.005752428),
-            car_vel: Vector3::new(89.86856, 1188.811, 7.4339933),
-            ..Default::default()
-        });
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(1620.9868, -4204.8145, 93.14),
+                ball_vel: Vector3::new(-105.58675, 298.33023, 0.0),
+                car_loc: Vector3::new(3361.587, -4268.589, 16.258373),
+                car_rot: Rotation3::from_unreal_angles(-0.0066152923, 1.5453898, -0.005752428),
+                car_vel: Vector3::new(89.86856, 1188.811, 7.4339933),
+                ..Default::default()
+            })
+            .behavior(HitToOwnCorner::new())
+            .run_for_millis(2000);
 
-        test.sleep_millis(2000);
         test.examine_events(|events| {
             assert!(events.contains(&Event::HitToOwnCorner));
             assert!(events.contains(&Event::PushFromRightToLeft));
@@ -518,15 +525,18 @@ mod integration_tests {
     #[test]
     #[ignore] // TODO
     fn push_from_corner_to_corner_2() {
-        let test = TestRunner::start(Runner::soccar(), TestScenario {
-            ball_loc: Vector3::new(2517.809, -4768.475, 93.13),
-            ball_vel: Vector3::new(-318.6226, 490.17892, 0.0),
-            car_loc: Vector3::new(3742.2703, -3277.4558, 16.954643),
-            car_rot: Rotation3::from_unreal_angles(-0.009108011, 2.528288, -0.0015339808),
-            car_vel: Vector3::new(-462.4023, 288.65112, 9.278907),
-            boost: 10,
-            ..Default::default()
-        });
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(2517.809, -4768.475, 93.13),
+                ball_vel: Vector3::new(-318.6226, 490.17892, 0.0),
+                car_loc: Vector3::new(3742.2703, -3277.4558, 16.954643),
+                car_rot: Rotation3::from_unreal_angles(-0.009108011, 2.528288, -0.0015339808),
+                car_vel: Vector3::new(-462.4023, 288.65112, 9.278907),
+                boost: 10,
+                ..Default::default()
+            })
+            .behavior(Runner::soccar())
+            .run_for_millis(2000);
 
         test.sleep_millis(2000);
         test.examine_events(|events| {
@@ -565,17 +575,19 @@ mod integration_tests {
     #[test]
     #[ignore] // TODO
     fn slow_rolling_save() {
-        let test = TestRunner::start(Runner::soccar(), TestScenario {
-            ball_loc: Vector3::new(1455.9731, -4179.0796, 93.15),
-            ball_vel: Vector3::new(-474.48724, -247.0518, 0.0),
-            car_loc: Vector3::new(2522.638, -708.08484, 17.01),
-            car_rot: Rotation3::from_unreal_angles(-0.00958738, 2.6835077, 0.0),
-            car_vel: Vector3::new(-1433.151, 800.56586, 8.33),
-            boost: 0,
-            ..Default::default()
-        });
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(1455.9731, -4179.0796, 93.15),
+                ball_vel: Vector3::new(-474.48724, -247.0518, 0.0),
+                car_loc: Vector3::new(2522.638, -708.08484, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, 2.6835077, 0.0),
+                car_vel: Vector3::new(-1433.151, 800.56586, 8.33),
+                boost: 0,
+                ..Default::default()
+            })
+            .behavior(Runner::soccar())
+            .run_for_millis(5000);
 
-        test.sleep_millis(5000);
         assert!(!test.enemy_has_scored());
         let packet = test.sniff_packet();
         assert!(packet.GameBall.Physics.vel().x < -1000.0);
@@ -583,16 +595,18 @@ mod integration_tests {
 
     #[test]
     fn slow_retreating_save() {
-        let test = TestRunner::start(Runner::soccar(), TestScenario {
-            ball_loc: Vector3::new(1446.3031, -2056.4917, 213.57251),
-            ball_vel: Vector3::new(-1024.0333, -1593.1566, -244.15135),
-            car_loc: Vector3::new(314.3022, -1980.4884, 17.01),
-            car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.7653242, 0.0),
-            car_vel: Vector3::new(-268.87683, -1383.9724, 8.309999),
-            ..Default::default()
-        });
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(1446.3031, -2056.4917, 213.57251),
+                ball_vel: Vector3::new(-1024.0333, -1593.1566, -244.15135),
+                car_loc: Vector3::new(314.3022, -1980.4884, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.7653242, 0.0),
+                car_vel: Vector3::new(-268.87683, -1383.9724, 8.309999),
+                ..Default::default()
+            })
+            .behavior(Runner::soccar())
+            .run_for_millis(2000);
 
-        test.sleep_millis(2000);
         assert!(!test.enemy_has_scored());
         let packet = test.sniff_packet();
         assert!(packet.GameBall.Physics.loc().x >= 1000.0);
@@ -601,16 +615,18 @@ mod integration_tests {
 
     #[test]
     fn fast_retreating_save() {
-        let test = TestRunner::start(Runner::soccar(), TestScenario {
-            ball_loc: Vector3::new(63.619453, -336.2556, 93.03),
-            ball_vel: Vector3::new(-189.17311, -1918.067, 0.0),
-            car_loc: Vector3::new(-103.64991, 955.411, 16.99),
-            car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.5927514, 0.0),
-            car_vel: Vector3::new(-57.26778, -2296.9263, 8.53),
-            ..Default::default()
-        });
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Vector3::new(63.619453, -336.2556, 93.03),
+                ball_vel: Vector3::new(-189.17311, -1918.067, 0.0),
+                car_loc: Vector3::new(-103.64991, 955.411, 16.99),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.5927514, 0.0),
+                car_vel: Vector3::new(-57.26778, -2296.9263, 8.53),
+                ..Default::default()
+            })
+            .behavior(Runner::soccar())
+            .run_for_millis(4000);
 
-        test.sleep_millis(4000);
         assert!(!test.enemy_has_scored());
         let packet = test.sniff_packet();
         assert!(packet.GameBall.Physics.loc().x < 1000.0);
@@ -642,8 +658,7 @@ mod integration_tests {
             })
             .starting_boost(0.0)
             .behavior(Runner::soccar())
-            .run();
-        test.sleep_millis(6000);
+            .run_for_millis(6000);
 
         let packet = test.sniff_packet();
         assert!(packet.GameBall.Physics.Location.X < -1000.0);
