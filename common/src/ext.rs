@@ -251,7 +251,6 @@ impl<N: Real> ExtendUnitVector2<N> for Unit<Vector2<N>> {
 
 pub trait ExtendRLBot {
     fn get_field_info(&self) -> Result<rlbot::ffi::FieldInfo, Box<Error>>;
-    fn wait_for_match_start(&self) -> Result<(), Box<Error>>;
 }
 
 impl ExtendRLBot for rlbot::RLBot {
@@ -259,22 +258,5 @@ impl ExtendRLBot for rlbot::RLBot {
         let mut field_info = unsafe { mem::uninitialized() };
         self.update_field_info(&mut field_info)?;
         Ok(field_info)
-    }
-
-    /// Copy-pasted from unreleased rlbot 0.1.1.
-    fn wait_for_match_start(&self) -> Result<(), Box<Error>> {
-        let mut packets = self.packeteer();
-        let mut count = 0;
-
-        // Sometimes we get a few stray ticks from a previous game while the next game
-        // is loading. Wait for RoundActive to stabilize before trusting it.
-        while count < 5 {
-            if packets.next()?.GameInfo.RoundActive {
-                count += 1;
-            } else {
-                count = 0;
-            }
-        }
-        Ok(())
     }
 }

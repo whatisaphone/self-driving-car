@@ -18,7 +18,6 @@ pub fn main() -> Result<(), Box<Error>> {
     rlbot.update_player_input(Default::default(), 0)?;
 
     start_match(&rlbot)?;
-    wait_for_match_start(&rlbot)?;
 
     run_scenario(&rlbot, scenarios::Coast::new())?;
 
@@ -69,21 +68,7 @@ fn start_match(rlbot: &rlbot::RLBot) -> Result<(), Box<Error>> {
     match_settings.PlayerConfiguration[0].set_name("Chell");
 
     rlbot.start_match(match_settings)?;
-    Ok(())
-}
-
-fn wait_for_match_start(rlbot: &rlbot::RLBot) -> Result<(), Box<Error>> {
-    let mut packets = rlbot.packeteer();
-    let mut pings = 0;
-
-    while pings < 5 {
-        if packets.next()?.GameInfo.RoundActive {
-            pings += 1;
-        } else {
-            pings = 0;
-        }
-    }
-    Ok(())
+    rlbot.wait_for_match_start()
 }
 
 fn stabilize_scenario(rlbot: &rlbot::RLBot, desired_game_state: rlbot::state::DesiredGameState) {
