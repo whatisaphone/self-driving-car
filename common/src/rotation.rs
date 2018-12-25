@@ -1,23 +1,8 @@
 use crate::prelude::*;
-use nalgebra::{Matrix3, Rotation3, UnitQuaternion};
+use nalgebra::UnitQuaternion;
 
 pub fn convert_quat_to_pyr(quat: &UnitQuaternion<f32>) -> (f32, f32, f32) {
-    clamp_rotation_matrix(quat.to_rotation_matrix()).to_unreal_angles()
-}
-
-/// Work around https://github.com/rustsim/nalgebra/issues/494
-fn clamp_rotation_matrix(r: Rotation3<f32>) -> Rotation3<f32> {
-    Rotation3::from_matrix_unchecked(Matrix3::new(
-        r[(0, 0)].max(-1.0).min(1.0),
-        r[(0, 1)].max(-1.0).min(1.0),
-        r[(0, 2)].max(-1.0).min(1.0),
-        r[(1, 0)].max(-1.0).min(1.0),
-        r[(1, 1)].max(-1.0).min(1.0),
-        r[(1, 2)].max(-1.0).min(1.0),
-        r[(2, 0)].max(-1.0).min(1.0),
-        r[(2, 1)].max(-1.0).min(1.0),
-        r[(2, 2)].max(-1.0).min(1.0),
-    ))
+    quat.to_rotation_matrix().to_unreal_angles()
 }
 
 /// I am really not confident about these angle conversions, so let's test as
