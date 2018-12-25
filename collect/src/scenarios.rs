@@ -391,7 +391,7 @@ impl Scenario for Dodge {
                     ..Default::default()
                 };
                 rlbot.update_player_input(input, 0)?;
-                return Ok(ScenarioStepResult::Write);
+                Ok(ScenarioStepResult::Write)
             }
             DodgePhase::Jump(start) => {
                 if time - start >= 0.05 {
@@ -404,7 +404,7 @@ impl Scenario for Dodge {
                     ..Default::default()
                 };
                 rlbot.update_player_input(input, 0)?;
-                return Ok(ScenarioStepResult::Write);
+                Ok(ScenarioStepResult::Write)
             }
             DodgePhase::Wait(start) => {
                 if time - start >= 0.05 {
@@ -414,7 +414,7 @@ impl Scenario for Dodge {
 
                 let input = Default::default();
                 rlbot.update_player_input(input, 0)?;
-                return Ok(ScenarioStepResult::Write);
+                Ok(ScenarioStepResult::Write)
             }
             DodgePhase::Dodge(start) => {
                 if time - start >= 0.05 {
@@ -428,7 +428,7 @@ impl Scenario for Dodge {
                     ..Default::default()
                 };
                 rlbot.update_player_input(input, 0)?;
-                return Ok(ScenarioStepResult::Write);
+                Ok(ScenarioStepResult::Write)
             }
             DodgePhase::Land(start) => {
                 if time - start >= 2.0 {
@@ -437,7 +437,7 @@ impl Scenario for Dodge {
 
                 let input = Default::default();
                 rlbot.update_player_input(input, 0)?;
-                return Ok(ScenarioStepResult::Write);
+                Ok(ScenarioStepResult::Write)
             }
         }
     }

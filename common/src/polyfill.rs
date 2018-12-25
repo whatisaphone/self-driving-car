@@ -9,6 +9,6 @@ pub trait ExtendDuration {
 
 impl ExtendDuration for Duration {
     fn as_millis_polyfill(&self) -> u128 {
-        self.as_secs() as u128 * MILLIS_PER_SEC as u128 + self.subsec_millis() as u128
+        u128::from(self.as_secs()) * u128::from(MILLIS_PER_SEC) + u128::from(self.subsec_millis())
     }
 }

@@ -39,7 +39,7 @@ impl Behavior for GroundAccelToLoc {
         let time_remaining = self.target_time - ctx.packet.GameInfo.TimeSeconds;
 
         ctx.eeg.draw(Drawable::ghost_car_ground(
-            Point2::from(self.target_loc),
+            self.target_loc,
             me.Physics.rot(),
         ));
         ctx.eeg.draw(Drawable::print(
@@ -88,6 +88,7 @@ impl Behavior for GroundAccelToLoc {
 
 /// Starting at `origin`, if we go pedal to the metal for `time` seconds, will
 /// we have traveled `distance`?
+#[allow(clippy::if_same_then_else)]
 fn estimate_approach(car: &rlbot::ffi::PlayerInfo, distance: f32, time: f32) -> (f32, bool) {
     let would_reach = |throttle, boost| {
         let lag_comp = 1.5 / 120.0; // Start a few ticks later to compensate for input lag.

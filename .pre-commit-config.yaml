@@ -68,6 +68,13 @@ repos:
       entry: sh -c '( cd simulate && cargo check --all-targets --features strict )'
       pass_filenames: false
 
+    - id: clippy
+      name: clippy
+      language: system
+      files: '[.]rs$'
+      entry: cargo +nightly clippy -- -D clippy::all
+      pass_filenames: false
+
     - id: test
       name: test
       language: system

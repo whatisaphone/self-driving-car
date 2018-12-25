@@ -1,4 +1,5 @@
 #![cfg_attr(feature = "strict", deny(warnings))]
+#![allow(clippy::unreadable_literal)]
 
 pub use crate::{
     car::{Car, CarSimulateError},

@@ -21,6 +21,7 @@ pub struct EEG {
 }
 
 impl EEG {
+    #[allow(clippy::new_without_default)]
     pub fn new() -> EEG {
         let (tx, rx) = crossbeam_channel::unbounded();
         let join_handle = thread::spawn(|| thread(rx));
@@ -80,7 +81,7 @@ impl EEG {
         self.tx
             .as_ref()
             .unwrap()
-            .send(ThreadMessage::Draw(packet.clone(), drawables));
+            .send(ThreadMessage::Draw(*packet, drawables));
     }
 }
 
@@ -184,12 +185,7 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
         window.draw_2d(&e, |_c, g| clear(color::BLACK, g));
     }
 
-    loop {
-        let event = match window.next() {
-            Some(e) => e,
-            None => break,
-        };
-
+    while let Some(event) = window.next() {
         let mut message = rx.recv();
         // Only process the latest message
         while let Some(m) = rx.try_recv() {
@@ -214,10 +210,10 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
                     rectangle(
                         color::PITCH,
                         rectangle::rectangle_by_corners(
-                            -rl::FIELD_MAX_X as f64,
-                            -rl::FIELD_MAX_Y as f64,
-                            rl::FIELD_MAX_X as f64,
-                            rl::FIELD_MAX_Y as f64,
+                            f64::from(-rl::FIELD_MAX_X),
+                            f64::from(-rl::FIELD_MAX_Y),
+                            f64::from(rl::FIELD_MAX_X),
+                            f64::from(rl::FIELD_MAX_Y),
                         ),
                         transform,
                         g,
@@ -225,10 +221,10 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
                     rectangle(
                         color::BLUE_DARK,
                         rectangle::rectangle_by_corners(
-                            -rl::GOALPOST_X as f64,
-                            -rl::FIELD_MAX_Y as f64,
-                            rl::GOALPOST_X as f64,
-                            -rl::FIELD_MAX_Y as f64 - GOAL_DEPTH,
+                            f64::from(-rl::GOALPOST_X),
+                            f64::from(-rl::FIELD_MAX_Y),
+                            f64::from(rl::GOALPOST_X),
+                            f64::from(-rl::FIELD_MAX_Y) - GOAL_DEPTH,
                         ),
                         transform,
                         g,
@@ -236,10 +232,10 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
                     rectangle(
                         color::ORANGE_DARK,
                         rectangle::rectangle_by_corners(
-                            -rl::GOALPOST_X as f64,
-                            rl::FIELD_MAX_Y as f64,
-                            rl::GOALPOST_X as f64,
-                            rl::FIELD_MAX_Y as f64 + GOAL_DEPTH,
+                            f64::from(-rl::GOALPOST_X),
+                            f64::from(rl::FIELD_MAX_Y),
+                            f64::from(rl::GOALPOST_X),
+                            f64::from(rl::FIELD_MAX_Y) + GOAL_DEPTH,
                         ),
                         transform,
                         g,
@@ -256,7 +252,7 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
                         ellipse(
                             color::YELLOW,
                             ellipse::circle(0.0, 0.0, 40.0),
-                            transform.trans(boost.x as f64, boost.y as f64),
+                            transform.trans(boost.x, boost.y),
                             g,
                         );
                     }
@@ -266,8 +262,11 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
                             color::for_team(Team::from_ffi(car.Team)),
                             car_rect,
                             transform
-                                .trans(car.Physics.Location.X as f64, car.Physics.Location.Y as f64)
-                                .rot_rad(car.Physics.Rotation.Yaw as f64),
+                                .trans(
+                                    f64::from(car.Physics.Location.X),
+                                    f64::from(car.Physics.Location.Y),
+                                )
+                                .rot_rad(f64::from(car.Physics.Rotation.Yaw)),
                             g,
                         );
                     }
@@ -276,8 +275,8 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
                         color::WHITE,
                         ball_rect,
                         transform.trans(
-                            packet.GameBall.Physics.Location.X as f64,
-                            packet.GameBall.Physics.Location.Y as f64,
+                            f64::from(packet.GameBall.Physics.Location.X),
+                            f64::from(packet.GameBall.Physics.Location.Y),
                         ),
                         g,
                     );
@@ -290,7 +289,7 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
                                 Ellipse::new_border(color, OUTLINE_RADIUS).draw(
                                     ball_rect,
                                     &Default::default(),
-                                    transform.trans(loc.x as f64, loc.y as f64),
+                                    transform.trans(f64::from(loc.x), f64::from(loc.y)),
                                     g,
                                 );
                             }
@@ -299,8 +298,8 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
                                     car_rect,
                                     &Default::default(),
                                     transform
-                                        .trans(loc.x as f64, loc.y as f64)
-                                        .rot_rad(rot.yaw() as f64),
+                                        .trans(f64::from(loc.x), f64::from(loc.y))
+                                        .rot_rad(f64::from(rot.yaw())),
                                     g,
                                 );
                             }
@@ -309,10 +308,10 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
                                     color::YELLOW,
                                     OUTLINE_RADIUS,
                                     [
-                                        loc.x as f64 - 100.0,
-                                        loc.y as f64 - 100.0,
-                                        loc.x as f64 + 100.0,
-                                        loc.y as f64 + 100.0,
+                                        f64::from(loc.x) - 100.0,
+                                        f64::from(loc.y) - 100.0,
+                                        f64::from(loc.x) + 100.0,
+                                        f64::from(loc.y) + 100.0,
                                     ],
                                     transform,
                                     g,
@@ -321,30 +320,34 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
                                     color::YELLOW,
                                     OUTLINE_RADIUS,
                                     [
-                                        loc.x as f64 - 100.0,
-                                        loc.y as f64 + 100.0,
-                                        loc.x as f64 + 100.0,
-                                        loc.y as f64 - 100.0,
+                                        f64::from(loc.x) - 100.0,
+                                        f64::from(loc.y) + 100.0,
+                                        f64::from(loc.x) + 100.0,
+                                        f64::from(loc.y) - 100.0,
                                     ],
                                     transform,
                                     g,
                                 );
                             }
                             Drawable::Line(start, end, color) => {
-                                let pts =
-                                    [start.x as f64, start.y as f64, end.x as f64, end.y as f64];
+                                let pts = [
+                                    f64::from(start.x),
+                                    f64::from(start.y),
+                                    f64::from(end.x),
+                                    f64::from(end.y),
+                                ];
                                 line(color, OUTLINE_RADIUS, pts, transform, g);
                             }
                             Drawable::Arc(center, radius, start, end, color) => {
                                 circle_arc(
                                     color,
                                     OUTLINE_RADIUS,
-                                    start as f64,
-                                    end as f64,
+                                    f64::from(start),
+                                    f64::from(end),
                                     rectangle::centered_square(
-                                        center.x as f64,
-                                        center.y as f64,
-                                        radius as f64,
+                                        f64::from(center.x),
+                                        f64::from(center.y),
+                                        f64::from(radius),
                                     ),
                                     transform,
                                     g,

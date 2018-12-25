@@ -115,12 +115,8 @@ pub struct IsSkidding;
 
 impl IsSkidding {
     pub fn evaluate(&mut self, state: &CarState) -> bool {
-        if state.vel.norm() >= 100.0 {
-            if state.vel.normalize().dot(&car_forward_axis(state.rot)) < SKIDDING_THRESHOLD {
-                return true;
-            }
-        }
-        false
+        state.vel.norm() >= 100.0
+            && state.vel.normalize().dot(&car_forward_axis(state.rot)) < SKIDDING_THRESHOLD
     }
 }
 
@@ -143,13 +139,7 @@ impl Predicate for IsSkidding {
     }
 
     fn evaluate(&mut self, ctx: &mut Context) -> bool {
-        let me = ctx.me();
-        if me.Physics.vel().norm() >= 100.0 {
-            if me.Physics.vel().normalize().dot(&me.Physics.forward_axis()) < SKIDDING_THRESHOLD {
-                return true;
-            }
-        }
-        false
+        self.evaluate(&ctx.me().into())
     }
 }
 

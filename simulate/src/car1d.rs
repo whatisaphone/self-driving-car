@@ -1,3 +1,5 @@
+#![allow(clippy::float_cmp)]
+
 use crate::math::{linear_interpolate_find_index, linear_interpolate_use_index};
 use common::rl;
 use oven::data;
@@ -11,14 +13,20 @@ pub struct Car1D {
     boost: f32,
 }
 
-impl Car1D {
-    pub fn new() -> Self {
+impl Default for Car1D {
+    fn default() -> Self {
         Self {
             time: 0.0,
             distance: 0.0,
             speed: 0.0,
             boost: 100.0,
         }
+    }
+}
+
+impl Car1D {
+    pub fn new() -> Self {
+        Self::default()
     }
 
     pub fn with_speed(mut self, speed: f32) -> Self {
@@ -226,6 +234,7 @@ impl Car1D {
         self.calc_constant_speed_by_time(dt, boost)
     }
 
+    #[allow(clippy::match_bool)]
     fn lookup_advance_by_time(
         dt: f32,
         old_speed: f32,
@@ -272,6 +281,7 @@ impl Car1D {
         (new_time - old_time, new_dist - old_dist, new_speed)
     }
 
+    #[allow(clippy::match_bool)]
     fn lookup_advance_by_distance(
         distance: f32,
         old_speed: f32,

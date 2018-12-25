@@ -142,14 +142,14 @@ impl Team {
         }
     }
 
-    pub fn to_ffi(&self) -> u8 {
-        match *self {
+    pub fn to_ffi(self) -> u8 {
+        match self {
             Team::Blue => 0,
             Team::Orange => 1,
         }
     }
 
-    fn opposing(&self) -> Self {
+    fn opposing(self) -> Self {
         match self {
             Team::Blue => Team::Orange,
             Team::Orange => Team::Blue,
@@ -246,7 +246,7 @@ lazy_static! {
         // Source:
         // https://www.youtube.com/watch?v=4OBMq9faWzg
         // https://1drv.ms/x/s!Av9du64LKhjw8Xe7tHDJA2Q6FjsL
-        half_size: Vector3::new(59.003689, 42.099705, 18.079536),
+        half_size: Vector3::new(59.00369, 42.099705, 18.079536),
         pivot_offset: Vector3::new(13.87566, 0.0, 20.75499),
     };
 }

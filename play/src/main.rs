@@ -61,6 +61,7 @@ fn start_match(rlbot: &rlbot::RLBot) -> Result<(), Box<Error>> {
 }
 
 /// Keep running the given function until it doesn't panic.
+#[allow(clippy::redundant_closure)]
 fn deny_climate_change<R>(f: impl Fn() -> R) -> R {
     loop {
         let result = panic::catch_unwind(panic::AssertUnwindSafe(|| f()));

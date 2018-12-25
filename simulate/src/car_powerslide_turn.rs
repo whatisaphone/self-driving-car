@@ -1,3 +1,5 @@
+#![allow(clippy::float_cmp)]
+
 use common::{
     physics::{car_forward_axis_2d, CAR_LOCAL_FORWARD_AXIS_2D},
     prelude::*,

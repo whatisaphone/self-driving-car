@@ -63,7 +63,7 @@ impl Behavior for TryChoose {
             match behavior.execute(ctx) {
                 Action::Abort => continue,
                 Action::Return => continue,
-                action @ _ => {
+                action => {
                     self.chosen_index = Some(index);
                     ctx.eeg.log(format!("[TryChoose] Chose index {}", index));
                     return action;
@@ -72,6 +72,6 @@ impl Behavior for TryChoose {
         }
 
         ctx.eeg.log("[TryChoose] None suitable");
-        return Action::Abort;
+        Action::Abort
     }
 }

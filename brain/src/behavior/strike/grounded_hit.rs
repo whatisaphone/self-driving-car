@@ -115,7 +115,7 @@ where
                     "[GroundedHit] can't estimate approach: {:?}",
                     error,
                 ));
-                return Action::Abort;
+                Action::Abort
             }
         }
     }
@@ -229,6 +229,7 @@ where
         (target_loc, target_rot, target.dodge)
     }
 
+    #[allow(clippy::if_same_then_else)]
     fn estimate_approach(
         &mut self,
         ctx: &mut Context,

@@ -27,10 +27,10 @@ impl Behavior for TepidHit {
     }
 
     fn execute(&mut self, _ctx: &mut Context) -> Action {
-        return Action::call(chain!(Priority::Idle, [
+        Action::call(chain!(Priority::Idle, [
             FollowRoute::new(GroundIntercept::new()),
             GroundedHit::hit_towards(time_wasting_hit),
-        ]));
+        ]))
     }
 }
 
@@ -53,14 +53,11 @@ fn time_wasting_hit(ctx: &mut GroundedHitAimContext) -> Result<GroundedHitTarget
         feasible_hit_angle_away(ball_loc, me_loc, defense_avoid, PI / 6.0)
     };
 
-    let aim_loc = Point2::from(WallRayCalculator::calculate(ball_loc, aim_loc));
+    let aim_loc = WallRayCalculator::calculate(ball_loc, aim_loc);
 
-    match WallRayCalculator::wall_for_point(ctx.game, aim_loc) {
-        Wall::OwnGoal => {
-            ctx.eeg.log("[TepidHit] refusing to own goal");
-            return Err(());
-        }
-        _ => {}
+    if WallRayCalculator::wall_for_point(ctx.game, aim_loc) == Wall::OwnGoal {
+        ctx.eeg.log("[TepidHit] refusing to own goal");
+        return Err(());
     }
 
     Ok(GroundedHitTarget::new(

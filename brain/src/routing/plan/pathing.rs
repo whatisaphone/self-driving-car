@@ -32,6 +32,7 @@ pub fn avoid_plowing_into_goal_wall(
 /// Calculate whether driving straight to `target_loc` would intersect the goal
 /// wall. If so, return the waypoint we should drive to first to avoid
 /// embarrassing ourselves.
+#[allow(clippy::float_cmp)]
 pub fn avoid_goal_wall_waypoint(start: &CarState, target_loc: Point2<f32>) -> Option<Point2<f32>> {
     let margin = 125.0;
 

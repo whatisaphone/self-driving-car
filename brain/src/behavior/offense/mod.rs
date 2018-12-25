@@ -5,6 +5,7 @@ pub use self::{
 mod bounce_dribble;
 // mod carry_from_bounce;
 // mod corner_offense;
+#[allow(clippy::module_inception)]
 mod offense;
 mod regroup;
 mod reset_behind_ball;

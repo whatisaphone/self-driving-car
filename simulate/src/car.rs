@@ -18,6 +18,7 @@ pub enum CarSimulateError {
 }
 
 impl Car {
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Self {
             loc: Point3::origin(),

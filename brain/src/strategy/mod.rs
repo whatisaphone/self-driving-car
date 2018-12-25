@@ -17,4 +17,5 @@ pub mod null;
 mod runner;
 mod scenario;
 mod soccar;
+#[allow(clippy::module_inception)]
 mod strategy;

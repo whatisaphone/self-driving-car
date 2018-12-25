@@ -29,12 +29,7 @@ impl RecordingTick {
 
         let headers = r.headers().unwrap().clone();
         let num_players = (0..)
-            .skip_while(|i| {
-                headers
-                    .iter()
-                    .position(|h| h == format!("player{}_loc_x", i))
-                    .is_some()
-            })
+            .skip_while(|i| headers.iter().any(|h| h == format!("player{}_loc_x", i)))
             .next()
             .unwrap();
 

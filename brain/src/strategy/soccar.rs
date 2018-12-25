@@ -45,31 +45,29 @@ impl Strategy for Soccar {
         if current.priority() < Priority::Striking
             && enemy_can_shoot(ctx)
             && GetToFlatGround::on_flat_ground(ctx.me())
+            && ctx.scenario.possession().abs() < Scenario::POSSESSION_CONTESTABLE
         {
-            if ctx.scenario.possession().abs() < Scenario::POSSESSION_CONTESTABLE {
-                ctx.eeg.log(format!(
-                    "enemy can shoot, possession = {:.2}, going for 50/50",
-                    ctx.scenario.possession()
-                ));
-                return Some(Box::new(Chain::new(Priority::Striking, vec![Box::new(
-                    FiftyFifty::new(),
-                )])));
-            }
+            ctx.eeg.log(format!(
+                "enemy can shoot, possession = {:.2}, going for 50/50",
+                ctx.scenario.possession()
+            ));
+            return Some(Box::new(Chain::new(Priority::Striking, vec![Box::new(
+                FiftyFifty::new(),
+            )])));
         }
 
         if current.priority() < Priority::Defense
             && enemy_can_shoot(ctx)
             && GetToFlatGround::on_flat_ground(ctx.me())
+            && ctx.scenario.possession() < -Scenario::POSSESSION_CONTESTABLE
         {
-            if ctx.scenario.possession() < -Scenario::POSSESSION_CONTESTABLE {
-                ctx.eeg.log(format!(
-                    "enemy can shoot, possession = {:.2}, going to defense",
-                    ctx.scenario.possession()
-                ));
-                return Some(Box::new(Chain::new(Priority::Defense, vec![Box::new(
-                    Defense::new(),
-                )])));
-            }
+            ctx.eeg.log(format!(
+                "enemy can shoot, possession = {:.2}, going to defense",
+                ctx.scenario.possession()
+            ));
+            return Some(Box::new(Chain::new(Priority::Defense, vec![Box::new(
+                Defense::new(),
+            )])));
         }
 
         None

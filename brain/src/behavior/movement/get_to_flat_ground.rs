@@ -140,6 +140,7 @@ impl Behavior for GetToFlatGround {
     }
 }
 
+#[allow(clippy::if_same_then_else)]
 fn choose_facing(ctx: &mut Context) -> Unit<Vector3<f32>> {
     let me = ctx.me();
 

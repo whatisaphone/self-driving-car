@@ -4,6 +4,7 @@ pub use self::{
     retreat::Retreat,
 };
 
+#[allow(clippy::module_inception)]
 mod defense;
 mod panic_defense;
 mod retreat;

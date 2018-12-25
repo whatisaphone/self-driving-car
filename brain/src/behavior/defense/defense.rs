@@ -52,7 +52,7 @@ impl Defense {
             }
         }
 
-        return true;
+        true
     }
 }
 

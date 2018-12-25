@@ -189,5 +189,5 @@ impl Brain {
 
 fn format_fps(fps: Option<usize>) -> String {
     fps.map(|x| format!("{:.0}", x))
-        .unwrap_or("...".to_string())
+        .unwrap_or_else(|| "...".to_string())
 }
