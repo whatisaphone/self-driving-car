@@ -60,8 +60,8 @@ impl WallRayCalculator {
         (ray.origin + ray.dir * toi).to_2d()
     }
 
-    pub fn calc_ray(from: Point2<f32>, angle: f32) -> Vector2<f32> {
-        Self::calculate(from, from + Vector2::unit(angle)).coords
+    pub fn calc_ray(from: Point2<f32>, angle: f32) -> Point2<f32> {
+        Self::calculate(from, from + Vector2::unit(angle))
     }
 
     pub fn wall_for_point(game: &Game, point: Point2<f32>) -> Wall {

@@ -17,11 +17,7 @@ pub fn draw_ball_prediction(rlbot: &rlbot::RLBot, packet: &rlbot::ffi::LiveDataP
             ball.step(1.0 / 120.0);
         }
         let cur = ball.pos();
-        rg.draw_line_3d(
-            (prev.coords.x, prev.coords.y, prev.coords.z),
-            (cur.coords.x, cur.coords.y, cur.coords.z),
-            green,
-        );
+        rg.draw_line_3d((prev.x, prev.y, prev.z), (cur.x, cur.y, cur.z), green);
         prev = cur;
     }
     rg.render().unwrap();

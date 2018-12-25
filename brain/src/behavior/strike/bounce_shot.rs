@@ -94,7 +94,7 @@ impl BounceShot {
         let goal_angle = ball_loc.coords.angle_to(goal.center_2d.coords);
         let adjust = (naive_angle - goal_angle).normalize_angle();
         let aim_angle = goal_angle + adjust.max(-allow_angle_diff).min(allow_angle_diff);
-        Point2::from(WallRayCalculator::calc_ray(ball_loc, aim_angle))
+        WallRayCalculator::calc_ray(ball_loc, aim_angle)
     }
 
     /// Roughly where should the car be when it makes contact with the ball, in
