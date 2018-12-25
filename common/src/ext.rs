@@ -115,7 +115,7 @@ impl ExtendRotation3 for Rotation3<f32> {
     }
 
     fn to_unreal_angles(&self) -> (f32, f32, f32) {
-        let (roll, pitch, yaw) = self.to_euler_angles();
+        let (roll, pitch, yaw) = self.euler_angles();
         (-pitch, yaw, -roll)
     }
 
