@@ -8,7 +8,7 @@ use common::prelude::*;
 use lazycell::LazyCell;
 use ordered_float::NotNan;
 use rlbot;
-use simulate::{linear_interpolate, Car1Dv2};
+use simulate::{linear_interpolate, Car1D};
 use std::f32::{self, consts::PI};
 
 pub struct Scenario<'a> {
@@ -153,12 +153,12 @@ impl<'a> Scenario<'a> {
     }
 }
 
-fn blitz_start(car: &rlbot::ffi::PlayerInfo, ball_prediction: &BallTrajectory) -> Car1Dv2 {
+fn blitz_start(car: &rlbot::ffi::PlayerInfo, ball_prediction: &BallTrajectory) -> Car1D {
     let ball_loc = ball_prediction.start().loc.to_2d();
     let car_vel = car.Physics.vel_2d();
     let car_to_ball = ball_loc - car.Physics.loc_2d();
     let speed_towards_ball = car_vel.dot(&car_to_ball.normalize());
-    Car1Dv2::new()
+    Car1D::new()
         .with_speed(speed_towards_ball.max(0.0))
         .with_boost(car.Boost as f32)
 }

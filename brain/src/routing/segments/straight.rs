@@ -7,7 +7,7 @@ use crate::{
 use common::{prelude::*, rl};
 use nalgebra::{Point2, Vector2};
 use nameof::name_of_type;
-use simulate::Car1Dv2;
+use simulate::Car1D;
 
 #[derive(Clone)]
 pub struct Straight {
@@ -39,7 +39,7 @@ impl Straight {
             return Self::zero(start);
         }
 
-        let mut sim = Car1Dv2::new()
+        let mut sim = Car1D::new()
             .with_speed(start.vel.norm())
             .with_boost(start.boost);
         sim.advance_by_distance(start_to_end_dist, 1.0, true);
@@ -48,7 +48,7 @@ impl Straight {
         // target.
         if end_chop != 0.0 {
             let duration = (sim.time() - end_chop).max(0.0);
-            sim = Car1Dv2::new()
+            sim = Car1D::new()
                 .with_speed(start.vel.norm())
                 .with_boost(start.boost);
             sim.advance(duration, 1.0, true);

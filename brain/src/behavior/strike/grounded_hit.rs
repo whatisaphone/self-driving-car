@@ -17,7 +17,7 @@ use nalgebra::{Point2, Point3, UnitQuaternion};
 use rlbot;
 use simulate::{
     car_single_jump::{time_to_z, JUMP_MAX_Z},
-    linear_interpolate, Car1Dv2, CarSimulateError,
+    linear_interpolate, Car1D, CarSimulateError,
 };
 use std::f32::consts::PI;
 
@@ -246,7 +246,7 @@ where
 
         let would_reach = |throttle, boost| {
             // Phase 1: driving forward
-            let mut drive = Car1Dv2::new()
+            let mut drive = Car1D::new()
                 .with_speed(ctx.me().Physics.vel().norm())
                 .with_boost(ctx.me().Boost as f32);
             drive.advance(drive_time, throttle, boost);

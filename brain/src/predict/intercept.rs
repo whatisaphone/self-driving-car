@@ -1,7 +1,7 @@
 use crate::{plan::ball::BallFrame, routing::models::CarState};
 use common::prelude::*;
 use nalgebra::{Point3, UnitQuaternion, Vector3};
-use simulate::Car1Dv2;
+use simulate::Car1D;
 use std::borrow::Borrow;
 
 pub fn naive_ground_intercept<'a>(
@@ -37,7 +37,7 @@ where
     // we want their meshes to barely be touching.
     const RADII: f32 = 240.0;
 
-    let mut sim_car = Car1Dv2::new()
+    let mut sim_car = Car1D::new()
         .with_speed(start.vel.norm())
         .with_boost(start.boost);
 

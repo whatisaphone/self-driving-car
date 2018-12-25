@@ -12,7 +12,7 @@ use derive_new::new;
 use nalgebra::Point2;
 use nameof::name_of_type;
 use ordered_float::NotNan;
-use simulate::{Car1Dv2, CarForwardDodge, CarForwardDodge1D};
+use simulate::{Car1D, CarForwardDodge, CarForwardDodge1D};
 
 /// Drive straight. Requires the car to already be facing the target (i.e., it
 /// won't steer left or right).
@@ -174,7 +174,7 @@ impl StraightSimple {
         });
 
         let target_dist = (self.target_loc - ctx.start.loc.to_2d()).norm();
-        let mut sim = Car1Dv2::new()
+        let mut sim = Car1D::new()
             .with_speed(ctx.start.vel.to_2d().norm())
             .with_boost(ctx.start.boost);
         sim.advance(target_time, 0.0, false);
@@ -299,7 +299,7 @@ impl StraightDodgeCalculator {
     }
 
     fn evaluate(&self, approach_time: f32) -> Option<StraightDodge> {
-        let mut approach = Car1Dv2::new()
+        let mut approach = Car1D::new()
             .with_speed(self.start.vel.to_2d().norm())
             .with_boost(self.start.boost);
         approach.advance(approach_time, 1.0, true);
@@ -308,7 +308,7 @@ impl StraightDodgeCalculator {
 
         // `end_chop` is "dead time" that the caller requested we leave available for
         // the subsequent maneuver. Coasting on landing is the most conservative case.
-        let mut landing = Car1Dv2::new()
+        let mut landing = Car1D::new()
             .with_speed(dodge.end_speed)
             .with_boost(approach.boost());
         landing.advance(self.end_chop, 0.0, false);
@@ -334,7 +334,7 @@ impl StraightDodgeCalculator {
         // Now simulate coasting after the landing. If we pass the target before the
         // target time, dodging made us go too fast.
         if let Some(target_time) = self.target_time {
-            let mut coast = Car1Dv2::new()
+            let mut coast = Car1D::new()
                 .with_speed(dodge.end_speed)
                 .with_boost(approach.boost());
             coast.advance(target_time - total_time, 0.0, false);
@@ -346,7 +346,7 @@ impl StraightDodgeCalculator {
         // To calculate the "best" dodge, they all need to be compared on equal terms.
         // The equal term I choose is the minimum time needed to reach the target.
         // Do not boost here so that we don't outperform multiple dodges.
-        let mut blitz = Car1Dv2::new()
+        let mut blitz = Car1D::new()
             .with_speed(dodge.end_speed)
             .with_boost(approach.boost());
         blitz.advance_by_distance(target_traveled - total_dist, 1.0, false);

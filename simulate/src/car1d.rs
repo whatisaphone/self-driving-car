@@ -4,14 +4,14 @@ use oven::data;
 
 const EPS: f32 = 1e-3;
 
-pub struct Car1Dv2 {
+pub struct Car1D {
     time: f32,
     distance: f32,
     speed: f32,
     boost: f32,
 }
 
-impl Car1Dv2 {
+impl Car1D {
     pub fn new() -> Self {
         Self {
             time: 0.0,
@@ -335,7 +335,7 @@ struct CurveResult {
 
 #[cfg(test)]
 mod tests {
-    use crate::car1dv2::Car1Dv2;
+    use crate::car1d::Car1D;
     use common::rl;
     use oven::data;
 
@@ -357,19 +357,19 @@ mod tests {
 
     #[test]
     fn clamp_speed() {
-        let car = Car1Dv2::new().with_speed(rl::CAR_MAX_SPEED + 0.1);
+        let car = Car1D::new().with_speed(rl::CAR_MAX_SPEED + 0.1);
         assert_eq!(car.speed(), rl::CAR_MAX_SPEED);
     }
 
     #[test]
     #[should_panic]
     fn dont_clamp_outrageous_speed() {
-        Car1Dv2::new().with_speed(rl::CAR_MAX_SPEED + 100.0);
+        Car1D::new().with_speed(rl::CAR_MAX_SPEED + 100.0);
     }
 
     #[test]
     fn advance_0() {
-        let mut car = Car1Dv2::new().with_speed(1000.0);
+        let mut car = Car1D::new().with_speed(1000.0);
         car.advance(0.0, 1.0, false);
         assert_eq!(car.time(), 0.0);
         assert_eq!(car.boost(), 100.0);
@@ -377,7 +377,7 @@ mod tests {
 
     #[test]
     fn advance_throttle_rest() {
-        let mut car = Car1Dv2::new().with_speed(0.0);
+        let mut car = Car1D::new().with_speed(0.0);
         car.advance(DT, 1.0, false);
         assert!(20.0 <= car.speed() && car.speed() < 30.0);
         assert_eq!(car.boost(), 100.0);
@@ -385,7 +385,7 @@ mod tests {
 
     #[test]
     fn advance_throttle_supersonic() {
-        let mut car = Car1Dv2::new().with_speed(2000.0);
+        let mut car = Car1D::new().with_speed(2000.0);
         car.advance(DT, 1.0, false);
         assert_eq!(car.speed(), 2000.0);
         assert_eq!(car.boost(), 100.0);
@@ -393,7 +393,7 @@ mod tests {
 
     #[test]
     fn advance_throttle_max_speed() {
-        let mut car = Car1Dv2::new().with_speed(rl::CAR_MAX_SPEED);
+        let mut car = Car1D::new().with_speed(rl::CAR_MAX_SPEED);
         car.advance(DT, 1.0, false);
         assert_eq!(car.speed(), rl::CAR_MAX_SPEED);
         assert_eq!(car.boost(), 100.0);
@@ -401,7 +401,7 @@ mod tests {
 
     #[test]
     fn advance_boost_rest() {
-        let mut car = Car1Dv2::new().with_speed(0.0);
+        let mut car = Car1D::new().with_speed(0.0);
         car.advance(DT, 1.0, true);
         assert!(40.0 <= car.speed() && car.speed() < 45.0);
         assert!(99.4 <= car.boost() && car.boost() < 99.5);
@@ -409,7 +409,7 @@ mod tests {
 
     #[test]
     fn advance_boost_supersonic() {
-        let mut car = Car1Dv2::new().with_speed(2000.0);
+        let mut car = Car1D::new().with_speed(2000.0);
         car.advance(DT, 1.0, true);
         assert!(2010.0 <= car.speed() && car.speed() < 2020.0);
         assert!(99.4 <= car.boost() && car.boost() < 99.5);
@@ -417,21 +417,21 @@ mod tests {
 
     #[test]
     fn advance_boost_supersonic_dont_trigger_assert() {
-        let mut car = Car1Dv2::new().with_speed(2293.8083).with_boost(34.833214);
+        let mut car = Car1D::new().with_speed(2293.8083).with_boost(34.833214);
         car.advance(1.0 / 120.0, 1.0, true);
         assert!(2299.0 <= car.speed() && car.speed() < rl::CAR_MAX_SPEED);
     }
 
     #[test]
     fn advance_boost_supersonic_dont_trigger_assert_2() {
-        let mut car = Car1Dv2::new().with_speed(1673.71265).with_boost(3.00000286);
+        let mut car = Car1D::new().with_speed(1673.71265).with_boost(3.00000286);
         car.advance(0.125, 1.0, true);
         assert!(car.boost().abs() <= EPS);
     }
 
     #[test]
     fn advance_boost_max_speed() {
-        let mut car = Car1Dv2::new().with_speed(rl::CAR_MAX_SPEED);
+        let mut car = Car1D::new().with_speed(rl::CAR_MAX_SPEED);
         car.advance(DT, 1.0, true);
         assert_eq!(car.speed(), rl::CAR_MAX_SPEED);
         assert!(99.4 <= car.boost() && car.boost() < 99.5);
@@ -439,7 +439,7 @@ mod tests {
 
     #[test]
     fn advance_boost_with_no_boost() {
-        let mut car = Car1Dv2::new().with_boost(0.0);
+        let mut car = Car1D::new().with_boost(0.0);
         car.advance(DT, 1.0, true);
         assert!(20.0 <= car.speed() && car.speed() < 30.0);
         assert_eq!(car.boost(), 0.0);
@@ -447,7 +447,7 @@ mod tests {
 
     #[test]
     fn advance_boost_supersonic_boost_underflow() {
-        let mut car = Car1Dv2::new().with_speed(2000.0).with_boost(0.01);
+        let mut car = Car1D::new().with_speed(2000.0).with_boost(0.01);
         car.advance(DT, 1.0, true);
         assert!(2000.001 <= car.speed() && car.speed() < 2001.0);
         assert_eq!(car.boost(), 0.0);
@@ -455,7 +455,7 @@ mod tests {
 
     #[test]
     fn advance_boost_max_speed_boost_underflow() {
-        let mut car = Car1Dv2::new()
+        let mut car = Car1D::new()
             .with_speed(rl::CAR_MAX_SPEED)
             .with_boost(0.0001);
         car.advance(DT, 1.0, true);
@@ -465,9 +465,7 @@ mod tests {
 
     #[test]
     fn advance_boost_max_speed_deplete_boost() {
-        let mut car = Car1Dv2::new()
-            .with_speed(rl::CAR_MAX_SPEED)
-            .with_boost(10.0);
+        let mut car = Car1D::new().with_speed(rl::CAR_MAX_SPEED).with_boost(10.0);
         car.advance(1.0, 1.0, true);
         assert_eq!(car.speed(), rl::CAR_MAX_SPEED);
         assert_eq!(car.boost(), 0.0);
@@ -475,7 +473,7 @@ mod tests {
 
     #[test]
     fn advance_coast_rest() {
-        let mut car = Car1Dv2::new().with_speed(0.0);
+        let mut car = Car1D::new().with_speed(0.0);
         for _ in 0..100 {
             car.advance(DT, 0.0, false);
         }
@@ -485,21 +483,21 @@ mod tests {
 
     #[test]
     fn advance_coast_slow() {
-        let mut car = Car1Dv2::new().with_speed(100.0);
+        let mut car = Car1D::new().with_speed(100.0);
         car.advance(DT, 0.0, false);
         assert!(85.0 <= car.speed() && car.speed() < 95.0);
     }
 
     #[test]
     fn advance_coast_supersonic() {
-        let mut car = Car1Dv2::new().with_speed(2000.0);
+        let mut car = Car1D::new().with_speed(2000.0);
         car.advance(DT, 0.0, false);
         assert!(1980.0 <= car.speed() && car.speed() < 1995.0);
     }
 
     #[test]
     fn advance_by_distance_throttle_slow() {
-        let mut car = Car1Dv2::new().with_speed(1000.0);
+        let mut car = Car1D::new().with_speed(1000.0);
         car.advance_by_distance(1000.0, 1.0, false);
         assert!((car.distance() - 1000.0).abs() <= EPS);
         assert!(1300.0 <= car.speed() && car.speed() < 1400.0);
@@ -508,14 +506,14 @@ mod tests {
 
     #[test]
     fn advance_by_distance_throttle_supersonic_dont_trigger_assert() {
-        let mut car = Car1Dv2::new().with_speed(1878.42249);
+        let mut car = Car1D::new().with_speed(1878.42249);
         car.advance_by_distance(1000.0, 1.0, false);
         assert!((car.distance() - 1000.0).abs() <= EPS);
     }
 
     #[test]
     fn advance_by_distance_boost_with_low_boost_rest() {
-        let mut car = Car1Dv2::new().with_boost(10.0);
+        let mut car = Car1D::new().with_boost(10.0);
         car.advance_by_distance(1000.0, 1.0, true);
         assert!((car.distance() - 1000.0).abs() <= EPS);
         assert!(1200.0 <= car.speed() && car.speed() < 1300.0);
@@ -524,7 +522,7 @@ mod tests {
 
     #[test]
     fn advance_by_distance_boost_with_low_boost_slow() {
-        let mut car = Car1Dv2::new().with_speed(347.61176).with_boost(34.0);
+        let mut car = Car1D::new().with_speed(347.61176).with_boost(34.0);
         car.advance_by_distance(5000.0, 1.0, true);
         assert!((car.distance() - 5000.0).abs() <= EPS);
         assert!(1700.0 <= car.speed() && car.speed() < 1800.0);
@@ -533,7 +531,7 @@ mod tests {
 
     #[test]
     fn advance_by_distance_boost_with_no_boost() {
-        let mut car = Car1Dv2::new().with_speed(1000.0).with_boost(0.0);
+        let mut car = Car1D::new().with_speed(1000.0).with_boost(0.0);
         car.advance_by_distance(1000.0, 1.0, true);
         assert!((car.distance() - 1000.0).abs() <= EPS);
         assert!(1300.0 <= car.speed() && car.speed() < 1400.0);
@@ -542,7 +540,7 @@ mod tests {
 
     #[test]
     fn advance_by_distance_boost_max_speed_huge_distance() {
-        let mut car = Car1Dv2::new().with_speed(rl::CAR_MAX_SPEED);
+        let mut car = Car1D::new().with_speed(rl::CAR_MAX_SPEED);
         car.advance_by_distance(8000.0, 1.0, true);
         assert!((car.distance() - 8000.0).abs() <= EPS);
         assert_eq!(car.speed(), rl::CAR_MAX_SPEED);
@@ -551,7 +549,7 @@ mod tests {
 
     #[test]
     fn advance_by_distance_boost_almost_supersonic_dont_trigger_assert() {
-        let mut car = Car1Dv2::new().with_speed(2292.90942);
+        let mut car = Car1D::new().with_speed(2292.90942);
         car.advance_by_distance(1000.0, 1.0, true);
         assert_eq!(car.speed(), rl::CAR_MAX_SPEED);
     }

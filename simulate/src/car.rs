@@ -1,4 +1,4 @@
-use crate::car1dv2::Car1Dv2;
+use crate::car1d::Car1D;
 use common::{physics, prelude::*};
 use nalgebra::{Point3, Unit, UnitQuaternion, Vector2, Vector3};
 use rlbot;
@@ -67,7 +67,7 @@ impl Car {
             return Err(CarSimulateError::Skidding);
         }
 
-        let mut car1d = Car1Dv2::new()
+        let mut car1d = Car1D::new()
             .with_speed(self.vel.norm())
             .with_boost(self.boost);
         car1d.advance(dt, throttle, boost);

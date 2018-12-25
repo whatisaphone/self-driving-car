@@ -11,7 +11,7 @@ use common::{prelude::*, rl};
 use nalgebra::Point2;
 use nameof::name_of_type;
 use rlbot;
-use simulate::Car1Dv2;
+use simulate::Car1D;
 use std::f32::consts::PI;
 
 pub struct GroundAccelToLoc {
@@ -91,7 +91,7 @@ impl Behavior for GroundAccelToLoc {
 fn estimate_approach(car: &rlbot::ffi::PlayerInfo, distance: f32, time: f32) -> (f32, bool) {
     let would_reach = |throttle, boost| {
         let lag_comp = 1.5 / 120.0; // Start a few ticks later to compensate for input lag.
-        let mut sim_car = Car1Dv2::new()
+        let mut sim_car = Car1D::new()
             .with_speed(car.Physics.vel().norm())
             .with_boost(car.Boost as f32);
         sim_car.advance(time - lag_comp, throttle, boost);

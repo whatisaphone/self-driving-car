@@ -6,7 +6,7 @@ use crate::{
 use common::{prelude::*, rl};
 use nalgebra::Point2;
 use rlbot;
-use simulate::Car1Dv2;
+use simulate::Car1D;
 use std::f32::consts::PI;
 
 // I'm keeping this value artificially high until I implement smarter routing.
@@ -17,7 +17,7 @@ pub fn rough_time_drive_to_loc(car: &rlbot::ffi::PlayerInfo, target_loc: Point2<
 
     let base_time = 2.0 / 120.0 + steer_penalty(car, simple_yaw_diff(&car.Physics, target_loc));
 
-    let mut sim_car = Car1Dv2::new()
+    let mut sim_car = Car1D::new()
         .with_speed(car.Physics.vel().norm())
         .with_boost(car.Boost as f32);
     sim_car.advance_by_distance(target_dist, 1.0, true);
