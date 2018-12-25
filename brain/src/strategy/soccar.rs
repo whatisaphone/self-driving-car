@@ -1,6 +1,8 @@
 use crate::{
-    behavior::{Behavior, Chain, Defense, Kickoff, Offense, Priority},
-    maneuvers::{FiftyFifty, GetToFlatGround},
+    behavior::{
+        defense::Defense, higher_order::Chain, movement::GetToFlatGround, offense::Offense,
+        strike::FiftyFifty, Behavior, Kickoff, Priority,
+    },
     strategy::{scenario::Scenario, strategy::Strategy, Context},
     utils::Wall,
 };

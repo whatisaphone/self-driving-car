@@ -1,7 +1,6 @@
 use crate::{
-    behavior::{Action, Behavior, Chain, Priority},
+    behavior::{higher_order::Chain, movement::Yielder, Action, Behavior, Priority},
     eeg::{color, Drawable},
-    mechanics::Yielder,
     routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner},
     strategy::Context,
 };

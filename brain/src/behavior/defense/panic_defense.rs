@@ -1,8 +1,9 @@
 use crate::{
-    behavior::{Action, Behavior},
+    behavior::{
+        movement::{simple_steer_towards, BlitzToLocation, GetToFlatGround},
+        Action, Behavior,
+    },
     eeg::{color, Drawable},
-    maneuvers::{BlitzToLocation, GetToFlatGround},
-    mechanics::simple_steer_towards,
     plan::drive::rough_time_drive_to_loc,
     rules::SameBallTrajectory,
     strategy::Context,
@@ -173,8 +174,8 @@ fn calc_aim_hint(ctx: &mut Context) -> Point2<f32> {
 #[cfg(test)]
 mod integration_tests {
     use crate::{
+        behavior::defense::PanicDefense,
         integration_tests::helpers::{TestRunner, TestScenario},
-        maneuvers::PanicDefense,
     };
     use common::prelude::*;
     use nalgebra::{Rotation3, Vector3};

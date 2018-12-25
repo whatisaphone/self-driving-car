@@ -1,7 +1,6 @@
 use crate::{
-    behavior::{Action, Behavior},
+    behavior::{movement::get_to_flat_ground::GetToFlatGround, Action, Behavior},
     eeg::{color, Drawable},
-    maneuvers::GetToFlatGround,
     strategy::Context,
 };
 use common::{physics::CAR_LOCAL_FORWARD_AXIS_2D, prelude::*};

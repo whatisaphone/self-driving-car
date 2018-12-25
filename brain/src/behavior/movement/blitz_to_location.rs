@@ -1,7 +1,11 @@
 use crate::{
-    behavior::{Action, Behavior},
+    behavior::{
+        movement::{
+            quick_jump_and_dodge::QuickJumpAndDodge, simple_steer_towards::simple_steer_towards,
+        },
+        Action, Behavior,
+    },
     eeg::{color, Drawable},
-    mechanics::{simple_steer_towards, QuickJumpAndDodge},
     strategy::Context,
 };
 use common::{prelude::*, rl};

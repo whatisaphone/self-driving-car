@@ -1,5 +1,5 @@
 use crate::{
-    behavior::{Behavior, NullBehavior},
+    behavior::{higher_order::NullBehavior, Behavior},
     strategy::{strategy::Strategy, Context},
 };
 use derive_new::new;

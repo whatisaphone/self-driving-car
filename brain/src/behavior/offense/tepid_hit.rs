@@ -1,7 +1,9 @@
 use crate::{
-    behavior::{Action, Behavior, Priority},
+    behavior::{
+        strike::{GroundedHit, GroundedHitAimContext, GroundedHitTarget, GroundedHitTargetAdjust},
+        Action, Behavior, Priority,
+    },
     eeg::{color, Drawable},
-    maneuvers::{GroundedHit, GroundedHitAimContext, GroundedHitTarget, GroundedHitTargetAdjust},
     plan::hit_angle::{feasible_hit_angle_away, feasible_hit_angle_toward},
     routing::{behavior::FollowRoute, plan::GroundIntercept},
     strategy::Context,

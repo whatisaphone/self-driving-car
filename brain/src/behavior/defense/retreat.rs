@@ -1,9 +1,10 @@
 use crate::{
     behavior::{
-        defense::PushToOwnCorner, higher_order::TryChoose,
-        offense2::reset_behind_ball::ResetBehindBall, Action, Behavior, Priority,
+        defense::{PanicDefense, PushToOwnCorner},
+        higher_order::TryChoose,
+        offense::ResetBehindBall,
+        Action, Behavior, Priority,
     },
-    maneuvers::PanicDefense,
     strategy::{Context, Scenario},
 };
 use common::prelude::*;

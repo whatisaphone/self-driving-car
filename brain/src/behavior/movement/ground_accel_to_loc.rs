@@ -1,8 +1,10 @@
 use crate::{
-    behavior::{Action, Behavior, Chain},
+    behavior::{
+        higher_order::Chain,
+        movement::{drive_towards, simple_yaw_diff, GetToFlatGround},
+        Action, Behavior,
+    },
     eeg::{color, Drawable},
-    maneuvers::{drive_towards, GetToFlatGround},
-    mechanics::simple_yaw_diff,
     plan::drive::get_route_dodge,
     strategy::Context,
 };
@@ -111,8 +113,8 @@ fn estimate_approach(car: &rlbot::ffi::PlayerInfo, distance: f32, time: f32) -> 
 #[cfg(test)]
 mod integration_tests {
     use crate::{
+        behavior::movement::GroundAccelToLoc,
         integration_tests::helpers::{TestRunner, TestScenario},
-        mechanics::GroundAccelToLoc,
     };
     use common::prelude::*;
     use nalgebra::{Point2, Vector3};

@@ -1,5 +1,8 @@
 use crate::{
-    behavior::{Behavior, Fuse, NullBehavior},
+    behavior::{
+        higher_order::{Fuse, NullBehavior},
+        Behavior,
+    },
     brain::Brain,
     eeg::EEG,
     strategy::Team,

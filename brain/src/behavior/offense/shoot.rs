@@ -1,7 +1,11 @@
 use crate::{
-    behavior::{Action, Behavior, Chain, Priority},
-    maneuvers::{
-        BounceShot, GroundedHit, GroundedHitAimContext, GroundedHitTarget, GroundedHitTargetAdjust,
+    behavior::{
+        higher_order::Chain,
+        strike::{
+            BounceShot, GroundedHit, GroundedHitAimContext, GroundedHitTarget,
+            GroundedHitTargetAdjust,
+        },
+        Action, Behavior, Priority,
     },
     predict::{intercept::NaiveIntercept, naive_ground_intercept_2},
     routing::{behavior::FollowRoute, plan::GroundIntercept},
@@ -92,7 +96,7 @@ impl Behavior for Shoot {
 #[cfg(test)]
 mod integration_tests {
     use crate::{
-        behavior::shoot::Shoot,
+        behavior::offense::Shoot,
         integration_tests::helpers::{TestRunner, TestScenario},
         strategy::Runner2,
     };

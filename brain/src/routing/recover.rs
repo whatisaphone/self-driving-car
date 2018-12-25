@@ -1,9 +1,10 @@
 use crate::{
     behavior::{
-        offense2::reset_behind_ball::ResetBehindBall, Behavior, Predicate, TimeLimit, While,
+        higher_order::{Predicate, TimeLimit, While},
+        movement::{DriveTowards, GetToFlatGround, QuickJumpAndDodge, SkidRecover},
+        offense::ResetBehindBall,
+        Behavior,
     },
-    maneuvers::{DriveTowards, GetToFlatGround},
-    mechanics::{QuickJumpAndDodge, SkidRecover},
     routing::models::{CarState, RoutePlanError},
     strategy::{Context, Scenario},
 };

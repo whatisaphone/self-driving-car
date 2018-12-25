@@ -1,8 +1,10 @@
 use crate::{
-    behavior::{Action, Behavior, Chain, Priority},
+    behavior::{
+        higher_order::Chain,
+        movement::{dodge::Dodge, drive_towards::drive_towards, yielder::Yielder},
+        Action, Behavior, Priority,
+    },
     eeg::Drawable,
-    maneuvers::drive_towards,
-    mechanics::{Dodge, Yielder},
     routing::{models::CarState, plan::avoid_goal_wall_waypoint},
     strategy::Context,
 };

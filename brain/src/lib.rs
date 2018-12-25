@@ -24,8 +24,6 @@ mod brain;
 mod eeg;
 #[cfg(test)]
 mod integration_tests;
-mod maneuvers;
-mod mechanics;
 mod plan;
 mod predict;
 mod routing;

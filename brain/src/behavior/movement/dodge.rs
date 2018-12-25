@@ -1,6 +1,5 @@
 use crate::{
-    behavior::{Action, Behavior, Chain},
-    mechanics::Yielder,
+    behavior::{higher_order::Chain, movement::yielder::Yielder, Action, Behavior},
     strategy::Context,
 };
 use nalgebra::UnitComplex;

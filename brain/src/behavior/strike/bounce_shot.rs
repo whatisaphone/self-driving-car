@@ -1,7 +1,9 @@
 use crate::{
-    behavior::{Action, Behavior},
+    behavior::{
+        movement::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge},
+        Action, Behavior,
+    },
     eeg::{color, Drawable},
-    mechanics::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge},
     predict::{intercept::NaiveIntercept, naive_ground_intercept},
     rules::SameBallTrajectory,
     strategy::{Context, Goal},
@@ -126,9 +128,8 @@ impl BounceShot {
 #[cfg(test)]
 mod integration_tests {
     use crate::{
-        behavior::Repeat,
+        behavior::{higher_order::Repeat, strike::BounceShot},
         integration_tests::helpers::{TestRunner, TestScenario},
-        maneuvers::bounce_shot::BounceShot,
     };
     use common::{prelude::*, rl};
     use nalgebra::{Point2, Rotation3, Vector3};

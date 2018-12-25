@@ -1,7 +1,7 @@
 use crate::{
     behavior::{
-        offense2::reset_behind_ball::ResetBehindBall, shoot::Shoot, tepid_hit::TepidHit, Action,
-        Behavior,
+        offense::{ResetBehindBall, Shoot, TepidHit},
+        Action, Behavior,
     },
     plan::{ball::BallFrame, telepathy},
     predict::naive_ground_intercept_2,

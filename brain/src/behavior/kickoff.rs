@@ -1,6 +1,8 @@
 use crate::{
-    behavior::{defensive_hit, Action, Behavior, Chain, Priority},
-    maneuvers::GroundedHit,
+    behavior::{
+        defense::defensive_hit, higher_order::Chain, strike::GroundedHit, Action, Behavior,
+        Priority,
+    },
     routing::{
         behavior::FollowRoute,
         models::RoutePlanner,

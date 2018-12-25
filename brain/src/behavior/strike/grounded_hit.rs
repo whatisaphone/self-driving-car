@@ -1,8 +1,11 @@
 use crate::{
-    behavior::{Action, Behavior, Chain},
+    behavior::{
+        higher_order::Chain,
+        movement::{simple_steer_towards, Dodge, JumpAndTurn},
+        strike::BounceShot,
+        Action, Behavior,
+    },
     eeg::Drawable,
-    maneuvers::BounceShot,
-    mechanics::{simple_steer_towards, Dodge, JumpAndTurn},
     predict::{intercept::NaiveIntercept, naive_ground_intercept},
     routing::recover::{IsSkidding, NotOnFlatGround},
     rules::SameBallTrajectory,
@@ -402,11 +405,8 @@ enum Do {
 #[cfg(test)]
 mod integration_tests {
     use crate::{
+        behavior::strike::{GroundedHit, GroundedHitTarget, GroundedHitTargetAdjust},
         integration_tests::helpers::{TestRunner, TestScenario},
-        maneuvers::{
-            grounded_hit::{GroundedHit, GroundedHitTarget},
-            GroundedHitTargetAdjust,
-        },
     };
     use common::{prelude::*, rl};
     use nalgebra::{Point2, Rotation3, Vector3};

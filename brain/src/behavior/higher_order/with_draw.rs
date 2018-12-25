@@ -1,0 +1,37 @@
+use crate::{
+    behavior::{Action, Behavior, Priority},
+    eeg::{color, Drawable},
+    strategy::Context,
+};
+
+pub struct WithDraw<B: Behavior> {
+    draw: Vec<Drawable>,
+    behavior: B,
+}
+
+impl<B: Behavior> WithDraw<B> {
+    pub fn new(draw: Vec<Drawable>, behavior: B) -> Self {
+        Self { draw, behavior }
+    }
+}
+
+impl<B: Behavior> Behavior for WithDraw<B> {
+    fn name(&self) -> &str {
+        stringify!(WithDraw)
+    }
+
+    fn priority(&self) -> Priority {
+        self.behavior.priority()
+    }
+
+    fn execute2(&mut self, ctx: &mut Context) -> Action {
+        for d in self.draw.iter() {
+            ctx.eeg.draw(d.clone());
+        }
+
+        ctx.eeg
+            .draw(Drawable::print(self.behavior.name(), color::YELLOW));
+
+        self.behavior.execute2(ctx)
+    }
+}

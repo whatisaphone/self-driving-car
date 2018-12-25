@@ -1,11 +1,15 @@
 use crate::{
     behavior::{
-        defense2::retreat::Retreat, tepid_hit::TepidHit, Action, Behavior, Chain, Priority,
+        defense::retreat::Retreat,
+        higher_order::Chain,
+        offense::TepidHit,
+        strike::{
+            BounceShot, GroundedHit, GroundedHitAimContext, GroundedHitTarget,
+            GroundedHitTargetAdjust,
+        },
+        Action, Behavior, Priority,
     },
     eeg::{color, Drawable},
-    maneuvers::{
-        BounceShot, GroundedHit, GroundedHitAimContext, GroundedHitTarget, GroundedHitTargetAdjust,
-    },
     predict::naive_ground_intercept_2,
     routing::{behavior::FollowRoute, plan::GroundIntercept},
     strategy::{Context, Goal, Scenario},
@@ -280,7 +284,10 @@ fn blocking_angle(
 #[cfg(test)]
 mod integration_tests {
     use crate::{
-        behavior::{defense::Defense, runner::PUSHED, HitToOwnCorner},
+        behavior::{
+            defense::{defense::HitToOwnCorner, Defense},
+            runner::PUSHED,
+        },
         integration_tests::helpers::{TestRunner, TestScenario},
         strategy::Runner2,
     };

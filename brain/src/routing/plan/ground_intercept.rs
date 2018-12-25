@@ -1,5 +1,5 @@
 use crate::{
-    maneuvers::GroundedHit,
+    behavior::strike::GroundedHit,
     predict::naive_ground_intercept,
     routing::{
         models::{PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner},

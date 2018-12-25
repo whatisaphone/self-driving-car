@@ -1,6 +1,10 @@
 use crate::{
-    behavior::{defensive_hit, Action, Behavior, Chain, Priority, While},
-    maneuvers::GroundedHit,
+    behavior::{
+        defense::defensive_hit,
+        higher_order::{Chain, While},
+        strike::GroundedHit,
+        Action, Behavior, Priority,
+    },
     routing::{behavior::FollowRoute, plan::GroundIntercept, recover::WeDontWinTheRace},
     strategy::Context,
 };

@@ -1,7 +1,6 @@
 use crate::{
-    behavior::{Action, Behavior},
+    behavior::{movement::simple_steer_towards::simple_yaw_diff, Action, Behavior},
     eeg::{color, Drawable},
-    mechanics::simple_yaw_diff,
     strategy::Context,
 };
 use common::{prelude::*, rl};

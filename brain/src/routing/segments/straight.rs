@@ -1,7 +1,6 @@
 use crate::{
+    behavior::movement::{simple_steer_towards, GetToFlatGround},
     eeg::{color, Drawable},
-    maneuvers::GetToFlatGround,
-    mechanics::simple_steer_towards,
     routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner},
     strategy::Context,
 };
