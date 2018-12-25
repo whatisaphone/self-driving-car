@@ -2,7 +2,6 @@
 
 pub use crate::{
     car::{Car, CarSimulateError},
-    car1d::Car1D,
     car1dv2::Car1Dv2,
     car_forward_dodge::{CarForwardDodge, CarForwardDodge1D},
     car_powerslide_turn::{CarPowerslideTurn, CarPowerslideTurnBlueprint},
@@ -20,7 +19,6 @@ macro_rules! some_or_else {
 }
 
 mod car;
-mod car1d;
 mod car1dv2;
 mod car_forward_dodge;
 mod car_powerslide_turn;
