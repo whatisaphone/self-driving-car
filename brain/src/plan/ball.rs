@@ -1,8 +1,8 @@
-use crate::utils::TotalF32;
 use chip::Ball;
 use common::{math::fractionality, prelude::*, rl};
 use derive_new::new;
 use nalgebra::{Point3, Vector3};
+use ordered_float::OrderedFloat;
 use std::{iter::Cloned, mem, slice::Iter};
 
 const PREDICT_DURATION: f32 = 7.0;
@@ -80,7 +80,7 @@ impl BallTrajectory {
     pub fn at_time(&self, t: f32) -> Option<&BallFrame> {
         let i = match self
             .frames
-            .binary_search_by_key(&TotalF32(t), |f| TotalF32(f.t))
+            .binary_search_by_key(&OrderedFloat(t), |f| OrderedFloat(f.t))
         {
             Ok(i) => i,
             Err(i) => i,
