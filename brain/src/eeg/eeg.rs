@@ -125,15 +125,15 @@ pub enum Drawable {
 }
 
 impl Drawable {
-    pub fn ghost_ball(loc: Point3<f32>) -> Drawable {
+    pub fn ghost_ball(loc: Point3<f32>) -> Self {
         Drawable::GhostBall(loc, color::WHITE)
     }
 
-    pub fn ghost_car_ground(loc: Point2<f32>, rot: Rotation3<f32>) -> Drawable {
+    pub fn ghost_car_ground(loc: Point2<f32>, rot: Rotation3<f32>) -> Self {
         Drawable::GhostCar(loc.to_3d(rl::OCTANE_NEUTRAL_Z), rot)
     }
 
-    pub fn print(text: impl Into<String>, color: Color) -> Drawable {
+    pub fn print(text: impl Into<String>, color: Color) -> Self {
         Drawable::Print(text.into(), color)
     }
 }
