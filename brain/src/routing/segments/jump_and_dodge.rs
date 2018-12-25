@@ -107,7 +107,7 @@ impl JumpAndDodgeRunner {
 
 impl SegmentRunner for JumpAndDodgeRunner {
     fn execute(&mut self, ctx: &mut Context) -> SegmentRunAction {
-        match self.behavior.execute2(ctx) {
+        match self.behavior.execute(ctx) {
             Action::Yield(i) => SegmentRunAction::Yield(i),
             Action::Call(_) => panic!("Action::Call not supported in SegmentRunner"),
             Action::Return => SegmentRunAction::Success,

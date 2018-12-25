@@ -26,7 +26,7 @@ impl Behavior for BlitzToLocation {
         name_of_type!(BlitzToLocation)
     }
 
-    fn execute2(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context) -> Action {
         let me = ctx.me();
         let distance = (me.Physics.loc_2d() - self.target_loc).norm();
         let speed = me.Physics.vel().norm();

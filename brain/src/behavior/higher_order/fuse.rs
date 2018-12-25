@@ -17,7 +17,7 @@ impl Behavior for Fuse {
         name_of_type!(Fuse)
     }
 
-    fn execute2(&mut self, _ctx: &mut Context) -> Action {
+    fn execute(&mut self, _ctx: &mut Context) -> Action {
         // `take()` leaves a None behind, so this can only match `Some` once.
         match self.child.take() {
             Some(b) => Action::Call(b),

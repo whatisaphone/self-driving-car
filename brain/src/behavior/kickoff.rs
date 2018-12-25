@@ -25,7 +25,7 @@ impl Behavior for Kickoff {
         name_of_type!(Kickoff)
     }
 
-    fn execute2(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context) -> Action {
         if (ctx.packet.GameBall.Physics.loc_2d() - Point2::origin()).norm() >= 1.0 {
             ctx.eeg.log("[Kickoff] not a kickoff");
             return Action::Abort;

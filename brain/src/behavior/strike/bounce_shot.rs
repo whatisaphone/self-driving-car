@@ -33,7 +33,7 @@ impl Behavior for BounceShot {
         name_of_type!(BounceShot)
     }
 
-    fn execute2(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context) -> Action {
         return_some!(self.same_ball_trajectory.execute(ctx));
 
         let me = ctx.me();
@@ -78,7 +78,7 @@ impl Behavior for BounceShot {
             intercept_car_loc,
             ctx.packet.GameInfo.TimeSeconds + intercept.time,
         );
-        child.execute2(ctx)
+        child.execute(ctx)
     }
 }
 

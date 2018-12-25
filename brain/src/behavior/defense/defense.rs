@@ -61,7 +61,7 @@ impl Behavior for Defense {
         name_of_type!(Defense)
     }
 
-    fn execute2(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context) -> Action {
         // If we're not between the ball and our goal, get there.
         if !Self::is_between_ball_and_own_goal(ctx) {
             return Action::call(Retreat::new());
@@ -107,7 +107,7 @@ impl Behavior for PushToOwnCorner {
         name_of_type!(PushToOwnCorner)
     }
 
-    fn execute2(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context) -> Action {
         let impending_concede_soon = ctx
             .scenario
             .impending_concede()
@@ -196,7 +196,7 @@ impl Behavior for HitToOwnCorner {
         name_of_type!(HitToOwnCorner)
     }
 
-    fn execute2(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context) -> Action {
         ctx.eeg.log("redirect to own corner");
 
         Action::call(Chain::new(Priority::Striking, vec![

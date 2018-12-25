@@ -33,10 +33,10 @@ where
         stringify!(Repeat)
     }
 
-    fn execute2(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context) -> Action {
         ctx.eeg
             .draw(Drawable::print(self.current.name(), color::YELLOW));
-        match self.current.execute2(ctx) {
+        match self.current.execute(ctx) {
             Action::Yield(i) => Action::Yield(i),
             Action::Call(b) => Action::Call(b),
             Action::Return | Action::Abort => {

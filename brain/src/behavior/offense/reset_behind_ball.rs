@@ -40,7 +40,7 @@ impl Behavior for ResetBehindBall {
         name_of_type!(ResetBehindBall)
     }
 
-    fn execute2(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context) -> Action {
         let target_loc = self.get_sane_drive_loc(ctx);
         let straight = GroundDrive::new(target_loc).end_chop(0.5);
         let turn = TurnPlanner::new(self.loc, None);

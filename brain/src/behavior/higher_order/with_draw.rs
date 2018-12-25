@@ -23,7 +23,7 @@ impl<B: Behavior> Behavior for WithDraw<B> {
         self.behavior.priority()
     }
 
-    fn execute2(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context) -> Action {
         for d in self.draw.iter() {
             ctx.eeg.draw(d.clone());
         }
@@ -31,6 +31,6 @@ impl<B: Behavior> Behavior for WithDraw<B> {
         ctx.eeg
             .draw(Drawable::print(self.behavior.name(), color::YELLOW));
 
-        self.behavior.execute2(ctx)
+        self.behavior.execute(ctx)
     }
 }

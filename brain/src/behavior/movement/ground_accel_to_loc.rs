@@ -33,7 +33,7 @@ impl Behavior for GroundAccelToLoc {
         name_of_type!(GroundAccelToLoc)
     }
 
-    fn execute2(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context) -> Action {
         let me = ctx.me();
         let distance = (me.Physics.loc_2d() - self.target_loc).norm();
         let time_remaining = self.target_time - ctx.packet.GameInfo.TimeSeconds;

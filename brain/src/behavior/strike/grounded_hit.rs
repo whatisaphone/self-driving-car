@@ -64,7 +64,7 @@ where
         stringify!(GroundedHit)
     }
 
-    fn execute2(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context) -> Action {
         let me = ctx.me();
 
         if IsSkidding.evaluate(&me.into()) {

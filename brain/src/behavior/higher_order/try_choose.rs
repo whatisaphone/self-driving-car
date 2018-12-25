@@ -43,7 +43,7 @@ impl Behavior for TryChoose {
         self.priority
     }
 
-    fn execute2(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context) -> Action {
         ctx.eeg.draw(Drawable::print(
             self.choices
                 .iter()
@@ -54,13 +54,13 @@ impl Behavior for TryChoose {
         ));
 
         if let Some(chosen_index) = self.chosen_index {
-            return self.choices[chosen_index].execute2(ctx);
+            return self.choices[chosen_index].execute(ctx);
         }
 
         // We need to choose a child behavior. This will happen on the first frame.
 
         for (index, behavior) in self.choices.iter_mut().enumerate() {
-            match behavior.execute2(ctx) {
+            match behavior.execute(ctx) {
                 Action::Abort => continue,
                 Action::Return => continue,
                 action @ _ => {

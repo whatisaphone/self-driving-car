@@ -24,7 +24,7 @@ impl Behavior for Offense {
         name_of_type!(Offense)
     }
 
-    fn execute2(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context) -> Action {
         if can_we_shoot(ctx) {
             ctx.eeg.log("[Offense] Taking the shot!");
             return Action::call(Shoot::new());

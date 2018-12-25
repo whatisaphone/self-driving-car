@@ -23,14 +23,14 @@ impl Behavior for TimeLimit {
         name_of_type!(TimeLimit)
     }
 
-    fn execute2(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context) -> Action {
         let now = ctx.packet.GameInfo.TimeSeconds;
         let start = *self.start.get_or_insert(now);
         let elapsed = now - start;
         if elapsed >= self.limit {
             Action::Abort
         } else {
-            self.child.execute2(ctx)
+            self.child.execute(ctx)
         }
     }
 }

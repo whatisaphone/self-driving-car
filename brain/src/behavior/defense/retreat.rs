@@ -36,7 +36,7 @@ impl Behavior for Retreat {
         name_of_type!(Retreat)
     }
 
-    fn execute2(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context) -> Action {
         let mut choices = Vec::<Box<Behavior>>::new();
 
         if let Some(b) = reset_behind_ball(ctx) {

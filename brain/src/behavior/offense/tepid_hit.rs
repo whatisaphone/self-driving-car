@@ -26,7 +26,7 @@ impl Behavior for TepidHit {
         name_of_type!(TepidHit)
     }
 
-    fn execute2(&mut self, _ctx: &mut Context) -> Action {
+    fn execute(&mut self, _ctx: &mut Context) -> Action {
         return Action::call(chain!(Priority::Idle, [
             FollowRoute::new(GroundIntercept::new()),
             GroundedHit::hit_towards(time_wasting_hit),

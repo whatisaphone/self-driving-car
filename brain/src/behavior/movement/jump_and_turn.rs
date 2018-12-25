@@ -36,7 +36,7 @@ impl Behavior for JumpAndTurn {
         name_of_type!(JumpAndTurn)
     }
 
-    fn execute2(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context) -> Action {
         let elapsed = self.time.tick(ctx.packet.GameInfo.TimeSeconds);
         if elapsed >= self.total_duration {
             return Action::Return;

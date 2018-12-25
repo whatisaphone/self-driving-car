@@ -17,7 +17,7 @@ impl Behavior for NullBehavior {
         name_of_type!(NullBehavior)
     }
 
-    fn execute2(&mut self, _ctx: &mut Context) -> Action {
+    fn execute(&mut self, _ctx: &mut Context) -> Action {
         Action::Yield(rlbot::ffi::PlayerInput::default())
     }
 }

@@ -33,7 +33,7 @@ impl Behavior for GetToFlatGround {
         name_of_type!(GetToFlatGround)
     }
 
-    fn execute2(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context) -> Action {
         if Self::on_flat_ground(ctx.me()) {
             return Action::Return;
         }

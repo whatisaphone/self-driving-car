@@ -47,7 +47,7 @@ impl Behavior for FollowRoute {
         name_of_type!(FollowRoute)
     }
 
-    fn execute2(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context) -> Action {
         if self.current.is_none() {
             let planner = &*self.planner.take().unwrap();
             if let Err(action) = self.advance(planner, ctx) {

@@ -46,7 +46,7 @@ impl Behavior for Runner {
         name_of_type!(Runner)
     }
 
-    fn execute2(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context) -> Action {
         Action::Yield(self.exec(0, ctx))
     }
 }
@@ -61,7 +61,7 @@ impl Runner {
         let behavior = self.choose_behavior(ctx);
         ctx.eeg
             .draw(Drawable::print(behavior.name(), color::YELLOW));
-        let action = behavior.execute2(ctx);
+        let action = behavior.execute(ctx);
 
         match action {
             Action::Yield(i) => i,
