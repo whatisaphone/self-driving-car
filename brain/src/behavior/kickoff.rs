@@ -104,7 +104,7 @@ mod integration_tests {
     fn kickoff_off_center() {
         let test = TestRunner::new()
             .scenario(TestScenario {
-                car_loc: Point3::new(-256.0, -3840.0, 17.01).coords,
+                car_loc: Point3::new(-256.0, -3840.0, 17.01),
                 ..Default::default()
             })
             .starting_boost(33.0)
@@ -120,7 +120,7 @@ mod integration_tests {
     fn kickoff_diagonal() {
         let test = TestRunner::new()
             .scenario(TestScenario {
-                car_loc: Point3::new(-1952.0, -2464.0, 17.01).coords,
+                car_loc: Point3::new(-1952.0, -2464.0, 17.01),
                 car_rot: Rotation3::from_unreal_angles(0.0, 0.25 * PI, 0.0),
                 ..Default::default()
             })

@@ -219,14 +219,14 @@ mod integration_tests {
         integration_tests::helpers::{TestRunner, TestScenario},
         routing::{segments::SimpleArc, test::segment_plan_tester},
     };
-    use nalgebra::{Point2, Vector2, Vector3};
+    use nalgebra::{Point2, Point3, Vector2, Vector3};
 
     #[test]
     #[ignore(note = "This is a demo, not a test")]
     fn simple_arc_demo() {
         let test = TestRunner::new()
             .scenario(TestScenario {
-                car_loc: Vector3::new(1000.0, 0.0, 17.01),
+                car_loc: Point3::new(1000.0, 0.0, 17.01),
                 car_vel: Vector3::new(100.0, 0.0, 0.0),
                 ..Default::default()
             })

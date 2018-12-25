@@ -31,9 +31,9 @@ mod integration_tests {
     #[ignore]
     fn little_pop() {
         let test = TestRunner::start(CornerOffense::new(), TestScenario {
-            ball_loc: Vector3::new(2935.073, 3494.3137, 93.65),
+            ball_loc: Point3::new(2935.073, 3494.3137, 93.65),
             ball_vel: Vector3::new(-805.1208, 831.31323, 1.0785761),
-            car_loc: Vector3::new(3706.8596, 3888.5242, 126.83613),
+            car_loc: Point3::new(3706.8596, 3888.5242, 126.83613),
             car_rot: Rotation3::from_unreal_angles(0.39174035, 0.24965537, -2.3729725),
             car_vel: Vector3::new(436.61905, 1689.2134, 17.572618),
             ..Default::default()

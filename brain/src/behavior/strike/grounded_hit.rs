@@ -408,16 +408,16 @@ mod integration_tests {
         integration_tests::helpers::{TestRunner, TestScenario},
     };
     use common::{prelude::*, rl};
-    use nalgebra::{Point2, Rotation3, Vector3};
+    use nalgebra::{Point2, Point3, Rotation3, Vector3};
 
     #[test]
     #[ignore(note = "The great bankruptcy of 2018")]
     fn normal_shoot() {
         let test = TestRunner::new()
             .scenario(TestScenario {
-                ball_loc: Vector3::new(-2000.0, 2000.0, 500.0),
+                ball_loc: Point3::new(-2000.0, 2000.0, 500.0),
                 ball_vel: Vector3::new(1000.0, 0.0, 0.0),
-                car_loc: Vector3::new(0.0, 0.0, 17.01),
+                car_loc: Point3::new(0.0, 0.0, 17.01),
                 ..Default::default()
             })
             .behavior(GroundedHit::hit_towards(|ctx| {
@@ -435,9 +435,9 @@ mod integration_tests {
     fn rolling_hit() {
         let test = TestRunner::new()
             .scenario(TestScenario {
-                ball_loc: Vector3::new(3962.02, -1981.12, 152.39),
+                ball_loc: Point3::new(3962.02, -1981.12, 152.39),
                 ball_vel: Vector3::new(-291.741, 890.49097, -303.581),
-                car_loc: Vector3::new(3821.52, -3021.23, 16.18),
+                car_loc: Point3::new(3821.52, -3021.23, 16.18),
                 car_rot: Rotation3::from_unreal_angles(-0.018183012, 2.1181667, 0.012321899),
                 car_vel: Vector3::new(-644.811, 1099.141, 4.311),
                 ..Default::default()

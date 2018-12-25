@@ -177,13 +177,13 @@ mod integration_tests {
         integration_tests::helpers::{TestRunner, TestScenario},
     };
     use common::prelude::*;
-    use nalgebra::{Rotation3, Vector3};
+    use nalgebra::{Point3, Rotation3, Vector3};
     use std::f32::consts::PI;
 
     #[test]
     fn panic_defense() {
         let test = TestRunner::start0(TestScenario {
-            car_loc: Vector3::new(500.0, -1000.0, 17.01),
+            car_loc: Point3::new(500.0, -1000.0, 17.01),
             car_rot: Rotation3::from_unreal_angles(0.0, -PI / 2.0, 0.0),
             car_vel: Vector3::new(0.0, 0.0, 0.0),
             ..Default::default()

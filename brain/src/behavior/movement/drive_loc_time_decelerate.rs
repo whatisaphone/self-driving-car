@@ -181,7 +181,7 @@ mod integration_tests {
             let target_loc = Vector2::new(target_x, target_y);
             let test = TestRunner::start2(
                 TestScenario {
-                    ball_loc: Vector3::new(2000.0, 0.0, 0.0),
+                    ball_loc: Point3::new(2000.0, 0.0, 0.0),
                     car_vel: Vector3::new(0.0, initial_speed, 0.0),
                     ..Default::default()
                 },

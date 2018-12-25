@@ -2,7 +2,7 @@
 mod integration_tests {
     use crate::integration_tests::helpers::{TestRunner, TestScenario};
     use common::prelude::*;
-    use nalgebra::{Point3, Vector3};
+    use nalgebra::Point3;
 
     #[test]
     #[ignore] // This basically works but is inaccurate. See the comment above `air()`.
@@ -10,7 +10,7 @@ mod integration_tests {
         let expected_loc = Point3::new(400.0, 1100.0, 600.0);
         let test = TestRunner::new()
             .scenario(TestScenario {
-                ball_loc: Vector3::new(1000.0, 0.0, 0.0),
+                ball_loc: Point3::new(1000.0, 0.0, 0.0),
                 ..Default::default()
             })
             .run();

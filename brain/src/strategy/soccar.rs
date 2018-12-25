@@ -104,15 +104,15 @@ mod integration_tests {
     };
     use brain_test_data::recordings;
     use common::prelude::*;
-    use nalgebra::{Rotation3, Vector3};
+    use nalgebra::{Point3, Rotation3, Vector3};
 
     #[test]
     fn dont_panic_when_no_intercept() {
         let test = TestRunner::new()
             .scenario(TestScenario {
-                ball_loc: Vector3::new(-1185.1904, 1242.3097, 133.98555),
+                ball_loc: Point3::new(-1185.1904, 1242.3097, 133.98555),
                 ball_vel: Vector3::new(-1743.6543, 1205.1072, -55.04102),
-                car_loc: Vector3::new(492.75253, 567.8963, 17.01),
+                car_loc: Point3::new(492.75253, 567.8963, 17.01),
                 car_rot: Rotation3::from_unreal_angles(-0.00958738, -3.1036267, 0.0),
                 car_vel: Vector3::new(-1369.871, 12.749782, 8.351),
                 ..Default::default()
@@ -131,12 +131,12 @@ mod integration_tests {
     fn get_boost_on_defense_if_we_have_time() {
         let test = TestRunner::new()
             .scenario(TestScenario {
-                ball_loc: Vector3::new(-3112.23, -2548.45, 93.72),
+                ball_loc: Point3::new(-3112.23, -2548.45, 93.72),
                 ball_vel: Vector3::new(-15.161, 716.11096, 37.961),
-                car_loc: Vector3::new(-2500.7, -4935.0, 17.109999),
+                car_loc: Point3::new(-2500.7, -4935.0, 17.109999),
                 car_rot: Rotation3::from_unreal_angles(0.0120197795, 0.056800842, -0.0034418863),
                 car_vel: Vector3::new(492.951, -132.80101, 13.231),
-                enemy_loc: Vector3::new(-2241.9, -2789.75, 17.02),
+                enemy_loc: Point3::new(-2241.9, -2789.75, 17.02),
                 enemy_rot: Rotation3::from_unreal_angles(0.009554009, 1.960959, 0.00017689279),
                 enemy_vel: Vector3::new(-472.791, 1168.0409, 8.001),
                 ..Default::default()
@@ -159,9 +159,9 @@ mod integration_tests {
     fn get_boost_on_offense_if_we_have_time() {
         let test = TestRunner::new()
             .scenario(TestScenario {
-                ball_loc: Vector3::new(810.51, 373.18, 227.86),
+                ball_loc: Point3::new(810.51, 373.18, 227.86),
                 ball_vel: Vector3::new(1538.241, 861.4509, -272.631),
-                car_loc: Vector3::new(837.23, -759.61, 18.4),
+                car_loc: Point3::new(837.23, -759.61, 18.4),
                 car_rot: Rotation3::from_unreal_angles(-0.08508434, -0.4163043, 0.009112751),
                 car_vel: Vector3::new(1678.101, -205.961, -160.641),
                 ..Default::default()
@@ -180,8 +180,8 @@ mod integration_tests {
     fn clear_stationary_ball() {
         let test = TestRunner::new()
             .scenario(TestScenario {
-                ball_loc: Vector3::new(-500.0, -5000.0, 0.0),
-                car_loc: Vector3::new(500.0, -5000.0, 17.0),
+                ball_loc: Point3::new(-500.0, -5000.0, 0.0),
+                car_loc: Point3::new(500.0, -5000.0, 17.0),
                 car_rot: Rotation3::from_unreal_angles(0.0, 210_f32.to_radians(), 0.0),
                 ..Default::default()
             })

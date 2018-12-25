@@ -20,7 +20,7 @@ mod integration_tests {
         strategy::{Action, Behavior, Context},
     };
     use common::prelude::*;
-    use nalgebra::{Rotation3, Vector3};
+    use nalgebra::{Point3, Rotation3};
     use nameof::name_of_type;
     use rlbot;
 
@@ -45,8 +45,8 @@ mod integration_tests {
     #[test]
     fn steer_direction() {
         let test = TestRunner::start(SimpleSteerTowardsBall, TestScenario {
-            ball_loc: Vector3::new(2800.0, -2800.0, 0.0),
-            car_loc: Vector3::new(3800.0, -2400.0, 0.0),
+            ball_loc: Point3::new(2800.0, -2800.0, 0.0),
+            car_loc: Point3::new(3800.0, -2400.0, 0.0),
             car_rot: Rotation3::from_unreal_angles(0.0, 2.8, 0.0),
             ..Default::default()
         });

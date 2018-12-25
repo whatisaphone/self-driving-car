@@ -527,15 +527,15 @@ fn rotator(r: UnitQuaternion<f32>) -> rlbot::state::RotatorPartial {
 }
 
 pub struct TestScenario {
-    pub ball_loc: Vector3<f32>,
+    pub ball_loc: Point3<f32>,
     pub ball_rot: Rotation3<f32>,
     pub ball_vel: Vector3<f32>,
     pub ball_ang_vel: Vector3<f32>,
-    pub car_loc: Vector3<f32>,
+    pub car_loc: Point3<f32>,
     pub car_rot: Rotation3<f32>,
     pub car_vel: Vector3<f32>,
     pub car_ang_vel: Vector3<f32>,
-    pub enemy_loc: Vector3<f32>,
+    pub enemy_loc: Point3<f32>,
     pub enemy_rot: Rotation3<f32>,
     pub enemy_vel: Vector3<f32>,
     pub enemy_ang_vel: Vector3<f32>,
@@ -546,15 +546,15 @@ pub struct TestScenario {
 impl Default for TestScenario {
     fn default() -> Self {
         TestScenario {
-            ball_loc: Vector3::new(0.0, 0.0, 92.74),
+            ball_loc: Point3::new(0.0, 0.0, 92.74),
             ball_rot: Rotation3::from_unreal_angles(0.0, 0.0, 0.0),
             ball_vel: Vector3::new(0.0, 0.0, 0.0),
             ball_ang_vel: Vector3::new(0.0, 0.0, 0.0),
-            car_loc: Vector3::new(0.0, 0.0, 17.01),
+            car_loc: Point3::new(0.0, 0.0, 17.01),
             car_rot: Rotation3::from_unreal_angles(0.0, PI / 2.0, 0.0),
             car_vel: Vector3::new(0.0, 0.0, 0.0),
             car_ang_vel: Vector3::new(0.0, 0.0, 0.0),
-            enemy_loc: Vector3::new(6000.0, 6000.0, 0.0),
+            enemy_loc: Point3::new(6000.0, 6000.0, 0.0),
             enemy_rot: Rotation3::from_unreal_angles(0.0, 0.0, 0.0),
             enemy_vel: Vector3::new(0.0, 0.0, 0.0),
             enemy_ang_vel: Vector3::new(0.0, 0.0, 0.0),
@@ -574,15 +574,15 @@ impl TestScenario {
             .find(|r| time <= r.time && r.time < time + 1.0)
             .unwrap();
         let result = Self {
-            ball_loc: tick.ball.loc.coords,
+            ball_loc: tick.ball.loc,
             ball_rot: tick.ball.rot.to_rotation_matrix(),
             ball_vel: tick.ball.vel,
             ball_ang_vel: tick.ball.ang_vel,
-            car_loc: tick.players[0].state.loc.coords,
+            car_loc: tick.players[0].state.loc,
             car_rot: tick.players[0].state.rot.to_rotation_matrix(),
             car_vel: tick.players[0].state.vel,
             car_ang_vel: tick.players[0].state.ang_vel,
-            enemy_loc: tick.players[1].state.loc.coords,
+            enemy_loc: tick.players[1].state.loc,
             enemy_rot: tick.players[1].state.rot.to_rotation_matrix(),
             enemy_vel: tick.players[1].state.vel,
             enemy_ang_vel: tick.players[1].state.ang_vel,
@@ -622,9 +622,9 @@ impl TestScenario {
     fn to_source(&self) -> String {
         format!(
             "TestScenario {{
-            ball_loc: Vector3::new({}, {}, {}),
+            ball_loc: Point3::new({}, {}, {}),
             ball_vel: Vector3::new({}, {}, {}),
-            car_loc: Vector3::new({}, {}, {}),
+            car_loc: Point3::new({}, {}, {}),
             car_rot: Rotation3::from_unreal_angles({}, {}, {}),
             car_vel: Vector3::new({}, {}, {}),
             ..Default::default()

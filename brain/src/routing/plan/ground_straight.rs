@@ -382,7 +382,7 @@ mod integration_tests {
     fn brake_when_going_too_fast() {
         let test = TestRunner::new()
             .scenario(TestScenario {
-                ball_loc: Point3::new(1000.0, 0.0, 0.0).coords,
+                ball_loc: Point3::new(1000.0, 0.0, 0.0),
                 car_vel: Vector3::new(0.0, 2000.0, 0.0),
                 ..Default::default()
             })

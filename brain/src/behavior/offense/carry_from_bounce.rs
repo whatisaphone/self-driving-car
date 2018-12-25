@@ -72,9 +72,9 @@ mod integration_tests {
     #[ignore] // TODO
     fn quick_pickup() {
         let test = TestRunner::start(CarryFromBounce::new(), TestScenario {
-            ball_loc: Vector3::new(2087.2695, -3514.1238, 165.13829),
+            ball_loc: Point3::new(2087.2695, -3514.1238, 165.13829),
             ball_vel: Vector3::new(391.0601, 152.0587, 344.67285),
-            car_loc: Vector3::new(2699.6733, -4897.0317, 15.455973),
+            car_loc: Point3::new(2699.6733, -4897.0317, 15.455973),
             car_rot: Rotation3::from_unreal_angles(0.002876214, 1.2708073, -0.0089162635),
             car_vel: Vector3::new(338.24823, 904.18585, 11.588186),
             ..Default::default()
@@ -89,9 +89,9 @@ mod integration_tests {
     #[ignore] // TODO
     fn hard_mode_pickup() {
         let test = TestRunner::start(CarryFromBounce::new(), TestScenario {
-            ball_loc: Vector3::new(2087.2695, -3514.1238, 165.13829),
+            ball_loc: Point3::new(2087.2695, -3514.1238, 165.13829),
             ball_vel: Vector3::new(591.0601, 152.0587, 144.67285),
-            car_loc: Vector3::new(2699.6733, -4897.0317, 15.455973),
+            car_loc: Point3::new(2699.6733, -4897.0317, 15.455973),
             car_rot: Rotation3::from_unreal_angles(0.002876214, 1.2708073, -0.0089162635),
             car_vel: Vector3::new(338.24823, 904.18585, 11.588186),
             ..Default::default()
@@ -106,9 +106,9 @@ mod integration_tests {
     #[ignore] // TODO
     fn wait_for_side_wall_rebound() {
         let test = TestRunner::start(CarryFromBounce::new(), TestScenario {
-            ball_loc: Vector3::new(-2591.3115, -1322.5367, 459.51404),
+            ball_loc: Point3::new(-2591.3115, -1322.5367, 459.51404),
             ball_vel: Vector3::new(-930.0902, -258.3213, -359.45007),
-            car_loc: Vector3::new(-3092.0574, -3168.787, 17.01),
+            car_loc: Point3::new(-3092.0574, -3168.787, 17.01),
             car_rot: Rotation3::from_unreal_angles(-0.00958738, -3.0723717, 0.0),
             car_vel: Vector3::new(-1631.8348, -197.60046, 8.34),
             ..Default::default()

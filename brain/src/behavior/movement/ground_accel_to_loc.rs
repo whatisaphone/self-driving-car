@@ -117,7 +117,7 @@ mod integration_tests {
         integration_tests::helpers::{TestRunner, TestScenario},
     };
     use common::prelude::*;
-    use nalgebra::{Point2, Vector3};
+    use nalgebra::{Point2, Point3};
 
     // This test is ignored because it's finicky and not quite accurate. The
     // issue seems to be that there is more input lag for throttle than for
@@ -130,7 +130,7 @@ mod integration_tests {
             let target_loc = Point2::new(x, y);
             let test = TestRunner::start2(
                 TestScenario {
-                    ball_loc: Vector3::new(2000.0, 0.0, 0.0),
+                    ball_loc: Point3::new(2000.0, 0.0, 0.0),
                     boost,
                     ..Default::default()
                 },
