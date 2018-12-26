@@ -69,7 +69,7 @@ version = "0.1.0"
 dependencies = [
  "arrayvec 0.4.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "brain-test-data 0.1.0",
- "chip 0.0.4",
+ "chip 0.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "collect 0.1.0",
  "common 0.1.0",
  "crossbeam-channel 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -127,7 +127,8 @@ dependencies = [
 
 [[package]]
 name = "chip"
-version = "0.0.4"
+version = "0.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "nalgebra 0.16.12 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -183,7 +184,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "common"
 version = "0.1.0"
 dependencies = [
- "chip 0.0.4",
+ "chip 0.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "nalgebra 0.16.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "rlbot 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -344,7 +345,7 @@ dependencies = [
 name = "dom"
 version = "0.1.0"
 dependencies = [
- "chip 0.0.4",
+ "chip 0.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "common 0.1.0",
  "nalgebra 0.16.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "rlbot 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1594,6 +1595,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum cc 1.0.28 (registry+https://github.com/rust-lang/crates.io-index)" = "bb4a8b715cb4597106ea87c7c84b2f1d452c7492033765df7f32651e66fcf749"
 "checksum cfg-if 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "082bb9b28e00d3c9d39cc03e64ce4cea0f1bb9b3fde493f0cbc008472d22bdf4"
 "checksum cgl 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "55e7ec0b74fe5897894cbc207092c577e87c52f8a59e8ca8d97ef37551f60a49"
+"checksum chip 0.0.5 (registry+https://github.com/rust-lang/crates.io-index)" = "efad4e9c265a2accca4ff63807f3e8dad1084f36ae54b18379c4d011f12163aa"
 "checksum chrono 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)" = "45912881121cb26fad7c38c17ba7daa18764771836b34fab7d3fbd93ed633878"
 "checksum cloudabi 0.0.3 (registry+https://github.com/rust-lang/crates.io-index)" = "ddfc5b9aa5d4507acaf872de71051dfd0e309860e88966e1051e462a077aac4f"
 "checksum cocoa 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)" = "b0c23085dde1ef4429df6e5896b89356d35cdd321fb43afe3e378d010bb5adc6"

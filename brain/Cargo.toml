@@ -23,7 +23,7 @@ piston_window = "0.80.0"
 piston2d-graphics = "0.26.0"
 
 rlbot = "0.2.0"
-chip = "0.0.4"
+chip = "0.0.5"
 
 common = { path = "../common" }
 collect = { path = "../collect" }
