@@ -3,21 +3,16 @@ use crate::{
         defense::retreat::Retreat,
         higher_order::Chain,
         offense::TepidHit,
-        strike::{
-            BounceShot, GroundedHit, GroundedHitAimContext, GroundedHitTarget,
-            GroundedHitTargetAdjust,
-        },
+        strike::{GroundedHit, GroundedHitAimContext, GroundedHitTarget, GroundedHitTargetAdjust},
     },
-    eeg::{color, Drawable, Event},
-    predict::naive_ground_intercept_2,
+    eeg::Event,
     routing::{behavior::FollowRoute, plan::GroundIntercept},
-    strategy::{Action, Behavior, Context, Goal, Priority, Scenario},
-    utils::{geometry::ExtendF32, Wall, WallRayCalculator},
+    strategy::{Action, Behavior, Context, Priority, Scenario},
+    utils::geometry::ExtendF32,
 };
 use common::prelude::*;
-use nalgebra::{Point2, Point3, Rotation2, Vector2};
+use nalgebra::{Point2, Vector2};
 use nameof::name_of_type;
-use ordered_float::NotNan;
 use std::f32::consts::PI;
 
 pub struct Defense;
@@ -83,166 +78,6 @@ impl Behavior for Defense {
     }
 }
 
-pub struct PushToOwnCorner;
-
-impl PushToOwnCorner {
-    const MAX_BALL_Z: f32 = HitToOwnCorner::MAX_BALL_Z;
-
-    pub fn new() -> Self {
-        PushToOwnCorner
-    }
-
-    fn shot_angle(ball_loc: Point3<f32>, car_loc: Point3<f32>, aim_loc: Point2<f32>) -> f32 {
-        let angle_me_ball = car_loc.coords.to_2d().angle_to(ball_loc.coords.to_2d());
-        let angle_ball_goal = ball_loc.coords.to_2d().angle_to(aim_loc.coords);
-        (angle_me_ball - angle_ball_goal).normalize_angle().abs()
-    }
-
-    fn goal_angle(ball_loc: Point3<f32>, goal: &Goal) -> f32 {
-        let goal_to_ball_axis = (ball_loc.to_2d() - goal.center_2d).to_axis();
-        goal_to_ball_axis.rotation_to(&goal.normal_2d).angle().abs()
-    }
-}
-
-impl Behavior for PushToOwnCorner {
-    fn name(&self) -> &str {
-        name_of_type!(PushToOwnCorner)
-    }
-
-    fn execute(&mut self, ctx: &mut Context) -> Action {
-        let impending_concede_soon = ctx
-            .scenario
-            .impending_concede()
-            .map(|f| f.t < 5.0)
-            .unwrap_or_default();
-
-        let me_intercept =
-            naive_ground_intercept_2(&ctx.me().into(), ctx.scenario.ball_prediction(), |ball| {
-                ball.loc.z < Self::MAX_BALL_Z
-            });
-
-        let enemy_shootable_intercept = ctx
-            .enemy_cars()
-            .filter_map(|enemy| {
-                naive_ground_intercept_2(&enemy.into(), ctx.scenario.ball_prediction(), |ball| {
-                    let own_goal = ctx.game.own_goal().center_2d;
-                    ball.loc.z < GroundedHit::max_ball_z()
-                        && Self::shot_angle(ball.loc, enemy.Physics.loc(), own_goal) < PI / 3.0
-                        && Self::goal_angle(ball.loc, ctx.game.own_goal()) < PI / 3.0
-                })
-            })
-            .min_by_key(|i| NotNan::new(i.time).unwrap());
-
-        if let Some(ref i) = me_intercept {
-            ctx.eeg
-                .log(format!("[Defense] me_intercept: {:.2}", i.time));
-            ctx.eeg.draw(Drawable::GhostBall(
-                i.ball_loc,
-                color::for_team(ctx.game.team),
-            ));
-        }
-        if let Some(ref i) = enemy_shootable_intercept {
-            ctx.eeg
-                .log(format!("[Defense] enemy_shoot_intercept: {:.2}", i.time));
-            ctx.eeg.draw(Drawable::GhostBall(
-                i.ball_loc,
-                color::for_team(ctx.game.enemy_team),
-            ));
-        }
-
-        match (me_intercept, enemy_shootable_intercept) {
-            (_, None) => {
-                if !impending_concede_soon {
-                    ctx.eeg.log("Safe for now");
-                    Action::Return
-                } else {
-                    ctx.eeg.log("Hitting away from goal");
-                    Action::call(HitToOwnCorner::new())
-                }
-            }
-            (None, _) => {
-                ctx.eeg.log("Can't reach ball");
-                Action::Abort
-            }
-            (Some(_), Some(_)) => {
-                if ctx.scenario.possession() >= 3.0 {
-                    ctx.eeg.log("we have all the time in the world");
-                    Action::Abort
-                } else if ctx.scenario.possession() >= Scenario::POSSESSION_CONTESTABLE {
-                    ctx.eeg.log("Swatting ball away from enemy");
-                    Action::call(HitToOwnCorner::new())
-                } else if ctx.scenario.possession() >= -Scenario::POSSESSION_CONTESTABLE {
-                    ctx.eeg.log("Defensive race");
-                    Action::call(HitToOwnCorner::new())
-                } else {
-                    ctx.eeg.log("Can't reach ball before enemy");
-                    Action::Abort
-                }
-            }
-        }
-    }
-}
-
-pub struct HitToOwnCorner;
-
-impl HitToOwnCorner {
-    const MAX_BALL_Z: f32 = BounceShot::MAX_BALL_Z;
-
-    pub fn new() -> Self {
-        HitToOwnCorner
-    }
-}
-
-impl Behavior for HitToOwnCorner {
-    fn name(&self) -> &str {
-        name_of_type!(HitToOwnCorner)
-    }
-
-    fn execute(&mut self, ctx: &mut Context) -> Action {
-        ctx.eeg.track(Event::HitToOwnCorner);
-
-        Action::call(Chain::new(Priority::Striking, vec![
-            Box::new(FollowRoute::new(GroundIntercept::new())),
-            Box::new(GroundedHit::hit_towards(Self::aim)),
-        ]))
-    }
-}
-
-impl HitToOwnCorner {
-    fn aim(ctx: &mut GroundedHitAimContext) -> Result<GroundedHitTarget, ()> {
-        let avoid = ctx.game.own_goal().center_2d;
-
-        let me_loc = ctx.car.Physics.loc_2d();
-        let ball_loc = ctx.intercept_ball_loc.to_2d();
-        let me_to_ball = ball_loc - me_loc;
-
-        let ltr_dir = Rotation2::new(PI / 6.0) * me_to_ball;
-        let ltr = WallRayCalculator::calculate(ball_loc, ball_loc + ltr_dir);
-        let rtl_dir = Rotation2::new(-PI / 6.0) * me_to_ball;
-        let rtl = WallRayCalculator::calculate(ball_loc, ball_loc + rtl_dir);
-
-        let result = if (avoid - ltr).norm() > (avoid - rtl).norm() {
-            ctx.eeg.log("push from left to right");
-            ltr
-        } else {
-            ctx.eeg.log("push from right to left");
-            rtl
-        };
-
-        match WallRayCalculator::wall_for_point(ctx.game, result) {
-            Wall::OwnGoal => {
-                ctx.eeg.log("avoiding the own goal");
-                Err(())
-            }
-            _ => Ok(GroundedHitTarget::new(
-                ctx.intercept_time,
-                GroundedHitTargetAdjust::RoughAim,
-                result,
-            )),
-        }
-    }
-}
-
 /// For `GroundedHit::hit_towards`, calculate an aim location which puts us
 /// between the ball and our own goal.
 pub fn defensive_hit(ctx: &mut GroundedHitAimContext) -> Result<GroundedHitTarget, ()> {
@@ -285,7 +120,7 @@ fn blocking_angle(
 #[cfg(test)]
 mod integration_tests {
     use crate::{
-        behavior::defense::{defense::HitToOwnCorner, Defense},
+        behavior::defense::{Defense, HitToOwnCorner},
         eeg::Event,
         integration_tests::helpers::{TestRunner, TestScenario},
         strategy::Runner,

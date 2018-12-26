@@ -24,7 +24,7 @@ impl Shoot {
 
     pub fn viable_shot(game: &Game, car_loc: Point3<f32>, ball_loc: Point3<f32>) -> Option<Shot> {
         // Aerials are not ready for prime-time yet
-        if ball_loc.z >= GroundedHit::max_ball_z() {
+        if ball_loc.z >= GroundedHitTarget::MAX_BALL_Z {
             return None;
         }
 

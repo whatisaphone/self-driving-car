@@ -52,7 +52,7 @@ impl RoutePlanner for GroundIntercept {
             ctx.start.loc,
             ctx.start.vel,
             ctx.start.boost,
-            |ball| ball.loc.z < GroundedHit::max_ball_z() && ball.vel.z < 25.0,
+            |ball| ball.loc.z < GroundedHit::MAX_BALL_Z && ball.vel.z < 25.0,
         )
         .ok_or_else(|| RoutePlanError::UnknownIntercept)?;
 
@@ -98,7 +98,7 @@ impl RoutePlanner for GroundInterceptStraight {
             ctx.start.loc,
             ctx.start.vel,
             ctx.start.boost,
-            |ball| ball.loc.z < GroundedHit::max_ball_z() && ball.vel.z < 25.0,
+            |ball| ball.loc.z < GroundedHit::MAX_BALL_Z && ball.vel.z < 25.0,
         )
         .ok_or_else(|| RoutePlanError::UnknownIntercept)?;
 

@@ -32,9 +32,6 @@ impl<Aim> GroundedHit<Aim>
 where
     Aim: Fn(&mut GroundedHitAimContext) -> Result<GroundedHitTarget, ()> + Send,
 {
-    const CONTACT_Z_OFFSET: f32 = -70.0; // This is misguided and should probably go away.
-    const MAX_BALL_Z: f32 = 220.0 - Self::CONTACT_Z_OFFSET; // TODO: how high can I jump
-
     pub fn hit_towards(aim: Aim) -> Self {
         Self {
             aim,
@@ -44,9 +41,8 @@ where
 }
 
 impl GroundedHit<fn(&mut GroundedHitAimContext) -> Result<GroundedHitTarget, ()>> {
-    pub fn max_ball_z() -> f32 {
-        Self::MAX_BALL_Z
-    }
+    const CONTACT_Z_OFFSET: f32 = -70.0; // This is misguided and should probably go away.
+    pub const MAX_BALL_Z: f32 = 220.0 - Self::CONTACT_Z_OFFSET; // TODO: how high can I jump
 
     /// A preset for `Aim` that hits the ball straight ahead.
     #[allow(dead_code)]
@@ -133,7 +129,7 @@ where
             me.Physics.loc(),
             me.Physics.vel(),
             me.Boost as f32,
-            |ball| ball.loc.z < Self::MAX_BALL_Z,
+            |ball| ball.loc.z < GroundedHit::MAX_BALL_Z,
         );
         let intercept = some_or_else!(intercept, {
             ctx.eeg.log("[GroundedHit] can't find intercept");
@@ -384,6 +380,8 @@ pub struct GroundedHitTarget {
 }
 
 impl GroundedHitTarget {
+    pub const MAX_BALL_Z: f32 = GroundedHit::MAX_BALL_Z;
+
     pub fn dodge(mut self, dodge: bool) -> Self {
         self.dodge = dodge;
         self
