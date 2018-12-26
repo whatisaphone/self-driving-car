@@ -29,7 +29,7 @@ impl<B: Behavior> Behavior for WithDraw<B> {
         }
 
         ctx.eeg
-            .draw(Drawable::print(self.behavior.name(), color::YELLOW));
+            .draw(Drawable::print(self.behavior.blurb(), color::YELLOW));
 
         self.behavior.execute(ctx)
     }

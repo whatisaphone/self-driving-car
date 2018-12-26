@@ -48,7 +48,7 @@ where
         }
 
         ctx.eeg
-            .draw(Drawable::print(self.child.name(), color::YELLOW));
+            .draw(Drawable::print(self.child.blurb(), color::YELLOW));
 
         self.child.execute(ctx)
     }

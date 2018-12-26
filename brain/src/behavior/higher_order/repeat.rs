@@ -35,7 +35,7 @@ where
 
     fn execute(&mut self, ctx: &mut Context) -> Action {
         ctx.eeg
-            .draw(Drawable::print(self.current.name(), color::YELLOW));
+            .draw(Drawable::print(self.current.blurb(), color::YELLOW));
         match self.current.execute(ctx) {
             Action::Yield(i) => Action::Yield(i),
             Action::Call(b) => Action::Call(b),

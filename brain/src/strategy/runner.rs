@@ -57,7 +57,7 @@ impl Runner {
 
         let behavior = self.choose_behavior(ctx);
         ctx.eeg
-            .draw(Drawable::print(behavior.name(), color::YELLOW));
+            .draw(Drawable::print(behavior.blurb(), color::YELLOW));
         let action = behavior.execute(ctx);
 
         match action {

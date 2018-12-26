@@ -11,21 +11,21 @@ pub struct TryChoose {
     priority: Priority,
     choices: Vec<Box<Behavior>>,
     chosen_index: Option<usize>,
-    name: String,
+    blurb: String,
 }
 
 impl TryChoose {
     pub fn new(priority: Priority, choices: Vec<Box<Behavior>>) -> Self {
-        let name = Self::name(choices.iter());
+        let blurb = Self::blurb(choices.iter());
         Self {
             priority,
             choices,
             chosen_index: None,
-            name,
+            blurb,
         }
     }
 
-    fn name<'a>(children: impl Iterator<Item = &'a Box<Behavior>>) -> String {
+    fn blurb<'a>(children: impl Iterator<Item = &'a Box<Behavior>>) -> String {
         iter::once(name_of_type!(TryChoose))
             .chain(iter::once(" ("))
             .chain(children.map(|b| b.name()).intersperse(", "))
@@ -36,7 +36,11 @@ impl TryChoose {
 
 impl Behavior for TryChoose {
     fn name(&self) -> &str {
-        &self.name
+        name_of_type!(TryChoose)
+    }
+
+    fn blurb(&self) -> &str {
+        &self.blurb
     }
 
     fn priority(&self) -> Priority {
@@ -65,14 +69,13 @@ impl Behavior for TryChoose {
                 Action::Return => continue,
                 action => {
                     self.chosen_index = Some(index);
-                    ctx.eeg
-                        .log(name_of_type!(TryChoose), format!("chose index {}", index));
+                    ctx.eeg.log(self.name(), format!("chose index {}", index));
                     return action;
                 }
             }
         }
 
-        ctx.eeg.log(name_of_type!(TryChoose), "none suitable");
+        ctx.eeg.log(self.name(), "none suitable");
         Action::Abort
     }
 }
