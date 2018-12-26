@@ -11,7 +11,7 @@ use collect::{
 };
 use common::{ext::ExtendRLBot, prelude::*};
 use lazy_static::lazy_static;
-use nalgebra::{Point3, Rotation3, UnitQuaternion, Vector3};
+use nalgebra::{Point2, Point3, Rotation3, UnitQuaternion, Vector3};
 use ordered_float::NotNan;
 use std::{
     collections::HashSet,
@@ -398,7 +398,9 @@ fn test_thread(
                     let first_score = first_packet.match_score();
                     let current_score = packet.match_score();
                     let team = Team::Orange.to_ffi() as usize;
-                    tx.send(current_score[team] > first_score[team]);
+                    // This doesn't detect own goals, because of RLBot framework limitations. If
+                    // there was a goal reset, conservatively assume that the enemy scored.
+                    tx.send(current_score[team] > first_score[team] || is_kickoff(&packet));
                 }
                 Message::ExamineEEG(f) => {
                     f(&eeg);
@@ -419,6 +421,10 @@ fn test_thread(
     for i in 0..match_settings.NumPlayers {
         rlbot.update_player_input(Default::default(), i).unwrap();
     }
+}
+
+fn is_kickoff(packet: &rlbot::ffi::LiveDataPacket) -> bool {
+    (packet.GameBall.Physics.loc_2d() - Point2::origin()).norm() < 1.0
 }
 
 fn setup_scenario(

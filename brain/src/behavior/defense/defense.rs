@@ -127,7 +127,7 @@ mod integration_tests {
     };
     use brain_test_data::recordings;
     use common::prelude::*;
-    use nalgebra::{Point2, Point3, Rotation3, Vector3};
+    use nalgebra::{Point3, Rotation3, Vector3};
 
     #[test]
     fn bouncing_save() {
@@ -547,11 +547,6 @@ mod integration_tests {
             .run_for_millis(4000);
 
         assert!(!test.enemy_has_scored());
-        let packet = test.sniff_packet();
-        let ball_loc = packet.GameBall.Physics.loc_2d();
-        // Sometimes enemy_has_scored doesn't work since the framework doesn't support
-        // it. Also make sure there wasn't a goal reset.
-        assert!((ball_loc - Point2::origin()).norm() >= 1.0);
     }
 
     #[test]
