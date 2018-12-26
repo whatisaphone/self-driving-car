@@ -455,10 +455,9 @@ fn setup_scenario(
     );
 
     // Wait a few frames for the state to take effect.
-    rlbot.packeteer().next().unwrap();
-    rlbot.packeteer().next().unwrap();
-    rlbot.packeteer().next().unwrap();
-    rlbot.packeteer().next().unwrap();
+    let mut packeteer = rlbot.packeteer();
+    packeteer.next().unwrap();
+    packeteer.next().unwrap();
 }
 
 fn set_state(
