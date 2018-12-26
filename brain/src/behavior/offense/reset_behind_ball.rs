@@ -55,8 +55,10 @@ impl ResetBehindBall {
             self.loc + (self.loc - ctx.game.enemy_goal().center_2d).normalize() * self.distance;
 
         if !ctx.game.is_inside_field(target_loc) {
-            ctx.eeg
-                .log("[ResetBehindBall] loc outside field; trying straight back from reference");
+            ctx.eeg.log(
+                self.name(),
+                "loc outside field; trying straight back from reference",
+            );
             target_loc = self.loc
                 + Vector2::new(
                     0.0,
@@ -65,8 +67,10 @@ impl ResetBehindBall {
         }
 
         if !ctx.game.is_inside_field(target_loc) {
-            ctx.eeg
-                .log("[ResetBehindBall] loc outside field; trying straight back from self");
+            ctx.eeg.log(
+                self.name(),
+                "loc outside field; trying straight back from self",
+            );
             target_loc = ctx.me().Physics.loc_2d()
                 + Vector2::new(
                     0.0,
@@ -76,7 +80,7 @@ impl ResetBehindBall {
 
         if !ctx.game.is_inside_field(target_loc) {
             ctx.eeg
-                .log("[ResetBehindBall] loc outside field; going to goal instead");
+                .log(self.name(), "loc outside field; going to goal instead");
             return ctx.game.own_goal().center_2d
                 + Vector2::new(0.0, ctx.game.own_goal().center_2d.y.signum() * 250.0);
         }
@@ -84,12 +88,12 @@ impl ResetBehindBall {
         let margin = 250.0;
         let max_x = ctx.game.field_max_x() - margin;
         if target_loc.x.abs() >= max_x {
-            ctx.eeg.log("[ResetBehindBall] clamping x");
+            ctx.eeg.log(self.name(), "clamping x");
             target_loc.x = max_x * target_loc.x.signum();
         }
         let max_y = ctx.game.field_max_y() - margin;
         if target_loc.y.abs() >= max_y {
-            ctx.eeg.log("[ResetBehindBall] clamping y");
+            ctx.eeg.log(self.name(), "clamping y");
             target_loc.y = max_y * target_loc.y.signum();
         }
         target_loc

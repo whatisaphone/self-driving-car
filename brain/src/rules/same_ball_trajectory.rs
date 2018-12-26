@@ -1,5 +1,6 @@
 use crate::strategy::{Action, Context};
 use nalgebra::Point3;
+use nameof::name_of_type;
 
 const ERROR_THRESHOLD: f32 = 25.0;
 
@@ -51,10 +52,10 @@ impl SameBallTrajectory {
 
         let error = (prediction.loc - frame.loc).norm();
         if error >= ERROR_THRESHOLD {
-            ctx.eeg.log(format!(
-                "[SameBallTrajectory] perturbance detected with error {:.2}",
-                error,
-            ));
+            ctx.eeg.log(
+                name_of_type!(SameBallTrajectory),
+                format!("perturbance detected with error {:.2}", error),
+            );
             true
         } else {
             false

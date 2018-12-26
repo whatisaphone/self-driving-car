@@ -81,7 +81,7 @@ impl Behavior for Shoot {
     fn execute(&mut self, ctx: &mut Context) -> Action {
         let intercept = Self::aim_calc(ctx.game, &ctx.scenario, ctx.me());
         if intercept.is_none() {
-            ctx.eeg.log("[Shoot] no viable shot");
+            ctx.eeg.log(self.name(), "no viable shot");
             return Action::Abort;
         }
 

@@ -96,6 +96,10 @@ impl ForwardDodgeRunner {
 }
 
 impl SegmentRunner for ForwardDodgeRunner {
+    fn name(&self) -> &str {
+        name_of_type!(ForwardDodgeRunner)
+    }
+
     fn execute(&mut self, ctx: &mut Context) -> SegmentRunAction {
         match self.behavior.execute(ctx) {
             Action::Yield(i) => SegmentRunAction::Yield(i),

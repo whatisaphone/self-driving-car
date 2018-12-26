@@ -65,13 +65,14 @@ impl Behavior for TryChoose {
                 Action::Return => continue,
                 action => {
                     self.chosen_index = Some(index);
-                    ctx.eeg.log(format!("[TryChoose] Chose index {}", index));
+                    ctx.eeg
+                        .log(name_of_type!(TryChoose), format!("chose index {}", index));
                     return action;
                 }
             }
         }
 
-        ctx.eeg.log("[TryChoose] None suitable");
+        ctx.eeg.log(name_of_type!(TryChoose), "none suitable");
         Action::Abort
     }
 }

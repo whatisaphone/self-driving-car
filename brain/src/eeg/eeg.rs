@@ -75,12 +75,17 @@ impl EEG {
         self.current_packet_time = packet.GameInfo.TimeSeconds;
     }
 
-    pub fn log(&mut self, message: impl Into<String>) {
-        println!("{:>8.3} {}", self.current_packet_time, message.into());
+    pub fn log(&mut self, tag: &str, message: impl Into<String>) {
+        println!(
+            "{:>8.3} [{}] {}",
+            self.current_packet_time,
+            tag,
+            message.into()
+        );
     }
 
-    pub fn log_pretty(&mut self, logger: &str, name: &str, value: impl PrettyPrint) {
-        self.log(format!("[{}] {} = {}", logger, name, value.pretty()))
+    pub fn log_pretty(&mut self, tag: &str, name: &str, value: impl PrettyPrint) {
+        self.log(tag, format!("{} = {}", name, value.pretty()))
     }
 
     pub fn track(&mut self, event: Event) {

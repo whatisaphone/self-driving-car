@@ -43,7 +43,7 @@ where
 
     fn execute(&mut self, ctx: &mut Context) -> Action {
         if !self.predicate.evaluate(ctx) {
-            ctx.eeg.log("[While] Terminating");
+            ctx.eeg.log(self.name(), "terminating");
             return Action::Abort;
         }
 

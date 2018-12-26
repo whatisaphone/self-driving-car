@@ -83,16 +83,16 @@ impl FollowRoute {
         let mut log = Vec::new();
         let mut dump = PlanningDump { log: &mut log };
         ctx.eeg
-            .log(format!("[FollowRoute] planning with {}", planner.name()));
+            .log(self.name(), format!("planning with {}", planner.name()));
         let plan = planner.plan(&context, &mut dump);
         let plan = match plan {
             Ok(s) => s,
             Err(err) => return Err(self.handle_error(ctx, planner.name(), err, log)),
         };
-        ctx.eeg.log(format!(
-            "[FollowRoute] next segment is {}",
-            plan.segment.name(),
-        ));
+        ctx.eeg.log(
+            self.name(),
+            format!("next segment is {}", plan.segment.name()),
+        );
         let provisional_expansion = plan.provisional_expand(&ctx.scenario).map_err(|error| {
             self.handle_error(
                 ctx,
@@ -118,27 +118,27 @@ impl FollowRoute {
         error: RoutePlanError,
         log: impl IntoIterator<Item = String>,
     ) -> Action {
-        ctx.eeg.log(format!(
-            "[FollowRoute] Error {:?} from segment {}",
-            error, planner_name,
-        ));
+        ctx.eeg.log(
+            self.name(),
+            format!("error {:?} from segment {}", error, planner_name),
+        );
         for line in log {
-            ctx.eeg.log(format!("[FollowRoute] {}", line));
+            ctx.eeg.log(self.name(), line);
         }
 
         match error.recover(ctx) {
             Some(b) => {
                 if self.never_recover {
                     ctx.eeg
-                        .log("[FollowRoute] Recoverable, but we are forbidden to do so");
+                        .log(self.name(), "recoverable, but we are forbidden to do so");
                     Action::Abort
                 } else {
-                    ctx.eeg.log("[FollowRoute] Recoverable!");
+                    ctx.eeg.log(self.name(), "recoverable!");
                     Action::Call(b)
                 }
             }
             None => {
-                ctx.eeg.log("[FollowRoute] Non-recoverable");
+                ctx.eeg.log(self.name(), "non-recoverable");
                 Action::Abort
             }
         }
@@ -156,7 +156,7 @@ impl FollowRoute {
         };
 
         if !success {
-            ctx.eeg.log("[FollowRoute] Segment failure; aborting");
+            ctx.eeg.log(self.name(), "segment failure; aborting");
             return Action::Abort;
         }
 

@@ -26,7 +26,7 @@ impl Behavior for Offense {
 
     fn execute(&mut self, ctx: &mut Context) -> Action {
         if can_we_shoot(ctx) {
-            ctx.eeg.log("[Offense] Taking the shot!");
+            ctx.eeg.log(self.name(), "taking the shot!");
             return Action::call(Shoot::new());
         }
 
@@ -42,7 +42,8 @@ impl Behavior for Offense {
             return Action::Call(b);
         }
 
-        ctx.eeg.log("[Offense] no good hit; going for a tepid hit");
+        ctx.eeg
+            .log(self.name(), "no good hit; going for a tepid hit");
         Action::call(TepidHit::new())
     }
 }
@@ -52,7 +53,7 @@ fn can_we_shoot(ctx: &mut Context) -> bool {
 
     if playing_goalie(ctx.game, ctx.scenario.ball_prediction().start()) {
         ctx.eeg
-            .log("[can_we_shoot] playing goalie, so not shooting");
+            .log(name_of_type!(Offense), "playing goalie, so not shooting");
         return false;
     }
 
@@ -67,7 +68,8 @@ fn can_we_shoot(ctx: &mut Context) -> bool {
     );
 
     let shoot_intercept = some_or_else!(shoot_intercept, {
-        ctx.eeg.log("[can_we_shoot] no shootable intercept");
+        ctx.eeg
+            .log(name_of_type!(Offense), "no shootable intercept");
         return false;
     });
 
@@ -81,7 +83,7 @@ fn can_we_shoot(ctx: &mut Context) -> bool {
     // possession we have, the longer we're willing to wait.
     if shoot_intercept.time >= naive_intercept + 2.0 {
         ctx.eeg
-            .log("[can_we_shoot] we can shoot, but not soon enough");
+            .log(name_of_type!(Offense), "we can shoot, but not soon enough");
         return false;
     }
 
@@ -117,8 +119,10 @@ fn slow_play(ctx: &mut Context) -> Option<Action> {
     }
 
     if ctx.me().Boost < 50 {
-        ctx.eeg
-            .log("[Offense] Getting boost conveniently behind the ball");
+        ctx.eeg.log(
+            name_of_type!(Offense),
+            "getting boost conveniently behind the ball",
+        );
         let behind_ball = Point2::new(
             ball_loc.x,
             ball_loc.y + ctx.game.own_goal().center_2d.y.signum() * 2500.0,
@@ -127,8 +131,10 @@ fn slow_play(ctx: &mut Context) -> Option<Action> {
         return Some(Action::call(FollowRoute::new(dollar)));
     }
 
-    ctx.eeg
-        .log("[Offense] Swing around behind the ball for a better hit");
+    ctx.eeg.log(
+        name_of_type!(Offense),
+        "swing around behind the ball for a better hit",
+    );
     Some(Action::call(
         ResetBehindBall::behind_loc(ball_loc).distance(2000.0),
     ))
@@ -151,7 +157,8 @@ fn readjust_for_shot(ctx: &mut Context, intercept_time: f32) -> Option<Action> {
         return None;
     }
 
-    ctx.eeg.log("[Offense] re-adjust for a possible shot");
+    ctx.eeg
+        .log(name_of_type!(Offense), "re-adjust for a possible shot");
     Some(Action::call(
         ResetBehindBall::behind_loc(ball_loc).distance(2000.0),
     ))
@@ -164,10 +171,13 @@ fn get_boost(ctx: &mut Context) -> Option<Box<Behavior>> {
     if ctx.scenario.possession() < -Scenario::POSSESSION_CONTESTABLE
         && ctx.scenario.enemy_shoot_score_seconds() >= 7.0
     {
-        ctx.eeg.log(format!(
-            "enemy_shoot_score_seconds is {:.2}, so let's get boost",
-            ctx.scenario.enemy_shoot_score_seconds(),
-        ));
+        ctx.eeg.log(
+            name_of_type!(Offense),
+            format!(
+                "enemy_shoot_score_seconds is {:.2}, so let's get boost",
+                ctx.scenario.enemy_shoot_score_seconds(),
+            ),
+        );
 
         let future_loc = ctx.scenario.ball_prediction().at_time_or_last(3.0).loc;
         let behind_ball = Vector2::new(0.0, ctx.game.own_goal().center_2d.y.signum() * 2500.0);
@@ -176,8 +186,8 @@ fn get_boost(ctx: &mut Context) -> Option<Box<Behavior>> {
             .unwrap_or_else(Vector2::zeros);
         let hint = future_loc.to_2d() + behind_ball + opponent_hit;
         ctx.eeg
-            .log_pretty("get_boost", "opponent_hit", opponent_hit);
-        ctx.eeg.log_pretty("get_boost", "hint", hint);
+            .log_pretty(name_of_type!(Offense), "opponent_hit", opponent_hit);
+        ctx.eeg.log_pretty(name_of_type!(Offense), "hint", hint);
         let get_dollar = GetDollar::new(hint).target_face(future_loc.to_2d());
         return Some(Box::new(FollowRoute::new(get_dollar)));
     }

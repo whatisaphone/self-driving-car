@@ -51,7 +51,7 @@ impl Behavior for PanicDefense {
         return_some!(self.same_ball_trajectory.execute(ctx));
 
         if !GetToFlatGround::on_flat_ground(ctx.me()) {
-            ctx.eeg.log("[PanicDefense] not on flat ground");
+            ctx.eeg.log(self.name(), "not on flat ground");
             return Action::Abort;
         }
 
@@ -122,13 +122,13 @@ impl PanicDefense {
         {
             let theta = (me.Physics.rot().yaw() - target_yaw).normalize_angle();
             if theta.abs() <= 15.0_f32.to_radians() {
-                ctx.eeg.log("done, facing the right way");
+                ctx.eeg.log(self.name(), "done, facing the right way");
                 return Some(Phase::Finished);
             }
             // Fail-safe
             let elapsed = ctx.packet.GameInfo.TimeSeconds - start_time;
             if elapsed >= 0.75 {
-                ctx.eeg.log("done, time elapsed failsafe");
+                ctx.eeg.log(self.name(), "done, time elapsed failsafe");
                 return Some(Phase::Finished);
             }
         }

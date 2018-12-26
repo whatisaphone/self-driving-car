@@ -65,15 +65,18 @@ impl Behavior for PushToOwnCorner {
 
         if let Some(ref i) = me_intercept {
             ctx.eeg
-                .log(format!("[Defense] me_intercept: {:.2}", i.time));
+                .log_pretty(self.name(), "me_intercept", format!("{:.2}", i.time));
             ctx.eeg.draw(Drawable::GhostBall(
                 i.ball_loc,
                 color::for_team(ctx.game.team),
             ));
         }
         if let Some(ref i) = enemy_shootable_intercept {
-            ctx.eeg
-                .log(format!("[Defense] enemy_shoot_intercept: {:.2}", i.time));
+            ctx.eeg.log_pretty(
+                self.name(),
+                "enemy_shoot_intercept",
+                format!("{:.2}", i.time),
+            );
             ctx.eeg.draw(Drawable::GhostBall(
                 i.ball_loc,
                 color::for_team(ctx.game.enemy_team),
@@ -83,29 +86,30 @@ impl Behavior for PushToOwnCorner {
         match (me_intercept, enemy_shootable_intercept) {
             (_, None) => {
                 if !impending_concede_soon {
-                    ctx.eeg.log("Safe for now");
+                    ctx.eeg.log(self.name(), "safe for now");
                     Action::Return
                 } else {
-                    ctx.eeg.log("Hitting away from goal");
+                    ctx.eeg.log(self.name(), "hitting away from goal");
                     Action::call(HitToOwnCorner::new())
                 }
             }
             (None, _) => {
-                ctx.eeg.log("Can't reach ball");
+                ctx.eeg.log(self.name(), "can't reach ball");
                 Action::Abort
             }
             (Some(_), Some(_)) => {
                 if ctx.scenario.possession() >= 3.0 {
-                    ctx.eeg.log("we have all the time in the world");
+                    ctx.eeg
+                        .log(self.name(), "we have all the time in the world");
                     Action::Abort
                 } else if ctx.scenario.possession() >= Scenario::POSSESSION_CONTESTABLE {
-                    ctx.eeg.log("Swatting ball away from enemy");
+                    ctx.eeg.log(self.name(), "swatting ball away from enemy");
                     Action::call(HitToOwnCorner::new())
                 } else if ctx.scenario.possession() >= -Scenario::POSSESSION_CONTESTABLE {
-                    ctx.eeg.log("Defensive race");
+                    ctx.eeg.log(self.name(), "defensive race");
                     Action::call(HitToOwnCorner::new())
                 } else {
-                    ctx.eeg.log("Can't reach ball before enemy");
+                    ctx.eeg.log(self.name(), "can't reach ball before enemy");
                     Action::Abort
                 }
             }

@@ -52,7 +52,7 @@ impl Behavior for GroundAccelToLoc {
 
         // This behavior currently just operates in 2D
         if !GetToFlatGround::on_flat_ground(ctx.me()) {
-            ctx.eeg.log("[GroudAccelToLoc] not on flat ground");
+            ctx.eeg.log(self.name(), "not on flat ground");
             return Action::Abort;
         }
 

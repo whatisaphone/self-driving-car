@@ -132,11 +132,14 @@ impl StraightRunner {
 }
 
 impl SegmentRunner for StraightRunner {
+    fn name(&self) -> &str {
+        name_of_type!(StraightRunner)
+    }
+
     fn execute(&mut self, ctx: &mut Context) -> SegmentRunAction {
         match self.plan.mode {
             StraightMode::Fake => {
-                ctx.eeg
-                    .log("[StraightRunner] stopping because mode is fake");
+                ctx.eeg.log(self.name(), "stopping because mode is fake");
                 return SegmentRunAction::Success;
             }
             StraightMode::Asap => {} // continued below :)
@@ -152,7 +155,7 @@ impl SegmentRunner for StraightRunner {
         }
 
         if !GetToFlatGround::on_flat_ground(me) {
-            ctx.eeg.log("[StraightRunner] Not on flat ground");
+            ctx.eeg.log(self.name(), "not on flat ground");
             return SegmentRunAction::Failure;
         }
 

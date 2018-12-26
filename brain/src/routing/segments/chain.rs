@@ -47,6 +47,10 @@ struct Chainer {
 }
 
 impl SegmentRunner for Chainer {
+    fn name(&self) -> &str {
+        name_of_type!(Chainer)
+    }
+
     fn execute(&mut self, ctx: &mut Context) -> SegmentRunAction {
         let action = self.segments.front_mut().unwrap().execute(ctx);
         match action {
@@ -59,7 +63,7 @@ impl SegmentRunner for Chainer {
         if self.segments.is_empty() {
             SegmentRunAction::Success
         } else {
-            ctx.eeg.log("[Chainer] next runner");
+            ctx.eeg.log(self.name(), "next runner");
             self.execute(ctx)
         }
     }

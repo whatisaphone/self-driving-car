@@ -84,7 +84,7 @@ impl Behavior for QuickJumpAndDodge {
 
         if self.phase == Phase::Jump || elapsed < self.dodge_time - Self::MIN_PHASE_TIME {
             if self.phase == Phase::Jump && !ctx.me().OnGround {
-                ctx.eeg.log("[QuickJumpAndDodge] wheels must be on ground");
+                ctx.eeg.log(self.name(), "wheels must be on ground");
                 return Action::Abort;
             }
 
@@ -94,7 +94,7 @@ impl Behavior for QuickJumpAndDodge {
             Action::Yield(result)
         } else if self.phase == Phase::And || elapsed < self.dodge_time {
             if ctx.me().DoubleJumped {
-                ctx.eeg.log("[QuickJumpAndDodge] must have air charge");
+                ctx.eeg.log(self.name(), "must have air charge");
                 return Action::Abort;
             }
 
@@ -103,7 +103,7 @@ impl Behavior for QuickJumpAndDodge {
             Action::Yield(result)
         } else if self.phase == Phase::Dodge || elapsed < self.dodge_time + Self::MIN_PHASE_TIME {
             if ctx.me().OnGround {
-                ctx.eeg.log("[QuickJumpAndDodge] goomba stomped");
+                ctx.eeg.log(self.name(), "goomba stomped?");
                 return Action::Abort;
             }
 

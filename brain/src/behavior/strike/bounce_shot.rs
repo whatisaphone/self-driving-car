@@ -51,7 +51,7 @@ impl Behavior for BounceShot {
         );
 
         let intercept = some_or_else!(intercept, {
-            ctx.eeg.log("[BounceShot] unknown intercept");
+            ctx.eeg.log(self.name(), "unknown intercept");
             return Action::Abort;
         });
 

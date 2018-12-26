@@ -7,7 +7,7 @@ use crate::routing::{
     segments::{Brake, Chain, ForwardDodge, Straight, StraightMode},
 };
 use arrayvec::ArrayVec;
-use common::{prelude::*, PrettyPrint};
+use common::prelude::*;
 use derive_new::new;
 use nalgebra::Point2;
 use nameof::name_of_type;
@@ -47,7 +47,7 @@ impl RoutePlanner for GroundStraightPlanner {
         dump: &mut PlanningDump,
     ) -> Result<RoutePlan, RoutePlanError> {
         dump.log_start(self, &ctx.start);
-        dump.log(self, format!("target_loc = {}", self.target_loc.pretty()));
+        dump.log_pretty(self, "target_loc", self.target_loc);
 
         assert!(!self.target_loc.x.is_nan());
         guard!(

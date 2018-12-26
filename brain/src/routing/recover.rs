@@ -52,7 +52,7 @@ impl RoutePlanError {
                     && ctx.packet.GameBall.Physics.vel_2d().norm() < 400.0
                 {
                     ctx.eeg
-                        .log("[MustBeFacingTarget] we gotta get things moving!");
+                        .log(stringify!(recover), "we gotta get things moving!");
                     let ball_loc = ctx.scenario.ball_prediction().at_time_or_last(2.5).loc;
                     return Some(Box::new(
                         ResetBehindBall::behind_loc(ball_loc.to_2d()).never_recover(true),
@@ -81,8 +81,10 @@ fn check_easy_flip_recover(ctx: &mut Context) -> Option<Box<Behavior>> {
         && me_rot_to_ball.angle().abs() < PI / 3.0
         && me_rot_to_own_goal.angle().abs() >= PI / 3.0
     {
-        ctx.eeg
-            .log("[check_easy_flip_recover] the ball is right here, I can't resist!");
+        ctx.eeg.log(
+            stringify!(recover),
+            "the ball is right here, I can't resist!",
+        );
         let dodge =
             me_forward.rotation_to(&(ball.loc.to_2d() - ctx.me().Physics.loc_2d()).to_axis());
         return Some(Box::new(QuickJumpAndDodge::new().angle(dodge.angle())));

@@ -3,7 +3,7 @@ use crate::{
         higher_order::Chain,
         strike::{GroundedHit, GroundedHitAimContext, GroundedHitTarget, GroundedHitTargetAdjust},
     },
-    eeg::Event,
+    eeg::{color, Drawable, Event},
     routing::{behavior::FollowRoute, plan::GroundIntercept},
     strategy::{Action, Behavior, Context, Priority},
     utils::{Wall, WallRayCalculator},
@@ -52,16 +52,19 @@ impl HitToOwnCorner {
         let rtl = WallRayCalculator::calculate(ball_loc, ball_loc + rtl_dir);
 
         let result = if (avoid - ltr).norm() > (avoid - rtl).norm() {
-            ctx.eeg.log("push from left to right");
+            ctx.eeg
+                .draw(Drawable::print("push from left to right", color::GREEN));
             ltr
         } else {
-            ctx.eeg.log("push from right to left");
+            ctx.eeg
+                .draw(Drawable::print("push from right to left", color::GREEN));
             rtl
         };
 
         match WallRayCalculator::wall_for_point(ctx.game, result) {
             Wall::OwnGoal => {
-                ctx.eeg.log("avoiding the own goal");
+                ctx.eeg
+                    .log(name_of_type!(HitToOwnCorner), "avoiding the own goal");
                 Err(())
             }
             _ => Ok(GroundedHitTarget::new(

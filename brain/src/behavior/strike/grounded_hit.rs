@@ -13,6 +13,7 @@ use crate::{
 use common::{physics, prelude::*, rl};
 use derive_new::new;
 use nalgebra::{Point2, Point3, UnitQuaternion};
+use nameof::name_of_type;
 use simulate::{
     car_single_jump::{time_to_z, JUMP_MAX_Z},
     linear_interpolate, Car1D, CarSimulateError,
@@ -62,11 +63,11 @@ where
         let me = ctx.me();
 
         if IsSkidding.evaluate(&me.into()) {
-            ctx.eeg.log("[GroundedHit] IsSkidding");
+            ctx.eeg.log(self.name(), name_of_type!(IsSkidding));
             return Action::Abort;
         }
         if NotOnFlatGround.evaluate(&me.into()) {
-            ctx.eeg.log("[GroundedHit] NotOnFlatGround");
+            ctx.eeg.log(self.name(), name_of_type!(NotOnFlatGround));
             return Action::Abort;
         }
         return_some!(self.same_ball_trajectory.execute(ctx));
@@ -80,7 +81,7 @@ where
         {
             Ok(x) => x,
             Err(()) => {
-                ctx.eeg.log("[GroundedHit] error finding target_loc");
+                ctx.eeg.log(self.name(), "error finding target_loc");
                 return Action::Abort;
             }
         };
@@ -97,7 +98,7 @@ where
             .forward_axis_2d()
             .rotation_to(&(target_loc - me.Physics.loc()).to_2d().to_axis());
         if steer.angle().abs() >= PI / 6.0 {
-            ctx.eeg.log("[GroundedHit] not facing the target");
+            ctx.eeg.log(self.name(), "not facing the target");
             return Action::Abort;
         }
 
@@ -105,10 +106,8 @@ where
             Ok(Do::Drive(throttle, boost)) => self.drive(ctx, target_loc, throttle, boost),
             Ok(Do::Jump) => self.jump(ctx, intercept_ball_loc, target_loc, target_rot, dodge),
             Err(error) => {
-                ctx.eeg.log(format!(
-                    "[GroundedHit] can't estimate approach: {:?}",
-                    error,
-                ));
+                ctx.eeg
+                    .log(self.name(), format!("can't estimate approach: {:?}", error));
                 Action::Abort
             }
         }
@@ -131,7 +130,7 @@ where
             |ball| ball.loc.z < GroundedHit::MAX_BALL_Z,
         );
         let intercept = some_or_else!(intercept, {
-            ctx.eeg.log("[GroundedHit] can't find intercept");
+            ctx.eeg.log(self.name(), "can't find intercept");
             return Err(());
         });
 
@@ -143,8 +142,8 @@ where
             intercept_ball_loc: intercept.ball_loc,
             eeg: ctx.eeg,
         };
-        let target =
-            (self.aim)(&mut aim_context).map_err(|_| ctx.eeg.log("error getting aim location"))?;
+        let target = (self.aim)(&mut aim_context)
+            .map_err(|_| ctx.eeg.log(self.name(), "error getting aim location"))?;
         let (target_loc, _target_rot, _dodge) = Self::preliminary_target(ctx, &intercept, &target);
         let ball_max_z = JUMP_MAX_Z + (intercept.ball_loc.z - target_loc.z);
 
@@ -157,7 +156,7 @@ where
             |ball| ball.loc.z < ball_max_z,
         );
         let intercept = some_or_else!(intercept, {
-            ctx.eeg.log("[GroundedHit] can't find intercept");
+            ctx.eeg.log(self.name(), "can't find intercept");
             return Err(());
         });
 

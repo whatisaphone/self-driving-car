@@ -80,6 +80,10 @@ impl PowerslideTurnRunner {
 }
 
 impl SegmentRunner for PowerslideTurnRunner {
+    fn name(&self) -> &str {
+        name_of_type!(PowerslideTurnRunner)
+    }
+
     fn execute(&mut self, ctx: &mut Context) -> SegmentRunAction {
         let now = ctx.packet.GameInfo.TimeSeconds;
         let start_time = *self.start_time.get_or_insert(now);
@@ -91,7 +95,7 @@ impl SegmentRunner for PowerslideTurnRunner {
         }
 
         if !GetToFlatGround::on_flat_ground(ctx.me()) {
-            ctx.eeg.log("[PowerslideTurnRunner] Not on flat ground");
+            ctx.eeg.log(self.name(), "not on flat ground");
             return SegmentRunAction::Failure;
         }
 

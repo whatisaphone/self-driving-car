@@ -51,7 +51,7 @@ impl Behavior for Runner {
 impl Runner {
     fn exec(&mut self, depth: u32, ctx: &mut Context) -> rlbot::ffi::PlayerInput {
         if depth > 5 {
-            ctx.eeg.log("infinite loop?");
+            ctx.eeg.log(self.name(), "infinite loop?");
             return Default::default();
         }
 
@@ -63,13 +63,15 @@ impl Runner {
         match action {
             Action::Yield(i) => i,
             Action::Call(b) => {
-                ctx.eeg.log(format!("> {}", b.name()));
+                ctx.eeg.log(self.name(), format!("> {}", b.name()));
                 self.current = Some(b);
                 self.exec(depth + 1, ctx)
             }
             Action::Return | Action::Abort => {
-                ctx.eeg
-                    .log(format!("< {}", self.current.as_ref().unwrap().name()));
+                ctx.eeg.log(
+                    self.name(),
+                    format!("< {}", self.current.as_ref().unwrap().name()),
+                );
                 self.current = None;
                 self.exec(depth + 1, ctx)
             }
@@ -79,10 +81,10 @@ impl Runner {
     fn choose_behavior(&mut self, ctx: &mut Context) -> &mut Behavior {
         if self.current.is_none() {
             self.current = Some(self.strategy.baseline(ctx));
-            ctx.eeg.log(format!(
-                "baseline: {}",
-                self.current.as_ref().unwrap().name()
-            ));
+            ctx.eeg.log(
+                self.name(),
+                format!("baseline: {}", self.current.as_ref().unwrap().name()),
+            );
         }
 
         if let Some(b) = self
@@ -90,10 +92,10 @@ impl Runner {
             .interrupt(ctx, &**self.current.as_ref().unwrap())
         {
             self.current = Some(b);
-            ctx.eeg.log(format!(
-                "override: {}",
-                self.current.as_ref().unwrap().name()
-            ));
+            ctx.eeg.log(
+                self.name(),
+                format!("override: {}", self.current.as_ref().unwrap().name()),
+            );
         }
 
         &mut **self.current.as_mut().unwrap()

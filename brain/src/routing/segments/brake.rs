@@ -76,6 +76,10 @@ struct Braker {
 }
 
 impl SegmentRunner for Braker {
+    fn name(&self) -> &str {
+        name_of_type!(Braker)
+    }
+
     fn execute(&mut self, ctx: &mut Context) -> SegmentRunAction {
         let speed = ctx.me().Physics.vel_2d().norm();
         if speed < self.plan.target_speed {

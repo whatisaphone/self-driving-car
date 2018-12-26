@@ -40,7 +40,7 @@ where
             Action::Yield(i) => Action::Yield(i),
             Action::Call(b) => Action::Call(b),
             Action::Return | Action::Abort => {
-                ctx.eeg.log("[Repeat] repeating");
+                ctx.eeg.log(self.name(), "repeating");
                 self.current = (self.factory)();
                 Action::Yield(Default::default())
             }

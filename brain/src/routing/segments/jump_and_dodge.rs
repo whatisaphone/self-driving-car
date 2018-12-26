@@ -106,6 +106,10 @@ impl JumpAndDodgeRunner {
 }
 
 impl SegmentRunner for JumpAndDodgeRunner {
+    fn name(&self) -> &str {
+        name_of_type!(JumpAndDodgeRunner)
+    }
+
     fn execute(&mut self, ctx: &mut Context) -> SegmentRunAction {
         match self.behavior.execute(ctx) {
             Action::Yield(i) => SegmentRunAction::Yield(i),

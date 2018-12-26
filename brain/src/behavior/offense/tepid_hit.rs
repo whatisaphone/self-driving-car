@@ -58,7 +58,7 @@ fn time_wasting_hit(ctx: &mut GroundedHitAimContext) -> Result<GroundedHitTarget
     let aim_loc = WallRayCalculator::calculate(ball_loc, aim_loc);
 
     if WallRayCalculator::wall_for_point(ctx.game, aim_loc) == Wall::OwnGoal {
-        ctx.eeg.log("[TepidHit] refusing to own goal");
+        ctx.eeg.log(name_of_type!(TepidHit), "refusing to own goal");
         return Err(());
     }
 

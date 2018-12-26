@@ -288,6 +288,8 @@ impl Clone for Box<SegmentPlan> {
 }
 
 pub trait SegmentRunner: Send {
+    fn name(&self) -> &str;
+
     fn execute(&mut self, ctx: &mut Context) -> SegmentRunAction;
 }
 

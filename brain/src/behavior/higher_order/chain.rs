@@ -70,19 +70,23 @@ impl Behavior for Chain {
             Action::Call(b) => {
                 self.children[0] = b;
                 self.name = Self::name(self.children.iter());
-                ctx.eeg
-                    .log(format!("[Chain] child Call; becoming {}", self.name));
+                ctx.eeg.log(
+                    name_of_type!(Chain),
+                    format!("child Call; becoming {}", self.name),
+                );
                 self.execute(ctx)
             }
             Action::Return => {
                 self.children.pop_front();
                 self.name = Self::name(self.children.iter());
-                ctx.eeg
-                    .log(format!("[Chain] child Return; becoming {}", self.name));
+                ctx.eeg.log(
+                    name_of_type!(Chain),
+                    format!("child Return; becoming {}", self.name),
+                );
                 self.execute(ctx)
             }
             Action::Abort => {
-                ctx.eeg.log("[Chain] child Abort");
+                ctx.eeg.log(name_of_type!(Chain), "child Abort");
                 Action::Abort
             }
         }

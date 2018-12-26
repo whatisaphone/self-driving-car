@@ -8,6 +8,7 @@ use crate::{
 };
 use common::ExtendDuration;
 use nalgebra::clamp;
+use nameof::name_of_type;
 use std::time::Instant;
 
 pub struct Brain {
@@ -57,7 +58,7 @@ impl Brain {
 
     #[cfg(test)]
     pub fn set_behavior(&mut self, behavior: impl Behavior + 'static, eeg: &mut EEG) {
-        eeg.log(format!("! {}", behavior.name()));
+        eeg.log(name_of_type!(Brain), format!("! {}", behavior.name()));
         self.runner = Runner::with_current(behavior);
     }
 
@@ -178,8 +179,10 @@ impl Brain {
         let calc_ms = duration.as_millis_polyfill();
         // RL's physics runs at 120Hz, which leaves us ~8ms to make a decision.
         if calc_ms >= 8 {
-            ctx.eeg
-                .log(format!("[Brain] Slow frame took {}ms.", calc_ms));
+            ctx.eeg.log(
+                name_of_type!(Brain),
+                format!("slow frame took {}ms", calc_ms),
+            );
         }
 
         result

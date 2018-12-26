@@ -182,13 +182,17 @@ impl SimpleArcRunner {
 }
 
 impl SegmentRunner for SimpleArcRunner {
+    fn name(&self) -> &str {
+        name_of_type!(SimpleArcRunner)
+    }
+
     fn execute(&mut self, ctx: &mut Context) -> SegmentRunAction {
         let me = ctx.me();
         let car_loc = me.Physics.loc_2d();
         let car_forward_axis = me.Physics.forward_axis_2d();
 
         if !GetToFlatGround::on_flat_ground(ctx.me()) {
-            ctx.eeg.log("[SimpleArcRunner] Not on flat ground");
+            ctx.eeg.log(self.name(), "not on flat ground");
             return SegmentRunAction::Failure;
         }
 

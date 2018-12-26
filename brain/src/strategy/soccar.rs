@@ -9,6 +9,7 @@ use crate::{
 use common::prelude::*;
 use derive_new::new;
 use nalgebra::Point2;
+use nameof::name_of_type;
 use simulate::linear_interpolate;
 use std::f32::consts::PI;
 
@@ -47,10 +48,13 @@ impl Strategy for Soccar {
             && GetToFlatGround::on_flat_ground(ctx.me())
             && ctx.scenario.possession().abs() < Scenario::POSSESSION_CONTESTABLE
         {
-            ctx.eeg.log(format!(
-                "enemy can shoot, possession = {:.2}, going for 50/50",
-                ctx.scenario.possession()
-            ));
+            ctx.eeg.log(
+                name_of_type!(Soccar),
+                format!(
+                    "enemy can shoot, possession = {:.2}, going for 50/50",
+                    ctx.scenario.possession(),
+                ),
+            );
             return Some(Box::new(Chain::new(Priority::Striking, vec![Box::new(
                 FiftyFifty::new(),
             )])));
@@ -61,10 +65,13 @@ impl Strategy for Soccar {
             && GetToFlatGround::on_flat_ground(ctx.me())
             && ctx.scenario.possession() < -Scenario::POSSESSION_CONTESTABLE
         {
-            ctx.eeg.log(format!(
-                "enemy can shoot, possession = {:.2}, going to defense",
-                ctx.scenario.possession()
-            ));
+            ctx.eeg.log(
+                name_of_type!(Soccar),
+                format!(
+                    "enemy can shoot, possession = {:.2}, going to defense",
+                    ctx.scenario.possession(),
+                ),
+            );
             return Some(Box::new(Chain::new(Priority::Defense, vec![Box::new(
                 Defense::new(),
             )])));

@@ -38,6 +38,10 @@ impl SegmentPlan for NullSegment {
 struct NullSegmentRunner;
 
 impl SegmentRunner for NullSegmentRunner {
+    fn name(&self) -> &str {
+        name_of_type!(NullSegmentRunner)
+    }
+
     fn execute(&mut self, _ctx: &mut Context) -> SegmentRunAction {
         SegmentRunAction::Success
     }
