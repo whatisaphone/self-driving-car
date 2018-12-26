@@ -10,7 +10,6 @@ use crate::{
 use common::prelude::*;
 use nalgebra::{Unit, Vector2, Vector3};
 use nameof::name_of_type;
-use rlbot;
 use simulate::linear_interpolate;
 use std::f32::consts::PI;
 

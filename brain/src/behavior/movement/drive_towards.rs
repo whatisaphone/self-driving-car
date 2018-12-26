@@ -6,7 +6,6 @@ use crate::{
 use common::{prelude::*, rl};
 use nalgebra::Point2;
 use nameof::{name_of, name_of_type};
-use rlbot;
 use simulate::linear_interpolate;
 use std::f32::consts::PI;
 

@@ -8,7 +8,6 @@ use crate::{
 };
 use common::ExtendDuration;
 use nalgebra::clamp;
-use rlbot;
 use std::time::Instant;
 
 pub struct Brain {

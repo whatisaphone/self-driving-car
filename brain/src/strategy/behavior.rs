@@ -1,5 +1,4 @@
 use crate::strategy::Context;
-use rlbot;
 
 pub trait Behavior: Send {
     fn name(&self) -> &str;

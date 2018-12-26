@@ -8,7 +8,6 @@ use crate::{
 use common::{prelude::*, rl};
 use nalgebra::Point2;
 use nameof::name_of_type;
-use rlbot;
 use std::f32::consts::PI;
 
 pub struct BlitzToLocation {

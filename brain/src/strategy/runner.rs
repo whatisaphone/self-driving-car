@@ -3,7 +3,6 @@ use crate::{
     strategy::{strategy::Strategy, Action, Behavior, Context},
 };
 use nameof::name_of_type;
-use rlbot;
 
 pub struct Runner {
     strategy: Box<Strategy>,

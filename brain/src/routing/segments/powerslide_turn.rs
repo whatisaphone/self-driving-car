@@ -6,7 +6,6 @@ use crate::{
 };
 use nalgebra::Vector2;
 use nameof::name_of_type;
-use rlbot;
 use simulate::CarPowerslideTurnBlueprint;
 
 #[derive(Clone)]

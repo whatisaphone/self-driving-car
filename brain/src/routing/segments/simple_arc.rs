@@ -7,7 +7,6 @@ use crate::{
 use common::{physics::CAR_LOCAL_FORWARD_AXIS_2D, prelude::*};
 use nalgebra::{Point2, Unit, UnitComplex, Vector2};
 use nameof::name_of_type;
-use rlbot;
 use std::f32::consts::PI;
 
 #[derive(Clone)]

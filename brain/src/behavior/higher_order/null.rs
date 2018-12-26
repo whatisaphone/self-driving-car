@@ -1,6 +1,5 @@
 use crate::strategy::{Action, Behavior, Context};
 use nameof::name_of_type;
-use rlbot;
 
 #[allow(dead_code)]
 pub struct NullBehavior;

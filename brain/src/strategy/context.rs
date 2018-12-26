@@ -3,7 +3,6 @@ use crate::{
     plan::ball::BallPredictor,
     strategy::{game::Game, scenario::Scenario, Team},
 };
-use rlbot;
 
 pub struct Context<'a> {
     pub packet: &'a rlbot::ffi::LiveDataPacket,

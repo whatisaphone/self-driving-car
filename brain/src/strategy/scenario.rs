@@ -7,7 +7,6 @@ use crate::{
 use common::prelude::*;
 use lazycell::LazyCell;
 use ordered_float::NotNan;
-use rlbot;
 use simulate::{linear_interpolate, Car1D};
 use std::f32::{self, consts::PI};
 

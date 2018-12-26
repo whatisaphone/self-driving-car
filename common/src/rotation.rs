@@ -10,7 +10,6 @@ pub fn convert_quat_to_pyr(quat: &UnitQuaternion<f32>) -> (f32, f32, f32) {
 #[cfg(test)]
 mod tests {
     use crate::{prelude::*, rotation};
-    use chip;
     use lazy_static::lazy_static;
     use nalgebra::{Rotation3, UnitQuaternion, Vector3};
 

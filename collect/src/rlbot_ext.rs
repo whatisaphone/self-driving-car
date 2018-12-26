@@ -1,6 +1,5 @@
 use common::{prelude::*, rotation};
 use nalgebra::UnitQuaternion;
-use rlbot;
 use std::error::Error;
 
 const PHYSICS_TPS: f32 = 120.0;

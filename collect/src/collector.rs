@@ -1,6 +1,3 @@
-use csv;
-use flatbuffers;
-use rlbot;
 use std::{fs::File, iter::once};
 
 pub struct Collector {

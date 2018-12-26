@@ -9,7 +9,6 @@ use crate::{
 use common::prelude::*;
 use nalgebra::Point2;
 use nameof::name_of_type;
-use rlbot;
 
 pub struct PanicDefense {
     use_boost: bool,

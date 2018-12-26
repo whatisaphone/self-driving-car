@@ -13,7 +13,6 @@ use crate::{
 use common::{physics, prelude::*, rl};
 use derive_new::new;
 use nalgebra::{Point2, Point3, UnitQuaternion};
-use rlbot;
 use simulate::{
     car_single_jump::{time_to_z, JUMP_MAX_Z},
     linear_interpolate, Car1D, CarSimulateError,

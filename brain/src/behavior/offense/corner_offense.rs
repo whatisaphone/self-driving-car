@@ -1,6 +1,5 @@
 use behavior::{Action, Behavior};
 use eeg::EEG;
-use rlbot;
 
 pub struct CornerOffense;
 

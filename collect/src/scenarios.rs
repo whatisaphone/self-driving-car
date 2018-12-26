@@ -5,7 +5,6 @@
 
 use common::{prelude::*, rl};
 use nalgebra::{Point3, Vector3};
-use rlbot;
 use std::{error::Error, f32::consts::PI, fmt};
 
 pub trait Scenario {

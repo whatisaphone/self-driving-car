@@ -10,11 +10,9 @@ use collect::{
     RecordingTick,
 };
 use common::{ext::ExtendRLBot, prelude::*};
-use crossbeam_channel;
 use lazy_static::lazy_static;
 use nalgebra::{Point3, Rotation3, UnitQuaternion, Vector3};
 use ordered_float::NotNan;
-use rlbot;
 use std::{
     collections::HashSet,
     f32::consts::PI,

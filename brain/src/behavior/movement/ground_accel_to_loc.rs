@@ -10,7 +10,6 @@ use crate::{
 use common::{prelude::*, rl};
 use nalgebra::Point2;
 use nameof::name_of_type;
-use rlbot;
 use simulate::Car1D;
 use std::f32::consts::PI;
 

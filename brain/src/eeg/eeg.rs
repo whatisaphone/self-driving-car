@@ -2,14 +2,12 @@
 
 use crate::strategy::Team;
 use common::{prelude::*, rl, PrettyPrint};
-use crossbeam_channel;
 use graphics::{types::Color, Transformed};
 use nalgebra::{Point2, Point3, Rotation3};
 use piston_window::{
     circle_arc, clear, ellipse, line, rectangle, text, AdvancedWindow, Ellipse, Glyphs, OpenGL,
     PistonWindow, Position, Rectangle, TextureSettings, WindowSettings,
 };
-use rlbot;
 use std::{collections::HashSet, mem, path::PathBuf, thread};
 
 pub struct EEG {

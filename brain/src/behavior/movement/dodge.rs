@@ -4,7 +4,6 @@ use crate::{
 };
 use nalgebra::UnitComplex;
 use nameof::name_of_type;
-use rlbot;
 
 pub struct Dodge {
     angle: UnitComplex<f32>,

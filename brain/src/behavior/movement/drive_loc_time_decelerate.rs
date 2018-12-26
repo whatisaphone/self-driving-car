@@ -3,7 +3,6 @@ use common::prelude::*;
 use eeg::{color, Drawable, EEG};
 use mechanics::simple_steer_towards;
 use nalgebra::Vector2;
-use rlbot;
 use simulate::Car1D;
 use utils::my_car;
 

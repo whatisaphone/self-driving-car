@@ -5,7 +5,6 @@ use crate::{
 use common::physics;
 use nalgebra::UnitQuaternion;
 use nameof::name_of_type;
-use rlbot;
 
 pub struct JumpAndTurn {
     jump_duration: f32,

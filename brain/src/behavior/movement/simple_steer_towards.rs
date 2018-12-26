@@ -1,7 +1,6 @@
 use crate::utils::geometry::ExtendF32;
 use common::prelude::*;
 use nalgebra::Point2;
-use rlbot;
 
 pub fn simple_steer_towards(car: &rlbot::ffi::Physics, target_loc: Point2<f32>) -> f32 {
     simple_yaw_diff(car, target_loc).max(-1.0).min(1.0) * 2.0
@@ -22,7 +21,6 @@ mod integration_tests {
     use common::prelude::*;
     use nalgebra::{Point3, Rotation3};
     use nameof::name_of_type;
-    use rlbot;
 
     struct SimpleSteerTowardsBall;
 

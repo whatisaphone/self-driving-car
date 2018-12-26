@@ -3,7 +3,6 @@ use nalgebra::{
     Point2, Point3, Quaternion, Real, Rotation3, Unit, UnitComplex, UnitQuaternion, Vector2,
     Vector3,
 };
-use rlbot;
 use std::{error::Error, mem};
 
 pub trait ExtendVector2<N: Real> {

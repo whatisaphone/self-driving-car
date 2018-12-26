@@ -4,7 +4,6 @@ use crate::{
 };
 use common::{physics, prelude::*, rl, PrettyPrint};
 use nalgebra::{Point2, Point3, Unit, UnitComplex, UnitQuaternion, Vector2, Vector3};
-use rlbot;
 use std::{fmt, iter};
 
 #[derive(Clone)]

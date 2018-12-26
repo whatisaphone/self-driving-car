@@ -1,7 +1,6 @@
 use crate::car1d::Car1D;
 use common::{physics, prelude::*};
 use nalgebra::{Point3, Unit, UnitQuaternion, Vector2, Vector3};
-use rlbot;
 
 pub struct Car {
     loc: Point3<f32>,

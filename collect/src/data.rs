@@ -1,6 +1,4 @@
-use csv;
 use nalgebra::{Point3, Quaternion, UnitQuaternion, Vector3};
-use rlbot;
 use std::io::Read;
 
 pub struct RecordingTick {

@@ -11,7 +11,6 @@ use crate::{
     },
     utils::geometry::circle_point_tangents,
 };
-use chip;
 use common::{prelude::*, rl};
 use derive_new::new;
 use nalgebra::Point2;
