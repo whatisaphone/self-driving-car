@@ -45,16 +45,17 @@ mod integration_tests {
     #[test]
     #[ignore] // TODO
     fn high_bouncer() {
-        let test = TestRunner::start0(TestScenario {
-            ball_loc: Point3::new(-1725.8822, 4719.4307, 93.15),
-            ball_vel: Vector3::new(1031.4242, 2151.6794, 0.0),
-            car_loc: Point3::new(-2374.2222, 3805.5469, 17.01),
-            car_rot: Rotation3::from_unreal_angles(-0.009970875, 1.0610354, -0.0002876214),
-            car_vel: Vector3::new(521.8343, 928.79755, 8.326952),
-            ..Default::default()
-        });
-        test.set_behavior(Runner::soccar());
-        test.sleep_millis(4000);
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(-1725.8822, 4719.4307, 93.15),
+                ball_vel: Vector3::new(1031.4242, 2151.6794, 0.0),
+                car_loc: Point3::new(-2374.2222, 3805.5469, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.009970875, 1.0610354, -0.0002876214),
+                car_vel: Vector3::new(521.8343, 928.79755, 8.326952),
+                ..Default::default()
+            })
+            .behavior(Runner::soccar())
+            .run_for_millis(4000);
         assert!(test.has_scored());
     }
 

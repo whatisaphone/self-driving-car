@@ -136,56 +136,53 @@ mod integration_tests {
 
     #[test]
     fn normal() {
-        let test = TestRunner::start(
-            Repeat::new(|| BounceShot::new(Point2::new(0.0, rl::FIELD_MAX_Y))),
-            TestScenario {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
                 ball_loc: Point3::new(-2000.0, 2000.0, 500.0),
                 ball_vel: Vector3::new(1000.0, 0.0, 0.0),
                 car_loc: Point3::new(0.0, 0.0, 17.01),
                 car_vel: Vector3::new(0.0, 0.0, 0.0),
                 ..Default::default()
-            },
-        );
-
-        test.sleep_millis(5000);
+            })
+            .behavior(BounceShot::new(Point2::new(0.0, rl::FIELD_MAX_Y)))
+            .run_for_millis(5000);
 
         assert!(test.has_scored());
     }
 
     #[test]
     fn slow_no_boost() {
-        let test = TestRunner::start(
-            Repeat::new(|| BounceShot::new(Point2::new(0.0, rl::FIELD_MAX_Y))),
-            TestScenario {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
                 ball_loc: Point3::new(-2000.0, 2000.0, 1000.0),
                 ball_vel: Vector3::new(500.0, 0.0, 0.0),
                 car_loc: Point3::new(0.0, 0.0, 17.01),
                 car_vel: Vector3::new(0.0, 0.0, 0.0),
                 boost: 0,
                 ..Default::default()
-            },
-        );
-
-        test.sleep_millis(6000);
+            })
+            .behavior(BounceShot::new(Point2::new(0.0, rl::FIELD_MAX_Y)))
+            .run_for_millis(6000);
 
         assert!(test.has_scored());
     }
 
     #[test]
     fn face_target_before_estimating_approach() {
-        let test = TestRunner::start0(TestScenario {
-            ball_loc: Point3::new(866.92804, -4290.7188, 353.78827),
-            ball_vel: Vector3::new(-166.86324, -8.325447, 345.70105),
-            car_loc: Point3::new(1816.7043, -4648.5, 17.01),
-            car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.3079103, 0.0),
-            car_vel: Vector3::new(30.373384, 216.24547, 8.311),
-            ..Default::default()
-        });
-        test.set_behavior(Repeat::new(|| {
-            BounceShot::new(Point2::new(-rl::FIELD_MAX_X, -1000.0))
-        }));
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(866.92804, -4290.7188, 353.78827),
+                ball_vel: Vector3::new(-166.86324, -8.325447, 345.70105),
+                car_loc: Point3::new(1816.7043, -4648.5, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.3079103, 0.0),
+                car_vel: Vector3::new(30.373384, 216.24547, 8.311),
+                ..Default::default()
+            })
+            .behavior(Repeat::new(|| {
+                BounceShot::new(Point2::new(-rl::FIELD_MAX_X, -1000.0))
+            }))
+            .run_for_millis(3000);
 
-        test.sleep_millis(3000);
         let packet = test.sniff_packet();
         assert!(packet.GameBall.Physics.vel().norm() >= 1000.0);
     }

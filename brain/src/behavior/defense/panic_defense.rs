@@ -183,15 +183,15 @@ mod integration_tests {
 
     #[test]
     fn panic_defense() {
-        let test = TestRunner::start0(TestScenario {
-            car_loc: Point3::new(500.0, -1000.0, 17.01),
-            car_rot: Rotation3::from_unreal_angles(0.0, -PI / 2.0, 0.0),
-            car_vel: Vector3::new(0.0, 0.0, 0.0),
-            ..Default::default()
-        });
-        test.set_behavior(PanicDefense::new());
-
-        test.sleep_millis(4000);
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                car_loc: Point3::new(500.0, -1000.0, 17.01),
+                car_rot: Rotation3::from_unreal_angles(0.0, -PI / 2.0, 0.0),
+                car_vel: Vector3::new(0.0, 0.0, 0.0),
+                ..Default::default()
+            })
+            .behavior(PanicDefense::new())
+            .run_for_millis(4000);
 
         let packet = test.sniff_packet();
         println!("{:?}", packet.GameCars[0].Physics.vel());

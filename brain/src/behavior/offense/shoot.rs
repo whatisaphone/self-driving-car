@@ -154,14 +154,16 @@ mod integration_tests {
     #[test]
     #[ignore(note = "The great bankruptcy of 2018")]
     fn fast_falling_ball() {
-        let test = TestRunner::start0(TestScenario {
-            ball_loc: Point3::new(3862.044, 1163.3925, 1456.4243),
-            ball_vel: Vector3::new(2532.4116, 897.6915, 396.8566),
-            car_loc: Point3::new(1530.9783, 45.435856, 16.924282),
-            car_rot: Rotation3::from_unreal_angles(-0.010162623, 0.8, -0.0006711166),
-            car_vel: Vector3::new(1301.4751, 366.96378, 9.762962),
-            ..Default::default()
-        });
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(3862.044, 1163.3925, 1456.4243),
+                ball_vel: Vector3::new(2532.4116, 897.6915, 396.8566),
+                car_loc: Point3::new(1530.9783, 45.435856, 16.924282),
+                car_rot: Rotation3::from_unreal_angles(-0.010162623, 0.8, -0.0006711166),
+                car_vel: Vector3::new(1301.4751, 366.96378, 9.762962),
+                ..Default::default()
+            })
+            .run();
 
         // Temp fix until ball prediction can handle walls. Also perhaps see source
         // control to restore the previous car rotation.
@@ -226,16 +228,17 @@ mod integration_tests {
     #[test]
     #[ignore] // TODO
     fn awkward_corner_angle() {
-        let test = TestRunner::start0(TestScenario {
-            ball_loc: Point3::new(3074.1807, 4219.743, 506.9326),
-            ball_vel: Vector3::new(-1596.3938, 1474.6923, -355.48773),
-            car_loc: Point3::new(-970.7269, 2484.3645, 17.01),
-            car_rot: Rotation3::from_unreal_angles(-0.00958738, 1.5245851, -0.0000958738),
-            car_vel: Vector3::new(64.24027, 1407.491, 8.309999),
-            ..Default::default()
-        });
-        test.set_behavior(Runner::soccar());
-        test.sleep_millis(4000);
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(3074.1807, 4219.743, 506.9326),
+                ball_vel: Vector3::new(-1596.3938, 1474.6923, -355.48773),
+                car_loc: Point3::new(-970.7269, 2484.3645, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, 1.5245851, -0.0000958738),
+                car_vel: Vector3::new(64.24027, 1407.491, 8.309999),
+                ..Default::default()
+            })
+            .behavior(Runner::soccar())
+            .run_for_millis(4000);
         assert!(test.has_scored());
     }
 

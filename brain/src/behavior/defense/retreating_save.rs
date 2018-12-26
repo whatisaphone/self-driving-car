@@ -50,16 +50,17 @@ mod integration_tests {
     #[test]
     #[ignore] // TODO
     fn rolling_around_corner_into_box() {
-        let test = TestRunner::start0(TestScenario {
-            ball_loc: Point3::new(3042.6016, -4141.044, 180.57321),
-            ball_vel: Vector3::new(-1414.86847, -1357.0486, -0.0),
-            car_loc: Point3::new(720.54016, 635.665, 17.01),
-            car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.4134674, 0.0),
-            car_vel: Vector3::new(256.23804, -1591.1218, 8.3),
-            ..Default::default()
-        });
-        test.set_behavior(Runner::soccar());
-        test.sleep_millis(5000);
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(3042.6016, -4141.044, 180.57321),
+                ball_vel: Vector3::new(-1414.86847, -1357.0486, -0.0),
+                car_loc: Point3::new(720.54016, 635.665, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.4134674, 0.0),
+                car_vel: Vector3::new(256.23804, -1591.1218, 8.3),
+                ..Default::default()
+            })
+            .behavior(Runner::soccar())
+            .run_for_millis(5000);
 
         assert!(test.has_scored());
     }
@@ -67,16 +68,17 @@ mod integration_tests {
     #[test]
     #[ignore] // TODO
     fn low_bouncing_directly_ahead() {
-        let test = TestRunner::start0(TestScenario {
-            ball_loc: Point3::new(-916.57043, -5028.2397, 449.42386),
-            ball_vel: Vector3::new(215.22325, 0.07279097, -403.102),
-            car_loc: Point3::new(-320.59094, -2705.4436, 17.02),
-            car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.6579456, 0.0),
-            car_vel: Vector3::new(-85.847946, -990.35706, 8.0),
-            ..Default::default()
-        });
-        test.set_behavior(Runner::soccar());
-        test.sleep_millis(5000);
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(-916.57043, -5028.2397, 449.42386),
+                ball_vel: Vector3::new(215.22325, 0.07279097, -403.102),
+                car_loc: Point3::new(-320.59094, -2705.4436, 17.02),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.6579456, 0.0),
+                car_vel: Vector3::new(-85.847946, -990.35706, 8.0),
+                ..Default::default()
+            })
+            .behavior(Runner::soccar())
+            .run_for_millis(5000);
 
         assert!(test.has_scored());
     }
@@ -84,16 +86,17 @@ mod integration_tests {
     #[test]
     #[ignore] // TODO
     fn high_loft_in_front_of_goal() {
-        let test = TestRunner::start0(TestScenario {
-            ball_loc: Point3::new(-2285.6035, -5024.131, 438.6606),
-            ball_vel: Vector3::new(751.0301, 16.736507, 811.52356),
-            car_loc: Point3::new(-1805.5178, -2341.8872, 17.01),
-            car_rot: Rotation3::from_unreal_angles(-0.00958738, -0.4485935, 0.0),
-            car_vel: Vector3::new(1141.101, -487.77042, 8.34),
-            ..Default::default()
-        });
-        test.set_behavior(Runner::soccar());
-        test.sleep_millis(5000);
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(-2285.6035, -5024.131, 438.6606),
+                ball_vel: Vector3::new(751.0301, 16.736507, 811.52356),
+                car_loc: Point3::new(-1805.5178, -2341.8872, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, -0.4485935, 0.0),
+                car_vel: Vector3::new(1141.101, -487.77042, 8.34),
+                ..Default::default()
+            })
+            .behavior(Runner::soccar())
+            .run_for_millis(5000);
 
         assert!(test.has_scored());
     }

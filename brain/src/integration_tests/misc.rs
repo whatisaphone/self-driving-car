@@ -9,15 +9,17 @@ use nalgebra::{Point3, Rotation3, Vector3};
 #[ignore]
 // We came in too hot, we should be able to smack it to the side.
 fn todo() {
-    let test = TestRunner::start0(TestScenario {
-        ball_loc: Point3::new(-1004.2267, -1863.0571, 93.15),
-        ball_vel: Vector3::new(1196.1945, -1186.7386, 0.0),
-        car_loc: Point3::new(1692.9968, -2508.7695, 17.01),
-        car_rot: Rotation3::from_unreal_angles(-0.009779127, -2.0910075, 0.0),
-        car_vel: Vector3::new(-896.0074, -1726.876, 8.375226),
-        ..Default::default()
-    });
-    test.set_behavior(Runner::soccar());
+    let _test = TestRunner::new()
+        .scenario(TestScenario {
+            ball_loc: Point3::new(-1004.2267, -1863.0571, 93.15),
+            ball_vel: Vector3::new(1196.1945, -1186.7386, 0.0),
+            car_loc: Point3::new(1692.9968, -2508.7695, 17.01),
+            car_rot: Rotation3::from_unreal_angles(-0.009779127, -2.0910075, 0.0),
+            car_vel: Vector3::new(-896.0074, -1726.876, 8.375226),
+            ..Default::default()
+        })
+        .behavior(Runner::soccar())
+        .run_for_millis(2500);
     unimplemented!();
 }
 

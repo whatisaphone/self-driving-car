@@ -27,16 +27,17 @@ mod integration_tests {
 
     #[test]
     fn fast_push_to_corner() {
-        let test = TestRunner::start0(TestScenario {
-            ball_loc: Point3::new(-3231.1572, 1764.513, 92.159996),
-            ball_vel: Vector3::new(800.4098, -1559.2743, 0.0),
-            car_loc: Point3::new(-3508.7988, 3034.4133, 17.02),
-            car_rot: Rotation3::from_unreal_angles(-0.00958738, 3.0207918, 0.0),
-            car_vel: Vector3::new(-1254.4124, 211.01375, 8.24),
-            ..Default::default()
-        });
-        test.set_behavior(Runner::soccar());
-        test.sleep_millis(5500);
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(-3231.1572, 1764.513, 92.159996),
+                ball_vel: Vector3::new(800.4098, -1559.2743, 0.0),
+                car_loc: Point3::new(-3508.7988, 3034.4133, 17.02),
+                car_rot: Rotation3::from_unreal_angles(-0.00958738, 3.0207918, 0.0),
+                car_vel: Vector3::new(-1254.4124, 211.01375, 8.24),
+                ..Default::default()
+            })
+            .behavior(Runner::soccar())
+            .run_for_millis(5500);
 
         let packet = test.sniff_packet();
         assert!(packet.GameBall.Physics.loc().x >= 1000.0);

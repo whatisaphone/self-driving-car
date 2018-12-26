@@ -179,22 +179,20 @@ mod integration_tests {
         ];
         for &(initial_speed, target_x, target_y, target_speed) in cases.iter() {
             let target_loc = Vector2::new(target_x, target_y);
-            let test = TestRunner::start2(
-                TestScenario {
+            let test = TestRunner::new()
+                .scenario(TestScenario {
                     ball_loc: Point3::new(2000.0, 0.0, 0.0),
                     car_vel: Vector3::new(0.0, initial_speed, 0.0),
                     ..Default::default()
-                },
-                move |p| {
+                })
+                .behavior_fn(move |p| {
                     DriveLocTimeDecelerate::new(
                         target_loc,
                         target_speed,
                         p.GameInfo.TimeSeconds + 2.0,
                     )
-                },
-            );
-
-            test.sleep_millis(2000);
+                })
+                .run_for_millis(2000);
 
             let packet = test.sniff_packet();
             let discrepancy = (packet.GameCars[0].Physics.loc_2d() - target_loc).norm();

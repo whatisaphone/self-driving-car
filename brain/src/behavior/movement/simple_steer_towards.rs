@@ -44,14 +44,15 @@ mod integration_tests {
 
     #[test]
     fn steer_direction() {
-        let test = TestRunner::start(SimpleSteerTowardsBall, TestScenario {
-            ball_loc: Point3::new(2800.0, -2800.0, 0.0),
-            car_loc: Point3::new(3800.0, -2400.0, 0.0),
-            car_rot: Rotation3::from_unreal_angles(0.0, 2.8, 0.0),
-            ..Default::default()
-        });
-
-        test.sleep_millis(2000);
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(2800.0, -2800.0, 0.0),
+                car_loc: Point3::new(3800.0, -2400.0, 0.0),
+                car_rot: Rotation3::from_unreal_angles(0.0, 2.8, 0.0),
+                ..Default::default()
+            })
+            .behavior(SimpleSteerTowardsBall)
+            .run_for_millis(2000);
 
         let packet = test.sniff_packet();
         assert!(packet.GameBall.Physics.loc().x < 2700.0);

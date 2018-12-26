@@ -128,16 +128,16 @@ mod integration_tests {
         let cases = [(-200.0, 500.0, 0), (100.0, 600.0, 50)];
         for &(x, y, boost) in cases.iter() {
             let target_loc = Point2::new(x, y);
-            let test = TestRunner::start2(
-                TestScenario {
+            let test = TestRunner::new()
+                .scenario(TestScenario {
                     ball_loc: Point3::new(2000.0, 0.0, 0.0),
                     boost,
                     ..Default::default()
-                },
-                move |p| GroundAccelToLoc::new(target_loc, p.GameInfo.TimeSeconds + 2.0),
-            );
-
-            test.sleep_millis(2000);
+                })
+                .behavior_fn(move |p| {
+                    GroundAccelToLoc::new(target_loc, p.GameInfo.TimeSeconds + 2.0)
+                })
+                .run_for_millis(2000);
 
             let packet = test.sniff_packet();
             let diff = (packet.GameCars[0].Physics.loc_2d() - target_loc).norm();

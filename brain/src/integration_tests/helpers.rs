@@ -37,26 +37,6 @@ pub struct TestRunner {
     enemy_initial_boost: f32,
 }
 
-/// Static API
-impl TestRunner {
-    pub fn start(behavior: impl Behavior + Send + 'static, scenario: TestScenario) -> RunningTest {
-        Self::start2(scenario, |_| behavior)
-    }
-
-    pub fn start0(scenario: TestScenario) -> RunningTest {
-        Self::start2(scenario, |_| NullBehavior::new())
-    }
-
-    pub fn start2<B, BF>(scenario: TestScenario, behavior: BF) -> RunningTest
-    where
-        B: Behavior + 'static,
-        BF: FnOnce(&rlbot::ffi::LiveDataPacket) -> B + Send + 'static,
-    {
-        Self::new().scenario(scenario).behavior_fn(behavior).run()
-    }
-}
-
-/// Builder API
 impl TestRunner {
     const DEFAULT_STARTING_BOOST: f32 = 100.0;
 
