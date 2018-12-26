@@ -1,0 +1,65 @@
+fmt:
+  image: rustlang/rust:nightly
+  script:
+    - rustup component add rustfmt-preview
+    - cargo fmt -- --check
+
+# Each package is checked separately because of
+# https://github.com/rust-lang/cargo/issues/5364
+
+.check-crate:
+  image: rust
+  script: cd "$crate" && cargo check --all-targets --features strict
+
+check-brain:
+  extends: .check-crate
+  variables:
+    crate: brain
+
+check-brain-test-data:
+  extends: .check-crate
+  variables:
+    crate: brain-test-data
+
+check-collect:
+  extends: .check-crate
+  variables:
+    crate: collect
+
+check-common:
+  extends: .check-crate
+  variables:
+    crate: common
+
+check-dom:
+  extends: .check-crate
+  variables:
+    crate: dom
+
+check-oven:
+  extends: .check-crate
+  variables:
+    crate: oven
+
+check-play:
+  extends: .check-crate
+  variables:
+    crate: play
+
+check-simulate:
+  extends: .check-crate
+  variables:
+    crate: simulate
+
+clippy:
+  image: rustlang/rust:nightly
+  script:
+    - rustup component add clippy
+    - cargo clippy -- -D clippy::all
+
+# Unfortunately testing can't happen in CI right now because we require Windows.
+.test:
+  image: rust
+  script:
+    # Skip the tests which require Rocket League to be running.
+    - cargo test -- --skip integration

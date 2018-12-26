@@ -47,11 +47,11 @@ cargo build --release && \
 The integration tests require a copy of Rocket League running (naturally).
 
 ```sh
-cargo test -p brain -- --test-threads=1 integration_tests
+cargo test -p brain -- --test-threads=1 integration
 ```
 
-To run an individual test, you can replace `integration_tests` with a pattern
-that matches the name of the test.
+To run an individual test, you can replace `integration` with a pattern that
+matches the name of the test.
 
 ### Profiling
 
