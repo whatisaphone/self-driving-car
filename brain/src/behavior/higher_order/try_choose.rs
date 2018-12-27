@@ -4,33 +4,32 @@ use crate::{
 };
 use itertools::Itertools;
 use nameof::name_of_type;
-use std::iter;
 
 /// Run the first `child` that does not immediately return or abort.
 pub struct TryChoose {
     priority: Priority,
     choices: Vec<Box<Behavior>>,
     chosen_index: Option<usize>,
+    choice_names: String,
     blurb: String,
 }
 
 impl TryChoose {
     pub fn new(priority: Priority, choices: Vec<Box<Behavior>>) -> Self {
-        let blurb = Self::blurb(choices.iter());
+        let (choice_names, blurb) = Self::blurb(choices.iter());
         Self {
             priority,
             choices,
             chosen_index: None,
+            choice_names,
             blurb,
         }
     }
 
-    fn blurb<'a>(children: impl Iterator<Item = &'a Box<Behavior>>) -> String {
-        iter::once(name_of_type!(TryChoose))
-            .chain(iter::once(" ("))
-            .chain(children.map(|b| b.name()).intersperse(", "))
-            .chain(iter::once(")"))
-            .join("")
+    fn blurb<'a>(children: impl Iterator<Item = &'a Box<Behavior>>) -> (String, String) {
+        let choice_names = children.map(|b| b.name()).join(", ");
+        let blurb = format!("{} ({})", name_of_type!(TryChoose), choice_names);
+        (choice_names, blurb)
     }
 }
 
@@ -48,20 +47,20 @@ impl Behavior for TryChoose {
     }
 
     fn execute(&mut self, ctx: &mut Context) -> Action {
-        ctx.eeg.draw(Drawable::print(
-            self.choices
-                .iter()
-                .map(|b| b.name())
-                .collect::<Vec<_>>()
-                .join(", "),
-            color::GREEN,
-        ));
+        ctx.eeg
+            .draw(Drawable::print(self.choice_names.as_str(), color::GREEN));
 
         if let Some(chosen_index) = self.chosen_index {
             return self.choices[chosen_index].execute(ctx);
         }
 
-        // We need to choose a child behavior. This will happen on the first frame.
+        // If we get here, we need to choose a child behavior. This will only happen on
+        // the first frame.
+
+        ctx.eeg.log(
+            self.name(),
+            format!("choosing between {}", self.choice_names),
+        );
 
         for (index, behavior) in self.choices.iter_mut().enumerate() {
             match behavior.execute(ctx) {
@@ -69,7 +68,10 @@ impl Behavior for TryChoose {
                 Action::Return => continue,
                 action => {
                     self.chosen_index = Some(index);
-                    ctx.eeg.log(self.name(), format!("chose index {}", index));
+                    ctx.eeg.log(
+                        self.name(),
+                        format!("chose index {}: {}", index, self.choices[index].blurb()),
+                    );
                     return action;
                 }
             }
