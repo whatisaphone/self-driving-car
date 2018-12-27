@@ -8,7 +8,6 @@ use crate::{
 };
 use common::prelude::*;
 use derive_new::new;
-use nalgebra::Point2;
 use nameof::name_of_type;
 use simulate::linear_interpolate;
 use std::f32::consts::PI;
@@ -34,10 +33,7 @@ impl Strategy for Soccar {
         // Force kickoff behavior. We can't rely on the normal routing, because it
         // doesn't account for boost pads that you pick up on the way, so it dodges and
         // goes too slow.
-        if current.priority() < Priority::Force
-            && (ctx.packet.GameBall.Physics.loc_2d() - Point2::origin()).norm() < 1.0
-            && ctx.packet.GameBall.Physics.vel().norm() < 1.0
-        {
+        if current.priority() < Priority::Force && Kickoff::is_kickoff(&ctx.packet.GameBall) {
             return Some(Box::new(Chain::new(Priority::Force, vec![Box::new(
                 Kickoff::new(),
             )])));
