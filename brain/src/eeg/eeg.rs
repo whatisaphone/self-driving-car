@@ -1,6 +1,6 @@
 // This file is a hot mess, don't look at it please :)
 
-use crate::strategy::Team;
+use crate::{eeg::color, strategy::Team};
 use common::{prelude::*, rl, PrettyPrint};
 use graphics::{types::Color, Transformed};
 use nalgebra::{Point2, Point3, Rotation3};
@@ -154,29 +154,6 @@ impl Drawable {
 
     pub fn print(text: impl Into<String>, color: Color) -> Self {
         Drawable::Print(text.into(), color)
-    }
-}
-
-pub mod color {
-    use crate::strategy::Team;
-    use graphics::types::Color;
-
-    pub const BLACK: Color = [0.0, 0.0, 0.0, 1.0];
-    pub const WHITE: Color = [1.0, 1.0, 1.0, 1.0];
-    pub const PITCH: Color = [0.0, 0.2, 0.0, 1.0];
-    pub const RED: Color = [1.0, 0.0, 0.0, 1.0];
-    pub const ORANGE: Color = [1.0, 0.5, 0.0, 1.0];
-    pub const ORANGE_DARK: Color = [0.5, 0.25, 0.0, 1.0];
-    pub const GREEN: Color = [0.0, 1.0, 0.0, 1.0];
-    pub const YELLOW: Color = [1.0, 1.0, 0.0, 1.0];
-    pub const BLUE: Color = [0.5, 0.5, 1.0, 1.0];
-    pub const BLUE_DARK: Color = [0.25, 0.25, 0.5, 1.0];
-
-    pub fn for_team(team: Team) -> Color {
-        match team {
-            Team::Blue => BLUE,
-            Team::Orange => ORANGE,
-        }
     }
 }
 
