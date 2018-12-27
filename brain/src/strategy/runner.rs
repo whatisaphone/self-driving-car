@@ -18,14 +18,6 @@ impl Runner {
     }
 
     #[cfg(test)]
-    pub fn soccar() -> Self {
-        Self {
-            strategy: Box::new(crate::strategy::Soccar::new()),
-            current: None,
-        }
-    }
-
-    #[cfg(test)]
     pub fn with_current(current: impl Behavior + 'static) -> Self {
         Self {
             strategy: Box::new(crate::strategy::null::NullStrategy::new()),

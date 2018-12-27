@@ -1,9 +1,6 @@
 #[cfg(test)]
 mod integration_tests {
-    use crate::{
-        integration_tests::helpers::{TestRunner, TestScenario},
-        strategy::Runner,
-    };
+    use crate::integration_tests::helpers::{TestRunner, TestScenario};
     use common::prelude::*;
     use nalgebra::{Point3, Rotation3, Vector3};
 
@@ -18,7 +15,7 @@ mod integration_tests {
                 car_vel: Vector3::new(-1599.1952, 1223.4504, 9.51471),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(4000);
 
         assert!(test.has_scored());
@@ -35,7 +32,7 @@ mod integration_tests {
                 car_vel: Vector3::new(1566.5747, 1017.1486, 13.497895),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(3500);
         assert!(test.has_scored());
     }
@@ -51,7 +48,7 @@ mod integration_tests {
                 car_vel: Vector3::new(521.8343, 928.79755, 8.326952),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(4000);
         assert!(test.has_scored());
     }
@@ -68,7 +65,7 @@ mod integration_tests {
                 boost: 0,
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(5000);
         assert!(test.has_scored());
     }
@@ -84,7 +81,7 @@ mod integration_tests {
                 car_vel: Vector3::new(1287.4675, -433.82834, -183.28568),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(2000);
         assert!(test.has_scored());
     }
@@ -101,7 +98,7 @@ mod integration_tests {
                 boost: 0,
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(3000);
 
         assert!(test.has_scored());
@@ -118,7 +115,7 @@ mod integration_tests {
                 car_vel: Vector3::new(232.67545, -405.04382, 8.36),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(2000);
 
         assert!(test.has_scored());

@@ -1,9 +1,6 @@
 #[cfg(test)]
 mod integration_tests {
-    use crate::{
-        integration_tests::helpers::{TestRunner, TestScenario},
-        strategy::Runner,
-    };
+    use crate::integration_tests::helpers::{TestRunner, TestScenario};
     use common::{prelude::*, rl};
     use nalgebra::{Point2, Point3, Rotation3, Vector3};
 
@@ -19,7 +16,7 @@ mod integration_tests {
                 car_vel: Vector3::new(786.13666, -620.0981, 8.309999),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(2500);
 
         assert!(!test.enemy_has_scored());
@@ -44,7 +41,7 @@ mod integration_tests {
                 enemy_vel: Vector3::new(-379.28546, -1859.9683, 8.41),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(2500);
 
         let packet = test.sniff_packet();
@@ -63,7 +60,7 @@ mod integration_tests {
                 car_vel: Vector3::new(256.23804, -1591.1218, 8.3),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(5000);
 
         assert!(test.has_scored());
@@ -80,7 +77,7 @@ mod integration_tests {
                 car_vel: Vector3::new(-85.847946, -990.35706, 8.0),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(4000);
 
         assert!(!test.enemy_has_scored());
@@ -101,7 +98,7 @@ mod integration_tests {
                 car_vel: Vector3::new(1141.101, -487.77042, 8.34),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(5000);
 
         assert!(test.has_scored());
@@ -119,7 +116,7 @@ mod integration_tests {
                 enemy_loc: Point3::new(-1500.0, -4000.0, 17.01),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(4000);
 
         assert!(!test.enemy_has_scored());

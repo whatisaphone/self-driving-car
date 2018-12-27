@@ -2,10 +2,7 @@
 // I don't accidentally copy/paste them and forget to commit the actual harness.
 #![allow(deprecated)]
 
-use crate::{
-    integration_tests::helpers::{TestRunner, TestScenario},
-    strategy::Runner,
-};
+use crate::integration_tests::helpers::{TestRunner, TestScenario};
 use nalgebra::Point3;
 
 #[test]
@@ -17,7 +14,7 @@ fn scenario_template() {
             ..TestScenario::from_recorded_row("../logs/play.csv", 10.0)
         })
         .starting_boost(25.0)
-        .behavior(Runner::soccar())
+        .soccar()
         .run_for_millis(7000);
     unimplemented!();
 }
@@ -28,7 +25,7 @@ fn recording_template() {
     let _test = TestRunner::new()
         .preview_recording("../logs/play.csv", 100.0, 2.0, 5.0)
         .starting_boost(25.0)
-        .behavior(Runner::soccar())
+        .soccar()
         .run_for_millis(7000);
     unimplemented!();
 }

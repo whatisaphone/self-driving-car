@@ -2,7 +2,7 @@ use crate::{
     behavior::higher_order::{Fuse, NullBehavior},
     brain::Brain,
     eeg::{Event, EEG},
-    strategy::{Behavior, Team},
+    strategy::{Behavior, Runner, Soccar, Team},
 };
 use brain_test_data::OneVOneScenario;
 use collect::{
@@ -136,6 +136,11 @@ impl TestRunner {
         // https://github.com/rust-lang/rust/issues/28796
         let mut behavior = Some(behavior);
         self.behavior = Some(Box::new(move |p| Box::new(behavior.take().unwrap()(p))));
+        self
+    }
+
+    pub fn soccar(mut self) -> Self {
+        self.behavior = Some(Box::new(|_| Box::new(Runner::new(Soccar::new()))));
         self
     }
 

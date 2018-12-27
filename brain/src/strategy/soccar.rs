@@ -103,7 +103,6 @@ mod integration_tests {
     use crate::{
         eeg::Event,
         integration_tests::helpers::{TestRunner, TestScenario},
-        strategy::Runner,
     };
     use brain_test_data::recordings;
     use common::prelude::*;
@@ -120,7 +119,7 @@ mod integration_tests {
                 car_vel: Vector3::new(-1369.871, 12.749782, 8.351),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(100);
 
         test.examine_events(|events| {
@@ -144,7 +143,7 @@ mod integration_tests {
                 ..Default::default()
             })
             .starting_boost(0.0)
-            .behavior(Runner::soccar())
+            .soccar()
             .run();
 
         let packet = test.sniff_packet();
@@ -169,7 +168,7 @@ mod integration_tests {
                 ..Default::default()
             })
             .starting_boost(28.0)
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(2000);
 
         let packet = test.sniff_packet();
@@ -187,7 +186,7 @@ mod integration_tests {
                 car_rot: Rotation3::from_unreal_angles(0.0, 210_f32.to_radians(), 0.0),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(2000);
 
         let packet = test.sniff_packet();
@@ -198,7 +197,7 @@ mod integration_tests {
     fn clear_defensive_ball() {
         let test = TestRunner::new()
             .one_v_one(&*recordings::CLEAR_DEFENSIVE_BALL, 53.0)
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(2000);
 
         let packet = test.sniff_packet();
@@ -211,7 +210,7 @@ mod integration_tests {
         let test = TestRunner::new()
             .one_v_one(&*recordings::DONT_ALLOW_LONG_SHOT, 282.5)
             .starting_boost(0.0)
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(7000);
 
         assert!(!test.enemy_has_scored());

@@ -1,9 +1,6 @@
 #[cfg(test)]
 mod integration_tests {
-    use crate::{
-        integration_tests::helpers::{TestRunner, TestScenario},
-        strategy::Runner,
-    };
+    use crate::integration_tests::helpers::{TestRunner, TestScenario};
     use common::prelude::*;
     use nalgebra::{Point3, Rotation3, Vector3};
 
@@ -21,7 +18,7 @@ mod integration_tests {
                 enemy_vel: Vector3::new(63.52187, -1216.5942, 40.226746),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(2000);
 
         let packet = test.sniff_packet();
@@ -40,7 +37,7 @@ mod integration_tests {
                 enemy_loc: Point3::new(0.0, -1000.0, 17.01),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(5500);
 
         let packet = test.sniff_packet();

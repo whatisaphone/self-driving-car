@@ -1,9 +1,6 @@
 #[cfg(test)]
 mod integration_tests {
-    use crate::{
-        integration_tests::helpers::{TestRunner, TestScenario},
-        strategy::Runner,
-    };
+    use crate::integration_tests::helpers::{TestRunner, TestScenario};
     use common::prelude::*;
     use nalgebra::{Point3, Rotation3, Vector3};
 
@@ -19,7 +16,7 @@ mod integration_tests {
                 enemy_loc: Point3::new(-1500.0, 4000.0, 17.01),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(4000);
 
         assert!(test.has_scored());
@@ -37,7 +34,7 @@ mod integration_tests {
                 car_vel: Vector3::new(-855.45123, 459.4182, 14.042989),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(5000);
 
         unimplemented!();
@@ -54,7 +51,7 @@ mod integration_tests {
                 car_vel: Vector3::new(1083.5627, 572.17487, 8.241),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(4000);
         assert!(test.has_scored());
     }

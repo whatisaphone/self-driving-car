@@ -123,7 +123,7 @@ mod integration_tests {
         behavior::defense::{Defense, HitToOwnCorner},
         eeg::Event,
         integration_tests::helpers::{TestRunner, TestScenario},
-        strategy::{Runner, SOCCAR_GOAL_BLUE},
+        strategy::SOCCAR_GOAL_BLUE,
     };
     use brain_test_data::recordings;
     use common::prelude::*;
@@ -141,7 +141,7 @@ mod integration_tests {
                 enemy_loc: Point3::new(1500.0, -4000.0, 17.01),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(2000);
 
         let packet = test.sniff_packet();
@@ -160,7 +160,7 @@ mod integration_tests {
                 car_vel: Vector3::new(982.8443, -1059.1908, -935.80194),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(6000);
 
         assert!(!test.enemy_has_scored());
@@ -178,7 +178,7 @@ mod integration_tests {
                 enemy_loc: Point3::new(-2600.0, 1000.0, 17.01),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(100);
 
         // This result is just *okay*
@@ -203,7 +203,7 @@ mod integration_tests {
                 boost: 0,
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(3000);
 
         assert!(!test.enemy_has_scored());
@@ -221,7 +221,7 @@ mod integration_tests {
                 car_vel: Vector3::new(131.446, -188.83897, 8.33),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(3000);
 
         let packet = test.sniff_packet();
@@ -241,7 +241,7 @@ mod integration_tests {
                 boost: 0,
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(3000);
 
         let packet = test.sniff_packet();
@@ -314,7 +314,7 @@ mod integration_tests {
                 enemy_loc: Point3::new(-2400.0, 100.0, 17.01),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(2000);
 
         let packet = test.sniff_packet();
@@ -359,7 +359,7 @@ mod integration_tests {
                 boost: 10,
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(3000);
 
         assert!(!test.enemy_has_scored());
@@ -383,7 +383,7 @@ mod integration_tests {
                 car_vel: Vector3::new(947.339, -565.98175, 15.669456),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(2000);
 
         test.examine_events(|events| {
@@ -408,7 +408,7 @@ mod integration_tests {
                 boost: 0,
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(5000);
 
         assert!(!test.enemy_has_scored());
@@ -427,7 +427,7 @@ mod integration_tests {
                 car_vel: Vector3::new(-268.87683, -1383.9724, 8.309999),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(2000);
 
         assert!(!test.enemy_has_scored());
@@ -447,7 +447,7 @@ mod integration_tests {
                 car_vel: Vector3::new(-57.26778, -2296.9263, 8.53),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(4000);
 
         assert!(!test.enemy_has_scored());
@@ -461,7 +461,7 @@ mod integration_tests {
         let test = TestRunner::new()
             .one_v_one(&*recordings::JUMP_SAVE_FROM_INSIDE_GOAL, 106.0)
             .starting_boost(0.0)
-            .behavior(Runner::soccar())
+            .soccar()
             .run();
         test.sleep_millis(3000);
         assert!(!test.enemy_has_scored());
@@ -480,7 +480,7 @@ mod integration_tests {
                 ..Default::default()
             })
             .starting_boost(0.0)
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(6000);
 
         let packet = test.sniff_packet();
@@ -494,7 +494,7 @@ mod integration_tests {
         let test = TestRunner::new()
             .one_v_one(&*recordings::CLEAR_AROUND_GOAL_WALL, 327.0)
             .starting_boost(100.0)
-            .behavior(Runner::soccar())
+            .soccar()
             .run();
         test.sleep_millis(3000);
 
@@ -512,7 +512,7 @@ mod integration_tests {
         let test = TestRunner::new()
             .one_v_one(&*recordings::DEFENSIVE_CONFIDENCE, 24.0)
             .starting_boost(65.0)
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(3500);
 
         let packet = test.sniff_packet();
@@ -531,7 +531,7 @@ mod integration_tests {
                 ..Default::default()
             })
             .starting_boost(10.0)
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(4000);
 
         assert!(!test.enemy_has_scored());
@@ -543,7 +543,7 @@ mod integration_tests {
             .one_v_one(&*recordings::BLOCK_GOAL_WITH_NO_BOOST, 61.5)
             .starting_boost(0.0)
             .enemy_starting_boost(50.0)
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(2500);
 
         assert!(!test.enemy_has_scored());
@@ -555,7 +555,7 @@ mod integration_tests {
             .one_v_one(&*recordings::INCONVENIENT_ANGLE_HIT_TO_THE_SIDE, 419.5)
             .starting_boost(0.0)
             .enemy_starting_boost(0.0)
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(5000);
 
         assert!(!test.enemy_has_scored());

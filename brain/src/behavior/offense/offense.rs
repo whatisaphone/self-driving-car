@@ -203,7 +203,6 @@ mod integration_tests {
         behavior::offense::Offense,
         eeg::Event,
         integration_tests::helpers::{TestRunner, TestScenario},
-        strategy::Runner,
     };
     use common::prelude::*;
     use nalgebra::{Point3, Rotation3, Vector3};
@@ -256,7 +255,7 @@ mod integration_tests {
                 car_vel: Vector3::new(-352.9971, 833.215, 8.34),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(3000);
         let packet = test.sniff_packet();
         assert!(packet.GameBall.Physics.vel().y >= 1000.0);
@@ -274,7 +273,7 @@ mod integration_tests {
                 boost: 0,
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run();
         test.sleep_millis(3000);
         assert!(test.has_scored());
@@ -292,7 +291,7 @@ mod integration_tests {
                 boost: 0,
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(8000);
         assert!(test.has_scored());
     }
@@ -309,7 +308,7 @@ mod integration_tests {
                 car_vel: Vector3::new(-702.66034, 1446.7336, 8.615206),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(3000);
         assert!(test.has_scored());
     }
@@ -325,7 +324,7 @@ mod integration_tests {
                 car_vel: Vector3::new(1251.7024, 854.6698, 8.411),
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(100);
 
         test.examine_events(|events| {
@@ -348,7 +347,7 @@ mod integration_tests {
                 boost: 31,
                 ..Default::default()
             })
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(3000);
 
         let packet = test.sniff_packet();
@@ -367,7 +366,7 @@ mod integration_tests {
                 ..Default::default()
             })
             .starting_boost(70.0)
-            .behavior(Runner::soccar())
+            .soccar()
             .run_for_millis(7000);
 
         assert!(test.has_scored());
