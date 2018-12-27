@@ -431,28 +431,14 @@ fn setup_scenario(
     rlbot: &rlbot::RLBot,
     ball: &RecordingRigidBodyState,
     car: &RecordingRigidBodyState,
-    car_boost_amount: f32,
+    car_boost: f32,
     enemy: &RecordingRigidBodyState,
-    enemy_boost_amount: f32,
+    enemy_boost: f32,
 ) {
-    set_state(
-        rlbot,
-        ball,
-        car,
-        car_boost_amount,
-        enemy,
-        enemy_boost_amount,
-    );
+    set_state(rlbot, ball, car, car_boost, enemy, enemy_boost);
     // Wait for car suspension to settle to neutral, then set it again.
     sleep(Duration::from_millis(1000));
-    set_state(
-        rlbot,
-        ball,
-        car,
-        car_boost_amount,
-        enemy,
-        enemy_boost_amount,
-    );
+    set_state(rlbot, ball, car, car_boost, enemy, enemy_boost);
 
     // Wait a few frames for the state to take effect.
     let mut packeteer = rlbot.packeteer();
@@ -464,9 +450,9 @@ fn set_state(
     rlbot: &rlbot::RLBot,
     ball: &RecordingRigidBodyState,
     car: &RecordingRigidBodyState,
-    car_boost_amount: f32,
+    car_boost: f32,
     enemy: &RecordingRigidBodyState,
-    enemy_boost_amount: f32,
+    enemy_boost: f32,
 ) {
     let ball_state = rlbot::state::DesiredBallState::new().physics(
         rlbot::state::DesiredPhysics::new()
@@ -483,7 +469,7 @@ fn set_state(
                 .velocity(car.vel)
                 .angular_velocity(car.ang_vel),
         )
-        .boost_amount(car_boost_amount);
+        .boost_amount(car_boost);
     let enemy_state = rlbot::state::DesiredCarState::new()
         .physics(
             rlbot::state::DesiredPhysics::new()
@@ -492,7 +478,7 @@ fn set_state(
                 .velocity(enemy.vel)
                 .angular_velocity(enemy.ang_vel),
         )
-        .boost_amount(enemy_boost_amount);
+        .boost_amount(enemy_boost);
     let game_state = rlbot::state::DesiredGameState::new()
         .ball_state(ball_state)
         .car_state(0, car_state)
