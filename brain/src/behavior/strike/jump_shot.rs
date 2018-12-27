@@ -16,6 +16,7 @@ mod integration_tests {
                 car_loc: Point3::new(3066.908, 4276.6646, 20.0),
                 car_rot: Rotation3::from_unreal_angles(0.0, 3.43, 0.0),
                 car_vel: Vector3::new(-1351.3594, 345.7535, 108.78551),
+                enemy_loc: Point3::new(-1500.0, 4000.0, 17.01),
                 ..Default::default()
             })
             .behavior(Runner::soccar())
@@ -25,7 +26,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore] // TODO
+    #[ignore(note = "TODO")]
     fn sideways_jump() {
         let _test = TestRunner::new()
             .scenario(TestScenario {
@@ -54,7 +55,7 @@ mod integration_tests {
                 ..Default::default()
             })
             .behavior(Runner::soccar())
-            .run_for_millis(3500);
+            .run_for_millis(4000);
         assert!(test.has_scored());
     }
 }

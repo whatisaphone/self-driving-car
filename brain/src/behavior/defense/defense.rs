@@ -393,7 +393,7 @@ mod integration_tests {
 
         assert!(!test.enemy_has_scored());
         let packet = test.sniff_packet();
-        assert!((packet.GameBall.Physics.loc_2d() - SOCCAR_GOAL_BLUE.center_2d).norm() >= 1000.0);
+        assert!((packet.GameBall.Physics.loc_2d() - SOCCAR_GOAL_BLUE.center_2d).norm() >= 500.0);
     }
 
     #[test]

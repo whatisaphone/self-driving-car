@@ -1,5 +1,6 @@
 use crate::{
     behavior::offense::{ResetBehindBall, Shoot, TepidHit},
+    eeg::Event,
     plan::{ball::BallFrame, telepathy},
     predict::naive_ground_intercept_2,
     routing::{behavior::FollowRoute, plan::GetDollar},
@@ -25,6 +26,8 @@ impl Behavior for Offense {
     }
 
     fn execute(&mut self, ctx: &mut Context) -> Action {
+        ctx.eeg.track(Event::Offense);
+
         if can_we_shoot(ctx) {
             ctx.eeg.log(self.name(), "taking the shot!");
             return Action::call(Shoot::new());
@@ -207,7 +210,7 @@ mod integration_tests {
     use std::f32::consts::PI;
 
     #[test]
-    #[ignore] // TODO
+    #[ignore(note = "TODO")]
     fn wait_for_curl_around_lip_near_post() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -225,7 +228,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore] // TODO
+    #[ignore(note = "TODO")]
     fn in_corner_barely_cant_reach() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -243,7 +246,6 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore] // TODO
     fn wait_for_ball_to_fall() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -279,7 +281,6 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore] // TODO
     fn awkward_breakaway_shot() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -292,12 +293,12 @@ mod integration_tests {
                 ..Default::default()
             })
             .behavior(Runner::soccar())
-            .run_for_millis(5000);
+            .run_for_millis(8000);
         assert!(test.has_scored());
     }
 
     #[test]
-    #[ignore] // TODO
+    #[ignore(note = "TODO")]
     fn juicy_bouncing() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -314,7 +315,6 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "The great bankruptcy of 2018")]
     fn tepid_hit_from_own_goal() {
         let test = TestRunner::new()
             .scenario(TestScenario {

@@ -16,6 +16,9 @@ mod integration_tests {
                 car_loc: Point3::new(920.5995, 3787.2036, 44.447636),
                 car_rot: Rotation3::from_unreal_angles(-0.010929613, -1.1549916, -1.3353302),
                 car_vel: Vector3::new(63.52187, -1216.5942, 40.226746),
+                enemy_loc: Point3::new(1500.0, 3000.0, 17.01),
+                enemy_rot: Rotation3::from_unreal_angles(-0.010929613, -1.1549916, 0.0),
+                enemy_vel: Vector3::new(63.52187, -1216.5942, 40.226746),
                 ..Default::default()
             })
             .behavior(Runner::soccar())
@@ -34,6 +37,7 @@ mod integration_tests {
                 car_loc: Point3::new(-3508.7988, 3034.4133, 17.02),
                 car_rot: Rotation3::from_unreal_angles(-0.00958738, 3.0207918, 0.0),
                 car_vel: Vector3::new(-1254.4124, 211.01375, 8.24),
+                enemy_loc: Point3::new(0.0, -1000.0, 17.01),
                 ..Default::default()
             })
             .behavior(Runner::soccar())

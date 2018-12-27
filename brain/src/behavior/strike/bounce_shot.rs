@@ -188,6 +188,7 @@ mod integration_tests {
     }
 
     #[test]
+    #[ignore(note = "TODO")]
     fn long_high_bouncing_save() {
         let corner = Point2::new(rl::FIELD_MAX_X, -rl::FIELD_MAX_Y);
         let test = TestRunner::new()

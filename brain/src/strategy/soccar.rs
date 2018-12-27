@@ -130,7 +130,6 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "This only ever worked in the first place because of a hilarious tragedy.")]
     fn get_boost_on_defense_if_we_have_time() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -158,7 +157,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore] // Doesn't work yet
+    #[ignore(note = "TODO")]
     fn get_boost_on_offense_if_we_have_time() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -207,6 +206,7 @@ mod integration_tests {
     }
 
     #[test]
+    #[ignore(note = "TODO")]
     fn dont_allow_long_shot() {
         let test = TestRunner::new()
             .one_v_one(&*recordings::DONT_ALLOW_LONG_SHOT, 282.5)

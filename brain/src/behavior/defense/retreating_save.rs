@@ -86,7 +86,7 @@ mod integration_tests {
         assert!(!test.enemy_has_scored());
         let packet = test.sniff_packet();
         println!("{:?}", packet.GameBall.Physics.vel());
-        assert!(packet.GameBall.Physics.vel().x < -2000.0);
+        assert!(packet.GameBall.Physics.vel().x < -1000.0);
     }
 
     #[test]

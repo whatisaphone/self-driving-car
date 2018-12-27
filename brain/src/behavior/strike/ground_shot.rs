@@ -8,7 +8,6 @@ mod integration_tests {
     use nalgebra::{Point3, Rotation3, Vector3};
 
     #[test]
-    #[ignore] // TODO
     fn crossing_the_midfield() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -26,7 +25,6 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore] // TODO
     fn crossing_the_box() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -43,7 +41,6 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore] // TODO
     fn high_bouncer() {
         let test = TestRunner::new()
             .scenario(TestScenario {
