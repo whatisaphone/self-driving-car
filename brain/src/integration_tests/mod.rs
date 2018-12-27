@@ -1,2 +1,2 @@
 pub(crate) mod helpers;
-mod misc;
+mod templates;
