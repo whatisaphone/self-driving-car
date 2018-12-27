@@ -55,7 +55,6 @@ mod integration_tests {
     use brain_test_data::recordings;
 
     #[test]
-    #[ignore(note = "The great bankruptcy of 2018")]
     fn retreating_hit_to_own_corner() {
         let test = TestRunner::new()
             .one_v_one(&*recordings::RETREATING_HIT_TO_OWN_CORNER, 104.5)

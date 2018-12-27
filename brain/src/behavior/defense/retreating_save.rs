@@ -8,6 +8,7 @@ mod integration_tests {
     use nalgebra::{Point2, Point3, Rotation3, Vector3};
 
     #[test]
+    #[ignore(note = "TODO")]
     fn falling_in_front_of_far_corner() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -30,7 +31,6 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore] // TODO
     fn rolling_quickly() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -39,16 +39,20 @@ mod integration_tests {
                 car_loc: Point3::new(3001.808, 3554.98, 16.99),
                 car_rot: Rotation3::from_unreal_angles(-0.00958738, -1.7710767, 0.0000958738),
                 car_vel: Vector3::new(-379.28546, -1859.9683, 8.41),
+                enemy_loc: Point3::new(3301.808, 3554.98, 16.99),
+                enemy_rot: Rotation3::from_unreal_angles(-0.00958738, -1.7710767, 0.0000958738),
+                enemy_vel: Vector3::new(-379.28546, -1859.9683, 8.41),
                 ..Default::default()
             })
             .behavior(Runner::soccar())
-            .run_for_millis(5000);
+            .run_for_millis(2500);
 
-        assert!(test.has_scored());
+        let packet = test.sniff_packet();
+        assert!(packet.GameBall.Physics.vel().x >= -200.0);
     }
 
     #[test]
-    #[ignore] // TODO
+    #[ignore(note = "TODO")]
     fn rolling_around_corner_into_box() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -66,7 +70,6 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore] // TODO
     fn low_bouncing_directly_ahead() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -78,13 +81,16 @@ mod integration_tests {
                 ..Default::default()
             })
             .behavior(Runner::soccar())
-            .run_for_millis(5000);
+            .run_for_millis(4000);
 
-        assert!(test.has_scored());
+        assert!(!test.enemy_has_scored());
+        let packet = test.sniff_packet();
+        println!("{:?}", packet.GameBall.Physics.vel());
+        assert!(packet.GameBall.Physics.vel().x < -2000.0);
     }
 
     #[test]
-    #[ignore] // TODO
+    #[ignore(note = "TODO")]
     fn high_loft_in_front_of_goal() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -110,6 +116,7 @@ mod integration_tests {
                 car_loc: Point3::new(-3077.711, -3389.5276, 17.01),
                 car_rot: Rotation3::from_unreal_angles(-0.00958738, -0.95528656, -0.0000958738),
                 car_vel: Vector3::new(1027.5283, -1455.2512, 8.3),
+                enemy_loc: Point3::new(-1500.0, -4000.0, 17.01),
                 ..Default::default()
             })
             .behavior(Runner::soccar())
