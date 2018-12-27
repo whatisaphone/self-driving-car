@@ -52,10 +52,12 @@ impl HitToOwnCorner {
         let rtl = WallRayCalculator::calculate(ball_loc, ball_loc + rtl_dir);
 
         let result = if (avoid - ltr).norm() > (avoid - rtl).norm() {
+            ctx.eeg.track(Event::PushFromLeftToRight);
             ctx.eeg
                 .draw(Drawable::print("push from left to right", color::GREEN));
             ltr
         } else {
+            ctx.eeg.track(Event::PushFromRightToLeft);
             ctx.eeg
                 .draw(Drawable::print("push from right to left", color::GREEN));
             rtl

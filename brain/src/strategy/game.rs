@@ -221,12 +221,12 @@ impl Vehicle {
 }
 
 lazy_static! {
-    static ref SOCCAR_GOAL_BLUE: Goal = Goal {
+    pub static ref SOCCAR_GOAL_BLUE: Goal = Goal {
         center_2d: Point2::new(0.0, -rl::FIELD_MAX_Y),
         normal_2d: Vector2::y_axis(),
         max_x: rl::GOALPOST_X,
     };
-    static ref SOCCAR_GOAL_ORANGE: Goal = Goal {
+    pub static ref SOCCAR_GOAL_ORANGE: Goal = Goal {
         center_2d: Point2::new(0.0, rl::FIELD_MAX_Y),
         normal_2d: -Vector2::y_axis(),
         max_x: rl::GOALPOST_X,

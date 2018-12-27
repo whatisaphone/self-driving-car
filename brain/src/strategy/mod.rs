@@ -2,7 +2,10 @@ pub use crate::strategy::{
     behavior::{Action, Behavior, Priority},
     context::Context,
     dropshot::Dropshot,
-    game::{infer_game_mode, BoostPickup, Game, Goal, Team, Vehicle},
+    game::{
+        infer_game_mode, BoostPickup, Game, Goal, Team, Vehicle, SOCCAR_GOAL_BLUE,
+        SOCCAR_GOAL_ORANGE,
+    },
     runner::Runner,
     scenario::Scenario,
     soccar::Soccar,
