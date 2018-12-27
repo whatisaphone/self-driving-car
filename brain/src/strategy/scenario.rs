@@ -110,7 +110,6 @@ impl<'a> Scenario<'a> {
     }
 
     /// If nobody touches the ball, will it end up in our goal?
-    #[allow(dead_code)]
     pub fn impending_concede(&self) -> Option<&BallFrame> {
         self.impending_concede
             .borrow_with(|| {

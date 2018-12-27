@@ -76,7 +76,6 @@ impl TestRunner {
         self
     }
 
-    #[allow(dead_code)]
     pub fn enemy_starting_boost(mut self, boost: f32) -> Self {
         self.enemy_initial_boost = boost;
         self
@@ -550,7 +549,6 @@ impl Default for TestScenario {
 impl TestScenario {
     /// This is a development-only convenience function that lets you load a
     /// scenario directly from a saved gameplay recording.
-    #[allow(dead_code)]
     #[deprecated(note = "Use TestScenario::new() instead when writing actual tests.")]
     pub fn from_recorded_row(filename: impl AsRef<Path>, time: f32) -> Self {
         let file = File::open(filename).unwrap();

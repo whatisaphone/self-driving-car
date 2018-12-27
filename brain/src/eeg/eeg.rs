@@ -157,12 +157,10 @@ impl Drawable {
     }
 }
 
-#[allow(dead_code)]
 pub mod color {
     use crate::strategy::Team;
     use graphics::types::Color;
 
-    pub const TRANSPARENT: Color = [0.0, 0.0, 0.0, 0.0];
     pub const BLACK: Color = [0.0, 0.0, 0.0, 1.0];
     pub const WHITE: Color = [1.0, 1.0, 1.0, 1.0];
     pub const PITCH: Color = [0.0, 0.2, 0.0, 1.0];

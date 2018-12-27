@@ -1,11 +1,9 @@
 use crate::strategy::{Action, Behavior, Context};
 use nameof::name_of_type;
 
-#[allow(dead_code)]
 pub struct NullBehavior;
 
 impl NullBehavior {
-    #[allow(dead_code)]
     pub fn new() -> NullBehavior {
         NullBehavior
     }

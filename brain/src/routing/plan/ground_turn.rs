@@ -152,7 +152,6 @@ struct ArcTowards {
     next: Option<Box<RoutePlanner>>,
 }
 
-#[allow(dead_code)]
 impl RoutePlanner for ArcTowards {
     fn name(&self) -> &'static str {
         name_of_type!(ArcTowards)
