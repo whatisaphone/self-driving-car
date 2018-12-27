@@ -14,7 +14,7 @@ mod chain;
 mod fuse;
 #[cfg(test)]
 mod null;
-#[cfg(test)]
+#[allow(dead_code)]
 mod repeat;
 mod run_while;
 mod time_limit;

@@ -126,18 +126,6 @@ impl TestRunner {
         self
     }
 
-    pub fn behavior_fn<B, BF>(mut self, behavior: BF) -> Self
-    where
-        B: Behavior + 'static,
-        BF: FnOnce(&rlbot::ffi::LiveDataPacket) -> B + Send + 'static,
-    {
-        // Use an option as a workaround for FnOnce being uncallable
-        // https://github.com/rust-lang/rust/issues/28796
-        let mut behavior = Some(behavior);
-        self.behavior = Some(Box::new(move |p| Box::new(behavior.take().unwrap()(p))));
-        self
-    }
-
     pub fn soccar(mut self) -> Self {
         self.behavior = Some(Box::new(|_| Box::new(Runner::new(Soccar::new()))));
         self

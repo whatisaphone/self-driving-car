@@ -1,85 +1,14 @@
 use crate::{
-    behavior::movement::{simple_yaw_diff, GroundAccelToLoc, QuickJumpAndDodge},
-    eeg::{color, Drawable},
-    predict::{intercept::NaiveIntercept, naive_ground_intercept},
-    rules::SameBallTrajectory,
-    strategy::{Action, Behavior, Context, Goal},
+    predict::intercept::NaiveIntercept,
+    strategy::Goal,
     utils::{geometry::ExtendF32, WallRayCalculator},
 };
 use common::prelude::*;
 use nalgebra::Point2;
-use nameof::name_of_type;
 use std::f32::consts::PI;
 
 pub struct BounceShot {
-    aim_loc: Point2<f32>,
-    same_ball_trajectory: SameBallTrajectory,
-}
-
-impl BounceShot {
-    pub const MAX_BALL_Z: f32 = 110.0;
-
-    #[allow(dead_code)] // Can I finally delete this?
-    pub fn new(aim_loc: Point2<f32>) -> Self {
-        Self {
-            aim_loc,
-            same_ball_trajectory: SameBallTrajectory::new(),
-        }
-    }
-}
-
-impl Behavior for BounceShot {
-    fn name(&self) -> &str {
-        name_of_type!(BounceShot)
-    }
-
-    fn execute(&mut self, ctx: &mut Context) -> Action {
-        return_some!(self.same_ball_trajectory.execute(ctx));
-
-        let me = ctx.me();
-        let intercept = naive_ground_intercept(
-            ctx.scenario.ball_prediction().iter(),
-            me.Physics.loc(),
-            me.Physics.vel(),
-            me.Boost as f32,
-            |ball| {
-                // What we actually want is vel.z >= 0, e.g. the upward half of a bounce. But
-                // velocity will be approx. -6.8 when the ball is stationary, due to gravity
-                // being applied after collision handling.
-                ball.loc.z < Self::MAX_BALL_Z && ball.vel.z >= -10.0
-            },
-        );
-
-        let intercept = some_or_else!(intercept, {
-            ctx.eeg.log(self.name(), "unknown intercept");
-            return Action::Abort;
-        });
-
-        let intercept_car_loc = Self::rough_shooting_spot(&intercept, self.aim_loc);
-        let distance = (ctx.me().Physics.loc_2d() - intercept_car_loc).norm();
-
-        ctx.eeg.draw(Drawable::Crosshair(self.aim_loc));
-        ctx.eeg.draw(Drawable::ghost_ball(intercept.ball_loc));
-        ctx.eeg.draw(Drawable::print(
-            format!("intercept_time: {:.2}", intercept.time),
-            color::GREEN,
-        ));
-        ctx.eeg.draw(Drawable::print(
-            format!("distance: {:.0}", distance),
-            color::GREEN,
-        ));
-
-        if intercept.time < QuickJumpAndDodge::MIN_DODGE_TIME {
-            return self.flip(ctx);
-        }
-
-        // TODO: this is not how this works…
-        let mut child = GroundAccelToLoc::new(
-            intercept_car_loc,
-            ctx.packet.GameInfo.TimeSeconds + intercept.time,
-        );
-        child.execute(ctx)
-    }
+    _private: (),
 }
 
 impl BounceShot {
@@ -115,26 +44,19 @@ impl BounceShot {
         let impulse = desired_vel - intercept_vel;
         intercept.ball_loc.to_2d() - impulse.normalize() * 200.0
     }
-
-    fn flip(&mut self, ctx: &mut Context) -> Action {
-        let angle = simple_yaw_diff(&ctx.me().Physics, ctx.packet.GameBall.Physics.loc_2d());
-        Action::call(QuickJumpAndDodge::begin(ctx.packet).angle(angle))
-    }
 }
 
 #[cfg(test)]
 mod integration_tests {
-    use crate::{
-        behavior::{higher_order::Repeat, strike::BounceShot},
-        integration_tests::helpers::{TestRunner, TestScenario},
-    };
-    use common::{prelude::*, rl};
-    use nalgebra::{Point2, Point3, Rotation3, Vector3};
+    use crate::integration_tests::helpers::{TestRunner, TestScenario};
+    use common::prelude::*;
+    use nalgebra::{Point3, Rotation3, Vector3};
 
     // `Repeat` is used in these tests so the shot is not aborted by
     // `SameBallTrajectory` when the ball bounces.
 
     #[test]
+    #[ignore(note = "TODO")]
     fn normal() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -144,13 +66,14 @@ mod integration_tests {
                 car_vel: Vector3::new(0.0, 0.0, 0.0),
                 ..Default::default()
             })
-            .behavior(BounceShot::new(Point2::new(0.0, rl::FIELD_MAX_Y)))
+            .soccar()
             .run_for_millis(5000);
 
         assert!(test.has_scored());
     }
 
     #[test]
+    #[ignore(note = "TODO")]
     fn slow_no_boost() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -161,13 +84,14 @@ mod integration_tests {
                 boost: 0,
                 ..Default::default()
             })
-            .behavior(BounceShot::new(Point2::new(0.0, rl::FIELD_MAX_Y)))
+            .soccar()
             .run_for_millis(6000);
 
         assert!(test.has_scored());
     }
 
     #[test]
+    #[ignore(note = "TODO")]
     fn face_target_before_estimating_approach() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -178,9 +102,7 @@ mod integration_tests {
                 car_vel: Vector3::new(30.373384, 216.24547, 8.311),
                 ..Default::default()
             })
-            .behavior(Repeat::new(|| {
-                BounceShot::new(Point2::new(-rl::FIELD_MAX_X, -1000.0))
-            }))
+            .soccar()
             .run_for_millis(3000);
 
         let packet = test.sniff_packet();
@@ -190,7 +112,6 @@ mod integration_tests {
     #[test]
     #[ignore(note = "TODO")]
     fn long_high_bouncing_save() {
-        let corner = Point2::new(rl::FIELD_MAX_X, -rl::FIELD_MAX_Y);
         let test = TestRunner::new()
             .scenario(TestScenario {
                 ball_loc: Point3::new(90.25211, -340.07803, 1487.03),
@@ -200,7 +121,7 @@ mod integration_tests {
                 car_vel: Vector3::new(-60.050007, -1915.0122, 15.930969),
                 ..Default::default()
             })
-            .behavior(BounceShot::new(corner))
+            .soccar()
             .run_for_millis(2500);
 
         let packet = test.sniff_packet();

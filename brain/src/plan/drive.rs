@@ -1,15 +1,7 @@
-use crate::{
-    behavior::movement::{simple_yaw_diff, QuickJumpAndDodge},
-    strategy::Behavior,
-    utils::geometry::ExtendF32,
-};
-use common::{prelude::*, rl};
+use crate::{behavior::movement::simple_yaw_diff, utils::geometry::ExtendF32};
+use common::prelude::*;
 use nalgebra::Point2;
 use simulate::Car1D;
-use std::f32::consts::PI;
-
-// I'm keeping this value artificially high until I implement smarter routing.
-const GROUND_DODGE_TIME: f32 = 2.0;
 
 pub fn rough_time_drive_to_loc(car: &rlbot::ffi::PlayerInfo, target_loc: Point2<f32>) -> f32 {
     let target_dist = (car.Physics.loc_2d() - target_loc).norm();
@@ -31,39 +23,4 @@ fn steer_penalty(car: &rlbot::ffi::PlayerInfo, desired_aim: f32) -> f32 {
         .abs();
     // Literally just guessing here
     turn * 3.0 / 4.0
-}
-
-pub fn get_route_dodge(
-    car: &rlbot::ffi::PlayerInfo,
-    target_loc: Point2<f32>,
-) -> Option<Box<Behavior>> {
-    const DODGE_SPEED_BOOST: f32 = 500.0; // TODO: Literally just guessed this
-
-    if !car.OnGround {
-        return None;
-    }
-    if car.Physics.rot().pitch() >= PI / 12.0 {
-        return None;
-    }
-
-    if simple_yaw_diff(&car.Physics, target_loc).abs() >= PI / 60.0 {
-        return None;
-    }
-
-    if car.Physics.vel().norm() < 1300.0 {
-        // This number is just a total guess
-        return None; // It's faster to accelerate.
-    }
-    if car.Physics.vel().norm() >= rl::CAR_ALMOST_MAX_SPEED {
-        return None; // We can't get any faster.
-    }
-
-    let target_dist = (car.Physics.loc_2d() - target_loc).norm();
-    let dodge_vel = car.Physics.vel().norm() + DODGE_SPEED_BOOST;
-    let travel_time = target_dist / dodge_vel;
-    if travel_time < GROUND_DODGE_TIME {
-        return None;
-    }
-
-    Some(Box::new(QuickJumpAndDodge::new()))
 }
