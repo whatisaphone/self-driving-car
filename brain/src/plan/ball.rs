@@ -48,7 +48,7 @@ impl BallTrajectory {
     pub fn iter_step_by<'a>(&'a self, dt: f32) -> impl Iterator<Item = BallFrame> + 'a {
         let factor = dt / self.frames[0].dt;
         // Enforce integral divisions.
-        assert!(fractionality(factor) <= 1e-6);
+        assert!(fractionality(factor) <= 1e-5);
         let factor = factor.round();
 
         self.frames

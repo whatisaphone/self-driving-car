@@ -115,9 +115,8 @@ impl<'a> Scenario<'a> {
         self.impending_concede
             .borrow_with(|| {
                 self.ball_prediction()
-                    .iter()
+                    .iter_step_by(0.5)
                     .find(|ball| self.game.own_goal().ball_is_scored(ball.loc))
-                    .map(Clone::clone)
             })
             .as_ref()
     }
