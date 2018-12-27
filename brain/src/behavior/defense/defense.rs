@@ -141,36 +141,9 @@ mod integration_tests {
                 ..Default::default()
             })
             .behavior(Runner::soccar())
-            .run();
+            .run_for_millis(6000);
 
-        let start_time = test.sniff_packet().GameInfo.TimeSeconds;
-
-        let mut max_z = 0.0_f32;
-        loop {
-            let packet = test.sniff_packet();
-            let elapsed = packet.GameInfo.TimeSeconds - start_time;
-            if elapsed >= 4.0 {
-                break;
-            }
-            if elapsed >= 1.0 && packet.GameBall.Physics.Velocity.Z > 0.0 {
-                max_z = max_z.max(packet.GameBall.Physics.Location.Z);
-            }
-        }
-
-        test.examine_events(|events| {
-            assert!(events.contains(&Event::Defense));
-            assert!(events.contains(&Event::HitToOwnCorner));
-            assert!(events.contains(&Event::PushFromLeftToRight));
-            assert!(!events.contains(&Event::PushFromRightToLeft));
-        });
-
-        let packet = test.sniff_packet();
-        println!("{:?}", packet.GameBall.Physics.Location);
-        assert!(packet.GameBall.Physics.Location.X >= 800.0);
-        assert!(packet.GameBall.Physics.Location.Y >= -4000.0);
-
-        // Should power-shot, meaning the ball bounces high.
-        assert!(max_z >= 500.0, "{}", max_z);
+        assert!(!test.enemy_has_scored());
     }
 
     #[test]

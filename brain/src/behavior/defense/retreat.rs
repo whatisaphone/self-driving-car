@@ -2,7 +2,6 @@ use crate::{
     behavior::{
         defense::{PanicDefense, PushToOwnCorner},
         higher_order::TryChoose,
-        offense::ResetBehindBall,
     },
     strategy::{Action, Behavior, Context, Priority, Scenario},
 };
@@ -39,10 +38,6 @@ impl Behavior for Retreat {
     fn execute(&mut self, ctx: &mut Context) -> Action {
         let mut choices = Vec::<Box<Behavior>>::new();
 
-        if let Some(b) = reset_behind_ball(ctx) {
-            choices.push(b);
-        }
-
         if Self::behind_ball(ctx) && ctx.scenario.possession() >= -Scenario::POSSESSION_CONTESTABLE
         {
             choices.push(Box::new(PushToOwnCorner::new()));
@@ -52,22 +47,6 @@ impl Behavior for Retreat {
 
         Action::call(TryChoose::new(Priority::Idle, choices))
     }
-}
-
-fn reset_behind_ball(ctx: &mut Context) -> Option<Box<Behavior>> {
-    if ctx.scenario.possession() < 2.0 {
-        return None;
-    }
-    let me_intercept = some_or_else!(ctx.scenario.me_intercept(), {
-        return None;
-    });
-    let ball = ctx
-        .scenario
-        .ball_prediction()
-        .at_time_or_last(me_intercept.time + 2.5);
-    Some(Box::new(
-        ResetBehindBall::behind_loc(ball.loc.to_2d()).distance(2000.0),
-    ))
 }
 
 #[cfg(test)]
