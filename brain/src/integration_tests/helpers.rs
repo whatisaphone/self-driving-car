@@ -435,10 +435,12 @@ fn setup_scenario(
     enemy: &RecordingRigidBodyState,
     enemy_boost: f32,
 ) {
-    set_state(rlbot, ball, car, car_boost, enemy, enemy_boost);
+    let num_boosts = rlbot.get_field_info().unwrap().NumBoosts;
+
+    set_state(rlbot, ball, car, car_boost, enemy, enemy_boost, num_boosts);
     // Wait for car suspension to settle to neutral, then set it again.
     sleep(Duration::from_millis(1000));
-    set_state(rlbot, ball, car, car_boost, enemy, enemy_boost);
+    set_state(rlbot, ball, car, car_boost, enemy, enemy_boost, num_boosts);
 
     // Wait a few frames for the state to take effect.
     let mut packeteer = rlbot.packeteer();
@@ -453,6 +455,7 @@ fn set_state(
     car_boost: f32,
     enemy: &RecordingRigidBodyState,
     enemy_boost: f32,
+    num_boosts: i32,
 ) {
     let ball_state = rlbot::state::DesiredBallState::new().physics(
         rlbot::state::DesiredPhysics::new()
@@ -479,10 +482,17 @@ fn set_state(
                 .angular_velocity(enemy.ang_vel),
         )
         .boost_amount(enemy_boost);
-    let game_state = rlbot::state::DesiredGameState::new()
+    let mut game_state = rlbot::state::DesiredGameState::new()
         .ball_state(ball_state)
         .car_state(0, car_state)
         .car_state(1, enemy_state);
+
+    for boost_index in 0..num_boosts as usize {
+        game_state = game_state.boost_state(
+            boost_index,
+            rlbot::state::DesiredBoostState::new().respawn_time(0.0),
+        );
+    }
 
     rlbot.set_game_state_struct(game_state).unwrap();
 }
