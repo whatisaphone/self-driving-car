@@ -23,8 +23,10 @@ impl PushToOwnCorner {
     }
 
     fn shot_angle(ball_loc: Point3<f32>, car_loc: Point3<f32>, aim_loc: Point2<f32>) -> f32 {
-        let angle_me_ball = car_loc.coords.to_2d().angle_to(ball_loc.coords.to_2d());
-        let angle_ball_goal = ball_loc.coords.to_2d().angle_to(aim_loc.coords);
+        let angle_me_ball = car_loc
+            .to_2d()
+            .negated_difference_and_angle_to(ball_loc.to_2d());
+        let angle_ball_goal = ball_loc.to_2d().negated_difference_and_angle_to(aim_loc);
         (angle_me_ball - angle_ball_goal).normalize_angle().abs()
     }
 

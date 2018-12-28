@@ -143,8 +143,7 @@ impl PanicDefense {
                     .game
                     .own_goal()
                     .center_2d
-                    .coords
-                    .angle_to(aim_hint.coords);
+                    .negated_difference_and_angle_to(aim_hint);
                 return Some(Phase::Turn {
                     aim_hint: calc_aim_hint(ctx),
                     start_time: ctx.packet.GameInfo.TimeSeconds,

@@ -89,8 +89,11 @@ fn enemy_can_shoot(ctx: &mut Context) -> bool {
         return false;
     }
     ctx.cars(ctx.game.enemy_team).any(|enemy| {
-        let angle_car_ball = enemy.Physics.loc_2d().coords.angle_to(ball_loc.coords);
-        let angle_ball_goal = ball_loc.coords.angle_to(goal.center_2d.coords);
+        let angle_car_ball = enemy
+            .Physics
+            .loc_2d()
+            .negated_difference_and_angle_to(ball_loc);
+        let angle_ball_goal = ball_loc.negated_difference_and_angle_to(goal.center_2d);
         let angle_diff = (angle_car_ball - angle_ball_goal).normalize_angle().abs();
         let max_angle_diff =
             linear_interpolate(&[2500.0, 7500.0], &[PI / 2.0, PI / 4.0], dist_ball_to_goal);

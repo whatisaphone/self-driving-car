@@ -19,8 +19,8 @@ impl BounceShot {
         // so we're less likely to miss.
         let y_dist = (goal.center_2d.y - ball_loc.y).abs();
         let allow_angle_diff = ((1000.0 - y_dist) / 1000.0).max(0.0) * PI / 12.0;
-        let naive_angle = car_loc.coords.angle_to(ball_loc.coords);
-        let goal_angle = ball_loc.coords.angle_to(goal.center_2d.coords);
+        let naive_angle = car_loc.negated_difference_and_angle_to(ball_loc);
+        let goal_angle = ball_loc.negated_difference_and_angle_to(goal.center_2d);
         let adjust = (naive_angle - goal_angle).normalize_angle();
         let aim_angle = goal_angle + adjust.max(-allow_angle_diff).min(allow_angle_diff);
         WallRayCalculator::calc_ray(ball_loc, aim_angle)

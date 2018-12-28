@@ -15,7 +15,6 @@ pub trait ExtendVector2<N: Real> {
     where
         Self: Sized;
     fn to_3d(&self, z: N) -> Vector3<N>;
-    fn angle_to(&self, other: Self) -> N;
     fn rotation_to(&self, other: &Self) -> UnitComplex<N>;
 }
 
@@ -35,12 +34,6 @@ impl<N: Real> ExtendVector2<N> for Vector2<N> {
 
     fn to_3d(&self, z: N) -> Vector3<N> {
         Vector3::new(self.x, self.y, z)
-    }
-
-    // This treats `Vector`s as `Point`s. It should be deprecated.
-    fn angle_to(&self, other: Self) -> N {
-        let diff = other - self;
-        N::atan2(diff.y, diff.x)
     }
 
     fn rotation_to(&self, other: &Self) -> UnitComplex<N> {
@@ -68,11 +61,19 @@ impl ExtendVector3 for Vector3<f32> {
 
 pub trait ExtendPoint2<N: Real> {
     fn to_3d(&self, z: N) -> Point3<N>;
+    // This uses an implicit origin vector and should be considered deprecated.
+    fn negated_difference_and_angle_to(&self, other: Self) -> N;
 }
 
 impl<N: Real> ExtendPoint2<N> for Point2<N> {
     fn to_3d(&self, z: N) -> Point3<N> {
         Point3::new(self.x, self.y, z)
+    }
+
+    // This uses an implicit origin vector and should be considered deprecated.
+    fn negated_difference_and_angle_to(&self, other: Self) -> N {
+        let diff = other - self;
+        N::atan2(diff.y, diff.x)
     }
 }
 

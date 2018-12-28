@@ -109,8 +109,8 @@ fn blocking_angle(
     block_loc: Point2<f32>,
     max_angle_diff: f32,
 ) -> f32 {
-    let naive_angle = ball_loc.coords.angle_to(car_loc.coords);
-    let block_angle = ball_loc.coords.angle_to(block_loc.coords);
+    let naive_angle = ball_loc.negated_difference_and_angle_to(car_loc);
+    let block_angle = ball_loc.negated_difference_and_angle_to(block_loc);
     let adjust = (block_angle - naive_angle)
         .normalize_angle()
         .max(-max_angle_diff)

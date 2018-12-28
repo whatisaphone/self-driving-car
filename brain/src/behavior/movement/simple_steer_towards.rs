@@ -7,7 +7,7 @@ pub fn simple_steer_towards(car: &rlbot::ffi::Physics, target_loc: Point2<f32>) 
 }
 
 pub fn simple_yaw_diff(car: &rlbot::ffi::Physics, target_loc: Point2<f32>) -> f32 {
-    let target_yaw = car.loc_2d().coords.angle_to(target_loc.coords);
+    let target_yaw = car.loc_2d().negated_difference_and_angle_to(target_loc);
     (target_yaw - car.rot().yaw()).normalize_angle()
 }
 
