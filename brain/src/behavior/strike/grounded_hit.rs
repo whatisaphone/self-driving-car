@@ -250,14 +250,18 @@ where
             (jump_end_loc - target_loc.to_2d()).dot(&drive_forward)
         };
 
+        // Aim for a few uu behind the ball so we don't make contact before we dodge.
+        let target_offset = -10.0;
+
         let coast_offset = would_reach(0.0, false);
+        let throttle_offset = would_reach(1.0, false);
         let blitz_offset = would_reach(1.0, true);
 
-        let (throttle, boost) = if coast_offset > 0.0 {
+        let (throttle, boost) = if coast_offset > target_offset {
             (0.0, false) // We're overshooting…
-        } else if would_reach(1.0, false) > 0.0 {
+        } else if throttle_offset > target_offset {
             (0.0, false)
-        } else if blitz_offset > 0.0 {
+        } else if blitz_offset > target_offset {
             (1.0, false)
         } else {
             (1.0, true)
@@ -268,6 +272,8 @@ where
         ctx.eeg.print_time("drive_time", drive_time);
         ctx.eeg.print_time("total_time", total_time);
         ctx.eeg.print_value("coast_offset", Distance(coast_offset));
+        ctx.eeg
+            .print_value("throttle_offset", Distance(throttle_offset));
         ctx.eeg.print_value("blitz_offset", Distance(blitz_offset));
 
         Ok(Do::Drive(throttle, boost))
