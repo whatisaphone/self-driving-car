@@ -1,5 +1,5 @@
 use crate::physics;
-use nalgebra::{Point2, Point3, Real, Rotation3, Unit, UnitQuaternion, Vector2, Vector3};
+use nalgebra::{Point2, Point3, Rotation3, Unit, UnitQuaternion, Vector2, Vector3};
 use std::fmt::{self, Formatter};
 
 pub trait PrettyPrint {
@@ -7,139 +7,53 @@ pub trait PrettyPrint {
     fn pretty(&self) -> Self::PrettyPrinter;
 }
 
-impl PrettyPrint for String {
-    type PrettyPrinter = Self;
-
-    fn pretty(&self) -> Self::PrettyPrinter {
-        self.clone() // :(
-    }
-}
-
-impl<N: Real> PrettyPrint for Vector2<N> {
-    type PrettyPrinter = Vector2PrettyPrinter<N>;
-
-    fn pretty(&self) -> Self::PrettyPrinter {
-        Self::PrettyPrinter { data: *self }
-    }
-}
-
-impl<N: Real> PrettyPrint for Point2<N> {
-    type PrettyPrinter = Vector2PrettyPrinter<N>;
-
-    fn pretty(&self) -> Self::PrettyPrinter {
-        Self::PrettyPrinter { data: self.coords }
-    }
-}
-
-pub struct Vector2PrettyPrinter<N: Real> {
-    data: Vector2<N>,
-}
-
-impl<N: Real> fmt::Display for Vector2PrettyPrinter<N> {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
-        write!(f, "({:.0}, {:.0})", self.data.x, self.data.y)
-    }
-}
-
-impl<N: Real> PrettyPrint for Vector3<N> {
-    type PrettyPrinter = Vector3PrettyPrinter<N>;
-
-    fn pretty(&self) -> Self::PrettyPrinter {
-        Self::PrettyPrinter { data: *self }
-    }
-}
-
-impl<N: Real> PrettyPrint for Point3<N> {
-    type PrettyPrinter = Vector3PrettyPrinter<N>;
-
-    fn pretty(&self) -> Self::PrettyPrinter {
-        Self::PrettyPrinter { data: self.coords }
-    }
-}
-
-pub struct Vector3PrettyPrinter<N: Real> {
-    data: Vector3<N>,
-}
-
-impl<N: Real> fmt::Display for Vector3PrettyPrinter<N> {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
-        write!(
-            f,
-            "({:.0}, {:.0}, {:.0})",
-            self.data.x, self.data.y, self.data.z,
-        )
-    }
-}
-
-impl<N: Real> PrettyPrint for Unit<Vector3<N>> {
-    type PrettyPrinter = UnitVector3PrettyPrinter<N>;
-
-    fn pretty(&self) -> Self::PrettyPrinter {
-        Self::PrettyPrinter { data: *self }
-    }
-}
-
-pub struct UnitVector3PrettyPrinter<N: Real> {
-    data: Unit<Vector3<N>>,
-}
-
-impl<N: Real> fmt::Display for UnitVector3PrettyPrinter<N> {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
-        write!(
-            f,
-            "({:.2}, {:.2}, {:.2})",
-            self.data.x, self.data.y, self.data.z,
-        )
-    }
-}
-
-impl PrettyPrint for UnitQuaternion<f32> {
-    type PrettyPrinter = UnitQuaternionPrettyPrinter;
-
-    fn pretty(&self) -> Self::PrettyPrinter {
-        Self::PrettyPrinter { data: *self }
-    }
-}
-
-pub struct UnitQuaternionPrettyPrinter {
-    data: UnitQuaternion<f32>,
-}
-
-impl fmt::Display for UnitQuaternionPrettyPrinter {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
-        let forward = physics::car_forward_axis(self.data);
-        write!(f, "@{}", forward.pretty())
-    }
-}
-
-impl PrettyPrint for Rotation3<f32> {
-    type PrettyPrinter = UnitQuaternionPrettyPrinter;
-
-    fn pretty(&self) -> Self::PrettyPrinter {
-        Self::PrettyPrinter {
-            data: UnitQuaternion::from_rotation_matrix(self),
-        }
-    }
-}
-
 macro_rules! delegate {
-    ($type:ty) => {
+    ($type:ty $(,)*) => {
         impl PrettyPrint for $type {
             type PrettyPrinter = Self;
 
             fn pretty(&self) -> Self::PrettyPrinter {
-                *self
+                self.clone()
             }
         }
     };
 }
 
-macro_rules! pretty {
-    ($name:ident, $type:ty, $fmt:expr) => {
-        pretty!($name, $type, $fmt, |x| x);
+macro_rules! inherent {
+    ($printer:ident, $type:ty, $fmt:expr $(,)*) => {
+        inherent!($printer, $type, $fmt, |x| x);
     };
 
-    ($name:ident, $type:ty, $fmt:expr, | $x:pat | $map:expr) => {
+    ($printer:ident, $type:ty, $fmt:expr, | $x:pat | ($($map:expr),+ $(,)*) $(,)*) => {
+        impl PrettyPrint for $type {
+            type PrettyPrinter = $printer;
+
+            fn pretty(&self) -> Self::PrettyPrinter {
+                $printer(*self)
+            }
+        }
+
+        pub struct $printer($type);
+
+        impl fmt::Display for $printer {
+            fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+                let $x = self.0;
+                write!(f, $fmt, $($map),+)
+            }
+        }
+    };
+
+    ($printer:ident, $type:ty, $fmt:expr, | $x:pat | $map:expr $(,)*) => {
+        inherent!($printer, $type, $fmt, |$x| ($map));
+    };
+}
+
+macro_rules! wrap {
+    ($name:ident, $type:ty, $fmt:expr $(,)*) => {
+        wrap!($name, $type, $fmt, |x| x);
+    };
+
+    ($name:ident, $type:ty, $fmt:expr, | $x:pat | $map:expr $(,)*) => {
         #[derive(Copy, Clone)]
         pub struct $name(pub $type);
 
@@ -162,10 +76,29 @@ macro_rules! pretty {
 }
 
 delegate!(bool);
+delegate!(String);
 
-pretty!(Time, f32, "{:.2}");
-pretty!(Coordinate, f32, "{:.0}");
-pretty!(Distance, f32, "{:.0}");
-pretty!(Angle, f32, "{:.0}°", |x| x.to_degrees());
-pretty!(AngularVelocity, f32, "{:.0}°/s", |x| x.to_degrees());
-pretty!(ControllerInput, f32, "{:.2}");
+inherent!(P2PP, Point2<f32>, "({:.0}, {:.0})", |v| (v.x, v.y));
+inherent!(V2PP, Vector2<f32>, "({:.0}, {:.0})", |v| (v.x, v.y));
+inherent!(P3PP, Point3<f32>, "({:.0}, {:.0}, {:.0})", |v| (
+    v.x, v.y, v.z,
+));
+inherent!(V3PP, Vector3<f32>, "({:.0}, {:.0}, {:.0})", |v| (
+    v.x, v.y, v.z,
+));
+inherent!(UV3PP, Unit<Vector3<f32>>, "({:.2}, {:.2}, {:.2})", |v| (
+    v.x, v.y, v.z,
+));
+inherent!(UQPP, UnitQuaternion<f32>, "@{}", |x| {
+    physics::car_forward_axis(x).pretty()
+});
+inherent!(R3PP, Rotation3<f32>, "{}", |x| {
+    UnitQuaternion::from_rotation_matrix(&x).pretty()
+});
+
+wrap!(Time, f32, "{:.2}");
+wrap!(Coordinate, f32, "{:.0}");
+wrap!(Distance, f32, "{:.0}");
+wrap!(Angle, f32, "{:.0}°", |x| x.to_degrees());
+wrap!(AngularVelocity, f32, "{:.0}°/s", |x| x.to_degrees());
+wrap!(ControllerInput, f32, "{:.2}");
