@@ -205,7 +205,6 @@ impl ExtendPhysics for rlbot::ffi::Physics {
 
 pub trait ExtendUnitQuaternion<N: Real> {
     fn xyzw(x: N, y: N, z: N, w: N) -> Self;
-
     fn to_2d(&self) -> UnitComplex<N>;
 }
 
