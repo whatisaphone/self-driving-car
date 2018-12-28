@@ -72,7 +72,7 @@ impl Behavior for GetToFlatGround {
                     let angle = (me.Physics.forward_axis().unwrap()
                         + me.Physics.roof_axis().unwrap())
                     .to_2d()
-                    .rotation_to(ctx.game.own_back_wall_center() - ctx.me().Physics.loc_2d());
+                    .rotation_to(&(ctx.game.own_back_wall_center() - ctx.me().Physics.loc_2d()));
 
                     // Let go of jump
                     inputs.push(Box::new(Yielder::new(

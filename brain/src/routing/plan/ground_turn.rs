@@ -227,8 +227,8 @@ fn calculate_circle_turn(
             return Err(RoutePlanError::TurningRadiusTooTight);
         }
     };
-    let t1_rot = (start_loc - turn_center).rotation_to(tangent1 - turn_center);
-    let t2_rot = (start_loc - turn_center).rotation_to(tangent2 - turn_center);
+    let t1_rot = (start_loc - turn_center).rotation_to(&(tangent1 - turn_center));
+    let t2_rot = (start_loc - turn_center).rotation_to(&(tangent2 - turn_center));
     let t1_forward_axis = t1_rot * start_forward_axis;
     let t2_forward_axis = t2_rot * start_forward_axis;
     let t1_dot = t1_forward_axis.dot(&(target_loc - tangent1));

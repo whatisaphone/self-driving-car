@@ -16,7 +16,7 @@ pub trait ExtendVector2<N: Real> {
         Self: Sized;
     fn to_3d(&self, z: N) -> Vector3<N>;
     fn angle_to(&self, other: Self) -> N;
-    fn rotation_to(&self, other: Self) -> UnitComplex<N>;
+    fn rotation_to(&self, other: &Self) -> UnitComplex<N>;
 }
 
 impl<N: Real> ExtendVector2<N> for Vector2<N> {
@@ -43,8 +43,8 @@ impl<N: Real> ExtendVector2<N> for Vector2<N> {
         N::atan2(diff.y, diff.x)
     }
 
-    fn rotation_to(&self, other: Self) -> UnitComplex<N> {
-        UnitComplex::rotation_between(self, &other)
+    fn rotation_to(&self, other: &Self) -> UnitComplex<N> {
+        UnitComplex::rotation_between(self, other)
     }
 }
 

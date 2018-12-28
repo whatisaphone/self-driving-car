@@ -33,7 +33,7 @@ impl Shoot {
 
         let car_to_ball = ball_loc.to_2d() - car_loc.to_2d();
         let ball_to_goal = aim_loc - ball_loc.to_2d();
-        if car_to_ball.rotation_to(ball_to_goal).angle().abs() >= PI / 6.0 {
+        if car_to_ball.rotation_to(&ball_to_goal).angle().abs() >= PI / 6.0 {
             return None;
         }
 

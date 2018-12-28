@@ -40,8 +40,8 @@ fn time_wasting_hit(ctx: &mut GroundedHitAimContext) -> Result<GroundedHitTarget
     let offense_aim = ctx.game.enemy_back_wall_center();
     let defense_avoid = ctx.game.own_back_wall_center();
 
-    let naive_offense = (ball_loc - me_loc).rotation_to(offense_aim - me_loc);
-    let naive_defense = (ball_loc - me_loc).rotation_to(defense_avoid - me_loc);
+    let naive_offense = (ball_loc - me_loc).rotation_to(&(offense_aim - me_loc));
+    let naive_defense = (ball_loc - me_loc).rotation_to(&(defense_avoid - me_loc));
 
     let aim_loc = if naive_offense.angle().abs() < naive_defense.angle().abs() {
         ctx.eeg.track(Event::TepidHitTowardEnemyGoal);
@@ -80,7 +80,7 @@ fn is_chippable(ctx: &mut GroundedHitAimContext, aim_loc: Point2<f32>) -> bool {
         .abs();
 
     let goalward_angle = (ctx.intercept_ball_loc.to_2d() - ctx.car.Physics.loc_2d())
-        .rotation_to(ctx.game.enemy_goal().center_2d - ctx.intercept_ball_loc.to_2d())
+        .rotation_to(&(ctx.game.enemy_goal().center_2d - ctx.intercept_ball_loc.to_2d()))
         .angle()
         .abs();
 

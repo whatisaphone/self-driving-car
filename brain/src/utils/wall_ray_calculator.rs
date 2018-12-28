@@ -70,7 +70,7 @@ impl WallRayCalculator {
 
         // These are intentionally atan2(x, y), since the zero angle is on the y axis,
         // not the x axis.
-        match to_enemy_goal.rotation_to(to_point).angle().abs() {
+        match to_enemy_goal.rotation_to(&to_point).angle().abs() {
             a if a < f32::atan2(rl::GOALPOST_X, rl::FIELD_MAX_Y) => Wall::EnemyGoal,
             a if a < f32::atan2(rl::FIELD_MAX_X, rl::FIELD_MAX_Y) => Wall::EnemyBackWall,
             a if a < f32::atan2(rl::FIELD_MAX_X, -rl::FIELD_MAX_Y) => Wall::Midfield,

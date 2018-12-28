@@ -55,11 +55,13 @@ impl SimpleArc {
 
         // Compare the velocity vector to the circle's radius. Since we're starting
         // along a tangent, the angle to the center will be either -90° or 90°.
-        let clockwise = start_vel.rotation_to(start_loc - center).angle() < 0.0;
+        let clockwise = start_vel.rotation_to(&(start_loc - center)).angle() < 0.0;
 
         // Go the long way around the circle (more than 180°) if necessary. This avoids
         // an impossible route with discontinuous reversals at each tangent.
-        let sweep = (start_loc - center).rotation_to(end_loc - center).angle();
+        let sweep = (start_loc - center)
+            .rotation_to(&(end_loc - center))
+            .angle();
         let sweep = if clockwise && sweep < 0.0 {
             sweep + 2.0 * PI
         } else if !clockwise && sweep >= 0.0 {
@@ -87,7 +89,7 @@ impl SimpleArc {
     /// direction.
     fn sweep_between(&self, start_loc: Point2<f32>, end_loc: Point2<f32>) -> f32 {
         let result = (start_loc - self.center)
-            .rotation_to(end_loc - self.center)
+            .rotation_to(&(end_loc - self.center))
             .angle();
         if result < 0.0 && self.sweep >= 0.0 {
             result + 2.0 * PI
@@ -152,7 +154,7 @@ impl SegmentPlan for SimpleArc {
 
     fn draw(&self, ctx: &mut Context) {
         let theta1 = Vector2::x()
-            .rotation_to(self.start_loc - self.center)
+            .rotation_to(&(self.start_loc - self.center))
             .angle();
         let theta2 = theta1 + self.sweep;
         ctx.eeg.draw(Drawable::Arc(
@@ -207,7 +209,9 @@ impl SegmentRunner for SimpleArcRunner {
         ctx.eeg
             .draw(Drawable::ghost_car_ground(target_loc, me.Physics.rot()));
 
-        let rotation = car_forward_axis.unwrap().rotation_to(target_loc - car_loc);
+        let rotation = car_forward_axis
+            .unwrap()
+            .rotation_to(&(target_loc - car_loc));
         SegmentRunAction::Yield(rlbot::ffi::PlayerInput {
             Throttle: 1.0,
             Steer: rotation.angle().max(-1.0).min(1.0),

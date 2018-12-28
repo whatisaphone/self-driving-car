@@ -137,7 +137,7 @@ impl<'a> Scenario<'a> {
             let angle_factor = linear_interpolate(
                 &[PI / 6.0, PI / 2.0],
                 &[1.0, 0.0],
-                car_to_ball.rotation_to(ball_to_goal).angle().abs(),
+                car_to_ball.rotation_to(&ball_to_goal).angle().abs(),
             );
 
             let shot_speed = ball_scoring_speed + impulse_guess * angle_factor;

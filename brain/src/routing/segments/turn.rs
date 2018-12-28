@@ -34,7 +34,7 @@ impl Turn {
         };
 
         let sweep = (start.loc - center)
-            .rotation_to(projected_end_loc - center)
+            .rotation_to(&(projected_end_loc - center))
             .angle();
 
         Self {
@@ -50,7 +50,7 @@ impl Turn {
     /// direction.
     fn sweep_to(&self, end_loc: Point2<f32>) -> f32 {
         let result = (self.start.loc - self.center)
-            .rotation_to(end_loc - self.center)
+            .rotation_to(&(end_loc - self.center))
             .angle();
         if result < 0.0 && self.sweep >= 0.0 {
             result + 2.0 * PI
@@ -93,7 +93,7 @@ impl SegmentPlan for Turn {
 
     fn draw(&self, ctx: &mut Context) {
         let theta1 = Vector2::x()
-            .rotation_to(self.start.loc - self.center)
+            .rotation_to(&(self.start.loc - self.center))
             .angle();
         let theta2 = theta1 + self.sweep;
         ctx.eeg.draw(Drawable::Arc(
