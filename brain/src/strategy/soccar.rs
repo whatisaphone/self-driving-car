@@ -88,7 +88,7 @@ fn enemy_can_shoot(ctx: &mut Context) -> bool {
     if dist_ball_to_goal >= 7500.0 {
         return false;
     }
-    ctx.cars(ctx.game.enemy_team).any(|enemy| {
+    ctx.enemy_cars().any(|enemy| {
         let angle_car_ball = enemy
             .Physics
             .loc_2d()
