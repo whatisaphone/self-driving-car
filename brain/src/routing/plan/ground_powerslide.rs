@@ -75,7 +75,7 @@ impl RoutePlanner for GroundSimplePowerslideTurn {
         let munged_start_loc = ctx.start.loc.to_2d() + ctx.start.vel.to_2d() * 0.5;
         let end_rot =
             CAR_LOCAL_FORWARD_AXIS_2D.rotation_to(&(self.target_face - munged_start_loc).to_axis());
-        let rot_by = ctx.start.rot.to_2d().rotation_to(&end_rot).angle();
+        let rot_by = ctx.start.rot.to_2d().angle_to(&end_rot);
         let blueprint = CarPowerslideTurn::evaluate(
             ctx.start.loc.to_2d(),
             ctx.start.rot.to_2d(),
@@ -134,7 +134,7 @@ impl RoutePlanner for GroundPowerslideEssence {
 
         let end_rot =
             CAR_LOCAL_FORWARD_AXIS_2D.rotation_to(&(self.target_face - self.target_loc).to_axis());
-        let rot_by = ctx.start.rot.to_2d().rotation_to(&end_rot).angle();
+        let rot_by = ctx.start.rot.to_2d().angle_to(&end_rot);
 
         // First pass to estimate the approach angle
         let blueprint = {

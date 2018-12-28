@@ -200,7 +200,7 @@ impl Goal {
 
     pub fn shot_angle_2d(&self, ball_loc: Point2<f32>) -> f32 {
         let goal_to_ball_axis = (ball_loc - self.center_2d).to_axis();
-        goal_to_ball_axis.rotation_to(&self.normal_2d).angle().abs()
+        goal_to_ball_axis.angle_to(&self.normal_2d).abs()
     }
 }
 

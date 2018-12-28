@@ -33,14 +33,14 @@ impl Shoot {
 
         let car_to_ball = ball_loc.to_2d() - car_loc.to_2d();
         let ball_to_goal = aim_loc - ball_loc.to_2d();
-        if car_to_ball.rotation_to(&ball_to_goal).angle().abs() >= PI / 6.0 {
+        if car_to_ball.angle_to(&ball_to_goal).abs() >= PI / 6.0 {
             return None;
         }
 
         let goal_angle = (ball_loc.to_2d() - aim_loc)
             .to_axis()
-            .rotation_to(&goal.normal_2d);
-        if goal_angle.angle().abs() >= PI * (5.0 / 12.0) {
+            .angle_to(&goal.normal_2d);
+        if goal_angle.abs() >= PI * (5.0 / 12.0) {
             return None;
         }
 

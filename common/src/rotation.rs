@@ -53,7 +53,7 @@ mod tests {
             println!("{:?} {:?} {:?}", case_pitch, case_yaw, case_roll);
             let quat = convert_pyr_to_quat((case_pitch, case_yaw, case_roll));
             println!("{:?}", quat);
-            assert!(case_quat.rotation_to(&quat).angle() < EPS);
+            assert!(case_quat.angle_to(&quat) < EPS);
         }
     }
 
@@ -90,7 +90,7 @@ mod tests {
             let mat2 = Rotation3::from_unreal_angles(case_pitch, case_yaw, case_roll);
             eprintln!("mat1 = {:?}", mat1);
             eprintln!("mat2 = {:?}", mat2);
-            assert!(mat1.rotation_to(&mat2).angle() < EPS);
+            assert!(mat1.angle_to(&mat2) < EPS);
         }
     }
 

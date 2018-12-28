@@ -72,22 +72,21 @@ fn check_easy_flip_recover(ctx: &mut Context) -> Option<Box<Behavior>> {
     let me_loc = ctx.me().Physics.loc_2d();
     let me_forward = ctx.me().Physics.forward_axis_2d();
 
-    let me_rot_to_ball = me_forward.rotation_to(&(ball.loc.to_2d() - me_loc).to_axis());
+    let angle_to_ball = me_forward.angle_to(&(ball.loc.to_2d() - me_loc).to_axis());
     let own_goal_loc = ctx.game.own_goal().center_2d;
-    let me_rot_to_own_goal = me_forward.rotation_to(&(own_goal_loc - me_loc).to_axis());
+    let angle_to_own_goal = me_forward.angle_to(&(own_goal_loc - me_loc).to_axis());
     if (me_loc - ball.loc.to_2d()).norm() < 400.0
         && ball.loc.z < 120.0
         && ball.vel.z.abs() < 50.0
-        && me_rot_to_ball.angle().abs() < PI / 3.0
-        && me_rot_to_own_goal.angle().abs() >= PI / 3.0
+        && angle_to_ball.abs() < PI / 3.0
+        && angle_to_own_goal.abs() >= PI / 3.0
     {
         ctx.eeg.log(
             stringify!(recover),
             "the ball is right here, I can't resist!",
         );
-        let dodge =
-            me_forward.rotation_to(&(ball.loc.to_2d() - ctx.me().Physics.loc_2d()).to_axis());
-        return Some(Box::new(QuickJumpAndDodge::new().angle(dodge.angle())));
+        let dodge = me_forward.angle_to(&(ball.loc.to_2d() - ctx.me().Physics.loc_2d()).to_axis());
+        return Some(Box::new(QuickJumpAndDodge::new().angle(dodge)));
     }
 
     None
@@ -131,7 +130,7 @@ impl NotFacingTarget2D {
     pub fn evaluate(&self, state: &CarState) -> bool {
         let forward = state.forward_axis_2d();
         let to_target = (self.target_loc - state.loc.to_2d()).to_axis();
-        forward.rotation_to(&to_target).angle().abs() >= PI / 6.0
+        forward.angle_to(&to_target).abs() >= PI / 6.0
     }
 }
 

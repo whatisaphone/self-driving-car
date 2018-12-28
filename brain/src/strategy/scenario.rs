@@ -137,7 +137,7 @@ impl<'a> Scenario<'a> {
             let angle_factor = linear_interpolate(
                 &[PI / 6.0, PI / 2.0],
                 &[1.0, 0.0],
-                car_to_ball.rotation_to(&ball_to_goal).angle().abs(),
+                car_to_ball.angle_to(&ball_to_goal).abs(),
             );
 
             let shot_speed = ball_scoring_speed + impulse_guess * angle_factor;
@@ -200,11 +200,7 @@ fn blitz_penalty(car: &rlbot::ffi::PlayerInfo, ball: &BallFrame) -> f32 {
     let car_forward = car.Physics.forward_axis_2d();
     let car_to_ball = ball_loc - car.Physics.loc_2d();
 
-    let rotation_penalty = car_forward
-        .rotation_to(&car_to_ball.to_axis())
-        .angle()
-        .abs()
-        * 0.25;
+    let rotation_penalty = car_forward.angle_to(&car_to_ball.to_axis()).abs() * 0.25;
 
     let speed_towards_ball = (car_vel - ball_vel).dot(&car_to_ball.normalize());
     let reverse_penalty = if speed_towards_ball < 0.0 {

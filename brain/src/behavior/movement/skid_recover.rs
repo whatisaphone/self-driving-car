@@ -33,7 +33,7 @@ impl Behavior for SkidRecover {
         // Since we're skidding, aim towards where we will be a bit in the future.
         // Otherwise we'll overshoot.
         let future_rot = target_rot * UnitComplex::new(me_ang_vel * 0.25);
-        let steer = me_rot.rotation_to(&future_rot).angle().max(-1.0).min(1.0);
+        let steer = me_rot.angle_to(&future_rot).max(-1.0).min(1.0);
 
         ctx.eeg.draw(Drawable::ghost_car_ground(
             self.target_loc,

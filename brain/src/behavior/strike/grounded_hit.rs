@@ -90,8 +90,8 @@ where
         let steer = me
             .Physics
             .forward_axis_2d()
-            .rotation_to(&(target_loc - me.Physics.loc()).to_2d().to_axis());
-        if steer.angle().abs() >= PI / 6.0 {
+            .angle_to(&(target_loc - me.Physics.loc()).to_2d().to_axis());
+        if steer.abs() >= PI / 6.0 {
             ctx.eeg.log(self.name(), "not facing the target");
             return Action::Abort;
         }

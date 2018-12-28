@@ -115,11 +115,7 @@ impl Behavior for GetToFlatGround {
                 );
                 forward = facing.rotation_to(&-Vector3::z_axis()).powf(down_amount) * facing;
 
-                let nose_down_angle = me
-                    .Physics
-                    .forward_axis()
-                    .rotation_to(&-Vector3::z_axis())
-                    .angle();
+                let nose_down_angle = me.Physics.forward_axis().angle_to(&-Vector3::z_axis());
                 boost = down_amount > 0.0 && nose_down_angle < PI / 3.0;
             } else {
                 forward = facing;

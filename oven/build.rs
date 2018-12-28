@@ -99,7 +99,7 @@ fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write, 
     let player0_rot_2d_angle_cum = player0_rot_2d
         .iter()
         .scan(0.0, |state, rot| {
-            *state += UnitComplex::new(*state).rotation_to(rot).angle();
+            *state += UnitComplex::new(*state).angle_to(rot);
             Some(state.to_source())
         })
         .collect::<Vec<_>>();

@@ -33,9 +33,7 @@ impl Turn {
             boost: 0.0,
         };
 
-        let sweep = (start.loc - center)
-            .rotation_to(&(projected_end_loc - center))
-            .angle();
+        let sweep = (start.loc - center).angle_to(&(projected_end_loc - center));
 
         Self {
             start,
@@ -49,9 +47,7 @@ impl Turn {
     /// Calculate the angle between the two points, traveling in this plan's
     /// direction.
     fn sweep_to(&self, end_loc: Point2<f32>) -> f32 {
-        let result = (self.start.loc - self.center)
-            .rotation_to(&(end_loc - self.center))
-            .angle();
+        let result = (self.start.loc - self.center).angle_to(&(end_loc - self.center));
         if result < 0.0 && self.sweep >= 0.0 {
             result + 2.0 * PI
         } else if result > 0.0 && self.sweep < 0.0 {
@@ -92,9 +88,7 @@ impl SegmentPlan for Turn {
     }
 
     fn draw(&self, ctx: &mut Context) {
-        let theta1 = Vector2::x()
-            .rotation_to(&(self.start.loc - self.center))
-            .angle();
+        let theta1 = Vector2::x().angle_to(&(self.start.loc - self.center));
         let theta2 = theta1 + self.sweep;
         ctx.eeg.draw(Drawable::Arc(
             self.center,
@@ -133,9 +127,7 @@ impl SegmentRunner for Turner {
 
         // Check two end conditions to decrease the chances that silly things happen.
 
-        let yaw_diff = me_forward
-            .rotation_to(&(self.plan.target_loc - me_loc).to_axis())
-            .angle();
+        let yaw_diff = me_forward.angle_to(&(self.plan.target_loc - me_loc).to_axis());
         if yaw_diff.abs() < 3.0_f32.to_radians() {
             return SegmentRunAction::Success;
         }

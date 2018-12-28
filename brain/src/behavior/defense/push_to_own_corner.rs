@@ -32,7 +32,7 @@ impl PushToOwnCorner {
 
     fn goal_angle(ball_loc: Point3<f32>, goal: &Goal) -> f32 {
         let goal_to_ball_axis = (ball_loc.to_2d() - goal.center_2d).to_axis();
-        goal_to_ball_axis.rotation_to(&goal.normal_2d).angle().abs()
+        goal_to_ball_axis.angle_to(&goal.normal_2d).abs()
     }
 }
 

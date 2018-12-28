@@ -16,6 +16,7 @@ pub trait ExtendVector2<N: Real> {
         Self: Sized;
     fn to_3d(&self, z: N) -> Vector3<N>;
     fn rotation_to(&self, other: &Self) -> UnitComplex<N>;
+    fn angle_to(&self, other: &Self) -> N;
 }
 
 impl<N: Real> ExtendVector2<N> for Vector2<N> {
@@ -38,6 +39,10 @@ impl<N: Real> ExtendVector2<N> for Vector2<N> {
 
     fn rotation_to(&self, other: &Self) -> UnitComplex<N> {
         UnitComplex::rotation_between(self, other)
+    }
+
+    fn angle_to(&self, other: &Self) -> N {
+        self.rotation_to(other).angle()
     }
 }
 
@@ -221,6 +226,7 @@ impl<N: Real> ExtendUnitQuaternion<N> for UnitQuaternion<N> {
 pub trait ExtendUnitVector3<N: Real> {
     fn to_2d(&self) -> Unit<Vector2<N>>;
     fn rotation_to(&self, other: &Self) -> UnitQuaternion<N>;
+    fn angle_to(&self, other: &Self) -> N;
 }
 
 impl<N: Real> ExtendUnitVector3<N> for Unit<Vector3<N>> {
@@ -230,6 +236,10 @@ impl<N: Real> ExtendUnitVector3<N> for Unit<Vector3<N>> {
 
     fn rotation_to(&self, other: &Self) -> UnitQuaternion<N> {
         UnitQuaternion::rotation_between_axis(self, other).unwrap()
+    }
+
+    fn angle_to(&self, other: &Self) -> N {
+        self.rotation_to(other).angle()
     }
 }
 

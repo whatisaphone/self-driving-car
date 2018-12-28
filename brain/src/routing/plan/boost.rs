@@ -106,8 +106,7 @@ impl GetDollar {
             && ctx
                 .start
                 .forward_axis_2d()
-                .rotation_to(&(pickup.loc - ctx.start.loc.to_2d()).to_axis())
-                .angle()
+                .angle_to(&(pickup.loc - ctx.start.loc.to_2d()).to_axis())
                 .abs()
                 >= PI / 3.0
         {

@@ -52,7 +52,7 @@ mod tests {
         let dom = to_rotation_matrix(0.1, 0.2, 0.3);
         println!("chip = {:?}", chip);
         println!("dom = {:?}", dom);
-        assert!(chip.rotation_to(&dom).angle() < EPS);
+        assert!(chip.angle_to(&dom) < EPS);
     }
 
     #[test]
@@ -61,6 +61,6 @@ mod tests {
         let fua = Rotation3::from_unreal_angles(0.1, 0.2, 0.3);
         println!("dom = {:?}", dom);
         println!("fua = {:?}", fua);
-        assert!(fua.rotation_to(&dom).angle() < EPS);
+        assert!(fua.angle_to(&dom) < EPS);
     }
 }

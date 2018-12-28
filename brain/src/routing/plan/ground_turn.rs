@@ -92,13 +92,13 @@ impl PathingUnawareTurnPlanner {
         let munged_start_loc = start.loc.to_2d() + start.vel.to_2d() * 0.25;
         let turn = start
             .forward_axis_2d()
-            .rotation_to(&(self.target_face - munged_start_loc).to_axis());
+            .angle_to(&(self.target_face - munged_start_loc).to_axis());
         let angle_cutoff = linear_interpolate(
             &[0.0, rl::CAR_NORMAL_SPEED],
             &[PI * 0.25, PI * 0.50],
             start.vel.to_2d().norm(),
         );
-        turn.angle().abs() > angle_cutoff
+        turn.abs() > angle_cutoff
     }
 }
 
@@ -211,14 +211,13 @@ fn calculate_circle_turn(
     let start_right_axis = start.right_axis_2d();
 
     // Check if we're already facing the target
-    let turn_rot = start_forward_axis.rotation_to(&(target_loc - start_loc).to_axis());
-    if turn_rot.angle().abs() < 2.0_f32.to_radians() {
+    let turn_angle = start_forward_axis.angle_to(&(target_loc - start_loc).to_axis());
+    if turn_angle.abs() < 2.0_f32.to_radians() {
         return Ok(None);
     }
 
     // Define a circle where our current location/rotation form a tangent.
-    let turn_center =
-        start_loc + start_right_axis.as_ref() * turn_rot.angle().signum() * turn_radius;
+    let turn_center = start_loc + start_right_axis.as_ref() * turn_angle.signum() * turn_radius;
 
     // Figure out which tangent point is relevant for this route.
     let [tangent1, tangent2] = match circle_point_tangents(turn_center, turn_radius, target_loc) {
