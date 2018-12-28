@@ -29,16 +29,17 @@ impl Defense {
             Some(i) => i.ball_loc.to_2d(),
             None => ctx.scenario.ball_prediction().last().loc.to_2d(),
         };
-        let goal_to_ball_axis = (ball_loc - goal_loc).to_axis();
 
+        // Project our location on a line drawn from the goal to the ball.
+        let goal_to_ball_axis = (ball_loc - goal_loc).to_axis();
         let ball_dist = (ball_loc - goal_loc).dot(&goal_to_ball_axis);
         let me_dist = (me_loc - goal_loc).dot(&goal_to_ball_axis);
         if ball_dist <= me_dist {
             return false;
         }
 
-        let defending_angle = (ball_loc - goal_loc).rotation_to(me_loc - goal_loc);
-        if defending_angle.angle().abs() >= PI / 3.0 {
+        let defending_angle = (ball_loc - goal_loc).angle(&(me_loc - goal_loc));
+        if defending_angle.abs() >= PI / 3.0 {
             // If we're in net, chances are our angle of defense is fine already. e.g. we
             // might be opposite the desired angle, which would be 180° away according to
             // the math, but is a perfectly fine place to be.
