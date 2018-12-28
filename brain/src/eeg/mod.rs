@@ -5,3 +5,4 @@ pub mod color;
 mod eeg;
 #[allow(dead_code)]
 pub mod recipes;
+mod window;
