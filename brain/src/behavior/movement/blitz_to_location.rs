@@ -2,10 +2,10 @@ use crate::{
     behavior::movement::{
         quick_jump_and_dodge::QuickJumpAndDodge, simple_steer_towards::simple_steer_towards,
     },
-    eeg::{color, Drawable},
+    eeg::Drawable,
     strategy::{Action, Behavior, Context},
 };
-use common::{prelude::*, rl};
+use common::{prelude::*, rl, Distance};
 use nalgebra::Point2;
 use nameof::name_of_type;
 use std::f32::consts::PI;
@@ -36,10 +36,7 @@ impl Behavior for BlitzToLocation {
             self.target_loc,
             me.Physics.rot(),
         ));
-        ctx.eeg.draw(Drawable::print(
-            format!("distance: {:.0}", distance),
-            color::GREEN,
-        ));
+        ctx.eeg.print_value("distance", Distance(distance));
 
         // Should we boost?
         if distance > 1000.0

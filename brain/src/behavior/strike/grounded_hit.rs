@@ -10,7 +10,7 @@ use crate::{
     rules::SameBallTrajectory,
     strategy::{Action, Behavior, Context, Game, Scenario},
 };
-use common::{physics, prelude::*, rl};
+use common::{physics, prelude::*, rl, Coordinate, Distance};
 use derive_new::new;
 use nalgebra::{Point2, Point3, UnitQuaternion};
 use nameof::name_of_type;
@@ -179,7 +179,7 @@ where
 
         ctx.eeg.print_time("intercept_time", intercept.time);
         ctx.eeg
-            .print_value("intercept_loc_z", format!("{:.0}", intercept.ball_loc.z));
+            .print_value("intercept_loc_z", Coordinate(intercept.ball_loc.z));
         ctx.eeg.draw(Drawable::Crosshair(target.aim_loc));
         ctx.eeg.draw(Drawable::ghost_ball(intercept.ball_loc));
         ctx.eeg
@@ -267,10 +267,8 @@ where
         ctx.eeg.print_value("target", target_loc);
         ctx.eeg.print_time("drive_time", drive_time);
         ctx.eeg.print_time("total_time", total_time);
-        ctx.eeg
-            .print_value("coast_offset", format!("{:.0}", coast_offset));
-        ctx.eeg
-            .print_value("blitz_offset", format!("{:.0}", blitz_offset));
+        ctx.eeg.print_value("coast_offset", Distance(coast_offset));
+        ctx.eeg.print_value("blitz_offset", Distance(blitz_offset));
 
         Ok(Do::Drive(throttle, boost))
     }

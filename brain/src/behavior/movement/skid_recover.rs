@@ -1,9 +1,9 @@
 use crate::{
     behavior::movement::get_to_flat_ground::GetToFlatGround,
-    eeg::{color, Drawable},
+    eeg::Drawable,
     strategy::{Action, Behavior, Context},
 };
-use common::{physics::CAR_LOCAL_FORWARD_AXIS_2D, prelude::*};
+use common::{physics::CAR_LOCAL_FORWARD_AXIS_2D, prelude::*, AngularVelocity};
 use derive_new::new;
 use nalgebra::{Point2, UnitComplex};
 use nameof::name_of_type;
@@ -39,22 +39,10 @@ impl Behavior for SkidRecover {
             self.target_loc,
             target_rot.around_z_axis().to_rotation_matrix(),
         ));
-        ctx.eeg.draw(Drawable::Print(
-            format!("rot: {:.0}°", me_rot.angle().to_degrees()),
-            color::GREEN,
-        ));
-        ctx.eeg.draw(Drawable::Print(
-            format!("target_rot: {:.0}°", target_rot.angle().to_degrees()),
-            color::GREEN,
-        ));
-        ctx.eeg.draw(Drawable::Print(
-            format!("ang_vel: {:.0}°/s", me_ang_vel.to_degrees()),
-            color::GREEN,
-        ));
-        ctx.eeg.draw(Drawable::Print(
-            format!("future_rot: {:.0}°", future_rot.angle().to_degrees()),
-            color::GREEN,
-        ));
+        ctx.eeg.print_angle("rot", me_rot.angle());
+        ctx.eeg.print_angle("target_rot", target_rot.angle());
+        ctx.eeg.print_value("ang_vel", AngularVelocity(me_ang_vel));
+        ctx.eeg.print_angle("future_rot", future_rot.angle());
 
         Action::Yield(rlbot::ffi::PlayerInput {
             Throttle: 1.0,

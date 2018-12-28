@@ -6,8 +6,8 @@ use crate::{
     strategy::{infer_game_mode, Context, Dropshot, Game, Runner, Soccar},
     utils::FPSCounter,
 };
-use common::ExtendDuration;
-use nalgebra::clamp;
+use common::{prelude::*, ControllerInput, ExtendDuration};
+use nalgebra::{clamp, Point3};
 use nameof::name_of_type;
 use std::time::Instant;
 
@@ -74,41 +74,11 @@ impl Brain {
     ) -> rlbot::ffi::PlayerInput {
         self.fps_counter.tick(packet.GameInfo.TimeSeconds);
 
-        eeg.draw(Drawable::print(
-            format!("game_time: {:.2}", packet.GameInfo.TimeSeconds),
-            color::GREEN,
-        ));
-        eeg.draw(Drawable::print(
-            format!("fps: {}", format_fps(self.fps_counter.fps())),
-            color::GREEN,
-        ));
-        eeg.draw(Drawable::print(
-            format!(
-                "ball: ({:.0}, {:.0}, {:.0})",
-                packet.GameBall.Physics.Location.X,
-                packet.GameBall.Physics.Location.Y,
-                packet.GameBall.Physics.Location.Z,
-            ),
-            color::GREEN,
-        ));
-        eeg.draw(Drawable::print(
-            format!(
-                "p1 loc: ({:.0}, {:.0}, {:.0})",
-                packet.GameCars[0].Physics.Location.X,
-                packet.GameCars[0].Physics.Location.Y,
-                packet.GameCars[0].Physics.Location.Z,
-            ),
-            color::GREEN,
-        ));
-        eeg.draw(Drawable::print(
-            format!(
-                "p1 vel: ({:.0}, {:.0}, {:.0})",
-                packet.GameCars[0].Physics.Velocity.X,
-                packet.GameCars[0].Physics.Velocity.Y,
-                packet.GameCars[0].Physics.Velocity.Z,
-            ),
-            color::GREEN,
-        ));
+        eeg.print_time("game_time", packet.GameInfo.TimeSeconds);
+        eeg.print_value("fps", format_fps(self.fps_counter.fps()));
+        eeg.print_value("ball", packet.GameBall.Physics.loc());
+        eeg.print_value("p1 loc", packet.GameCars[0].Physics.loc());
+        eeg.print_value("p1 vel", Point3::from(packet.GameCars[0].Physics.vel()));
         eeg.draw(Drawable::print("-----------------------", color::GREEN));
 
         let mut result = self.determine_controls(field_info, packet, eeg);
@@ -120,38 +90,14 @@ impl Brain {
         result.Roll = clamp(result.Roll, -1.0, 1.0);
 
         eeg.draw(Drawable::print("-----------------------", color::GREEN));
-        eeg.draw(Drawable::print(
-            format!("throttle: {:.2}", result.Throttle),
-            color::GREEN,
-        ));
-        eeg.draw(Drawable::print(
-            format!("steer: {:.2}", result.Steer),
-            color::GREEN,
-        ));
-        eeg.draw(Drawable::print(
-            format!("pitch: {:.2}", result.Pitch),
-            color::GREEN,
-        ));
-        eeg.draw(Drawable::print(
-            format!("yaw: {:.2}", result.Yaw),
-            color::GREEN,
-        ));
-        eeg.draw(Drawable::print(
-            format!("roll: {:.2}", result.Roll),
-            color::GREEN,
-        ));
-        eeg.draw(Drawable::print(
-            format!("jump: {}", result.Jump),
-            color::GREEN,
-        ));
-        eeg.draw(Drawable::print(
-            format!("boost: {}", result.Boost),
-            color::GREEN,
-        ));
-        eeg.draw(Drawable::print(
-            format!("handbrake: {}", result.Handbrake),
-            color::GREEN,
-        ));
+        eeg.print_value("throttle", ControllerInput(result.Throttle));
+        eeg.print_value("steer", ControllerInput(result.Steer));
+        eeg.print_value("pitch", ControllerInput(result.Pitch));
+        eeg.print_value("yaw", ControllerInput(result.Yaw));
+        eeg.print_value("roll", ControllerInput(result.Roll));
+        eeg.print_value("jump", result.Jump);
+        eeg.print_value("boost", result.Boost);
+        eeg.print_value("handbrake", result.Handbrake);
 
         result
     }
@@ -167,10 +113,7 @@ impl Brain {
         let game = Game::new(field_info, packet, self.player_index.unwrap() as usize);
         let mut ctx = Context::new(&game, &*self.ball_predictor, packet, eeg);
 
-        ctx.eeg.draw(Drawable::print(
-            format!("possession: {:.2}", ctx.scenario.possession()),
-            color::GREEN,
-        ));
+        ctx.eeg.print_time("possession", ctx.scenario.possession());
 
         let result = self.runner.execute(&mut ctx);
 

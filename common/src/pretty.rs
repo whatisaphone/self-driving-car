@@ -121,3 +121,51 @@ impl PrettyPrint for Rotation3<f32> {
         }
     }
 }
+
+macro_rules! delegate {
+    ($type:ty) => {
+        impl PrettyPrint for $type {
+            type PrettyPrinter = Self;
+
+            fn pretty(&self) -> Self::PrettyPrinter {
+                *self
+            }
+        }
+    };
+}
+
+macro_rules! pretty {
+    ($name:ident, $type:ty, $fmt:expr) => {
+        pretty!($name, $type, $fmt, |x| x);
+    };
+
+    ($name:ident, $type:ty, $fmt:expr, | $x:pat | $map:expr) => {
+        #[derive(Copy, Clone)]
+        pub struct $name(pub $type);
+
+        impl PrettyPrint for $name {
+            type PrettyPrinter = Self;
+
+            fn pretty(&self) -> Self::PrettyPrinter {
+                *self
+            }
+        }
+
+        impl fmt::Display for $name {
+            fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+                let $x = self.0;
+                let s = $map;
+                write!(f, $fmt, s)
+            }
+        }
+    };
+}
+
+delegate!(bool);
+
+pretty!(Time, f32, "{:.2}");
+pretty!(Coordinate, f32, "{:.0}");
+pretty!(Distance, f32, "{:.0}");
+pretty!(Angle, f32, "{:.0}°", |x| x.to_degrees());
+pretty!(AngularVelocity, f32, "{:.0}°/s", |x| x.to_degrees());
+pretty!(ControllerInput, f32, "{:.2}");

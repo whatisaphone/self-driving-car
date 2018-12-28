@@ -6,7 +6,7 @@ use crate::{
     strategy::{Action, Behavior, Context},
     utils::geometry::ExtendF32,
 };
-use common::prelude::*;
+use common::{prelude::*, Distance};
 use nalgebra::Point2;
 use nameof::name_of_type;
 
@@ -60,10 +60,7 @@ impl Behavior for PanicDefense {
         }
 
         let me = ctx.me();
-        ctx.eeg.draw(Drawable::print(
-            format!("use_boost: {}", self.use_boost),
-            color::GREEN,
-        ));
+        ctx.eeg.print_value("use_boost", self.use_boost);
 
         match self.phase {
             Phase::Start => unreachable!(),
@@ -135,10 +132,8 @@ impl PanicDefense {
 
         if let Phase::Rush { aim_hint, .. } = self.phase {
             let cutoff = me.Physics.vel().y.abs() * 0.75;
-            ctx.eeg.draw(Drawable::print(
-                format!("cutoff_distance: {:.0}", me.Physics.loc().y - cutoff),
-                color::GREEN,
-            ));
+            ctx.eeg
+                .print_value("cutoff_distance", Distance(me.Physics.loc().y - cutoff));
             if ctx
                 .game
                 .own_goal()

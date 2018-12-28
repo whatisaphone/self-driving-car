@@ -1,7 +1,4 @@
-use crate::{
-    eeg::{color, Drawable},
-    strategy::{Action, Behavior, Context, Priority},
-};
+use crate::strategy::{Action, Behavior, Context, Priority};
 use nameof::name_of_type;
 
 pub struct QuickJumpAndDodge {
@@ -63,22 +60,10 @@ impl Behavior for QuickJumpAndDodge {
             .get_or_insert(ctx.packet.GameInfo.TimeSeconds);
         let elapsed = ctx.packet.GameInfo.TimeSeconds - start_time;
 
-        ctx.eeg.draw(Drawable::print(
-            format!("pitch: {:.0}°", self.pitch.to_degrees()),
-            color::GREEN,
-        ));
-        ctx.eeg.draw(Drawable::print(
-            format!("yaw: {:.0}°", self.yaw.to_degrees()),
-            color::GREEN,
-        ));
-        ctx.eeg.draw(Drawable::print(
-            format!("dodge_time: {:.2}", self.dodge_time),
-            color::GREEN,
-        ));
-        ctx.eeg.draw(Drawable::print(
-            format!("elapsed: {:.2}", elapsed),
-            color::GREEN,
-        ));
+        ctx.eeg.print_angle("pitch", self.pitch);
+        ctx.eeg.print_angle("yaw", self.yaw);
+        ctx.eeg.print_time("dodge_time", self.dodge_time);
+        ctx.eeg.print_time("elapsed", elapsed);
 
         let mut result = rlbot::ffi::PlayerInput::default();
 

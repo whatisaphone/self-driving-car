@@ -5,7 +5,7 @@ use crate::{
     strategy::{Action, Behavior, Context, Goal, Scenario},
     utils::geometry::ExtendF32,
 };
-use common::prelude::*;
+use common::{prelude::*, Time};
 use nalgebra::{Point2, Point3};
 use nameof::name_of_type;
 use ordered_float::NotNan;
@@ -65,18 +65,15 @@ impl Behavior for PushToOwnCorner {
 
         if let Some(ref i) = me_intercept {
             ctx.eeg
-                .log_pretty(self.name(), "me_intercept", format!("{:.2}", i.time));
+                .log_pretty(self.name(), "me_intercept", Time(i.time));
             ctx.eeg.draw(Drawable::GhostBall(
                 i.ball_loc,
                 color::for_team(ctx.game.team),
             ));
         }
         if let Some(ref i) = enemy_shootable_intercept {
-            ctx.eeg.log_pretty(
-                self.name(),
-                "enemy_shoot_intercept",
-                format!("{:.2}", i.time),
-            );
+            ctx.eeg
+                .log_pretty(self.name(), "enemy_shoot_intercept", Time(i.time));
             ctx.eeg.draw(Drawable::GhostBall(
                 i.ball_loc,
                 color::for_team(ctx.game.enemy_team),

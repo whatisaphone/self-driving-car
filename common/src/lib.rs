@@ -1,6 +1,10 @@
 #![cfg_attr(feature = "strict", deny(warnings))]
 
-pub use crate::{ext::ExtendRLBot, polyfill::ExtendDuration, pretty::PrettyPrint};
+pub use crate::{
+    ext::ExtendRLBot,
+    polyfill::ExtendDuration,
+    pretty::{Angle, AngularVelocity, ControllerInput, Coordinate, Distance, PrettyPrint, Time},
+};
 
 pub mod ext;
 pub mod math;

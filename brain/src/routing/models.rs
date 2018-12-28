@@ -126,9 +126,9 @@ impl<'a> PlanningDump<'a> {
     }
 
     pub fn log_start(&mut self, planner: &RoutePlanner, state: &CarState) {
-        self.log(planner, format!("start loc = {}", state.loc.pretty()));
-        self.log(planner, format!("start rot = {}", state.rot.pretty()));
-        self.log(planner, format!("start vel = {}", state.vel.pretty()));
+        self.log_pretty(planner, "start loc", state.loc);
+        self.log_pretty(planner, "start rot", state.rot);
+        self.log_pretty(planner, "start vel", state.vel);
     }
 
     pub fn log_plan(&mut self, planner: &RoutePlanner, plan: &RoutePlan) {
