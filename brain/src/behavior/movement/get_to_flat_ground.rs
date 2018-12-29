@@ -42,10 +42,13 @@ impl Behavior for GetToFlatGround {
         if me.OnGround && me.Physics.roof_axis().angle(&-Vector3::z_axis()) < PI / 10.0 {
             // We're probably upside down under the ceiling of a goal
             ctx.eeg.log(self.name(), "jumping while upside-down");
-            Action::Yield(rlbot::ffi::PlayerInput {
-                Jump: true,
-                ..Default::default()
-            })
+            Action::call(Yielder::new(
+                rlbot::ffi::PlayerInput {
+                    Jump: true,
+                    ..Default::default()
+                },
+                0.1,
+            ))
         } else if me.OnGround && me.Physics.forward_axis().angle(&Vector3::z_axis()) < PI / 4.0 {
             // Our nose is pointed towards the sky. It's quicker to jump down than to drive.
             ctx.eeg
