@@ -54,7 +54,7 @@ fn start_match(rlbot: &rlbot::RLBot) -> Result<(), Box<Error>> {
             MatchLength: rlbot::ffi::MatchLength::Unlimited,
             ..Default::default()
         },
-        ..rlbot::ffi::MatchSettings::simple_1v1("Formula None", "All-Star")
+        ..rlbot::ffi::MatchSettings::rlbot_vs_allstar("Formula None", "All-Star")
     };
     rlbot.start_match(match_settings)?;
     rlbot.wait_for_match_start()
