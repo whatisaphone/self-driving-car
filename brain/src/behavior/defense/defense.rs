@@ -463,8 +463,7 @@ mod integration_tests {
             .one_v_one(&*recordings::JUMP_SAVE_FROM_INSIDE_GOAL, 106.0)
             .starting_boost(0.0)
             .soccar()
-            .run();
-        test.sleep_millis(3000);
+            .run_for_millis(3000);
         assert!(!test.enemy_has_scored());
     }
 
@@ -496,8 +495,7 @@ mod integration_tests {
             .one_v_one(&*recordings::CLEAR_AROUND_GOAL_WALL, 327.0)
             .starting_boost(100.0)
             .soccar()
-            .run();
-        test.sleep_millis(3000);
+            .run_for_millis(3000);
 
         let packet = test.sniff_packet();
         assert!(packet.GameBall.Physics.Location.X < -1000.0);

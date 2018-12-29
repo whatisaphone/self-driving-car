@@ -274,8 +274,7 @@ mod integration_tests {
                 ..Default::default()
             })
             .soccar()
-            .run();
-        test.sleep_millis(3000);
+            .run_for_millis(3000);
         assert!(test.has_scored());
     }
 

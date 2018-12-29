@@ -16,9 +16,7 @@ mod integration_tests {
                 car_vel: Vector3::new(357.6586, 1213.9453, 8.309999),
                 ..Default::default()
             })
-            .run();
-
-        test.sleep_millis(4000);
+            .run_for_millis(4000);
 
         assert!(test.has_scored());
     }

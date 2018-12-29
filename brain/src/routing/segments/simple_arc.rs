@@ -223,7 +223,7 @@ mod integration_tests {
     #[test]
     #[ignore(note = "This is a demo, not a test")]
     fn simple_arc_demo() {
-        let test = TestRunner::new()
+        TestRunner::new()
             .scenario(TestScenario {
                 car_loc: Point3::new(1000.0, 0.0, 17.01),
                 car_vel: Vector3::new(100.0, 0.0, 0.0),
@@ -241,7 +241,6 @@ mod integration_tests {
                 .ok()
                 .unwrap(),
             ))
-            .run();
-        test.sleep_millis(10_000);
+            .run_for_millis(10_000);
     }
 }

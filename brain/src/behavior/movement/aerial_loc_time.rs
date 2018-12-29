@@ -13,9 +13,8 @@ mod integration_tests {
                 ball_loc: Point3::new(1000.0, 0.0, 0.0),
                 ..Default::default()
             })
-            .run();
+            .run_for_millis(3000);
 
-        test.sleep_millis(3000);
         let packet = test.sniff_packet();
         let car_loc = packet.GameCars[0].Physics.loc();
         let distance = (car_loc - expected_loc).norm();
