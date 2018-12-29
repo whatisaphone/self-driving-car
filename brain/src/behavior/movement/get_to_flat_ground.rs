@@ -167,7 +167,7 @@ fn choose_facing(ctx: &mut Context) -> Unit<Vector3<f32>> {
         ctx.eeg
             .draw(Drawable::print("landing in a goal", color::GREEN));
         face_the_ball(ctx)
-    } else if me.Physics.vel_2d().norm() < 500.0 {
+    } else if me.Physics.vel_2d().norm() < 1000.0 {
         // If we're not moving much, we have no momentum to conserve, so face the ball.
         ctx.eeg.draw(Drawable::print("no momentum", color::GREEN));
         face_the_ball(ctx)
