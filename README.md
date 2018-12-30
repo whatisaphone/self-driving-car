@@ -119,32 +119,26 @@ organizer!
 
 ### Next
 
-- GetToFlatGround: require stricter roof pointing before jumping (test case
-  fast_retreating_save)
+- flip earlier during kickoffs
+- driving on walls
+
+### Backlog
+
 - aiming model for most power
 - AnticipatingDrive with ability to throttle without boosting
 - aerials v2.0
 - model who is controlling the ball?
 - TepidHit should sent it to the corner if things are dangerous (e.g., we can't
   roll it up the wall and we're facing our own goal and the enemy is closing in)
-
-### Backlog
-
-- driving on walls
-- add the offense swing-around stuff (when no good shot angle)
 - backwards tepid hits should not dodge? (maybe all tepid hits)
 - BounceShot (and related) should verify the hit happened, and Action::Abort if
   not
-- don't jump directly after skidding and go the wrong way (probably test yaw vs
-  velocity angle and see if match)
 - QuickJumpAndDodge should allow choosing the angle at apex instead of only
   ahead of time
-- Brake should not get stuck in a loop when moving backwards
 - [chip recovery](https://pastebin.com/XtFL5JzV)
 - generic long-range pathfinding
   - if far away, waiting stationary, and turned the wrong way, fix yaw before
     sitting still
   - if in TIME CRUNCH MODE, just blitz to destination
   - otherwise: weave for pennies, opportunistic demos, etc
-- fix whiffs when retreating redirects to corner
 - [half flip](https://discordapp.com/channels/348658686962696195/348661571297214465/489479593632464901)
