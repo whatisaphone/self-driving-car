@@ -1,3 +1,4 @@
+use crate::strategy::pitch::{Pitch, DFH_STADIUM};
 use common::{prelude::*, rl};
 use lazy_static::lazy_static;
 use nalgebra::{Point2, Point3, Unit, Vector2, Vector3};
@@ -6,6 +7,7 @@ use std::ops::RangeTo;
 pub struct Game<'a> {
     packet: &'a rlbot::ffi::LiveDataPacket,
     mode: rlbot::ffi::GameMode,
+    pitch: &'a Pitch,
     player_index: usize,
     pub team: Team,
     pub enemy_team: Team,
@@ -23,6 +25,7 @@ impl<'a> Game<'a> {
         Self {
             packet,
             mode: infer_game_mode(field_info),
+            pitch: &*DFH_STADIUM,
             player_index,
             team,
             enemy_team: team.opposing(),
@@ -38,6 +41,10 @@ impl<'a> Game<'a> {
                 .into_boxed_slice(),
             me_vehicle: &OCTANE,
         }
+    }
+
+    pub fn pitch(&self) -> &Pitch {
+        self.pitch
     }
 
     pub fn field_max_x(&self) -> f32 {

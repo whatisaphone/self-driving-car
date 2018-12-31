@@ -17,6 +17,7 @@ mod dropshot;
 mod game;
 #[cfg(test)]
 pub mod null;
+mod pitch;
 mod runner;
 mod scenario;
 mod soccar;

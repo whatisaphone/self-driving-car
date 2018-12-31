@@ -20,4 +20,6 @@ mod jump_and_turn;
 mod quick_jump_and_dodge;
 mod simple_steer_towards;
 mod skid_recover;
+#[cfg(test)]
+mod wall_drive;
 mod yielder;

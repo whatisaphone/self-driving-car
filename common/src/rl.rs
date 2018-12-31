@@ -10,6 +10,11 @@ pub const FIELD_MAX_X: f32 = 4096.0;
 /// This value was copied from https://github.com/RLBot/RLBot/wiki/Useful-Game-Values.
 pub const FIELD_MAX_Y: f32 = 5120.0;
 
+/// The distance from the ground (z = 0) to the ceiling.
+///
+/// Source: observed in-game
+pub const FIELD_MAX_Z: f32 = 2046.68;
+
 /// The z-coordinate of the crossbar.
 ///
 /// This value was copied from https://github.com/RLBot/RLBot/wiki/Useful-Game-Values.

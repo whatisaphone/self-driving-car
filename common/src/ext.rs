@@ -211,6 +211,7 @@ impl ExtendPhysics for rlbot::ffi::Physics {
 pub trait ExtendUnitQuaternion<N: Real> {
     fn xyzw(x: N, y: N, z: N, w: N) -> Self;
     fn to_2d(&self) -> UnitComplex<N>;
+    fn project_2d(&self, axis: &Unit<Vector3<N>>) -> UnitComplex<N>;
 }
 
 impl<N: Real> ExtendUnitQuaternion<N> for UnitQuaternion<N> {
@@ -220,6 +221,10 @@ impl<N: Real> ExtendUnitQuaternion<N> for UnitQuaternion<N> {
 
     fn to_2d(&self) -> UnitComplex<N> {
         UnitComplex::new(self.scaled_axis().z)
+    }
+
+    fn project_2d(&self, axis: &Unit<Vector3<N>>) -> UnitComplex<N> {
+        UnitComplex::new(self.scaled_axis().dot(axis))
     }
 }
 
