@@ -1,8 +1,8 @@
 use crate::{
     eeg::{color, Drawable},
     routing::models::{
-        PlanningContext, ProvisionalPlanExpansion, RoutePlan, RoutePlanError, RoutePlanner,
-        SegmentRunAction, SegmentRunner,
+        PlanningContext, ProvisionalPlanExpansion, ProvisionalPlanExpansionTail, RoutePlan,
+        RoutePlanError, RoutePlanner, SegmentRunAction, SegmentRunner,
     },
     strategy::{Action, Behavior, Context},
 };
@@ -18,7 +18,7 @@ pub struct FollowRoute {
 struct Current {
     plan: RoutePlan,
     runner: Box<SegmentRunner>,
-    provisional_expansion: ProvisionalPlanExpansion,
+    provisional_expansion_tail: ProvisionalPlanExpansionTail,
 }
 
 impl FollowRoute {
@@ -66,8 +66,9 @@ impl FollowRoute {
         // 1. Make sure each segment thinks it can complete successfully.
         // 2. Predict far enough ahead that we can draw the whole plan to the screen.
         let current = self.current.as_ref().unwrap();
-        let provisional_expansion = &current.provisional_expansion;
-        for segment in provisional_expansion.iter_starting_with(&*current.plan.segment) {
+        let tail = &current.provisional_expansion_tail;
+        let provisional_expansion = ProvisionalPlanExpansion::new(&*current.plan.segment, tail);
+        for segment in provisional_expansion.iter() {
             segment.draw(ctx);
         }
     }
@@ -85,7 +86,7 @@ impl FollowRoute {
             self.name(),
             format!("next segment is {}", plan.segment.name()),
         );
-        let provisional_expansion = plan.provisional_expand(&ctx.scenario).map_err(|error| {
+        let tail = plan.provisional_expand(&ctx.scenario).map_err(|error| {
             self.handle_error(
                 ctx,
                 error.planner_name,
@@ -98,7 +99,7 @@ impl FollowRoute {
         self.current = Some(Current {
             plan,
             runner,
-            provisional_expansion,
+            provisional_expansion_tail: tail,
         });
         Ok(())
     }

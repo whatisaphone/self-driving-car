@@ -3,6 +3,7 @@ use crate::{
     strategy::{Context, Game, Scenario},
 };
 use common::{physics, prelude::*, rl, PrettyPrint};
+use derive_new::new;
 use nalgebra::{Point2, Point3, Unit, UnitComplex, UnitQuaternion, Vector2, Vector3};
 use std::{fmt, iter};
 
@@ -177,16 +178,19 @@ impl<'a> PlanningDump<'a> {
     }
 }
 
-pub struct ProvisionalPlanExpansion {
-    tail: Vec<Box<SegmentPlan>>,
+pub struct ProvisionalPlanExpansionTail {
+    items: Vec<Box<SegmentPlan>>,
 }
 
-impl ProvisionalPlanExpansion {
-    pub fn iter_starting_with<'a>(
-        &'a self,
-        head: &'a SegmentPlan,
-    ) -> impl Iterator<Item = &'a (SegmentPlan + 'a)> {
-        iter::once(head).chain(self.tail.iter().map(|s| &**s))
+#[derive(new)]
+pub struct ProvisionalPlanExpansion<'a> {
+    head: &'a SegmentPlan,
+    tail: &'a ProvisionalPlanExpansionTail,
+}
+
+impl<'a> ProvisionalPlanExpansion<'a> {
+    pub fn iter(&'a self) -> impl Iterator<Item = &'a (SegmentPlan + 'a)> {
+        iter::once(self.head).chain(self.tail.items.iter().map(|s| &**s))
     }
 }
 
@@ -224,7 +228,7 @@ impl RoutePlan {
     pub fn provisional_expand(
         &self,
         scenario: &Scenario,
-    ) -> Result<ProvisionalPlanExpansion, ProvisionalExpandError> {
+    ) -> Result<ProvisionalPlanExpansionTail, ProvisionalExpandError> {
         let mut tail = Vec::new();
         if let Some(ref planner) = self.next {
             let context = PlanningContext {
@@ -245,7 +249,7 @@ impl RoutePlan {
                 }
             }
         }
-        Ok(ProvisionalPlanExpansion { tail })
+        Ok(ProvisionalPlanExpansionTail { items: tail })
     }
 
     fn expand_round(
