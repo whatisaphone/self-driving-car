@@ -1,8 +1,8 @@
 use crate::{
     eeg::{color, Drawable},
     routing::models::{
-        PlanningContext, PlanningDump, ProvisionalPlanExpansion, RoutePlan, RoutePlanError,
-        RoutePlanner, SegmentRunAction, SegmentRunner,
+        PlanningContext, ProvisionalPlanExpansion, RoutePlan, RoutePlanError, RoutePlanner,
+        SegmentRunAction, SegmentRunner,
     },
     strategy::{Action, Behavior, Context},
 };
@@ -75,19 +75,11 @@ impl FollowRoute {
     fn advance(&mut self, planner: &RoutePlanner, ctx: &mut Context) -> Result<(), Action> {
         assert!(self.current.is_none());
 
-        let context = PlanningContext {
-            game: &ctx.game,
-            start: ctx.me().into(),
-            ball_prediction: ctx.scenario.ball_prediction(),
-        };
-        let mut log = Vec::new();
-        let mut dump = PlanningDump { log: &mut log };
         ctx.eeg
             .log(self.name(), format!("planning with {}", planner.name()));
-        let plan = planner.plan(&context, &mut dump);
-        let plan = match plan {
-            Ok(s) => s,
-            Err(err) => return Err(self.handle_error(ctx, planner.name(), err, log)),
+        let (plan, log) = match PlanningContext::plan(planner, ctx) {
+            Ok((plan, log)) => (plan, log),
+            Err(err) => return Err(self.handle_error(ctx, planner.name(), err.error, err.log)),
         };
         ctx.eeg.log(
             self.name(),
@@ -120,7 +112,7 @@ impl FollowRoute {
     ) -> Action {
         ctx.eeg.log(
             self.name(),
-            format!("error {:?} from segment {}", error, planner_name),
+            format!("error {:?} from planner {}", error, planner_name),
         );
         for line in log {
             ctx.eeg.log(self.name(), line);

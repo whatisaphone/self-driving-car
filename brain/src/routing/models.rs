@@ -103,6 +103,29 @@ pub struct PlanningContext<'a> {
     pub ball_prediction: &'a BallTrajectory,
 }
 
+impl<'a> PlanningContext<'a> {
+    pub fn plan(
+        planner: &RoutePlanner,
+        ctx: &mut Context,
+    ) -> Result<(RoutePlan, Vec<String>), ProvisionalExpandError<'a>> {
+        let context = PlanningContext {
+            game: &ctx.game,
+            start: ctx.me().into(),
+            ball_prediction: ctx.scenario.ball_prediction(),
+        };
+        let mut log = Vec::new();
+        let mut dump = PlanningDump { log: &mut log };
+        match planner.plan(&context, &mut dump) {
+            Ok(plan) => Ok((plan, log)),
+            Err(error) => Err(ProvisionalExpandError {
+                planner_name: planner.name(),
+                error,
+                log,
+            }),
+        }
+    }
+}
+
 pub struct PlanningDump<'a> {
     pub log: &'a mut Vec<String>,
 }
