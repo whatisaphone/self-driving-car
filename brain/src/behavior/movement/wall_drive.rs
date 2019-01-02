@@ -1,9 +1,6 @@
-use crate::{
-    strategy::{Action, Behavior, Context},
-    utils::geometry::Plane,
-};
+use crate::strategy::{Action, Behavior, Context};
 use common::prelude::*;
-use nalgebra::{Isometry3, Point3};
+use nalgebra::Point3;
 use nameof::name_of_type;
 
 struct WallDrive {
@@ -30,17 +27,21 @@ impl Behavior for WallDrive {
             return Action::Abort;
         }
 
-        let current_plane = ctx.game.pitch().closest_plane(me.Physics.loc());
-        let target_plane = ctx.game.pitch().closest_plane(self.target_loc);
+        let current_plane = ctx.game.pitch().closest_plane(&me.Physics.loc());
+        let target_plane = ctx.game.pitch().closest_plane(&self.target_loc);
 
-        if current_plane.distance_to_point(me.Physics.loc()) >= 100.0 {
+        if current_plane.distance_to_point(&me.Physics.loc()) >= 100.0 {
             ctx.eeg
                 .log(self.name(), "not on the plane we think we are?");
             return Action::Abort;
         }
 
         let steer_target_loc = if current_plane.normal.dot(&target_plane.normal) < 0.95 {
-            unfold_plane(target_plane, current_plane) * self.target_loc
+            let unfold = some_or_else!(target_plane.unfold(current_plane), {
+                ctx.eeg.log(self.name(), "can't unfold wall");
+                return Action::Abort;
+            });
+            unfold * self.target_loc
         } else {
             self.target_loc
         };
@@ -54,19 +55,6 @@ impl Behavior for WallDrive {
             ..Default::default()
         })
     }
-}
-
-/// Returns a transformation which "unfolds" two planes along their
-/// intersection.
-///
-/// Geometry will be transformed as if `unfold_plane` was "unfolded" to be
-/// coplanar with `fixed_plane`.
-fn unfold_plane(unfold_plane: &Plane, fixed_plane: &Plane) -> Isometry3<f32> {
-    let seam = unfold_plane.intersect(fixed_plane).unwrap();
-    Isometry3::rotation_wrt_point(
-        unfold_plane.normal.rotation_to(&fixed_plane.normal),
-        seam.origin,
-    )
 }
 
 #[cfg(test)]

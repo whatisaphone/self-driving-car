@@ -1,6 +1,6 @@
 use common::prelude::*;
 use euclid::{TypedPoint3D, TypedVector3D};
-use nalgebra::{Point2, Point3, Unit, Vector2, Vector3};
+use nalgebra::{Isometry3, Point2, Point3, Unit, Vector2, Vector3};
 use plane_split::{Line as TypedLine, Plane as TypedPlane};
 use std::f32::consts::PI;
 
@@ -31,8 +31,8 @@ pub struct Line {
 impl From<TypedLine<f32, ()>> for Line {
     fn from(line: TypedLine<f32, ()>) -> Self {
         Line {
-            origin: point3_from_euclid(line.origin),
-            dir: Unit::new_unchecked(vector3_from_euclid(line.dir)),
+            origin: point3_from_euclid(&line.origin),
+            dir: Unit::new_unchecked(vector3_from_euclid(&line.dir)),
         }
     }
 }
@@ -50,7 +50,7 @@ impl Plane {
         Plane { normal: n, offset }
     }
 
-    pub fn distance_to_point(&self, point: Point3<f32>) -> f32 {
+    pub fn distance_to_point(&self, point: &Point3<f32>) -> f32 {
         let plane = TypedPlane::from(*self);
         plane.signed_distance_to(&point3_to_euclid(point))
     }
@@ -60,12 +60,25 @@ impl Plane {
         let other = TypedPlane::from(*other);
         plane.intersect(&other).map(Into::into)
     }
+
+    /// Returns a transformation which "unfolds" this plane along its intersection with another plane, such that the two planes are coplanar.
+    ///
+    /// Returns `None` if the planes are parallel.
+    pub fn unfold(&self, target: &Plane) -> Option<Isometry3<f32>> {
+        let seam = some_or_else!(self.intersect(target), {
+            return None;
+        });
+        Some(Isometry3::rotation_wrt_point(
+            self.normal.rotation_to(&target.normal),
+            seam.origin,
+        ))
+    }
 }
 
 impl From<TypedPlane<f32, ()>> for Plane {
     fn from(plane: TypedPlane<f32, ()>) -> Self {
         Self {
-            normal: unit_vector3_from_euclid(plane.normal),
+            normal: unit_vector3_from_euclid(&plane.normal),
             offset: plane.offset,
         }
     }
@@ -74,29 +87,29 @@ impl From<TypedPlane<f32, ()>> for Plane {
 impl From<Plane> for TypedPlane<f32, ()> {
     fn from(plane: Plane) -> Self {
         Self {
-            normal: unit_vector3_to_euclid(plane.normal),
+            normal: unit_vector3_to_euclid(&plane.normal),
             offset: plane.offset,
         }
     }
 }
 
-fn vector3_from_euclid(v: TypedVector3D<f32, ()>) -> Vector3<f32> {
+fn vector3_from_euclid(v: &TypedVector3D<f32, ()>) -> Vector3<f32> {
     Vector3::new(v.x, v.y, v.z)
 }
 
-fn unit_vector3_from_euclid(v: TypedVector3D<f32, ()>) -> Unit<Vector3<f32>> {
+fn unit_vector3_from_euclid(v: &TypedVector3D<f32, ()>) -> Unit<Vector3<f32>> {
     Unit::new_unchecked(Vector3::new(v.x, v.y, v.z))
 }
 
-fn unit_vector3_to_euclid(v: Unit<Vector3<f32>>) -> TypedVector3D<f32, ()> {
+fn unit_vector3_to_euclid(v: &Unit<Vector3<f32>>) -> TypedVector3D<f32, ()> {
     TypedVector3D::new(v.x, v.y, v.z)
 }
 
-fn point3_from_euclid(v: TypedPoint3D<f32, ()>) -> Point3<f32> {
+fn point3_from_euclid(v: &TypedPoint3D<f32, ()>) -> Point3<f32> {
     Point3::new(v.x, v.y, v.z)
 }
 
-fn point3_to_euclid(point: Point3<f32>) -> TypedPoint3D<f32, ()> {
+fn point3_to_euclid(point: &Point3<f32>) -> TypedPoint3D<f32, ()> {
     TypedPoint3D::new(point.x, point.y, point.z)
 }
 

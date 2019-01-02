@@ -9,7 +9,7 @@ pub struct Pitch {
 }
 
 impl Pitch {
-    pub fn closest_plane(&self, point: Point3<f32>) -> &Plane {
+    pub fn closest_plane(&self, point: &Point3<f32>) -> &Plane {
         self.planes
             .iter()
             .min_by_key(|plane| NotNan::new(plane.distance_to_point(point)).unwrap())
