@@ -22,6 +22,7 @@ macro_rules! some_or_else {
 mod car;
 mod car1d;
 mod car_forward_dodge;
+pub mod car_jump;
 mod car_powerslide_turn;
 pub mod car_single_jump;
 mod collision;

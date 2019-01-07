@@ -1,7 +1,8 @@
 use crate::{
     routing::{
         models::{
-            CarState, PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner,
+            CarState, CarState2D, PlanningContext, PlanningDump, RoutePlan, RoutePlanError,
+            RoutePlanner,
         },
         plan::{
             ground_powerslide::GroundSimplePowerslideTurn, higher_order::ChainedPlanner, pathing,
@@ -9,7 +10,7 @@ use crate::{
         recover::{IsSkidding, NotOnFlatGround},
         segments::{NullSegment, SimpleArc, Turn},
     },
-    utils::geometry::circle_point_tangents,
+    utils::geometry::{circle_point_tangents, flattener::Flattener},
 };
 use common::{prelude::*, rl};
 use derive_new::new;
@@ -120,9 +121,11 @@ impl RoutePlanner for SimpleTurnPlanner {
     ) -> Result<RoutePlan, RoutePlanError> {
         dump.log_start(self, &ctx.start);
 
+        let start = ctx.start.flatten(&Flattener::identity());
+
         let turn_radius =
             1.0 / chip::max_curvature(ctx.start.vel.norm().max(SLOWEST_TURNING_SPEED));
-        let turn = match calculate_circle_turn(&ctx.start, turn_radius, self.target_loc)? {
+        let turn = match calculate_circle_turn(&start, turn_radius, self.target_loc)? {
             Some(x) => x,
             None => {
                 return Ok(RoutePlan {
@@ -173,9 +176,11 @@ impl RoutePlanner for ArcTowards {
             recover_target_loc: self.target_loc,
         });
 
+        let start = ctx.start.flatten(&Flattener::identity());
+
         let turn_radius =
             1.0 / chip::max_curvature(ctx.start.vel.norm().max(SLOWEST_TURNING_SPEED));
-        let turn = match calculate_circle_turn(&ctx.start, turn_radius, self.target_loc)? {
+        let turn = match calculate_circle_turn(&start, turn_radius, self.target_loc)? {
             Some(x) => x,
             None => {
                 return Ok(RoutePlan {
@@ -201,14 +206,14 @@ impl RoutePlanner for ArcTowards {
     }
 }
 
-fn calculate_circle_turn(
-    start: &CarState,
+pub fn calculate_circle_turn(
+    start: &CarState2D,
     turn_radius: f32,
     target_loc: Point2<f32>,
 ) -> Result<Option<CircleTurn>, RoutePlanError> {
-    let start_loc = start.loc.to_2d();
-    let start_forward_axis = start.forward_axis_2d();
-    let start_right_axis = start.right_axis_2d();
+    let start_loc = start.loc;
+    let start_forward_axis = start.forward_axis();
+    let start_right_axis = start.right_axis();
 
     // Check if we're already facing the target
     let turn_angle = start_forward_axis.angle_to(&(target_loc - start_loc).to_axis());
@@ -244,8 +249,8 @@ fn calculate_circle_turn(
     }))
 }
 
-struct CircleTurn {
-    center: Point2<f32>,
-    radius: f32,
-    tangent: Point2<f32>,
+pub struct CircleTurn {
+    pub center: Point2<f32>,
+    pub radius: f32,
+    pub tangent: Point2<f32>,
 }

@@ -5,6 +5,7 @@ authors = ["John Simon <john@whatisaph.one>"]
 edition = "2018"
 
 [dependencies]
+approx = "0.3.1"
 arrayvec = "0.4.8"
 crossbeam-channel = "0.2.6"
 derive-new = "0.5.5"
@@ -15,6 +16,7 @@ lazycell = "1.2.0"
 log = "0.4.5"
 nameof = "1.0.1"
 ordered-float = "1.0.1"
+vec_box = "1.0.0"
 
 nalgebra = "0.16.0"
 ncollide3d = "0.17.1"

@@ -8,6 +8,8 @@ pub use crate::routing::segments::{
     simple_arc::SimpleArc,
     straight::{Straight, StraightMode},
     turn::Turn,
+    wall_straight::WallStraight,
+    wall_turn::WallTurn,
 };
 
 mod brake;
@@ -19,3 +21,5 @@ mod powerslide_turn;
 mod simple_arc;
 mod straight;
 mod turn;
+mod wall_straight;
+mod wall_turn;

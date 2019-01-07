@@ -1,6 +1,7 @@
 use crate::{
     plan::ball::BallTrajectory,
-    strategy::{Context, Game, Scenario},
+    strategy::{Context, Context2, Game, Scenario},
+    utils::geometry::flattener::Flattener,
 };
 use common::{physics, prelude::*, rl, PrettyPrint};
 use derive_new::new;
@@ -31,6 +32,19 @@ impl CarState {
     pub fn right_axis_2d(&self) -> Unit<Vector2<f32>> {
         physics::car_right_axis_2d(self.rot.to_2d())
     }
+
+    pub fn roof_axis(&self) -> Unit<Vector3<f32>> {
+        physics::car_roof_axis(self.rot)
+    }
+
+    pub fn flatten(&self, flattener: &Flattener) -> CarState2D {
+        CarState2D {
+            loc: *flattener * self.loc,
+            rot: *flattener * self.rot,
+            vel: *flattener * self.vel,
+            boost: self.boost,
+        }
+    }
 }
 
 impl<'a> From<&'a rlbot::ffi::PlayerInfo> for CarState {
@@ -55,6 +69,10 @@ pub struct CarState2D {
 impl CarState2D {
     pub fn forward_axis(&self) -> Unit<Vector2<f32>> {
         physics::car_forward_axis_2d(self.rot)
+    }
+
+    pub fn right_axis(&self) -> Unit<Vector2<f32>> {
+        physics::car_right_axis_2d(self.rot)
     }
 
     pub fn to_3d(&self) -> CarState {
@@ -109,14 +127,29 @@ impl<'a> PlanningContext<'a> {
         planner: &RoutePlanner,
         ctx: &mut Context,
     ) -> Result<(RoutePlan, Vec<String>), ProvisionalExpandError<'a>> {
+        let (ctx, _eeg) = ctx.split();
+        Self::plan2(planner, &ctx)
+    }
+
+    pub fn plan2(
+        planner: &RoutePlanner,
+        ctx: &Context2,
+    ) -> Result<(RoutePlan, Vec<String>), ProvisionalExpandError<'a>> {
         let context = PlanningContext {
             game: &ctx.game,
             start: ctx.me().into(),
             ball_prediction: ctx.scenario.ball_prediction(),
         };
+        Self::plan_2(planner, &context)
+    }
+
+    pub fn plan_2(
+        planner: &RoutePlanner,
+        context: &PlanningContext,
+    ) -> Result<(RoutePlan, Vec<String>), ProvisionalExpandError<'a>> {
         let mut log = Vec::new();
         let mut dump = PlanningDump { log: &mut log };
-        match planner.plan(&context, &mut dump) {
+        match planner.plan(context, &mut dump) {
             Ok(plan) => Ok((plan, log)),
             Err(error) => Err(ProvisionalExpandError {
                 planner_name: planner.name(),
@@ -192,6 +225,10 @@ impl<'a> ProvisionalPlanExpansion<'a> {
     pub fn iter(&'a self) -> impl Iterator<Item = &'a (SegmentPlan + 'a)> {
         iter::once(self.head).chain(self.tail.items.iter().map(|s| &**s))
     }
+
+    pub fn duration(&self) -> f32 {
+        self.iter().map(|sp| sp.duration()).sum()
+    }
 }
 
 pub enum RoutePlanError {
@@ -201,6 +238,7 @@ pub enum RoutePlanError {
     MustBeFacingTarget,
     MovingTooFast,
     TurningRadiusTooTight,
+    CannotOperateWall,
     OtherError(&'static str),
 }
 
@@ -213,6 +251,7 @@ impl fmt::Debug for RoutePlanError {
             RoutePlanError::MustBeFacingTarget => f.write_str(stringify!(MustBeFacingTarget)),
             RoutePlanError::MovingTooFast => f.write_str(stringify!(MovingTooFast)),
             RoutePlanError::TurningRadiusTooTight => f.write_str(stringify!(TurningRadiusTooTight)),
+            RoutePlanError::CannotOperateWall => f.write_str(stringify!(CannotOperateWall)),
             RoutePlanError::OtherError(msg) => write!(f, "{}({:?})", stringify!(OtherError), msg),
         }
     }
@@ -229,12 +268,20 @@ impl RoutePlan {
         &self,
         scenario: &Scenario,
     ) -> Result<ProvisionalPlanExpansionTail, ProvisionalExpandError> {
+        self.provisional_expand_2(scenario.game, scenario.ball_prediction())
+    }
+
+    pub fn provisional_expand_2(
+        &self,
+        game: &Game,
+        ball_prediction: &BallTrajectory,
+    ) -> Result<ProvisionalPlanExpansionTail, ProvisionalExpandError> {
         let mut tail = Vec::new();
         if let Some(ref planner) = self.next {
             let context = PlanningContext {
-                game: &scenario.game,
+                game,
                 start: self.segment.end(),
-                ball_prediction: scenario.ball_prediction(),
+                ball_prediction,
             };
             let mut log = Vec::new();
             let mut dump = PlanningDump { log: &mut log };

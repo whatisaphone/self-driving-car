@@ -25,10 +25,19 @@ pub const CROSSBAR_Z: f32 = 642.775;
 /// This value was copied from https://github.com/RLBot/RLBot/wiki/Useful-Game-Values.
 pub const GOALPOST_X: f32 = 892.755;
 
+/// Source: https://github.com/RLBot/RLBot/wiki/Useful-Game-Values
+pub const GRAVITY: f32 = -650.0;
+
 /// The radius of the ball.
 ///
 /// This value was observed in data from `collect`.
 pub const BALL_RADIUS: f32 = 91.24;
+
+/// Source: https://discordapp.com/channels/348658686962696195/348659150793736193/525795583307415552
+pub const BALL_MASS: f32 = 30.0;
+
+/// Source: https://github.com/RLBot/RLBot/wiki/Useful-Game-Values
+pub const CAR_MASS: f32 = 180.0;
 
 /// The z location of the Octane when sitting on the ground.
 ///
@@ -55,6 +64,28 @@ pub const CAR_MAX_SPEED: f32 = 2299.981;
 /// boost hysteresis would have been appropriate but I was too lazy to
 /// implement it.
 pub const CAR_ALMOST_MAX_SPEED: f32 = CAR_MAX_SPEED - 10.0;
+
+/// Force applied on the first frame of a jump.
+///
+/// Source: RLBot magic_numbers.py
+pub const CAR_JUMP_IMPULSE: f32 = 52_500.0;
+
+/// Additional force applied during a jump while the button is held down.
+///
+/// Source: RLBot magic_numbers.py
+pub const CAR_JUMP_FORCE: f32 = 262_500.0;
+
+/// The amount of time additional force can be added during a jump while holding
+/// the button down.
+///
+/// Source: RLBot magic_numbers.py
+pub const CAR_JUMP_FORCE_TIME: f32 = 0.2;
+
+/// The instantaneous velocity change on the first frame of a jump.
+pub const CAR_JUMP_IMPULSE_SPEED: f32 = CAR_JUMP_IMPULSE / CAR_MASS;
+
+/// The additional acceleration during a jump while holding the button down.
+pub const CAR_JUMP_ACCEL: f32 = CAR_JUMP_FORCE / CAR_MASS;
 
 /// Boost depletion per second.
 ///

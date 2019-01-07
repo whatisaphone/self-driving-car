@@ -60,7 +60,9 @@ impl RoutePlanError {
                 }
                 None
             }
-            RoutePlanError::MovingTooFast | RoutePlanError::OtherError(_) => None,
+            RoutePlanError::MovingTooFast
+            | RoutePlanError::CannotOperateWall
+            | RoutePlanError::OtherError(_) => None,
         }
     }
 }

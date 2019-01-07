@@ -4,6 +4,7 @@ pub use self::{
     grounded_hit::{
         GroundedHit, GroundedHitAimContext, GroundedHitTarget, GroundedHitTargetAdjust,
     },
+    wall_hit::WallHit,
 };
 
 mod aerial_shot;
@@ -12,3 +13,4 @@ mod fifty_fifty;
 mod ground_shot;
 mod grounded_hit;
 mod jump_shot;
+mod wall_hit;

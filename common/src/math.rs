@@ -5,6 +5,19 @@ pub fn fractionality(n: f32) -> f32 {
     (n - n.round()).abs()
 }
 
+/// Solves the quadratic formula over the real numbers. Returns `None` if there
+/// is no real solution.
+///
+/// >ax^2 + bx + c = 0
+pub fn quadratic(a: f32, b: f32, c: f32) -> Option<[f32; 2]> {
+    let square = b * b - 4.0 * a * c;
+    if square < 0.0 {
+        return None;
+    }
+    let root = square.sqrt();
+    Some([(-b - root) / (2.0 * a), (-b + root) / (2.0 * a)])
+}
+
 #[cfg(test)]
 mod tests {
     use crate::math::fractionality;

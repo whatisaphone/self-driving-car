@@ -7,6 +7,7 @@ pub use crate::{
 };
 
 pub mod ext;
+pub mod kinematics;
 pub mod math;
 pub mod physics;
 mod polyfill;

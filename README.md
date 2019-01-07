@@ -97,6 +97,7 @@ organizer!
 * [Biarc interpolation](http://www.ryanjuckett.com/programming/biarc-interpolation/)
 * [Rotation converter](https://www.andre-gaschler.com/rotationconverter/)
 * [Parabola trajectory math](http://hyperphysics.phy-astr.gsu.edu/hbase/traj.html)
+* [Grade-school kinematics equations](http://zonalandeducation.com/mstm/physics/mechanics/kinematics/EquationsForAcceleratedMotion/EquationsForAcceleratedMotion.htm)
 
 ## Ideas
 
@@ -121,6 +122,7 @@ organizer!
 
 - flip earlier during kickoffs
 - driving on walls
+- boost down based on hangtime instead of z
 
 ### Backlog
 

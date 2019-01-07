@@ -1,12 +1,19 @@
-use common::prelude::*;
+use approx::{abs_diff_eq, AbsDiffEq};
+use common::{math::fractionality, prelude::*};
 use euclid::{TypedPoint3D, TypedVector3D};
-use nalgebra::{Isometry3, Point2, Point3, Unit, Vector2, Vector3};
+use nalgebra::{Isometry3, Point2, Point3, Unit, UnitQuaternion, Vector2, Vector3};
 use plane_split::{Line as TypedLine, Plane as TypedPlane};
 use std::f32::consts::PI;
+
+pub mod flattener;
+
+const EPSILON: f32 = 0.001;
 
 pub trait ExtendF32 {
     /// Normalize an angle to between -PI and PI.
     fn normalize_angle(self) -> Self;
+    /// Assert that a number is almost integral, then return it as an integer.
+    fn into_almost_int(self) -> i32;
 }
 
 impl ExtendF32 for f32 {
@@ -19,6 +26,11 @@ impl ExtendF32 for f32 {
         } else {
             result
         }
+    }
+
+    fn into_almost_int(self) -> i32 {
+        assert!(fractionality(self) <= 1e-5);
+        self.round() as i32
     }
 }
 
@@ -37,7 +49,7 @@ impl From<TypedLine<f32, ()>> for Line {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 pub struct Plane {
     pub normal: Unit<Vector3<f32>>,
     pub offset: f32,
@@ -55,6 +67,22 @@ impl Plane {
         plane.signed_distance_to(&point3_to_euclid(point))
     }
 
+    pub fn contains_point(&self, point: &Point3<f32>) -> bool {
+        self.distance_to_point(point) >= 0.0
+    }
+
+    pub fn project_point(&self, point: &Point3<f32>) -> Point3<f32> {
+        point - self.normal.unwrap() * self.distance_to_point(point)
+    }
+
+    pub fn project_rot(&self, quat: &UnitQuaternion<f32>) -> UnitQuaternion<f32> {
+        UnitQuaternion::from_scaled_axis(self.project_vector(&quat.scaled_axis()))
+    }
+
+    pub fn project_vector(&self, vector: &Vector3<f32>) -> Vector3<f32> {
+        vector - self.normal.unwrap() * self.normal.dot(&vector)
+    }
+
     pub fn intersect(&self, other: &Self) -> Option<Line> {
         let plane = TypedPlane::from(*self);
         let other = TypedPlane::from(*other);
@@ -63,15 +91,43 @@ impl Plane {
 
     /// Returns a transformation which "unfolds" this plane along its intersection with another plane, such that the two planes are coplanar.
     ///
-    /// Returns `None` if the planes are parallel.
-    pub fn unfold(&self, target: &Plane) -> Option<Isometry3<f32>> {
+    /// Returns `Err(())` if the planes are parallel.
+    pub fn unfold(&self, target: &Plane) -> Result<Isometry3<f32>, ()> {
+        // Special-case the identity transformation.
+        if abs_diff_eq!(target, self, epsilon = EPSILON) {
+            return Ok(Isometry3::identity());
+        }
+
         let seam = some_or_else!(self.intersect(target), {
-            return None;
+            return Err(());
         });
-        Some(Isometry3::rotation_wrt_point(
+        Ok(Isometry3::rotation_wrt_point(
             self.normal.rotation_to(&target.normal),
             seam.origin,
         ))
+    }
+
+    fn origin(&self) -> Point3<f32> {
+        Point3::origin() - self.offset * self.normal.unwrap()
+    }
+
+    pub fn transform(&self, m: Isometry3<f32>) -> Self {
+        let point = m * self.origin();
+        let normal = m * self.normal;
+        Self::point_normal(point, normal)
+    }
+}
+
+impl AbsDiffEq for Plane {
+    type Epsilon = f32;
+
+    fn default_epsilon() -> Self::Epsilon {
+        f32::default_epsilon()
+    }
+
+    fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+        self.normal.abs_diff_eq(&other.normal, epsilon)
+            && self.offset.abs_diff_eq(&other.offset, epsilon)
     }
 }
 

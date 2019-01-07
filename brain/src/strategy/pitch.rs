@@ -15,6 +15,10 @@ impl Pitch {
             .min_by_key(|plane| NotNan::new(plane.distance_to_point(point)).unwrap())
             .unwrap()
     }
+
+    pub fn ground(&self) -> &Plane {
+        &self.planes[0]
+    }
 }
 
 lazy_static! {

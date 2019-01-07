@@ -72,6 +72,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "brain"
 version = "0.1.0"
 dependencies = [
+ "approx 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "arrayvec 0.4.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "brain-test-data 0.1.0",
  "chip 0.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -95,6 +96,7 @@ dependencies = [
  "plane-split 0.13.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "rlbot 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "simulate 0.1.0",
+ "vec_box 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -1447,6 +1449,11 @@ version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "vec_box"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "vecmath"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1770,6 +1777,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum unicode-xid 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "fc72304796d0818e357ead4e000d19c9c174ab23dc11093ac919054d20a6a7fc"
 "checksum unreachable 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "382810877fe448991dfc7f0dd6e3ae5d58088fd0ea5e35189655f84e6814fa56"
 "checksum utf8-ranges 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)" = "796f7e48bef87609f7ade7e06495a87d5cd06c7866e6a5cbfceffc558a243737"
+"checksum vec_box 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "c5283fc94a1cd6b5199f707a4b4d7f885b9457d430d111c68a07d3e3d199fb2b"
 "checksum vecmath 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "1bdd6034ee9c1e5e12485f3e4120e12777f6c81cf43bf9a73bff98ed2b479afe"
 "checksum version_check 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "914b1a6776c4c929a602fafd8bc742e06365d4bcbe48c30f9cca5824f70dc9dd"
 "checksum void 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)" = "6a02e4885ed3bc0f2de90ea6dd45ebcbb66dacffe03547fadbb0eeae2770887d"

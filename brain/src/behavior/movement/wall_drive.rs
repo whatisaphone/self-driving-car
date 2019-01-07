@@ -37,7 +37,7 @@ impl Behavior for WallDrive {
         }
 
         let steer_target_loc = if current_plane.normal.dot(&target_plane.normal) < 0.95 {
-            let unfold = some_or_else!(target_plane.unfold(current_plane), {
+            let unfold = some_or_else!(target_plane.unfold(current_plane).ok(), {
                 ctx.eeg.log(self.name(), "can't unfold wall");
                 return Action::Abort;
             });

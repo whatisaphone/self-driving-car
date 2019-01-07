@@ -1,5 +1,5 @@
 use crate::eeg::{color, window::Window};
-use common::{prelude::*, rl, Angle, PrettyPrint, Time};
+use common::{prelude::*, rl, Angle, Distance, PrettyPrint, Time};
 use graphics::types::Color;
 use nalgebra::{Point2, Point3, Rotation3};
 use std::{collections::HashSet, mem};
@@ -56,6 +56,10 @@ impl EEG {
 
     pub fn print_angle(&mut self, label: &str, angle: f32) {
         self.draw_list.print_value(label, Angle(angle));
+    }
+
+    pub fn print_distance(&mut self, label: &str, distance: f32) {
+        self.draw_list.print_value(label, Distance(distance));
     }
 
     pub fn begin(&mut self, packet: &rlbot::ffi::LiveDataPacket) {

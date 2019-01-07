@@ -6,5 +6,6 @@ pub use crate::utils::{
 
 mod fps_counter;
 pub mod geometry;
+pub mod intercept_memory;
 mod stopwatch;
 mod wall_ray_calculator;
