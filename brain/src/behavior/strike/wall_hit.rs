@@ -327,7 +327,7 @@ mod integration_tests {
     use std::f32::consts::PI;
 
     #[test]
-    fn side_wall() {
+    fn side_wall_high() {
         let test = TestRunner::new()
             .scenario(TestScenario {
                 ball_loc: Point3::new(-3000.0, 0.0, 90.0),
@@ -341,5 +341,24 @@ mod integration_tests {
 
         let packet = test.sniff_packet();
         assert!(packet.GameBall.Physics.loc().y >= 1000.0);
+    }
+
+    #[test]
+    fn side_wall_low() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(3782.89, 563.18, 93.14),
+                ball_vel: Vector3::new(1426.631, -608.53094, 0.0),
+                ball_ang_vel: Vector3::new(2.53371, 5.33531, 1.05531),
+                car_loc: Point3::new(2422.1099, -635.58997, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.009912956, 0.29817224, 0.000076749064),
+                car_vel: Vector3::new(578.16095, 173.541, 8.301001),
+                ..Default::default()
+            })
+            .behavior(WallHit::new())
+            .run_for_millis(2000);
+
+        let packet = test.sniff_packet();
+        assert!(packet.GameBall.Physics.vel().y >= 500.0);
     }
 }
