@@ -25,7 +25,6 @@ pub struct WallHit {
 }
 
 impl WallHit {
-    #[cfg(test)]
     pub fn new() -> Self {
         Self {
             intercept: InterceptMemory::new(),
@@ -44,6 +43,11 @@ impl Behavior for WallHit {
 
     fn execute(&mut self, ctx: &mut Context) -> Action {
         let (ref ctx, ref mut eeg) = ctx.split();
+
+        if !ctx.me().OnGround {
+            eeg.log(self.name(), "not on ground");
+            return Action::Abort;
+        }
 
         let intercept = some_or_else!(intercept(ctx), {
             eeg.log(self.name(), "no viable intercept");
@@ -146,6 +150,7 @@ fn flat_target(ctx: &Context2, intercept_ball_loc: &Point3<f32>) -> Result<Path,
 
     Ok(Path {
         start_rot: me.Physics.quat(),
+        target_loc: ground_to_intercept * ground_target_loc,
         target_rot: ground_to_intercept.rotation * ground_target_rot,
 
         start_to_flat: me_to_flat,
@@ -155,6 +160,7 @@ fn flat_target(ctx: &Context2, intercept_ball_loc: &Point3<f32>) -> Result<Path,
         flat_start_loc: ground_start_loc.to_2d(),
         flat_start_rot: me_to_flat * me.Physics.quat(),
         flat_target_loc: ground_target_loc.to_2d(),
+        ground_start_loc,
         ground_target_loc,
     })
 }
@@ -162,6 +168,7 @@ fn flat_target(ctx: &Context2, intercept_ball_loc: &Point3<f32>) -> Result<Path,
 struct Path {
     // World coordinates
     start_rot: UnitQuaternion<f32>,
+    target_loc: Point3<f32>,
     target_rot: UnitQuaternion<f32>,
 
     // Unroll transform
@@ -173,6 +180,7 @@ struct Path {
     flat_start_loc: Point2<f32>,
     flat_start_rot: UnitComplex<f32>,
     flat_target_loc: Point2<f32>,
+    ground_start_loc: Point3<f32>,
     ground_target_loc: Point3<f32>,
 }
 
@@ -224,8 +232,12 @@ fn calculate_approach(ctx: &Context2, eeg: &mut EEG, target_time: f32, path: &Pa
         (1.0, true)
     };
 
-    eeg.print_value("flat_target", path.flat_target_loc);
+    eeg.print_value("target", path.target_loc);
+    eeg.print_value("flat_loc", path.ground_start_loc);
+    eeg.print_value("flat_target", path.ground_target_loc);
+    eeg.print_distance("jump_distance", jump_distance);
     eeg.print_time("drive_time", drive_time);
+    eeg.print_time("jump_time", jump_time);
     eeg.print_time("total_time", target_time);
     eeg.print_distance("coast_offset", coast_offset);
     eeg.print_distance("throttle_offset", throttle_offset);
@@ -362,5 +374,23 @@ mod integration_tests {
 
         let packet = test.sniff_packet();
         assert!(packet.GameBall.Physics.vel().y >= 500.0);
+    }
+
+    #[test]
+    fn side_wall_easy_angle() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(3971.1199, -1644.1699, 1230.4299),
+                ball_vel: Vector3::new(-19.700998, 948.86096, 203.451),
+                car_loc: Point3::new(3673.13, -2857.3, 16.84),
+                car_rot: Rotation3::from_unreal_angles(-0.009273871, 1.6484088, -0.0004669602),
+                car_vel: Vector3::new(5.8809996, 379.32098, 11.741),
+                ..Default::default()
+            })
+            .behavior(WallHit::new())
+            .run_for_millis(2000);
+
+        let packet = test.sniff_packet();
+        assert!(packet.GameBall.Physics.vel().y >= 1000.0);
     }
 }

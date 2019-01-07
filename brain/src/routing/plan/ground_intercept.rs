@@ -1,8 +1,11 @@
 use crate::{
     behavior::strike::GroundedHit,
-    predict::naive_ground_intercept,
+    plan::ball::{BallFrame, BallTrajectory},
+    predict::{naive_ground_intercept, naive_ground_intercept_2},
     routing::{
-        models::{PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner},
+        models::{
+            CarState, PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner,
+        },
         plan::{
             ground_straight::GroundStraightPlanner, ground_turn::TurnPlanner,
             higher_order::ChainedPlanner,
@@ -47,26 +50,32 @@ impl RoutePlanner for GroundIntercept {
         );
 
         // Naive first pass to get a rough location.
-        let guess = naive_ground_intercept(
-            ctx.ball_prediction.iter(),
-            ctx.start.loc,
-            ctx.start.vel,
-            ctx.start.boost,
-            |ball| ball.loc.z < GroundedHit::MAX_BALL_Z && ball.vel.z < 25.0,
-        )
-        .ok_or_else(|| RoutePlanError::UnknownIntercept)?;
+        let guess = Self::calc_intercept(&ctx.start, ctx.ball_prediction)
+            .ok_or_else(|| RoutePlanError::UnknownIntercept)?;
 
-        dump.log_pretty(self, "guess ball loc", guess.ball_loc.to_2d());
+        dump.log_pretty(self, "guess ball loc", guess.loc.to_2d());
 
         guard!(ctx.start, IsSkidding, RoutePlanError::MustNotBeSkidding {
-            recover_target_loc: guess.car_loc.to_2d(),
+            recover_target_loc: guess.loc.to_2d(),
         });
 
-        let turn = TurnPlanner::new(guess.ball_loc.to_2d(), None).plan(ctx, dump)?;
+        let turn = TurnPlanner::new(guess.loc.to_2d(), None).plan(ctx, dump)?;
         let straight = GroundInterceptStraight {
             allow_dodging: self.allow_dodging,
         };
         Ok(ChainedPlanner::join_planner(turn, Some(Box::new(straight))))
+    }
+}
+
+impl GroundIntercept {
+    pub fn calc_intercept<'ball>(
+        start: &CarState,
+        ball_prediction: &'ball BallTrajectory,
+    ) -> Option<&'ball BallFrame> {
+        naive_ground_intercept_2(start, ball_prediction, |ball| {
+            ball.loc.z < GroundedHit::MAX_BALL_Z && ball.vel.z < 25.0
+        })
+        .map(|i| ball_prediction.at_time(i.time).unwrap())
     }
 }
 

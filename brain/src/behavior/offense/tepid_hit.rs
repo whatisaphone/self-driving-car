@@ -1,16 +1,21 @@
 use crate::{
     behavior::strike::{
-        GroundedHit, GroundedHitAimContext, GroundedHitTarget, GroundedHitTargetAdjust,
+        GroundedHit, GroundedHitAimContext, GroundedHitTarget, GroundedHitTargetAdjust, WallHit,
     },
     eeg::{color, Drawable, Event},
     plan::hit_angle::{feasible_hit_angle_away, feasible_hit_angle_toward},
-    routing::{behavior::FollowRoute, plan::GroundIntercept},
-    strategy::{Action, Behavior, Context, Priority},
+    routing::{
+        behavior::FollowRoute,
+        plan::{GroundIntercept, WallIntercept},
+    },
+    strategy::{Action, Behavior, Context, Context2, Priority},
     utils::{Wall, WallRayCalculator},
 };
+use arrayvec::ArrayVec;
 use common::prelude::*;
 use nalgebra::Point2;
 use nameof::name_of_type;
+use ordered_float::NotNan;
 use std::f32::consts::PI;
 
 pub struct TepidHit;
@@ -26,12 +31,55 @@ impl Behavior for TepidHit {
         name_of_type!(TepidHit)
     }
 
-    fn execute(&mut self, _ctx: &mut Context) -> Action {
-        Action::call(chain!(Priority::Idle, [
-            FollowRoute::new(GroundIntercept::new()),
-            GroundedHit::hit_towards(time_wasting_hit),
-        ]))
+    fn execute(&mut self, ctx: &mut Context) -> Action {
+        let (ctx, _eeg) = ctx.split();
+
+        let mut hits = ArrayVec::<[_; 4]>::new();
+        hits.push(ground(&ctx));
+        hits.push(wall(&ctx));
+
+        let hit = hits
+            .into_iter()
+            .flatten()
+            .min_by_key(|&(duration, ref _typ)| NotNan::new(duration).unwrap());
+
+        match hit {
+            Some((_, HitType::Wall)) => Action::call(chain!(Priority::Striking, [
+                FollowRoute::new(WallIntercept::new()),
+                WallHit::new(),
+            ])),
+            Some((_, HitType::Ground)) | None => Action::call(chain!(Priority::Striking, [
+                FollowRoute::new(GroundIntercept::new()),
+                GroundedHit::hit_towards(time_wasting_hit),
+            ])),
+        }
     }
+}
+
+fn ground(ctx: &Context2) -> Option<(f32, HitType)> {
+    GroundIntercept::calc_intercept(&ctx.me().into(), ctx.scenario.ball_prediction())
+        .map(|i| (i.t, HitType::Ground))
+}
+
+fn wall<'ball>(ctx: &Context2<'_, 'ball>) -> Option<(f32, HitType)> {
+    let intercept = some_or_else!(WallIntercept::calc_intercept(ctx), {
+        return None;
+    });
+    let push_angle = (intercept.loc.to_2d() - ctx.me().Physics.loc_2d())
+        .angle_to(&(ctx.game.enemy_goal().center_2d - ctx.game.own_goal().center_2d));
+    if push_angle >= PI / 3.0 {
+        return None;
+    }
+    if intercept.loc.x.abs() < ctx.game.field_max_x() - 500.0 {
+        return None; // Must be side wall, not front or back wall.
+    }
+    Some((intercept.t, HitType::Wall))
+}
+
+#[derive(Ord, PartialOrd, Eq, PartialEq)]
+enum HitType {
+    Ground,
+    Wall,
 }
 
 fn time_wasting_hit(ctx: &mut GroundedHitAimContext) -> Result<GroundedHitTarget, ()> {

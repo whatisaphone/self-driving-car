@@ -116,13 +116,21 @@ impl Clone for Box<RoutePlanner> {
     }
 }
 
-pub struct PlanningContext<'a> {
-    pub game: &'a Game<'a>,
+pub struct PlanningContext<'a: 's, 's> {
+    pub game: &'s Game<'a>,
     pub start: CarState,
-    pub ball_prediction: &'a BallTrajectory,
+    pub ball_prediction: &'s BallTrajectory,
 }
 
-impl<'a> PlanningContext<'a> {
+impl<'a: 's, 's> PlanningContext<'a, 's> {
+    pub fn from_context(ctx: &Context2<'a, 's>) -> PlanningContext<'a, 's> {
+        PlanningContext {
+            game: &ctx.game,
+            start: ctx.me().into(),
+            ball_prediction: ctx.scenario.ball_prediction(),
+        }
+    }
+
     pub fn plan(
         planner: &RoutePlanner,
         ctx: &mut Context,
@@ -135,11 +143,7 @@ impl<'a> PlanningContext<'a> {
         planner: &RoutePlanner,
         ctx: &Context2,
     ) -> Result<(RoutePlan, Vec<String>), ProvisionalExpandError<'a>> {
-        let context = PlanningContext {
-            game: &ctx.game,
-            start: ctx.me().into(),
-            ball_prediction: ctx.scenario.ball_prediction(),
-        };
+        let context = PlanningContext::from_context(ctx);
         Self::plan_2(planner, &context)
     }
 

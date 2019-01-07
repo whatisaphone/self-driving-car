@@ -10,7 +10,7 @@ use crate::{
             wall_turn::WallTurnPlanner,
         },
     },
-    strategy::Pitch,
+    strategy::{Context2, Pitch},
     utils::geometry::{ExtendF32, Plane},
 };
 use derive_new::new;
@@ -33,20 +33,36 @@ impl RoutePlanner for WallIntercept {
     ) -> Result<RoutePlan, RoutePlanError> {
         dump.log_start(self, &ctx.start);
 
-        let mut balls = ctx.ball_prediction.iter();
-        while let Some(ball) = balls.next() {
-            match try_intercept(ctx, ball) {
-                Ok(plan) => return Ok(plan),
-                Err(Skip::No) => continue,
-                Err(Skip::Yes) => {
-                    // Skip ahead to try to stay within the frame budget.
-                    skip_time(&mut balls, 0.125);
-                    continue;
-                }
+        let (_ball, plan) = calc_plan(ctx)?;
+        Ok(plan)
+    }
+}
+
+impl WallIntercept {
+    pub fn calc_intercept<'ball>(ctx: &Context2<'_, 'ball>) -> Option<&'ball BallFrame> {
+        match calc_plan(&PlanningContext::from_context(ctx)) {
+            Ok((ball, _plan)) => Some(ball),
+            Err(_) => None,
+        }
+    }
+}
+
+fn calc_plan<'ball>(
+    ctx: &PlanningContext<'_, 'ball>,
+) -> Result<(&'ball BallFrame, RoutePlan), RoutePlanError> {
+    let mut balls = ctx.ball_prediction.iter();
+    while let Some(ball) = balls.next() {
+        match try_intercept(ctx, ball) {
+            Ok(plan) => return Ok((ball, plan)),
+            Err(Skip::No) => continue,
+            Err(Skip::Yes) => {
+                // Skip ahead to try to stay within the frame budget.
+                skip_time(&mut balls, 0.125);
+                continue;
             }
         }
-        Err(RoutePlanError::UnknownIntercept)
     }
+    Err(RoutePlanError::UnknownIntercept)
 }
 
 fn try_intercept(ctx: &PlanningContext, ball: &BallFrame) -> Result<RoutePlan, Skip> {

@@ -12,7 +12,6 @@ impl InterceptMemory {
     const LOC_THRESHOLD: f32 = 200.0;
     const TIME_THRESHOLD: f32 = 0.1;
 
-    #[cfg(test)]
     pub fn new() -> Self {
         Self::default()
     }
