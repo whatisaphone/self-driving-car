@@ -301,11 +301,13 @@ impl SimJump {
         let force_time = time.min(rl::CAR_JUMP_FORCE_TIME);
         let v_0 = start.vel + start.roof_axis().unwrap() * rl::CAR_JUMP_IMPULSE_SPEED;
         let a = start.roof_axis().unwrap() + Vector3::z() * rl::GRAVITY;
-        let (loc, vel) = kinematic(start.loc, v_0, a, force_time);
+        let (d, vel) = kinematic(v_0, a, force_time);
+        let loc = start.loc + d;
 
         let coast_time = (force_time - rl::CAR_JUMP_FORCE_TIME).max(0.0);
         let a = Vector3::z() * rl::GRAVITY;
-        let (loc, vel) = kinematic(loc, vel, a, coast_time);
+        let (d, vel) = kinematic(vel, a, coast_time);
+        let loc = loc + d;
 
         CarState {
             loc,
