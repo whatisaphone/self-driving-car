@@ -12,7 +12,7 @@ use crate::{
     utils::{Wall, WallRayCalculator},
 };
 use arrayvec::ArrayVec;
-use common::prelude::*;
+use common::{prelude::*, PrettyPrint, Time};
 use nalgebra::Point2;
 use nameof::name_of_type;
 use ordered_float::NotNan;
@@ -32,7 +32,7 @@ impl Behavior for TepidHit {
     }
 
     fn execute(&mut self, ctx: &mut Context) -> Action {
-        let (ctx, _eeg) = ctx.split();
+        let (ctx, eeg) = ctx.split();
 
         let mut hits = ArrayVec::<[_; 4]>::new();
         hits.push(ground(&ctx));
@@ -41,7 +41,13 @@ impl Behavior for TepidHit {
         let hit = hits
             .into_iter()
             .flatten()
-            .min_by_key(|&(duration, ref _typ)| NotNan::new(duration).unwrap());
+            .min_by_key(|&(duration, ref typ)| {
+                eeg.log(
+                    self.name(),
+                    format!("{:?} would take {}", typ, Time(duration).pretty()),
+                );
+                NotNan::new(duration).unwrap()
+            });
 
         match hit {
             Some((_, HitType::Wall)) => Action::call(chain!(Priority::Striking, [
@@ -76,7 +82,7 @@ fn wall<'ball>(ctx: &Context2<'_, 'ball>) -> Option<(f32, HitType)> {
     Some((intercept.t, HitType::Wall))
 }
 
-#[derive(Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Ord, PartialOrd, Eq, PartialEq, Debug)]
 enum HitType {
     Ground,
     Wall,
