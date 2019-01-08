@@ -4,7 +4,6 @@ use common::prelude::*;
 use nalgebra::{UnitComplex, UnitQuaternion};
 use std::{
     env,
-    fmt::Write as FmtWrite,
     fs::File,
     io::{Read, Write},
     path::PathBuf,
@@ -27,25 +26,18 @@ fn main() {
             continue;
         }
 
-        let file = File::open(&path).unwrap();
-
         let basename = path
             .file_stem()
             .unwrap()
             .to_str()
             .unwrap()
             .replace(".", "_");
-        let legacy = basename == "jump";
-        let legacy2 = basename == "throttle_frames";
-        let r = csv::ReaderBuilder::new()
-            .has_headers(!legacy)
-            .from_reader(file);
+        let legacy = basename == "throttle_frames";
 
-        if legacy {
-            compile_csv_legacy(&basename, r, &mut out);
-        } else {
-            compile_csv(&basename, r, &mut out, legacy2);
-        }
+        let file = File::open(&path).unwrap();
+        let r = csv::ReaderBuilder::new().from_reader(file);
+
+        compile_csv(&basename, r, &mut out, legacy);
     }
 }
 
@@ -111,6 +103,7 @@ fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write, 
     write_array!("TIME_REV", "f32", time.iter().rev().map(|x| x.to_source()));
     write_array!("CAR_LOC_X", "f32", col!("player0_loc_x").map(floatify));
     write_array!("CAR_LOC_Y", "f32", col!("player0_loc_y").map(floatify));
+    write_array!("CAR_LOC_Z", "f32", col!("player0_loc_z").map(floatify));
     write_array!(
         "CAR_LOC_Y_REV",
         "f32",
@@ -130,93 +123,6 @@ fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write, 
     }}")
     .unwrap();
     writeln!(w, "}}\n").unwrap();
-}
-
-fn compile_csv_legacy(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write) {
-    let mut out_time = "    pub const TIME: &[f32] = &[\n".to_string();
-    let mut out_time_rev = "\n    ];\n\n".chars().rev().collect::<String>();
-    let mut out_car_loc_y = "    pub const CAR_LOC_Y: &[f32] = &[\n".to_string();
-    let mut out_car_loc_z = "    pub const CAR_LOC_Z: &[f32] = &[\n".to_string();
-    let mut out_car_vel_y = "    pub const CAR_VEL_Y: &[f32] = &[\n".to_string();
-    // Write some things backwards to avoid loading the entire CSV in memory.
-    // I have 32GB of RAM and I'm aware this is pretty ridiculous.
-    let mut out_car_vel_y_rev = "\n    ];\n\n".chars().rev().collect::<String>();
-
-    for row in csv.records() {
-        let row = row.unwrap();
-        let time = floatify(&row[0]);
-        let _ball_loc_x = floatify(&row[1]);
-        let _ball_loc_y = floatify(&row[2]);
-        let _ball_loc_z = floatify(&row[3]);
-        let _ball_rot_pitch = floatify(&row[4]);
-        let _ball_rot_yaw = floatify(&row[5]);
-        let _ball_rot_roll = floatify(&row[6]);
-        let _ball_vel_x = floatify(&row[7]);
-        let _ball_vel_y = floatify(&row[8]);
-        let _ball_vel_z = floatify(&row[9]);
-        let _ball_ang_vel_x = floatify(&row[10]);
-        let _ball_ang_vel_y = floatify(&row[11]);
-        let _ball_ang_vel_z = floatify(&row[12]);
-        let _car_loc_x = floatify(&row[13]);
-        let car_loc_y = floatify(&row[14]);
-        let car_loc_z = floatify(&row[15]);
-        let _car_rot_pitch = floatify(&row[16]);
-        let _car_rot_yaw = floatify(&row[17]);
-        let _car_rot_roll = floatify(&row[18]);
-        let _car_vel_x = floatify(&row[19]);
-        let car_vel_y = floatify(&row[20]);
-        let _car_vel_z = floatify(&row[21]);
-        let _car_ang_vel_x = floatify(&row[22]);
-        let _car_ang_vel_y = floatify(&row[23]);
-        let _car_ang_vel_z = floatify(&row[24]);
-
-        write!(&mut out_time, "        {},\n", time).unwrap();
-        write!(
-            &mut out_time_rev,
-            "\n,{}        ",
-            time.chars().rev().collect::<String>()
-        )
-        .unwrap();
-        write!(&mut out_car_loc_y, "        {},\n", car_loc_y).unwrap();
-        write!(&mut out_car_loc_z, "        {},\n", car_loc_z).unwrap();
-        write!(&mut out_car_vel_y, "        {},\n", car_vel_y).unwrap();
-        write!(
-            &mut out_car_vel_y_rev,
-            "\n,{}        ",
-            car_vel_y.chars().rev().collect::<String>()
-        )
-        .unwrap();
-    }
-
-    write!(&mut out_time, "\n    ];\n\n").unwrap();
-    out_time_rev
-        .write_str(
-            &"    pub const TIME_REV: &[f32] = &[\n"
-                .chars()
-                .rev()
-                .collect::<String>(),
-        )
-        .unwrap();
-    write!(&mut out_car_loc_y, "\n    ];\n\n").unwrap();
-    write!(&mut out_car_loc_z, "\n    ];\n\n").unwrap();
-    write!(&mut out_car_vel_y, "\n    ];\n\n").unwrap();
-    out_car_vel_y_rev
-        .write_str(
-            &"    pub const CAR_VEL_Y_REV: &[f32] = &[\n"
-                .chars()
-                .rev()
-                .collect::<String>(),
-        )
-        .unwrap();
-
-    write!(w, "pub mod {} {{\n", name).unwrap();
-    write!(w, "{}", out_time).unwrap();
-    write!(w, "{}", out_time_rev.chars().rev().collect::<String>()).unwrap();
-    write!(w, "{}", out_car_loc_y).unwrap();
-    write!(w, "{}", out_car_loc_z).unwrap();
-    write!(w, "{}", out_car_vel_y).unwrap();
-    write!(w, "{}", out_car_vel_y_rev.chars().rev().collect::<String>()).unwrap();
-    write!(w, "}}\n").unwrap();
 }
 
 trait ToSource {

@@ -94,7 +94,7 @@ fn game_state_default() -> rlbot::state::DesiredGameState {
             rlbot::state::DesiredCarState::new()
                 .physics(
                     rlbot::state::DesiredPhysics::new()
-                        .location(Point3::new(2000.0, 0.0, 17.01))
+                        .location(Point3::new(0.0, 0.0, 17.01))
                         .rotation(
                             rlbot::state::RotatorPartial::new()
                                 .pitch(0.0)
@@ -334,6 +334,37 @@ impl Scenario for PowerslideTurn {
                     Ok(ScenarioStepResult::Finish)
                 }
             }
+        }
+    }
+}
+
+pub struct Jump;
+
+impl Jump {
+    pub fn new() -> Self {
+        Jump
+    }
+}
+
+impl SimpleScenario for Jump {
+    fn name(&self) -> String {
+        "jump".to_string()
+    }
+
+    fn step(
+        &mut self,
+        time: f32,
+        _packet: &rlbot::ffi::LiveDataPacket,
+    ) -> SimpleScenarioStepResult {
+        if time < 1.0 {
+            SimpleScenarioStepResult::Ignore(Default::default())
+        } else if time < 3.5 {
+            SimpleScenarioStepResult::Write(rlbot::ffi::PlayerInput {
+                Jump: true,
+                ..Default::default()
+            })
+        } else {
+            SimpleScenarioStepResult::Finish
         }
     }
 }

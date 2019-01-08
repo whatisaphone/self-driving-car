@@ -1,7 +1,7 @@
 use oven::data;
 
-pub const JUMP_MAX_Z: f32 = 241.45967;
-const JUMP_MAX_Z_TABLE_INDEX: usize = 220;
+pub const JUMP_MAX_Z: f32 = 241.45999;
+const JUMP_MAX_Z_TABLE_INDEX: usize = 106;
 
 pub fn time_to_z(z: f32) -> Option<f32> {
     if z <= data::jump::CAR_LOC_Z[0] {
@@ -44,12 +44,12 @@ mod tests {
     #[test]
     fn time_to_z() {
         assert_eq!(
-            car_single_jump::time_to_z(106.15358),
-            Some(10.889706 - 10.652489)
+            car_single_jump::time_to_z(105.31),
+            Some(11.066667 - 10.833333)
         );
         assert_eq!(
             car_single_jump::time_to_z(car_single_jump::JUMP_MAX_Z),
-            Some(11.537092 - 10.652489)
+            Some(11.716666 - 10.833333)
         );
         assert_eq!(car_single_jump::time_to_z(250.0), None);
     }

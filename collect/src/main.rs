@@ -19,7 +19,7 @@ pub fn main() -> Result<(), Box<Error>> {
 
     start_match(&rlbot)?;
 
-    run_scenario(&rlbot, scenarios::Coast::new())?;
+    run_scenario(&rlbot, scenarios::Jump::new())?;
 
     Ok(())
 }
