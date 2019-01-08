@@ -73,7 +73,7 @@ impl GroundIntercept {
         ball_prediction: &'ball BallTrajectory,
     ) -> Option<&'ball BallFrame> {
         naive_ground_intercept_2(start, ball_prediction, |ball| {
-            ball.loc.z < GroundedHit::MAX_BALL_Z && ball.vel.z < 25.0
+            ball.loc.z < GroundedHit::MAX_BALL_Z
         })
         .map(|i| ball_prediction.at_time(i.time).unwrap())
     }
@@ -107,7 +107,7 @@ impl RoutePlanner for GroundInterceptStraight {
             ctx.start.loc,
             ctx.start.vel,
             ctx.start.boost,
-            |ball| ball.loc.z < GroundedHit::MAX_BALL_Z && ball.vel.z < 25.0,
+            |ball| ball.loc.z < GroundedHit::MAX_BALL_Z,
         )
         .ok_or_else(|| RoutePlanError::UnknownIntercept)?;
 
