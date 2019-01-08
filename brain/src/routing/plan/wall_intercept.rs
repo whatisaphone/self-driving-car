@@ -84,11 +84,11 @@ fn try_intercept(ctx: &PlanningContext, ball: &BallFrame) -> Result<RoutePlan, S
     };
     let expansion = ProvisionalPlanExpansion::new(&*plan.segment, &tail);
 
-    if expansion.duration() < ball.t {
-        Err(Skip::Yes)
-    } else {
-        Ok(plan)
+    if expansion.duration() >= ball.t {
+        return Err(Skip::Yes);
     }
+
+    Ok(plan)
 }
 
 enum Skip {
