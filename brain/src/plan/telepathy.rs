@@ -3,7 +3,7 @@ use common::prelude::*;
 use nalgebra::{Unit, Vector2};
 use std::f32::consts::PI;
 
-pub fn predict_enemy_hit_direction(ctx: &mut Context) -> Option<Unit<Vector2<f32>>> {
+pub fn predict_enemy_hit_direction(ctx: &mut Context<'_>) -> Option<Unit<Vector2<f32>>> {
     let (enemy, intercept) = some_or_else!(ctx.scenario.enemy_intercept(), {
         return None;
     });

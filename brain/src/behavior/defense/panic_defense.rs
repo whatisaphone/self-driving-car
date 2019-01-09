@@ -45,7 +45,7 @@ impl Behavior for PanicDefense {
         name_of_type!(PanicDefense)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
         ctx.eeg.track(Event::PanicDefense);
 
         return_some!(self.same_ball_trajectory.execute(ctx));
@@ -83,11 +83,11 @@ impl Behavior for PanicDefense {
 }
 
 impl PanicDefense {
-    fn blitz_loc(ctx: &mut Context, aim_loc: Point2<f32>) -> Point2<f32> {
+    fn blitz_loc(ctx: &mut Context<'_>, aim_loc: Point2<f32>) -> Point2<f32> {
         Point2::new(800.0 * -aim_loc.x.signum(), ctx.game.own_goal().center_2d.y)
     }
 
-    fn next_phase(&mut self, ctx: &mut Context) -> Option<Phase> {
+    fn next_phase(&mut self, ctx: &mut Context<'_>) -> Option<Phase> {
         let me = ctx.me();
 
         if let Phase::Start = self.phase {
@@ -156,7 +156,7 @@ impl PanicDefense {
     }
 }
 
-fn calc_aim_hint(ctx: &mut Context) -> Point2<f32> {
+fn calc_aim_hint(ctx: &mut Context<'_>) -> Point2<f32> {
     // When we reach goal, which half of the field will the ball be on?
     let own_goal = ctx.game.own_goal().center_2d;
     let time = rough_time_drive_to_loc(ctx.me(), own_goal);

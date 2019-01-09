@@ -24,7 +24,7 @@ const SLOWEST_TURNING_SPEED: f32 = 900.0;
 #[derive(Clone, new)]
 pub struct TurnPlanner {
     target_face: Point2<f32>,
-    next: Option<Box<RoutePlanner>>,
+    next: Option<Box<dyn RoutePlanner>>,
 }
 
 impl RoutePlanner for TurnPlanner {
@@ -34,8 +34,8 @@ impl RoutePlanner for TurnPlanner {
 
     fn plan(
         &self,
-        ctx: &PlanningContext,
-        dump: &mut PlanningDump,
+        ctx: &PlanningContext<'_, '_>,
+        dump: &mut PlanningDump<'_>,
     ) -> Result<RoutePlan, RoutePlanError> {
         dump.log_start(self, &ctx.start);
         dump.log_pretty(self, "target_face", self.target_face);
@@ -59,7 +59,7 @@ impl RoutePlanner for TurnPlanner {
 #[derive(Clone, new)]
 pub struct PathingUnawareTurnPlanner {
     target_face: Point2<f32>,
-    next: Option<Box<RoutePlanner>>,
+    next: Option<Box<dyn RoutePlanner>>,
 }
 
 impl RoutePlanner for PathingUnawareTurnPlanner {
@@ -69,8 +69,8 @@ impl RoutePlanner for PathingUnawareTurnPlanner {
 
     fn plan(
         &self,
-        ctx: &PlanningContext,
-        dump: &mut PlanningDump,
+        ctx: &PlanningContext<'_, '_>,
+        dump: &mut PlanningDump<'_>,
     ) -> Result<RoutePlan, RoutePlanError> {
         dump.log_start(self, &ctx.start);
         dump.log_pretty(self, "target_face", self.target_face);
@@ -106,7 +106,7 @@ impl PathingUnawareTurnPlanner {
 #[derive(Clone, new)]
 pub struct SimpleTurnPlanner {
     target_loc: Point2<f32>,
-    next: Option<Box<RoutePlanner>>,
+    next: Option<Box<dyn RoutePlanner>>,
 }
 
 impl RoutePlanner for SimpleTurnPlanner {
@@ -116,8 +116,8 @@ impl RoutePlanner for SimpleTurnPlanner {
 
     fn plan(
         &self,
-        ctx: &PlanningContext,
-        dump: &mut PlanningDump,
+        ctx: &PlanningContext<'_, '_>,
+        dump: &mut PlanningDump<'_>,
     ) -> Result<RoutePlan, RoutePlanError> {
         dump.log_start(self, &ctx.start);
 
@@ -152,7 +152,7 @@ impl RoutePlanner for SimpleTurnPlanner {
 #[derive(Clone, new)]
 struct ArcTowards {
     target_loc: Point2<f32>,
-    next: Option<Box<RoutePlanner>>,
+    next: Option<Box<dyn RoutePlanner>>,
 }
 
 impl RoutePlanner for ArcTowards {
@@ -162,8 +162,8 @@ impl RoutePlanner for ArcTowards {
 
     fn plan(
         &self,
-        ctx: &PlanningContext,
-        dump: &mut PlanningDump,
+        ctx: &PlanningContext<'_, '_>,
+        dump: &mut PlanningDump<'_>,
     ) -> Result<RoutePlan, RoutePlanError> {
         dump.log_start(self, &ctx.start);
 

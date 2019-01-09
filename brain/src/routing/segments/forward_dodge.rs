@@ -43,11 +43,11 @@ impl SegmentPlan for ForwardDodge {
         self.dodge.duration()
     }
 
-    fn run(&self) -> Box<SegmentRunner> {
+    fn run(&self) -> Box<dyn SegmentRunner> {
         Box::new(ForwardDodgeRunner::new(self.clone()))
     }
 
-    fn draw(&self, ctx: &mut Context) {
+    fn draw(&self, ctx: &mut Context<'_>) {
         ctx.eeg.draw(Drawable::Line(
             self.start.loc.to_2d(),
             self.end().loc.to_2d(),
@@ -57,7 +57,7 @@ impl SegmentPlan for ForwardDodge {
 }
 
 struct ForwardDodgeRunner {
-    behavior: Box<Behavior>,
+    behavior: Box<dyn Behavior>,
 }
 
 impl ForwardDodgeRunner {
@@ -100,7 +100,7 @@ impl SegmentRunner for ForwardDodgeRunner {
         name_of_type!(ForwardDodgeRunner)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> SegmentRunAction {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction {
         match self.behavior.execute(ctx) {
             Action::Yield(i) => SegmentRunAction::Yield(i),
             Action::Call(_) => panic!("Action::Call not supported in SegmentRunner"),

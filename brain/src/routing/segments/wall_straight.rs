@@ -77,11 +77,11 @@ impl SegmentPlan for WallStraight {
         self.duration
     }
 
-    fn run(&self) -> Box<SegmentRunner> {
+    fn run(&self) -> Box<dyn SegmentRunner> {
         Box::new(WallStraightRunner)
     }
 
-    fn draw(&self, _ctx: &mut Context) {}
+    fn draw(&self, _ctx: &mut Context<'_>) {}
 }
 
 struct WallStraightRunner;
@@ -91,7 +91,7 @@ impl SegmentRunner for WallStraightRunner {
         name_of_type!(WallStraightRunner)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> SegmentRunAction {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction {
         let (_ctx, eeg) = ctx.split();
 
         // Assume the subsequent action will do this for us.

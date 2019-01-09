@@ -5,8 +5,8 @@ use crate::{
 use nameof::name_of_type;
 
 pub struct Runner {
-    strategy: Box<Strategy>,
-    current: Option<Box<Behavior>>,
+    strategy: Box<dyn Strategy>,
+    current: Option<Box<dyn Behavior>>,
 }
 
 impl Runner {
@@ -25,7 +25,7 @@ impl Runner {
         }
     }
 
-    pub fn execute(&mut self, ctx: &mut Context) -> rlbot::ffi::PlayerInput {
+    pub fn execute(&mut self, ctx: &mut Context<'_>) -> rlbot::ffi::PlayerInput {
         self.exec(0, ctx)
     }
 }
@@ -35,13 +35,13 @@ impl Behavior for Runner {
         name_of_type!(Runner)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
         Action::Yield(self.exec(0, ctx))
     }
 }
 
 impl Runner {
-    fn exec(&mut self, depth: u32, ctx: &mut Context) -> rlbot::ffi::PlayerInput {
+    fn exec(&mut self, depth: u32, ctx: &mut Context<'_>) -> rlbot::ffi::PlayerInput {
         if depth > 5 {
             ctx.eeg.log(self.name(), "infinite loop?");
             return Default::default();
@@ -70,7 +70,7 @@ impl Runner {
         }
     }
 
-    fn choose_behavior(&mut self, ctx: &mut Context) -> &mut Behavior {
+    fn choose_behavior(&mut self, ctx: &mut Context<'_>) -> &mut dyn Behavior {
         if self.current.is_none() {
             self.current = Some(self.strategy.baseline(ctx));
             ctx.eeg.log(

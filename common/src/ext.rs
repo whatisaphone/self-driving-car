@@ -264,11 +264,11 @@ impl<N: Real> ExtendUnitVector2<N> for Unit<Vector2<N>> {
 }
 
 pub trait ExtendRLBot {
-    fn get_field_info(&self) -> Result<rlbot::ffi::FieldInfo, Box<Error>>;
+    fn get_field_info(&self) -> Result<rlbot::ffi::FieldInfo, Box<dyn Error>>;
 }
 
 impl ExtendRLBot for rlbot::RLBot {
-    fn get_field_info(&self) -> Result<rlbot::ffi::FieldInfo, Box<Error>> {
+    fn get_field_info(&self) -> Result<rlbot::ffi::FieldInfo, Box<dyn Error>> {
         let mut field_info = unsafe { mem::uninitialized() };
         self.update_field_info(&mut field_info)?;
         Ok(field_info)

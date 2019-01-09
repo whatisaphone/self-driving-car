@@ -1,4 +1,6 @@
+#![warn(future_incompatible, rust_2018_compatibility, rust_2018_idioms, unused)]
 #![cfg_attr(feature = "strict", deny(warnings))]
+#![deny(clippy::all)]
 
 use common::prelude::*;
 use nalgebra::{UnitComplex, UnitQuaternion};

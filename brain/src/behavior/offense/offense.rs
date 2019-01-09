@@ -25,7 +25,7 @@ impl Behavior for Offense {
         name_of_type!(Offense)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
         ctx.eeg.track(Event::Offense);
 
         if can_we_shoot(ctx) {
@@ -51,7 +51,7 @@ impl Behavior for Offense {
     }
 }
 
-fn can_we_shoot(ctx: &mut Context) -> bool {
+fn can_we_shoot(ctx: &mut Context<'_>) -> bool {
     let me = ctx.me();
 
     if playing_goalie(ctx.game, ctx.scenario.ball_prediction().start()) {
@@ -93,14 +93,14 @@ fn can_we_shoot(ctx: &mut Context) -> bool {
     true
 }
 
-fn playing_goalie(game: &Game, ball: &BallFrame) -> bool {
+fn playing_goalie(game: &Game<'_>, ball: &BallFrame) -> bool {
     let safe = game.own_goal().center_2d;
     let danger = game.enemy_goal().center_2d;
     let defensiveness = (ball.loc.to_2d() - danger).norm() / (ball.loc.to_2d() - safe).norm();
     defensiveness >= 5.0
 }
 
-fn slow_play(ctx: &mut Context) -> Option<Action> {
+fn slow_play(ctx: &mut Context<'_>) -> Option<Action> {
     // Only slow play if we have enough time.
     if ctx.scenario.possession() < 2.0 {
         return None;
@@ -143,7 +143,7 @@ fn slow_play(ctx: &mut Context) -> Option<Action> {
     ))
 }
 
-fn readjust_for_shot(ctx: &mut Context, intercept_time: f32) -> Option<Action> {
+fn readjust_for_shot(ctx: &mut Context<'_>, intercept_time: f32) -> Option<Action> {
     let ball_loc = ctx
         .scenario
         .ball_prediction()
@@ -167,7 +167,7 @@ fn readjust_for_shot(ctx: &mut Context, intercept_time: f32) -> Option<Action> {
     ))
 }
 
-fn get_boost(ctx: &mut Context) -> Option<Box<Behavior>> {
+fn get_boost(ctx: &mut Context<'_>) -> Option<Box<dyn Behavior>> {
     if ctx.me().Boost > 50 {
         return None;
     }

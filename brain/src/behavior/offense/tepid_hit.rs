@@ -31,7 +31,7 @@ impl Behavior for TepidHit {
         name_of_type!(TepidHit)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
         let (ctx, eeg) = ctx.split();
 
         let mut hits = ArrayVec::<[_; 4]>::new();
@@ -62,7 +62,7 @@ impl Behavior for TepidHit {
     }
 }
 
-fn ground(ctx: &Context2) -> Option<(f32, HitType)> {
+fn ground(ctx: &Context2<'_, '_>) -> Option<(f32, HitType)> {
     GroundIntercept::calc_intercept(&ctx.me().into(), ctx.scenario.ball_prediction())
         .map(|i| (i.t, HitType::Ground))
 }
@@ -88,7 +88,7 @@ enum HitType {
     Wall,
 }
 
-fn time_wasting_hit(ctx: &mut GroundedHitAimContext) -> Result<GroundedHitTarget, ()> {
+fn time_wasting_hit(ctx: &mut GroundedHitAimContext<'_, '_>) -> Result<GroundedHitTarget, ()> {
     let me_loc = ctx.car.Physics.loc_2d();
     let ball_loc = ctx.intercept_ball_loc.to_2d();
     let offense_aim = ctx.game.enemy_back_wall_center();
@@ -124,7 +124,7 @@ fn time_wasting_hit(ctx: &mut GroundedHitAimContext) -> Result<GroundedHitTarget
     .dodge(!is_chippable(ctx, aim_loc)))
 }
 
-fn is_chippable(ctx: &mut GroundedHitAimContext, aim_loc: Point2<f32>) -> bool {
+fn is_chippable(ctx: &mut GroundedHitAimContext<'_, '_>, aim_loc: Point2<f32>) -> bool {
     let shot_angle = ctx
         .car
         .Physics

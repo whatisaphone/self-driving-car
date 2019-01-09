@@ -16,7 +16,7 @@ lazy_static! {
 
 // env_logger does not expose these bits of the default formatter for
 // customization, but at least we have copy and paste :^)
-pub fn format(buf: &mut Formatter, record: &Record) -> io::Result<()> {
+pub fn format(buf: &mut Formatter, record: &Record<'_>) -> io::Result<()> {
     let level = record.level();
     let mut level_style = buf.style();
     match level {

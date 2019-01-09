@@ -83,11 +83,11 @@ impl SegmentPlan for Turn {
         self.radius * self.sweep.abs() / assume_speed
     }
 
-    fn run(&self) -> Box<SegmentRunner> {
+    fn run(&self) -> Box<dyn SegmentRunner> {
         Box::new(Turner::new(self.clone()))
     }
 
-    fn draw(&self, ctx: &mut Context) {
+    fn draw(&self, ctx: &mut Context<'_>) {
         let theta1 = Vector2::x().angle_to(&(self.start.loc - self.center));
         let theta2 = theta1 + self.sweep;
         ctx.eeg.draw(Drawable::Arc(
@@ -115,7 +115,7 @@ impl SegmentRunner for Turner {
         name_of_type!(Turner)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> SegmentRunAction {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction {
         let me = ctx.me();
         let me_loc = me.Physics.loc_2d();
         let me_forward = me.Physics.forward_axis_2d();

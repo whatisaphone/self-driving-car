@@ -52,11 +52,11 @@ impl SegmentPlan for JumpAndDodge {
         JUMP_TIME + WAIT_TIME + FLOAT_TIME
     }
 
-    fn run(&self) -> Box<SegmentRunner> {
+    fn run(&self) -> Box<dyn SegmentRunner> {
         Box::new(JumpAndDodgeRunner::new(self.clone()))
     }
 
-    fn draw(&self, ctx: &mut Context) {
+    fn draw(&self, ctx: &mut Context<'_>) {
         ctx.eeg.draw(Drawable::Line(
             self.start.loc.to_2d(),
             self.end().loc.to_2d(),
@@ -66,7 +66,7 @@ impl SegmentPlan for JumpAndDodge {
 }
 
 struct JumpAndDodgeRunner {
-    behavior: Box<Behavior>,
+    behavior: Box<dyn Behavior>,
 }
 
 impl JumpAndDodgeRunner {
@@ -110,7 +110,7 @@ impl SegmentRunner for JumpAndDodgeRunner {
         name_of_type!(JumpAndDodgeRunner)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> SegmentRunAction {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction {
         match self.behavior.execute(ctx) {
             Action::Yield(i) => SegmentRunAction::Yield(i),
             Action::Call(_) => panic!("Action::Call not supported in SegmentRunner"),

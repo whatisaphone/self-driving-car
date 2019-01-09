@@ -6,15 +6,18 @@ const PHYSICS_TPS: f32 = 120.0;
 
 pub fn get_packet_and_inject_rigid_body_tick(
     rlbot: &rlbot::RLBot,
-    rigid_body_tick: rlbot::flat::RigidBodyTick,
-) -> Result<rlbot::ffi::LiveDataPacket, Box<Error>> {
+    rigid_body_tick: rlbot::flat::RigidBodyTick<'_>,
+) -> Result<rlbot::ffi::LiveDataPacket, Box<dyn Error>> {
     let mut packet = unsafe { ::std::mem::uninitialized() };
     rlbot.update_live_data_packet(&mut packet)?;
     physicsify(&mut packet, rigid_body_tick);
     Ok(packet)
 }
 
-pub fn physicsify(packet: &mut rlbot::ffi::LiveDataPacket, physics: rlbot::flat::RigidBodyTick) {
+pub fn physicsify(
+    packet: &mut rlbot::ffi::LiveDataPacket,
+    physics: rlbot::flat::RigidBodyTick<'_>,
+) {
     let ball = physics.ball().unwrap();
     let ball_state = ball.state().unwrap();
     packet.GameInfo.TimeSeconds = ball_state.frame() as f32 / PHYSICS_TPS;
@@ -25,7 +28,7 @@ pub fn physicsify(packet: &mut rlbot::ffi::LiveDataPacket, physics: rlbot::flat:
     }
 }
 
-fn set_physics(dest: &mut rlbot::ffi::Physics, source: rlbot::flat::RigidBodyState) {
+fn set_physics(dest: &mut rlbot::ffi::Physics, source: rlbot::flat::RigidBodyState<'_>) {
     dest.Location = vector3(source.location().unwrap());
     dest.Rotation = rotator(source.rotation().unwrap());
     dest.Velocity = vector3(source.velocity().unwrap());

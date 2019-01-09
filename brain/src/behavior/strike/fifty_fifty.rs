@@ -22,7 +22,7 @@ impl Behavior for FiftyFifty {
         name_of_type!(FiftyFifty)
     }
 
-    fn execute(&mut self, _ctx: &mut Context) -> Action {
+    fn execute(&mut self, _ctx: &mut Context<'_>) -> Action {
         Action::call(While::new(
             WeDontWinTheRace,
             Chain::new(Priority::Idle, vec![

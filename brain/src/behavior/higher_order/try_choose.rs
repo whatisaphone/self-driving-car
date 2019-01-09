@@ -8,14 +8,14 @@ use nameof::name_of_type;
 /// Run the first `child` that does not immediately return or abort.
 pub struct TryChoose {
     priority: Priority,
-    choices: Vec<Box<Behavior>>,
+    choices: Vec<Box<dyn Behavior>>,
     chosen_index: Option<usize>,
     choice_names: String,
     blurb: String,
 }
 
 impl TryChoose {
-    pub fn new(priority: Priority, choices: Vec<Box<Behavior>>) -> Self {
+    pub fn new(priority: Priority, choices: Vec<Box<dyn Behavior>>) -> Self {
         let (choice_names, blurb) = Self::blurb(choices.iter());
         Self {
             priority,
@@ -26,7 +26,7 @@ impl TryChoose {
         }
     }
 
-    fn blurb<'a>(children: impl Iterator<Item = &'a Box<Behavior>>) -> (String, String) {
+    fn blurb<'a>(children: impl Iterator<Item = &'a Box<dyn Behavior>>) -> (String, String) {
         let choice_names = children.map(|b| b.name()).join(", ");
         let blurb = format!("{} ({})", name_of_type!(TryChoose), choice_names);
         (choice_names, blurb)
@@ -46,7 +46,7 @@ impl Behavior for TryChoose {
         self.priority
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
         ctx.eeg
             .draw(Drawable::print(self.choice_names.as_str(), color::GREEN));
 

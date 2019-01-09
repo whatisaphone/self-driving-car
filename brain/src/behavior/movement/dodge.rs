@@ -28,7 +28,7 @@ impl Behavior for Dodge {
         name_of_type!(Dodge)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
         if ctx.me().OnGround {
             ctx.eeg.log(self.name(), "can't dodge while on ground");
             return Action::Abort;

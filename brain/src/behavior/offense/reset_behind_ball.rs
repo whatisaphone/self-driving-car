@@ -40,7 +40,7 @@ impl Behavior for ResetBehindBall {
         name_of_type!(ResetBehindBall)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
         let target_loc = self.get_sane_drive_loc(ctx);
         let straight = GroundDrive::new(target_loc).end_chop(0.5);
         let turn = TurnPlanner::new(self.loc, None);
@@ -50,7 +50,7 @@ impl Behavior for ResetBehindBall {
 }
 
 impl ResetBehindBall {
-    fn get_sane_drive_loc(&self, ctx: &mut Context) -> Point2<f32> {
+    fn get_sane_drive_loc(&self, ctx: &mut Context<'_>) -> Point2<f32> {
         let mut target_loc =
             self.loc + (self.loc - ctx.game.enemy_goal().center_2d).normalize() * self.distance;
 

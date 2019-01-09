@@ -41,7 +41,7 @@ impl Behavior for WallHit {
         Priority::Strike
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
         let (ref ctx, ref mut eeg) = ctx.split();
 
         if !ctx.me().OnGround {
@@ -82,7 +82,7 @@ impl Behavior for WallHit {
     }
 }
 
-fn intercept<'ctx>(ctx: &'ctx Context2) -> Option<&'ctx BallFrame> {
+fn intercept<'ctx>(ctx: &'ctx Context2<'_, '_>) -> Option<&'ctx BallFrame> {
     for ball in ctx.scenario.ball_prediction().iter() {
         if let Ok(()) = check_intercept(&ctx, ball) {
             return Some(ball);
@@ -91,7 +91,7 @@ fn intercept<'ctx>(ctx: &'ctx Context2) -> Option<&'ctx BallFrame> {
     None
 }
 
-fn check_intercept(ctx: &Context2, ball: &BallFrame) -> Result<(), ()> {
+fn check_intercept(ctx: &Context2<'_, '_>, ball: &BallFrame) -> Result<(), ()> {
     const RADII: f32 = 200.0; // TODO: tune
 
     let me = ctx.me();
@@ -124,7 +124,7 @@ fn check_intercept(ctx: &Context2, ball: &BallFrame) -> Result<(), ()> {
     Ok(())
 }
 
-fn flat_target(ctx: &Context2, intercept_ball_loc: &Point3<f32>) -> Result<Path, ()> {
+fn flat_target(ctx: &Context2<'_, '_>, intercept_ball_loc: &Point3<f32>) -> Result<Path, ()> {
     let me = ctx.me();
     let me_surface = ctx.game.pitch().closest_plane(&me.Physics.loc());
     let intercept_surface = ctx.game.pitch().closest_plane(&intercept_ball_loc);
@@ -185,7 +185,12 @@ struct Path {
 }
 
 #[allow(clippy::if_same_then_else)]
-fn calculate_approach(ctx: &Context2, eeg: &mut EEG, target_time: f32, path: &Path) -> Step {
+fn calculate_approach(
+    ctx: &Context2<'_, '_>,
+    eeg: &mut EEG,
+    target_time: f32,
+    path: &Path,
+) -> Step {
     let jump_distance = path.ground_target_loc.z - rl::OCTANE_NEUTRAL_Z;
     let jump_time = car_jump::jump_duration(&path.start_rot, jump_distance).unwrap_or(0.0);
     let drive_time = target_time - jump_time;

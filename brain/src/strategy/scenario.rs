@@ -13,7 +13,7 @@ use std::f32::{self, consts::PI};
 pub struct Scenario<'a> {
     packet: &'a rlbot::ffi::LiveDataPacket,
     pub game: &'a Game<'a>,
-    ball_predictor: &'a BallPredictor,
+    ball_predictor: &'a dyn BallPredictor,
     ball_prediction: LazyCell<BallTrajectory>,
     me_intercept: LazyCell<Option<NaiveIntercept>>,
     enemy_intercept: LazyCell<Option<(&'a rlbot::ffi::PlayerInfo, NaiveIntercept)>>,
@@ -28,8 +28,8 @@ impl<'a> Scenario<'a> {
     pub const POSSESSION_SATURATED: f32 = 5.0;
 
     pub fn new(
-        game: &'a Game,
-        ball_predictor: &'a BallPredictor,
+        game: &'a Game<'_>,
+        ball_predictor: &'a dyn BallPredictor,
         packet: &'a rlbot::ffi::LiveDataPacket,
     ) -> Scenario<'a> {
         Scenario {

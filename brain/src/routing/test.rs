@@ -31,8 +31,8 @@ where
 
     fn plan(
         &self,
-        _ctx: &PlanningContext,
-        _dump: &mut PlanningDump,
+        _ctx: &PlanningContext<'_, '_>,
+        _dump: &mut PlanningDump<'_>,
     ) -> Result<RoutePlan, RoutePlanError> {
         Ok(RoutePlan {
             segment: Box::new(self.plan.clone()),

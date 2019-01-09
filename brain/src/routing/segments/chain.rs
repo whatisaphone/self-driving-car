@@ -8,7 +8,7 @@ use std::collections::VecDeque;
 
 #[derive(Clone, new)]
 pub struct Chain {
-    segments: Vec<Box<SegmentPlan>>,
+    segments: Vec<Box<dyn SegmentPlan>>,
 }
 
 impl SegmentPlan for Chain {
@@ -28,13 +28,13 @@ impl SegmentPlan for Chain {
         self.segments.iter().map(|s| s.duration()).sum()
     }
 
-    fn run(&self) -> Box<SegmentRunner> {
+    fn run(&self) -> Box<dyn SegmentRunner> {
         Box::new(Chainer::new(
             self.segments.iter().map(|s| s.run()).collect(),
         ))
     }
 
-    fn draw(&self, ctx: &mut Context) {
+    fn draw(&self, ctx: &mut Context<'_>) {
         for segment in &self.segments {
             segment.draw(ctx);
         }
@@ -43,7 +43,7 @@ impl SegmentPlan for Chain {
 
 #[derive(new)]
 struct Chainer {
-    segments: VecDeque<Box<SegmentRunner>>,
+    segments: VecDeque<Box<dyn SegmentRunner>>,
 }
 
 impl SegmentRunner for Chainer {
@@ -51,7 +51,7 @@ impl SegmentRunner for Chainer {
         name_of_type!(Chainer)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> SegmentRunAction {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction {
         let action = self.segments.front_mut().unwrap().execute(ctx);
         match action {
             SegmentRunAction::Yield(i) => return SegmentRunAction::Yield(i),

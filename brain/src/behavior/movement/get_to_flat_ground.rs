@@ -32,7 +32,7 @@ impl Behavior for GetToFlatGround {
         name_of_type!(GetToFlatGround)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
         if Self::on_flat_ground(ctx.me()) {
             return Action::Return;
         }
@@ -64,7 +64,7 @@ impl Behavior for GetToFlatGround {
                 // Phase two of the reverse dismount: jump. The rotator below will make us land
                 // on our wheels.
                 ctx.eeg.log(self.name(), "jumping off the wall");
-                let mut inputs = Vec::<Box<Behavior>>::with_capacity(3);
+                let mut inputs = Vec::<Box<dyn Behavior>>::with_capacity(3);
                 inputs.push(Box::new(Yielder::new(
                     rlbot::ffi::PlayerInput {
                         Pitch: 1.0,
@@ -158,7 +158,7 @@ impl Behavior for GetToFlatGround {
     }
 }
 
-fn choose_facing(ctx: &mut Context) -> Unit<Vector3<f32>> {
+fn choose_facing(ctx: &mut Context<'_>) -> Unit<Vector3<f32>> {
     let me = ctx.me();
 
     if me.Physics.loc().y.abs() >= ctx.game.field_max_y() {
@@ -188,14 +188,14 @@ fn choose_facing(ctx: &mut Context) -> Unit<Vector3<f32>> {
 }
 
 /// How far deep in enemy territory are we?
-fn defensiveness(ctx: &mut Context) -> f32 {
+fn defensiveness(ctx: &mut Context<'_>) -> f32 {
     let safe = ctx.game.own_back_wall_center();
     let danger = ctx.game.enemy_back_wall_center();
     let me_loc = ctx.me().Physics.loc_2d();
     (me_loc - danger).norm() / (me_loc - safe).norm()
 }
 
-fn face_the_ball(ctx: &mut Context) -> Vector2<f32> {
+fn face_the_ball(ctx: &mut Context<'_>) -> Vector2<f32> {
     let me = ctx.me();
     let mut start = CarState::from(me);
     start.loc += start.vel * 1.0;

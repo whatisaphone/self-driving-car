@@ -23,8 +23,8 @@ impl RoutePlanner for StaticPlanner {
 
     fn plan(
         &self,
-        _ctx: &PlanningContext,
-        _dump: &mut PlanningDump,
+        _ctx: &PlanningContext<'_, '_>,
+        _dump: &mut PlanningDump<'_>,
     ) -> Result<RoutePlan, RoutePlanError> {
         Ok(self.plan.clone())
     }
@@ -33,8 +33,8 @@ impl RoutePlanner for StaticPlanner {
 /// Exhaust `head`, then advance to `next`.
 #[derive(Clone, new)]
 pub struct ChainedPlanner {
-    head: Box<RoutePlanner>,
-    next: Option<Box<RoutePlanner>>,
+    head: Box<dyn RoutePlanner>,
+    next: Option<Box<dyn RoutePlanner>>,
 }
 
 impl RoutePlanner for ChainedPlanner {
@@ -44,8 +44,8 @@ impl RoutePlanner for ChainedPlanner {
 
     fn plan(
         &self,
-        ctx: &PlanningContext,
-        dump: &mut PlanningDump,
+        ctx: &PlanningContext<'_, '_>,
+        dump: &mut PlanningDump<'_>,
     ) -> Result<RoutePlan, RoutePlanError> {
         dump.log_start(self, &ctx.start);
         let plan = self.head.plan(ctx, dump)?;
@@ -55,8 +55,8 @@ impl RoutePlanner for ChainedPlanner {
 
 impl ChainedPlanner {
     /// Create a plan that runs `first` to completion, and then runs `second`.
-    pub fn join_planner(first: RoutePlan, second: Option<Box<RoutePlanner>>) -> RoutePlan {
-        let next: Option<Box<RoutePlanner>> = match first.next {
+    pub fn join_planner(first: RoutePlan, second: Option<Box<dyn RoutePlanner>>) -> RoutePlan {
+        let next: Option<Box<dyn RoutePlanner>> = match first.next {
             Some(first_next) => Some(Box::new(ChainedPlanner::new(first_next, second))),
             None => second,
         };
@@ -66,7 +66,7 @@ impl ChainedPlanner {
         }
     }
 
-    pub fn chain(planners: Vec<Box<RoutePlanner>>) -> Self {
+    pub fn chain(planners: Vec<Box<dyn RoutePlanner>>) -> Self {
         let mut iter = planners.into_iter();
         let first = iter.next().unwrap();
         let mut result = Self::new(first, Some(iter.next().unwrap()));

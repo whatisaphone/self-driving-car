@@ -18,7 +18,7 @@ impl Behavior for WallDrive {
         name_of_type!(WallDrive)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
         let me = ctx.me();
         let me_forward = me.Physics.forward_axis();
 

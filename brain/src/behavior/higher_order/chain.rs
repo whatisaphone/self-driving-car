@@ -9,7 +9,7 @@ use std::{collections::VecDeque, iter};
 /// Run `children` in sequence.
 pub struct Chain {
     priority: Priority,
-    children: VecDeque<Box<Behavior>>,
+    children: VecDeque<Box<dyn Behavior>>,
     /// Cache the full name of the Behavior, including names of `children`. This
     /// must be kept up to date whenever `children` is modified.
     blurb: String,
@@ -23,7 +23,7 @@ macro_rules! chain {
 }
 
 impl Chain {
-    pub fn new(priority: Priority, children: Vec<Box<Behavior>>) -> Self {
+    pub fn new(priority: Priority, children: Vec<Box<dyn Behavior>>) -> Self {
         Self {
             blurb: Self::blurb(children.iter()),
             priority,
@@ -31,7 +31,7 @@ impl Chain {
         }
     }
 
-    fn blurb<'a>(children: impl Iterator<Item = &'a Box<Behavior>>) -> String {
+    fn blurb<'a>(children: impl Iterator<Item = &'a Box<dyn Behavior>>) -> String {
         iter::once(name_of_type!(Chain))
             .chain(iter::once(" ("))
             .chain(children.map(|b| b.name()).intersperse(", "))
@@ -53,7 +53,7 @@ impl Behavior for Chain {
         self.priority
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
         ctx.eeg.draw(Drawable::print(
             self.children
                 .iter()

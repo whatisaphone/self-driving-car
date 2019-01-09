@@ -64,7 +64,7 @@ impl WallRayCalculator {
         Self::calculate(from, from + Vector2::unit(angle))
     }
 
-    pub fn wall_for_point(game: &Game, point: Point2<f32>) -> Wall {
+    pub fn wall_for_point(game: &Game<'_>, point: Point2<f32>) -> Wall {
         let to_enemy_goal = game.enemy_goal().center_2d - Point2::origin();
         let to_point = point - Point2::origin();
 

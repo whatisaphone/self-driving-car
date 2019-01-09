@@ -57,11 +57,11 @@ impl SegmentPlan for Brake {
         (start_speed - self.target_speed) * (1.0 / rl::CAR_MAX_SPEED)
     }
 
-    fn run(&self) -> Box<SegmentRunner> {
+    fn run(&self) -> Box<dyn SegmentRunner> {
         Box::new(Braker::new(self.clone()))
     }
 
-    fn draw(&self, ctx: &mut Context) {
+    fn draw(&self, ctx: &mut Context<'_>) {
         ctx.eeg.draw(Drawable::Line(
             self.start.loc,
             self.end().loc.to_2d(),
@@ -80,7 +80,7 @@ impl SegmentRunner for Braker {
         name_of_type!(Braker)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> SegmentRunAction {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction {
         let speed = ctx.me().Physics.vel_2d().norm();
         if speed < self.plan.target_speed {
             return SegmentRunAction::Success;

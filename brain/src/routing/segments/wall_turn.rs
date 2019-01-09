@@ -85,11 +85,11 @@ impl SegmentPlan for WallTurn {
         self.radius * self.sweep.abs() / assume_speed
     }
 
-    fn run(&self) -> Box<SegmentRunner> {
+    fn run(&self) -> Box<dyn SegmentRunner> {
         Box::new(WallTurnRunner::new(self.clone()))
     }
 
-    fn draw(&self, _ctx: &mut Context) {}
+    fn draw(&self, _ctx: &mut Context<'_>) {}
 }
 
 struct WallTurnRunner {
@@ -107,7 +107,7 @@ impl SegmentRunner for WallTurnRunner {
         name_of_type!(WallTurnRunner)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> SegmentRunAction {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction {
         let me = ctx.me();
         let me_flat_loc = self.plan.flattener * me.Physics.loc();
         let me_flat_forward = self.plan.flattener * me.Physics.forward_axis();

@@ -19,7 +19,7 @@ pub trait Scenario {
         rlbot: &rlbot::RLBot,
         time: f32,
         packet: &rlbot::ffi::LiveDataPacket,
-    ) -> Result<ScenarioStepResult, Box<Error>>;
+    ) -> Result<ScenarioStepResult, Box<dyn Error>>;
 }
 
 pub enum ScenarioStepResult {
@@ -58,7 +58,7 @@ impl<S: SimpleScenario> Scenario for S {
         rlbot: &rlbot::RLBot,
         time: f32,
         packet: &rlbot::ffi::LiveDataPacket,
-    ) -> Result<ScenarioStepResult, Box<Error>> {
+    ) -> Result<ScenarioStepResult, Box<dyn Error>> {
         match self.step(time, packet) {
             SimpleScenarioStepResult::Ignore(i) => {
                 rlbot.update_player_input(i, 0)?;
@@ -219,7 +219,7 @@ impl Scenario for Turn {
         rlbot: &rlbot::RLBot,
         time: f32,
         packet: &rlbot::ffi::LiveDataPacket,
-    ) -> Result<ScenarioStepResult, Box<Error>> {
+    ) -> Result<ScenarioStepResult, Box<dyn Error>> {
         if self.start_time.is_none() {
             let speed = packet.GameCars[0].Physics.vel().norm();
             if speed >= self.start_speed {
@@ -301,7 +301,7 @@ impl Scenario for PowerslideTurn {
         rlbot: &rlbot::RLBot,
         time: f32,
         packet: &rlbot::ffi::LiveDataPacket,
-    ) -> Result<ScenarioStepResult, Box<Error>> {
+    ) -> Result<ScenarioStepResult, Box<dyn Error>> {
         if self.start_time.is_none() {
             let speed = packet.GameCars[0].Physics.vel().norm();
             if speed >= self.start_speed {
@@ -407,7 +407,7 @@ impl Scenario for Dodge {
         rlbot: &rlbot::RLBot,
         time: f32,
         packet: &rlbot::ffi::LiveDataPacket,
-    ) -> Result<ScenarioStepResult, Box<Error>> {
+    ) -> Result<ScenarioStepResult, Box<dyn Error>> {
         match self.phase {
             DodgePhase::Accelerate => {
                 if packet.GameCars[0].Physics.vel().norm() >= self.start_speed {
@@ -495,7 +495,7 @@ impl AirAxis {
 }
 
 impl fmt::Display for AirAxis {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
             AirAxis::Pitch => "pitch",
             AirAxis::Yaw => "yaw",
@@ -556,7 +556,7 @@ impl Scenario for AirRotateAccel {
         rlbot: &rlbot::RLBot,
         time: f32,
         _packet: &rlbot::ffi::LiveDataPacket,
-    ) -> Result<ScenarioStepResult, Box<Error>> {
+    ) -> Result<ScenarioStepResult, Box<dyn Error>> {
         if self.start_time.is_none() {
             self.start_time = Some(time);
         }
@@ -601,7 +601,7 @@ impl Scenario for AirRotateCoast {
         rlbot: &rlbot::RLBot,
         time: f32,
         _packet: &rlbot::ffi::LiveDataPacket,
-    ) -> Result<ScenarioStepResult, Box<Error>> {
+    ) -> Result<ScenarioStepResult, Box<dyn Error>> {
         if self.start_time.is_none() {
             self.start_time = Some(time);
         }
@@ -651,7 +651,7 @@ impl Scenario for AirRotateCounter {
         rlbot: &rlbot::RLBot,
         time: f32,
         _packet: &rlbot::ffi::LiveDataPacket,
-    ) -> Result<ScenarioStepResult, Box<Error>> {
+    ) -> Result<ScenarioStepResult, Box<dyn Error>> {
         if self.start_time.is_none() {
             self.start_time = Some(time);
         }

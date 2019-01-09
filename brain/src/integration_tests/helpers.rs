@@ -28,7 +28,7 @@ const RECORDING_DISTANCE_THRESHOLD: f32 = 25.0;
 const STATE_SET_DEBOUNCE: i32 = 10;
 
 pub struct TestRunner {
-    behavior: Option<Box<FnMut(&rlbot::ffi::LiveDataPacket) -> Box<Behavior> + Send>>,
+    behavior: Option<Box<dyn FnMut(&rlbot::ffi::LiveDataPacket) -> Box<dyn Behavior> + Send>>,
     ball_recording: Option<(Vec<f32>, Vec<RecordingRigidBodyState>)>,
     car_inital_state: Option<(RecordingRigidBodyState, f32)>,
     enemy_recording: Option<(Vec<f32>, Vec<RecordingPlayerTick>)>,
@@ -103,7 +103,7 @@ impl TestRunner {
     /// Replay the ball and enemy from a 1v1 recording. Lock the ball to the
     /// recording until the timestamp given by `ball_release`, and afterwards
     /// let it behave naturally.
-    pub fn one_v_one(mut self, scenario: &OneVOneScenario, ball_release: f32) -> Self {
+    pub fn one_v_one(mut self, scenario: &OneVOneScenario<'_>, ball_release: f32) -> Self {
         let ball_release_index = scenario
             .times
             .iter()
@@ -277,10 +277,10 @@ impl RunningTest {
 
 enum Message {
     SniffPacket(crossbeam_channel::Sender<rlbot::ffi::LiveDataPacket>),
-    SetBehavior(Box<Behavior + Send>),
+    SetBehavior(Box<dyn Behavior + Send>),
     HasScored(crossbeam_channel::Sender<bool>),
     EnemyHasScored(crossbeam_channel::Sender<bool>),
-    ExamineEEG(Box<Fn(&EEG) + Send>),
+    ExamineEEG(Box<dyn Fn(&EEG) + Send>),
     Terminate,
 }
 
@@ -302,7 +302,7 @@ fn test_thread(
     ball_scenario: BallScenario,
     car_scenario: CarScenario,
     enemy_scenario: CarScenario,
-    behavior: impl FnOnce(&rlbot::ffi::LiveDataPacket) -> Box<Behavior>,
+    behavior: impl FnOnce(&rlbot::ffi::LiveDataPacket) -> Box<dyn Behavior>,
     ready_wait: Arc<Barrier>,
     messages: crossbeam_channel::Receiver<Message>,
 ) {

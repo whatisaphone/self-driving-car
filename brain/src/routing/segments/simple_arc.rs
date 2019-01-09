@@ -144,11 +144,11 @@ impl SegmentPlan for SimpleArc {
         self.radius * self.sweep.abs() / self.start_vel.norm()
     }
 
-    fn run(&self) -> Box<SegmentRunner> {
+    fn run(&self) -> Box<dyn SegmentRunner> {
         Box::new(SimpleArcRunner::new(self.clone()))
     }
 
-    fn draw(&self, ctx: &mut Context) {
+    fn draw(&self, ctx: &mut Context<'_>) {
         let theta1 = Vector2::x().angle_to(&(self.start_loc - self.center));
         let theta2 = theta1 + self.sweep;
         ctx.eeg.draw(Drawable::Arc(
@@ -182,7 +182,7 @@ impl SegmentRunner for SimpleArcRunner {
         name_of_type!(SimpleArcRunner)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> SegmentRunAction {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction {
         let me = ctx.me();
         let car_loc = me.Physics.loc_2d();
         let car_forward_axis = me.Physics.forward_axis_2d();

@@ -32,8 +32,8 @@ impl RoutePlanner for GroundDrive {
 
     fn plan(
         &self,
-        ctx: &PlanningContext,
-        dump: &mut PlanningDump,
+        ctx: &PlanningContext<'_, '_>,
+        dump: &mut PlanningDump<'_>,
     ) -> Result<RoutePlan, RoutePlanError> {
         dump.log_start(self, &ctx.start);
         dump.log_pretty(self, "target_loc", self.target_loc);

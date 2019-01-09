@@ -16,7 +16,7 @@ use std::f32::consts::PI;
 pub struct Soccar;
 
 impl Strategy for Soccar {
-    fn baseline(&mut self, ctx: &mut Context) -> Box<Behavior> {
+    fn baseline(&mut self, ctx: &mut Context<'_>) -> Box<dyn Behavior> {
         if !GetToFlatGround::on_flat_ground(ctx.me()) {
             return Box::new(GetToFlatGround::new());
         }
@@ -29,7 +29,11 @@ impl Strategy for Soccar {
         Box::new(Offense::new())
     }
 
-    fn interrupt(&mut self, ctx: &mut Context, current: &Behavior) -> Option<Box<Behavior>> {
+    fn interrupt(
+        &mut self,
+        ctx: &mut Context<'_>,
+        current: &dyn Behavior,
+    ) -> Option<Box<dyn Behavior>> {
         // Force kickoff behavior. We can't rely on the normal routing, because it
         // doesn't account for boost pads that you pick up on the way, so it dodges and
         // goes too slow.
@@ -77,7 +81,7 @@ impl Strategy for Soccar {
     }
 }
 
-fn enemy_can_shoot(ctx: &mut Context) -> bool {
+fn enemy_can_shoot(ctx: &mut Context<'_>) -> bool {
     let (_enemy, intercept) = match ctx.scenario.enemy_intercept() {
         Some(i) => i,
         None => return false,

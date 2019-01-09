@@ -3,11 +3,11 @@ use nameof::name_of_type;
 
 /// Run `child` until it returns, then do nothing forever.
 pub struct Fuse {
-    child: Option<Box<Behavior>>,
+    child: Option<Box<dyn Behavior>>,
 }
 
 impl Fuse {
-    pub fn new(child: Box<Behavior>) -> Self {
+    pub fn new(child: Box<dyn Behavior>) -> Self {
         Self { child: Some(child) }
     }
 }
@@ -17,7 +17,7 @@ impl Behavior for Fuse {
         name_of_type!(Fuse)
     }
 
-    fn execute(&mut self, _ctx: &mut Context) -> Action {
+    fn execute(&mut self, _ctx: &mut Context<'_>) -> Action {
         // `take()` leaves a None behind, so this can only match `Some` once.
         match self.child.take() {
             Some(b) => Action::Call(b),

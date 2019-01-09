@@ -28,8 +28,8 @@ impl RoutePlanner for WallIntercept {
 
     fn plan(
         &self,
-        ctx: &PlanningContext,
-        dump: &mut PlanningDump,
+        ctx: &PlanningContext<'_, '_>,
+        dump: &mut PlanningDump<'_>,
     ) -> Result<RoutePlan, RoutePlanError> {
         dump.log_start(self, &ctx.start);
 
@@ -65,7 +65,7 @@ fn calc_plan<'ball>(
     Err(RoutePlanError::UnknownIntercept)
 }
 
-fn try_intercept(ctx: &PlanningContext, ball: &BallFrame) -> Result<RoutePlan, Skip> {
+fn try_intercept(ctx: &PlanningContext<'_, '_>, ball: &BallFrame) -> Result<RoutePlan, Skip> {
     if which_wall(ctx.game.pitch(), ball.loc).is_none() {
         return Err(Skip::No);
     }

@@ -29,13 +29,13 @@ impl Behavior for Kickoff {
         name_of_type!(Kickoff)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
         if !Self::is_kickoff(&ctx.packet.GameBall) {
             ctx.eeg.log(self.name(), "not a kickoff");
             return Action::Abort;
         }
 
-        let approach: Box<RoutePlanner> = if is_diagonal_kickoff(ctx) {
+        let approach: Box<dyn RoutePlanner> = if is_diagonal_kickoff(ctx) {
             let straight_loc = Point2::new(
                 500.0 * ctx.me().Physics.loc().x.signum(),
                 900.0 * ctx.me().Physics.loc().y.signum(),
@@ -70,12 +70,12 @@ impl Behavior for Kickoff {
     }
 }
 
-fn is_off_center_kickoff(ctx: &mut Context) -> bool {
+fn is_off_center_kickoff(ctx: &mut Context<'_>) -> bool {
     let car_x = ctx.me().Physics.loc().x;
     (car_x.abs() - 256.0).abs() < 50.0
 }
 
-fn is_diagonal_kickoff(ctx: &mut Context) -> bool {
+fn is_diagonal_kickoff(ctx: &mut Context<'_>) -> bool {
     let car_x = ctx.me().Physics.loc().x;
     car_x.abs() >= 1000.0
 }

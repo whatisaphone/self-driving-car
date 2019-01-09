@@ -10,14 +10,14 @@ use nameof::name_of_type;
 
 pub struct FollowRoute {
     /// Option dance: This only holds a planner before the first tick.
-    planner: Option<Box<RoutePlanner>>,
+    planner: Option<Box<dyn RoutePlanner>>,
     current: Option<Current>,
     never_recover: bool,
 }
 
 struct Current {
     plan: RoutePlan,
-    runner: Box<SegmentRunner>,
+    runner: Box<dyn SegmentRunner>,
     provisional_expansion_tail: ProvisionalPlanExpansionTail,
 }
 
@@ -26,7 +26,7 @@ impl FollowRoute {
         Self::new_boxed(Box::new(planner))
     }
 
-    pub fn new_boxed(planner: Box<RoutePlanner>) -> Self {
+    pub fn new_boxed(planner: Box<dyn RoutePlanner>) -> Self {
         Self {
             planner: Some(planner),
             current: None,
@@ -47,7 +47,7 @@ impl Behavior for FollowRoute {
         name_of_type!(FollowRoute)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
         if self.current.is_none() {
             let planner = &*self.planner.take().unwrap();
             if let Err(action) = self.advance(planner, ctx) {
@@ -61,7 +61,7 @@ impl Behavior for FollowRoute {
 }
 
 impl FollowRoute {
-    fn draw(&mut self, ctx: &mut Context) {
+    fn draw(&mut self, ctx: &mut Context<'_>) {
         // This provisional expansion serves two purposes:
         // 1. Make sure each segment thinks it can complete successfully.
         // 2. Predict far enough ahead that we can draw the whole plan to the screen.
@@ -73,7 +73,7 @@ impl FollowRoute {
         }
     }
 
-    fn advance(&mut self, planner: &RoutePlanner, ctx: &mut Context) -> Result<(), Action> {
+    fn advance(&mut self, planner: &dyn RoutePlanner, ctx: &mut Context<'_>) -> Result<(), Action> {
         assert!(self.current.is_none());
 
         ctx.eeg
@@ -106,7 +106,7 @@ impl FollowRoute {
 
     fn handle_error(
         &mut self,
-        ctx: &mut Context,
+        ctx: &mut Context<'_>,
         planner_name: &str,
         error: RoutePlanError,
         log: impl IntoIterator<Item = String>,
@@ -137,7 +137,7 @@ impl FollowRoute {
         }
     }
 
-    fn go(&mut self, ctx: &mut Context) -> Action {
+    fn go(&mut self, ctx: &mut Context<'_>) -> Action {
         let current = self.current.as_mut().unwrap();
         ctx.eeg
             .draw(Drawable::print(current.plan.segment.name(), color::YELLOW));

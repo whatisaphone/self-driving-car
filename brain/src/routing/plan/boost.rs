@@ -40,8 +40,8 @@ impl RoutePlanner for GetDollar {
 
     fn plan(
         &self,
-        ctx: &PlanningContext,
-        dump: &mut PlanningDump,
+        ctx: &PlanningContext<'_, '_>,
+        dump: &mut PlanningDump<'_>,
     ) -> Result<RoutePlan, RoutePlanError> {
         dump.log_start(self, &ctx.start);
 
@@ -68,8 +68,8 @@ impl GetDollar {
     /// If we're super close and not moving, just flip to it. Right now path
     /// routing is not good enough to do anything smarter.
     fn quick_flip(
-        ctx: &PlanningContext,
-        _dump: &mut PlanningDump,
+        ctx: &PlanningContext<'_, '_>,
+        _dump: &mut PlanningDump<'_>,
         pickup: &BoostPickup,
     ) -> Option<RoutePlan> {
         if ctx.start.vel.norm() >= 500.0 {
@@ -93,8 +93,8 @@ impl GetDollar {
 
     fn powerslide_turn(
         &self,
-        ctx: &PlanningContext,
-        dump: &mut PlanningDump,
+        ctx: &PlanningContext<'_, '_>,
+        dump: &mut PlanningDump<'_>,
         pickup: &BoostPickup,
     ) -> Result<RoutePlan, RoutePlanError> {
         guard!(ctx.start, IsSkidding, RoutePlanError::MustNotBeSkidding {
@@ -117,7 +117,7 @@ impl GetDollar {
     }
 
     fn chooose_pickup<'a>(
-        ctx: &'a PlanningContext,
+        ctx: &'a PlanningContext<'_, '_>,
         destination_hint: Point2<f32>,
     ) -> Option<&'a BoostPickup> {
         Self::choose_pickup(

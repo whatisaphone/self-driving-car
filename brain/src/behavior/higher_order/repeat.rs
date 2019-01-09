@@ -33,7 +33,7 @@ where
         stringify!(Repeat)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
         ctx.eeg
             .draw(Drawable::print(self.current.blurb(), color::YELLOW));
         match self.current.execute(ctx) {

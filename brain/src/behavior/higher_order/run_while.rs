@@ -15,7 +15,7 @@ where
 
 pub trait Predicate: Send {
     fn name(&self) -> &str;
-    fn evaluate(&mut self, ctx: &mut Context) -> bool;
+    fn evaluate(&mut self, ctx: &mut Context<'_>) -> bool;
 }
 
 impl<P, B> While<P, B>
@@ -41,7 +41,7 @@ where
         self.child.priority()
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
         if !self.predicate.evaluate(ctx) {
             ctx.eeg.log(self.name(), "terminating");
             return Action::Abort;

@@ -22,7 +22,7 @@ use std::f32::consts::PI;
 
 pub struct GroundedHit<Aim>
 where
-    Aim: Fn(&mut GroundedHitAimContext) -> Result<GroundedHitTarget, ()> + Send,
+    Aim: Fn(&mut GroundedHitAimContext<'_, '_>) -> Result<GroundedHitTarget, ()> + Send,
 {
     aim: Aim,
     same_ball_trajectory: SameBallTrajectory,
@@ -30,7 +30,7 @@ where
 
 impl<Aim> GroundedHit<Aim>
 where
-    Aim: Fn(&mut GroundedHitAimContext) -> Result<GroundedHitTarget, ()> + Send,
+    Aim: Fn(&mut GroundedHitAimContext<'_, '_>) -> Result<GroundedHitTarget, ()> + Send,
 {
     pub fn hit_towards(aim: Aim) -> Self {
         Self {
@@ -40,20 +40,20 @@ where
     }
 }
 
-impl GroundedHit<fn(&mut GroundedHitAimContext) -> Result<GroundedHitTarget, ()>> {
+impl GroundedHit<fn(&mut GroundedHitAimContext<'_, '_>) -> Result<GroundedHitTarget, ()>> {
     const CONTACT_Z_OFFSET: f32 = -70.0; // This is misguided and should probably go away.
     pub const MAX_BALL_Z: f32 = 220.0 - Self::CONTACT_Z_OFFSET; // TODO: how high can I jump
 }
 
 impl<Aim> Behavior for GroundedHit<Aim>
 where
-    Aim: Fn(&mut GroundedHitAimContext) -> Result<GroundedHitTarget, ()> + Send,
+    Aim: Fn(&mut GroundedHitAimContext<'_, '_>) -> Result<GroundedHitTarget, ()> + Send,
 {
     fn name(&self) -> &str {
         stringify!(GroundedHit)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
         let me = ctx.me();
 
         if IsSkidding.evaluate(&me.into()) {
@@ -110,9 +110,9 @@ where
 
 impl<Aim> GroundedHit<Aim>
 where
-    Aim: Fn(&mut GroundedHitAimContext) -> Result<GroundedHitTarget, ()> + Send,
+    Aim: Fn(&mut GroundedHitAimContext<'_, '_>) -> Result<GroundedHitTarget, ()> + Send,
 {
-    fn intercept_loc(&mut self, ctx: &mut Context) -> Result<NaiveIntercept, ()> {
+    fn intercept_loc(&mut self, ctx: &mut Context<'_>) -> Result<NaiveIntercept, ()> {
         let me = ctx.me();
 
         // First pass: get approximate jump height
@@ -159,7 +159,7 @@ where
 
     fn target_loc(
         &mut self,
-        ctx: &mut Context,
+        ctx: &mut Context<'_>,
         intercept: &NaiveIntercept,
     ) -> Result<(f32, Point3<f32>, UnitQuaternion<f32>, bool), ()> {
         let me = ctx.me();
@@ -189,7 +189,7 @@ where
     }
 
     fn preliminary_target(
-        ctx: &mut Context,
+        ctx: &mut Context<'_>,
         intercept: &NaiveIntercept,
         target: &GroundedHitTarget,
     ) -> (Point3<f32>, UnitQuaternion<f32>, bool) {
@@ -219,7 +219,7 @@ where
     #[allow(clippy::if_same_then_else)]
     fn estimate_approach(
         &mut self,
-        ctx: &mut Context,
+        ctx: &mut Context<'_>,
         intercept_time: f32,
         intercept_ball_loc: Point3<f32>,
         target_loc: Point3<f32>,
@@ -281,7 +281,7 @@ where
 
     fn drive(
         &self,
-        ctx: &mut Context,
+        ctx: &mut Context<'_>,
         target_loc: Point3<f32>,
         throttle: f32,
         boost: bool,
@@ -298,7 +298,7 @@ where
 
     fn jump(
         &self,
-        ctx: &mut Context,
+        ctx: &mut Context<'_>,
         intercept_ball_loc: Point3<f32>,
         target_loc: Point3<f32>,
         target_rot: UnitQuaternion<f32>,
@@ -339,7 +339,7 @@ where
 }
 
 pub fn car_ball_contact_with_pitch(
-    game: &Game,
+    game: &Game<'_>,
     ball_loc: Point3<f32>,
     car_reference_loc: Point3<f32>,
     pitch: f32,

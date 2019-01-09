@@ -14,7 +14,7 @@ use nalgebra::Point2;
 pub fn avoid_plowing_into_goal_wall(
     start: &CarState,
     target_loc: Point2<f32>,
-) -> Option<Box<RoutePlanner>> {
+) -> Option<Box<dyn RoutePlanner>> {
     match avoid_goal_wall_waypoint(start, target_loc) {
         None => None,
         Some(waypoint) => Some(Box::new(ChainedPlanner::chain(vec![

@@ -16,7 +16,7 @@ impl Retreat {
     }
 
     /// Returns `true` if the ball is between me and my goal.
-    pub fn behind_ball(ctx: &mut Context) -> bool {
+    pub fn behind_ball(ctx: &mut Context<'_>) -> bool {
         let intercept = some_or_else!(ctx.scenario.me_intercept(), {
             return false;
         });
@@ -35,8 +35,8 @@ impl Behavior for Retreat {
         name_of_type!(Retreat)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> Action {
-        let mut choices = Vec::<Box<Behavior>>::new();
+    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
+        let mut choices = Vec::<Box<dyn Behavior>>::new();
 
         if Self::behind_ball(ctx) && ctx.scenario.possession() >= -Scenario::POSSESSION_CONTESTABLE
         {

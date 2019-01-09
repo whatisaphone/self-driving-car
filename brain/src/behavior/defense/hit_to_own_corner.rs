@@ -28,7 +28,7 @@ impl Behavior for HitToOwnCorner {
         name_of_type!(HitToOwnCorner)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
         ctx.eeg.track(Event::HitToOwnCorner);
 
         Action::call(Chain::new(Priority::Strike, vec![
@@ -39,7 +39,7 @@ impl Behavior for HitToOwnCorner {
 }
 
 impl HitToOwnCorner {
-    fn aim(ctx: &mut GroundedHitAimContext) -> Result<GroundedHitTarget, ()> {
+    fn aim(ctx: &mut GroundedHitAimContext<'_, '_>) -> Result<GroundedHitTarget, ()> {
         let avoid = ctx.game.own_goal().center_2d;
 
         let me_loc = ctx.car.Physics.loc_2d();

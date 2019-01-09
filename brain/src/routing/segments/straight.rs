@@ -111,11 +111,11 @@ impl SegmentPlan for Straight {
         self.duration
     }
 
-    fn run(&self) -> Box<SegmentRunner> {
+    fn run(&self) -> Box<dyn SegmentRunner> {
         Box::new(StraightRunner::new(self.clone()))
     }
 
-    fn draw(&self, ctx: &mut Context) {
+    fn draw(&self, ctx: &mut Context<'_>) {
         ctx.eeg
             .draw(Drawable::Line(self.start.loc, self.end_loc, color::YELLOW));
     }
@@ -136,7 +136,7 @@ impl SegmentRunner for StraightRunner {
         name_of_type!(StraightRunner)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> SegmentRunAction {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction {
         match self.plan.mode {
             StraightMode::Fake => {
                 ctx.eeg.log(self.name(), "stopping because mode is fake");

@@ -15,7 +15,7 @@ impl Behavior for Yielder {
         name_of_type!(Yielder)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
         let now = ctx.packet.GameInfo.TimeSeconds;
         let start = *self.start.get_or_insert(now);
         let elapsed = now - start;

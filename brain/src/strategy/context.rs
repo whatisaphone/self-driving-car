@@ -13,8 +13,8 @@ pub struct Context<'a> {
 
 impl<'a> Context<'a> {
     pub fn new(
-        game: &'a Game,
-        ball_predictor: &'a BallPredictor,
+        game: &'a Game<'_>,
+        ball_predictor: &'a dyn BallPredictor,
         packet: &'a rlbot::ffi::LiveDataPacket,
         eeg: &'a mut EEG,
     ) -> Self {

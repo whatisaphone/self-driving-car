@@ -16,7 +16,7 @@ use std::f32::consts::PI;
 const SKIDDING_THRESHOLD: f32 = 0.95;
 
 impl RoutePlanError {
-    pub fn recover(&self, ctx: &mut Context) -> Option<Box<Behavior>> {
+    pub fn recover(&self, ctx: &mut Context<'_>) -> Option<Box<dyn Behavior>> {
         match *self {
             RoutePlanError::MustBeOnFlatGround => Some(Box::new(While::new(
                 NotOnFlatGround,
@@ -69,7 +69,7 @@ impl RoutePlanError {
 
 /// Check if the ball is roughly in front of us and we can easily just smack it
 /// for free.
-fn check_easy_flip_recover(ctx: &mut Context) -> Option<Box<Behavior>> {
+fn check_easy_flip_recover(ctx: &mut Context<'_>) -> Option<Box<dyn Behavior>> {
     let ball = ctx.scenario.ball_prediction().at_time_or_last(0.5);
     let me_loc = ctx.me().Physics.loc_2d();
     let me_forward = ctx.me().Physics.forward_axis_2d();
@@ -109,7 +109,7 @@ impl Predicate for NotOnFlatGround {
         name_of_type!(NotOnFlatGround)
     }
 
-    fn evaluate(&mut self, ctx: &'_ mut Context) -> bool {
+    fn evaluate(&mut self, ctx: &'_ mut Context<'_>) -> bool {
         !GetToFlatGround::on_flat_ground(ctx.me())
     }
 }
@@ -141,7 +141,7 @@ impl Predicate for IsSkidding {
         name_of_type!(IsSkidding)
     }
 
-    fn evaluate(&mut self, ctx: &mut Context) -> bool {
+    fn evaluate(&mut self, ctx: &mut Context<'_>) -> bool {
         self.evaluate(&ctx.me().into())
     }
 }
@@ -153,7 +153,7 @@ impl Predicate for WeDontWinTheRace {
         name_of_type!(WeDontWinTheRace)
     }
 
-    fn evaluate(&mut self, ctx: &mut Context) -> bool {
+    fn evaluate(&mut self, ctx: &mut Context<'_>) -> bool {
         ctx.scenario.possession() < Scenario::POSSESSION_CONTESTABLE
     }
 }

@@ -18,7 +18,7 @@ use simulate::CarPowerslideTurn;
 pub struct GroundPowerslideTurn {
     target_loc: Point2<f32>,
     target_face: Point2<f32>,
-    next: Option<Box<RoutePlanner>>,
+    next: Option<Box<dyn RoutePlanner>>,
 }
 
 impl RoutePlanner for GroundPowerslideTurn {
@@ -28,8 +28,8 @@ impl RoutePlanner for GroundPowerslideTurn {
 
     fn plan(
         &self,
-        ctx: &PlanningContext,
-        dump: &mut PlanningDump,
+        ctx: &PlanningContext<'_, '_>,
+        dump: &mut PlanningDump<'_>,
     ) -> Result<RoutePlan, RoutePlanError> {
         dump.log_start(self, &ctx.start);
 
@@ -57,8 +57,8 @@ impl RoutePlanner for GroundSimplePowerslideTurn {
 
     fn plan(
         &self,
-        ctx: &PlanningContext,
-        dump: &mut PlanningDump,
+        ctx: &PlanningContext<'_, '_>,
+        dump: &mut PlanningDump<'_>,
     ) -> Result<RoutePlan, RoutePlanError> {
         dump.log_start(self, &ctx.start);
 
@@ -99,7 +99,7 @@ impl RoutePlanner for GroundSimplePowerslideTurn {
 struct GroundPowerslideEssence {
     target_loc: Point2<f32>,
     target_face: Point2<f32>,
-    next: Option<Box<RoutePlanner>>,
+    next: Option<Box<dyn RoutePlanner>>,
 }
 
 impl RoutePlanner for GroundPowerslideEssence {
@@ -109,8 +109,8 @@ impl RoutePlanner for GroundPowerslideEssence {
 
     fn plan(
         &self,
-        ctx: &PlanningContext,
-        dump: &mut PlanningDump,
+        ctx: &PlanningContext<'_, '_>,
+        dump: &mut PlanningDump<'_>,
     ) -> Result<RoutePlan, RoutePlanError> {
         dump.log_start(self, &ctx.start);
         dump.log_pretty(self, "target_loc", self.target_loc);

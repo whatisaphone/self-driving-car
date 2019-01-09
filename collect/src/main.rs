@@ -1,4 +1,6 @@
+#![warn(future_incompatible, rust_2018_compatibility, rust_2018_idioms, unused)]
 #![cfg_attr(feature = "strict", deny(warnings))]
+#![deny(clippy::all)]
 
 use crate::{
     collector::Collector,
@@ -11,7 +13,7 @@ mod collector;
 mod rlbot_ext;
 mod scenarios;
 
-pub fn main() -> Result<(), Box<Error>> {
+pub fn main() -> Result<(), Box<dyn Error>> {
     let rlbot = rlbot::init()?;
 
     // Zero out our input, just to be safe
@@ -24,7 +26,7 @@ pub fn main() -> Result<(), Box<Error>> {
     Ok(())
 }
 
-fn run_scenario(rlbot: &rlbot::RLBot, mut scenario: impl Scenario) -> Result<(), Box<Error>> {
+fn run_scenario(rlbot: &rlbot::RLBot, mut scenario: impl Scenario) -> Result<(), Box<dyn Error>> {
     stabilize_scenario(&rlbot, scenario.initial_state());
 
     let f = File::create(format!("oven/data/{}.csv", scenario.name()))?;
@@ -53,7 +55,7 @@ fn run_scenario(rlbot: &rlbot::RLBot, mut scenario: impl Scenario) -> Result<(),
     Ok(())
 }
 
-fn start_match(rlbot: &rlbot::RLBot) -> Result<(), Box<Error>> {
+fn start_match(rlbot: &rlbot::RLBot) -> Result<(), Box<dyn Error>> {
     let mut match_settings = rlbot::ffi::MatchSettings {
         NumPlayers: 1,
         MutatorSettings: rlbot::ffi::MutatorSettings {

@@ -14,7 +14,7 @@ pub trait Behavior: Send {
         Priority::Idle
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> Action;
+    fn execute(&mut self, ctx: &mut Context<'_>) -> Action;
 }
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
@@ -27,7 +27,7 @@ pub enum Priority {
 
 pub enum Action {
     Yield(rlbot::ffi::PlayerInput),
-    Call(Box<Behavior>),
+    Call(Box<dyn Behavior>),
     Return,
     Abort,
 }

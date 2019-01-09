@@ -43,8 +43,8 @@ impl RoutePlanner for GroundStraightPlanner {
 
     fn plan(
         &self,
-        ctx: &PlanningContext,
-        dump: &mut PlanningDump,
+        ctx: &PlanningContext<'_, '_>,
+        dump: &mut PlanningDump<'_>,
     ) -> Result<RoutePlan, RoutePlanError> {
         dump.log_start(self, &ctx.start);
         dump.log_pretty(self, "target_loc", self.target_loc);
@@ -59,7 +59,7 @@ impl RoutePlanner for GroundStraightPlanner {
             recover_target_loc: self.target_loc,
         });
 
-        let mut planners = ArrayVec::<[&RoutePlanner; 4]>::new();
+        let mut planners = ArrayVec::<[&dyn RoutePlanner; 4]>::new();
         let straight =
             StraightSimple::new(self.target_loc, self.target_time, self.end_chop, self.mode);
         planners.push(&straight);
@@ -117,8 +117,8 @@ impl RoutePlanner for StraightSimple {
 
     fn plan(
         &self,
-        ctx: &PlanningContext,
-        _dump: &mut PlanningDump,
+        ctx: &PlanningContext<'_, '_>,
+        _dump: &mut PlanningDump<'_>,
     ) -> Result<RoutePlan, RoutePlanError> {
         guard!(
             ctx.start,
@@ -168,7 +168,7 @@ impl RoutePlanner for StraightSimple {
 }
 
 impl StraightSimple {
-    fn would_coasting_still_be_too_fast(&self, ctx: &PlanningContext) -> bool {
+    fn would_coasting_still_be_too_fast(&self, ctx: &PlanningContext<'_, '_>) -> bool {
         let target_time = some_or_else!(self.target_time, {
             return false;
         });
@@ -201,8 +201,8 @@ impl RoutePlanner for StraightWithDodge {
 
     fn plan(
         &self,
-        ctx: &PlanningContext,
-        _dump: &mut PlanningDump,
+        ctx: &PlanningContext<'_, '_>,
+        _dump: &mut PlanningDump<'_>,
     ) -> Result<RoutePlan, RoutePlanError> {
         guard!(
             ctx.start,

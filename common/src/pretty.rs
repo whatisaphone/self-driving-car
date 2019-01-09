@@ -36,7 +36,7 @@ macro_rules! inherent {
         pub struct $printer($type);
 
         impl fmt::Display for $printer {
-            fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+            fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), fmt::Error> {
                 let $x = self.0;
                 write!(f, $fmt, $($map),+)
             }
@@ -66,7 +66,7 @@ macro_rules! wrap {
         }
 
         impl fmt::Display for $name {
-            fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
+            fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), fmt::Error> {
                 let $x = self.0;
                 let s = $map;
                 write!(f, $fmt, s)

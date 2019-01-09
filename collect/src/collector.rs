@@ -14,7 +14,7 @@ impl Collector {
         }
     }
 
-    pub fn write(&mut self, tick: rlbot::flat::RigidBodyTick) -> csv::Result<()> {
+    pub fn write(&mut self, tick: rlbot::flat::RigidBodyTick<'_>) -> csv::Result<()> {
         if !self.wrote_header {
             self.wrote_header = true;
             self.w.write_record(
@@ -56,7 +56,7 @@ fn rigid_body_header(prefix: impl AsRef<str>) -> impl Iterator<Item = String> {
     .map(move |s| format!("{}{}", prefix.as_ref(), s))
 }
 
-fn rigid_body(state: rlbot::flat::RigidBodyState) -> impl Iterator<Item = String> {
+fn rigid_body(state: rlbot::flat::RigidBodyState<'_>) -> impl Iterator<Item = String> {
     vec![
         state.location().unwrap().x().to_string(),
         state.location().unwrap().y().to_string(),
@@ -90,7 +90,7 @@ fn controller_header(prefix: impl AsRef<str>) -> impl Iterator<Item = String> {
     .map(move |s| format!("{}{}", prefix.as_ref(), s))
 }
 
-fn controller(state: rlbot::flat::ControllerState) -> impl Iterator<Item = String> {
+fn controller(state: rlbot::flat::ControllerState<'_>) -> impl Iterator<Item = String> {
     vec![
         state.throttle().to_string(),
         state.steer().to_string(),

@@ -18,7 +18,7 @@ impl Behavior for SkidRecover {
         name_of_type!(SkidRecover)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
         if !GetToFlatGround::on_flat_ground(ctx.me()) {
             ctx.eeg.log(self.name(), "must be on flat ground");
             return Action::Abort;

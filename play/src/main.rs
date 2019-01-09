@@ -1,4 +1,6 @@
+#![warn(future_incompatible, rust_2018_compatibility, rust_2018_idioms, unused)]
 #![cfg_attr(feature = "strict", deny(warnings))]
+#![deny(clippy::all)]
 
 use brain::{Brain, EEG};
 use chrono::Local;
@@ -65,7 +67,7 @@ struct StartArgs {
     player_index: i32,
 }
 
-fn start_match(rlbot: &rlbot::RLBot) -> Result<(), Box<Error>> {
+fn start_match(rlbot: &rlbot::RLBot) -> Result<(), Box<dyn Error>> {
     let match_settings = rlbot::ffi::MatchSettings {
         MutatorSettings: rlbot::ffi::MutatorSettings {
             MatchLength: rlbot::ffi::MatchLength::Unlimited,
@@ -112,7 +114,7 @@ fn run_bot(rlbot: &'static rlbot::RLBot, player_index: i32, should_log: bool) {
     bot_loop(&rlbot, player_index, &mut bot);
 }
 
-fn bot_loop(rlbot: &rlbot::RLBot, player_index: i32, bot: &mut FormulaNone) {
+fn bot_loop(rlbot: &rlbot::RLBot, player_index: i32, bot: &mut FormulaNone<'_>) {
     let mut physics = rlbot.physicist();
 
     loop {
@@ -168,7 +170,7 @@ impl<'a> FormulaNone<'a> {
 
     fn tick(
         &mut self,
-        rigid_body_tick: rlbot::flat::RigidBodyTick,
+        rigid_body_tick: rlbot::flat::RigidBodyTick<'_>,
         packet: &rlbot::ffi::LiveDataPacket,
     ) -> rlbot::ffi::PlayerInput {
         if !packet.GameInfo.RoundActive {

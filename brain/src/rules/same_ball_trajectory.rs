@@ -20,7 +20,7 @@ impl SameBallTrajectory {
         SameBallTrajectory { prediction: None }
     }
 
-    pub fn execute(&mut self, ctx: &mut Context) -> Option<Action> {
+    pub fn execute(&mut self, ctx: &mut Context<'_>) -> Option<Action> {
         if self.eval_vel_changed(ctx) {
             Some(Action::Abort)
         } else {
@@ -29,7 +29,7 @@ impl SameBallTrajectory {
         }
     }
 
-    fn update_snapshot(&mut self, ctx: &mut Context) {
+    fn update_snapshot(&mut self, ctx: &mut Context<'_>) {
         let frame = ctx.scenario.ball_prediction().at_time_or_last(0.1);
         self.prediction = Some(Prediction {
             t: ctx.packet.GameInfo.TimeSeconds + frame.t,
@@ -37,7 +37,7 @@ impl SameBallTrajectory {
         });
     }
 
-    fn eval_vel_changed(&mut self, ctx: &mut Context) -> bool {
+    fn eval_vel_changed(&mut self, ctx: &mut Context<'_>) -> bool {
         let prediction = some_or_else!(self.prediction.as_ref(), {
             return false;
         });

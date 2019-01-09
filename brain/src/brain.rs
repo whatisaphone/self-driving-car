@@ -13,7 +13,7 @@ use std::time::Instant;
 
 pub struct Brain {
     runner: Runner,
-    ball_predictor: Box<BallPredictor>,
+    ball_predictor: Box<dyn BallPredictor>,
     player_index: Option<i32>,
     fps_counter: FPSCounter,
 }

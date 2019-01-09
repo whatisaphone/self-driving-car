@@ -8,7 +8,7 @@ use derive_new::new;
 pub struct Dropshot;
 
 impl Strategy for Dropshot {
-    fn baseline(&mut self, ctx: &mut Context) -> Box<Behavior> {
+    fn baseline(&mut self, ctx: &mut Context<'_>) -> Box<dyn Behavior> {
         if !GetToFlatGround::on_flat_ground(ctx.me()) {
             return Box::new(GetToFlatGround::new());
         }
@@ -16,7 +16,11 @@ impl Strategy for Dropshot {
         Box::new(TepidHit::new())
     }
 
-    fn interrupt(&mut self, _ctx: &mut Context, _current: &Behavior) -> Option<Box<Behavior>> {
+    fn interrupt(
+        &mut self,
+        _ctx: &mut Context<'_>,
+        _current: &dyn Behavior,
+    ) -> Option<Box<dyn Behavior>> {
         None
     }
 }

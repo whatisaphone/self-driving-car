@@ -22,7 +22,7 @@ impl Defense {
         Defense
     }
 
-    fn is_between_ball_and_own_goal(ctx: &mut Context) -> bool {
+    fn is_between_ball_and_own_goal(ctx: &mut Context<'_>) -> bool {
         let goal_loc = ctx.game.own_goal().center_2d;
         let me_loc = ctx.me().Physics.loc_2d();
         let ball_loc = match ctx.scenario.me_intercept() {
@@ -57,7 +57,7 @@ impl Behavior for Defense {
         name_of_type!(Defense)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
         ctx.eeg.track(Event::Defense);
 
         // If we're not between the ball and our goal, get there.
@@ -81,7 +81,7 @@ impl Behavior for Defense {
 
 /// For `GroundedHit::hit_towards`, calculate an aim location which puts us
 /// between the ball and our own goal.
-pub fn defensive_hit(ctx: &mut GroundedHitAimContext) -> Result<GroundedHitTarget, ()> {
+pub fn defensive_hit(ctx: &mut GroundedHitAimContext<'_, '_>) -> Result<GroundedHitTarget, ()> {
     let target_angle = blocking_angle(
         ctx.intercept_ball_loc.to_2d(),
         ctx.car.Physics.loc_2d(),

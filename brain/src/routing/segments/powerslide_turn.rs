@@ -52,11 +52,11 @@ impl SegmentPlan for PowerslideTurn {
         self.blueprint.duration
     }
 
-    fn run(&self) -> Box<SegmentRunner> {
+    fn run(&self) -> Box<dyn SegmentRunner> {
         Box::new(PowerslideTurnRunner::new(self.clone()))
     }
 
-    fn draw(&self, ctx: &mut Context) {
+    fn draw(&self, ctx: &mut Context<'_>) {
         ctx.eeg.draw(Drawable::Line(
             self.blueprint.start_loc,
             self.blueprint.end_loc,
@@ -84,7 +84,7 @@ impl SegmentRunner for PowerslideTurnRunner {
         name_of_type!(PowerslideTurnRunner)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> SegmentRunAction {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction {
         let now = ctx.packet.GameInfo.TimeSeconds;
         let start_time = *self.start_time.get_or_insert(now);
         let elapsed = now - start_time;

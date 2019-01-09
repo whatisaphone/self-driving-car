@@ -22,7 +22,11 @@ impl Shoot {
         Shoot
     }
 
-    pub fn viable_shot(game: &Game, car_loc: Point3<f32>, ball_loc: Point3<f32>) -> Option<Shot> {
+    pub fn viable_shot(
+        game: &Game<'_>,
+        car_loc: Point3<f32>,
+        ball_loc: Point3<f32>,
+    ) -> Option<Shot> {
         // Aerials are not ready for prime-time yet
         if ball_loc.z >= GroundedHitTarget::MAX_BALL_Z {
             return None;
@@ -47,7 +51,7 @@ impl Shoot {
         Some(Shot { aim_loc })
     }
 
-    fn aim(ctx: &mut GroundedHitAimContext) -> Result<GroundedHitTarget, ()> {
+    fn aim(ctx: &mut GroundedHitAimContext<'_, '_>) -> Result<GroundedHitTarget, ()> {
         match Self::aim_calc(ctx.game, ctx.scenario, ctx.car) {
             Some(i) => Ok(GroundedHitTarget::new(
                 i.time,
@@ -59,8 +63,8 @@ impl Shoot {
     }
 
     fn aim_calc(
-        game: &Game,
-        scenario: &Scenario,
+        game: &Game<'_>,
+        scenario: &Scenario<'_>,
         car: &rlbot::ffi::PlayerInfo,
     ) -> Option<NaiveIntercept<Shot>> {
         naive_ground_intercept_2(&car.into(), scenario.ball_prediction(), |ball| {
@@ -78,7 +82,7 @@ impl Behavior for Shoot {
         name_of_type!(Shoot)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
         let intercept = Self::aim_calc(ctx.game, &ctx.scenario, ctx.me());
         if intercept.is_none() {
             ctx.eeg.log(self.name(), "no viable shot");

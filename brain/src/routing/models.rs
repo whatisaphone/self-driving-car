@@ -92,25 +92,25 @@ pub trait RoutePlanner: RoutePlannerCloneBox + Send {
 
     fn plan(
         &self,
-        ctx: &PlanningContext,
-        dump: &mut PlanningDump,
+        ctx: &PlanningContext<'_, '_>,
+        dump: &mut PlanningDump<'_>,
     ) -> Result<RoutePlan, RoutePlanError>;
 }
 
 pub trait RoutePlannerCloneBox {
-    fn clone_box(&self) -> Box<RoutePlanner>;
+    fn clone_box(&self) -> Box<dyn RoutePlanner>;
 }
 
 impl<T> RoutePlannerCloneBox for T
 where
     T: RoutePlanner + Clone + 'static,
 {
-    fn clone_box(&self) -> Box<RoutePlanner> {
+    fn clone_box(&self) -> Box<dyn RoutePlanner> {
         Box::new(self.clone())
     }
 }
 
-impl Clone for Box<RoutePlanner> {
+impl Clone for Box<dyn RoutePlanner> {
     fn clone(&self) -> Self {
         self.clone_box()
     }
@@ -132,24 +132,24 @@ impl<'a: 's, 's> PlanningContext<'a, 's> {
     }
 
     pub fn plan(
-        planner: &RoutePlanner,
-        ctx: &mut Context,
+        planner: &dyn RoutePlanner,
+        ctx: &mut Context<'_>,
     ) -> Result<(RoutePlan, Vec<String>), ProvisionalExpandError<'a>> {
         let (ctx, _eeg) = ctx.split();
         Self::plan2(planner, &ctx)
     }
 
     pub fn plan2(
-        planner: &RoutePlanner,
-        ctx: &Context2,
+        planner: &dyn RoutePlanner,
+        ctx: &Context2<'_, '_>,
     ) -> Result<(RoutePlan, Vec<String>), ProvisionalExpandError<'a>> {
         let context = PlanningContext::from_context(ctx);
         Self::plan_2(planner, &context)
     }
 
     pub fn plan_2(
-        planner: &RoutePlanner,
-        context: &PlanningContext,
+        planner: &dyn RoutePlanner,
+        context: &PlanningContext<'_, '_>,
     ) -> Result<(RoutePlan, Vec<String>), ProvisionalExpandError<'a>> {
         let mut log = Vec::new();
         let mut dump = PlanningDump { log: &mut log };
@@ -173,11 +173,11 @@ impl<'a> PlanningDump<'a> {
         self.log.push(message.into());
     }
 
-    pub fn log(&mut self, planner: &RoutePlanner, message: impl AsRef<str>) {
+    pub fn log(&mut self, planner: &dyn RoutePlanner, message: impl AsRef<str>) {
         self.log_line(format!("[{}] {}", planner.name(), message.as_ref()));
     }
 
-    pub fn log_pretty(&mut self, planner: &RoutePlanner, name: &str, value: impl PrettyPrint) {
+    pub fn log_pretty(&mut self, planner: &dyn RoutePlanner, name: &str, value: impl PrettyPrint) {
         self.log_line(format!(
             "[{}] {} = {}",
             planner.name(),
@@ -186,13 +186,13 @@ impl<'a> PlanningDump<'a> {
         ));
     }
 
-    pub fn log_start(&mut self, planner: &RoutePlanner, state: &CarState) {
+    pub fn log_start(&mut self, planner: &dyn RoutePlanner, state: &CarState) {
         self.log_pretty(planner, "start loc", state.loc);
         self.log_pretty(planner, "start rot", state.rot);
         self.log_pretty(planner, "start vel", state.vel);
     }
 
-    pub fn log_plan(&mut self, planner: &RoutePlanner, plan: &RoutePlan) {
+    pub fn log_plan(&mut self, planner: &dyn RoutePlanner, plan: &RoutePlan) {
         let name = plan.segment.name();
         let end = plan.segment.end();
         let duration = plan.segment.duration();
@@ -216,17 +216,17 @@ impl<'a> PlanningDump<'a> {
 }
 
 pub struct ProvisionalPlanExpansionTail {
-    items: Vec<Box<SegmentPlan>>,
+    items: Vec<Box<dyn SegmentPlan>>,
 }
 
 #[derive(new)]
 pub struct ProvisionalPlanExpansion<'a> {
-    head: &'a SegmentPlan,
+    head: &'a dyn SegmentPlan,
     tail: &'a ProvisionalPlanExpansionTail,
 }
 
 impl<'a> ProvisionalPlanExpansion<'a> {
-    pub fn iter(&'a self) -> impl Iterator<Item = &'a (SegmentPlan + 'a)> {
+    pub fn iter(&'a self) -> impl Iterator<Item = &'a (dyn SegmentPlan + 'a)> {
         iter::once(self.head).chain(self.tail.items.iter().map(|s| &**s))
     }
 
@@ -247,7 +247,7 @@ pub enum RoutePlanError {
 }
 
 impl fmt::Debug for RoutePlanError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             RoutePlanError::MustBeOnFlatGround => f.write_str(stringify!(MustBeOnFlatGround)),
             RoutePlanError::MustNotBeSkidding { .. } => f.write_str(stringify!(MustNotBeSkidding)),
@@ -263,23 +263,23 @@ impl fmt::Debug for RoutePlanError {
 
 #[derive(Clone)]
 pub struct RoutePlan {
-    pub segment: Box<SegmentPlan>,
-    pub next: Option<Box<RoutePlanner>>,
+    pub segment: Box<dyn SegmentPlan>,
+    pub next: Option<Box<dyn RoutePlanner>>,
 }
 
 impl RoutePlan {
     pub fn provisional_expand(
         &self,
-        scenario: &Scenario,
-    ) -> Result<ProvisionalPlanExpansionTail, ProvisionalExpandError> {
+        scenario: &Scenario<'_>,
+    ) -> Result<ProvisionalPlanExpansionTail, ProvisionalExpandError<'_>> {
         self.provisional_expand_2(scenario.game, scenario.ball_prediction())
     }
 
     pub fn provisional_expand_2(
         &self,
-        game: &Game,
+        game: &Game<'_>,
         ball_prediction: &BallTrajectory,
-    ) -> Result<ProvisionalPlanExpansionTail, ProvisionalExpandError> {
+    ) -> Result<ProvisionalPlanExpansionTail, ProvisionalExpandError<'_>> {
         let mut tail = Vec::new();
         if let Some(ref planner) = self.next {
             let context = PlanningContext {
@@ -304,10 +304,10 @@ impl RoutePlan {
     }
 
     fn expand_round(
-        planner: &RoutePlanner,
-        ctx: &PlanningContext,
-        dump: &mut PlanningDump,
-        mut sink: impl FnMut(Box<SegmentPlan>),
+        planner: &dyn RoutePlanner,
+        ctx: &PlanningContext<'_, '_>,
+        dump: &mut PlanningDump<'_>,
+        mut sink: impl FnMut(Box<dyn SegmentPlan>),
     ) -> Result<(), (&'static str, RoutePlanError)> {
         dump.log.push(format!("-{}----------", planner.name()));
         let plan = planner.plan(ctx, dump).map_err(|e| (planner.name(), e))?;
@@ -342,24 +342,24 @@ pub trait SegmentPlan: SegmentPlanCloneBox + Send {
     fn start(&self) -> CarState;
     fn end(&self) -> CarState;
     fn duration(&self) -> f32;
-    fn run(&self) -> Box<SegmentRunner>;
-    fn draw(&self, ctx: &mut Context);
+    fn run(&self) -> Box<dyn SegmentRunner>;
+    fn draw(&self, ctx: &mut Context<'_>);
 }
 
 pub trait SegmentPlanCloneBox {
-    fn clone_box(&self) -> Box<SegmentPlan>;
+    fn clone_box(&self) -> Box<dyn SegmentPlan>;
 }
 
 impl<T> SegmentPlanCloneBox for T
 where
     T: SegmentPlan + Clone + 'static,
 {
-    fn clone_box(&self) -> Box<SegmentPlan> {
+    fn clone_box(&self) -> Box<dyn SegmentPlan> {
         Box::new(self.clone())
     }
 }
 
-impl Clone for Box<SegmentPlan> {
+impl Clone for Box<dyn SegmentPlan> {
     fn clone(&self) -> Self {
         self.clone_box()
     }
@@ -368,7 +368,7 @@ impl Clone for Box<SegmentPlan> {
 pub trait SegmentRunner: Send {
     fn name(&self) -> &str;
 
-    fn execute(&mut self, ctx: &mut Context) -> SegmentRunAction;
+    fn execute(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction;
 }
 
 pub enum SegmentRunAction {
@@ -391,10 +391,10 @@ mod tests {
     #[ignore(note = "Use this as needed to debug a plan.")]
     fn debug_plan() {
         // I'm very lucky that this works.
-        let scenario: Scenario = unsafe { mem::zeroed() };
+        let scenario: Scenario<'_> = unsafe { mem::zeroed() };
         let ball_prediction = unsafe { mem::zeroed() };
 
-        let planner: &RoutePlanner = unsafe { mem::uninitialized() }; // Fill this in.
+        let planner: &dyn RoutePlanner = unsafe { mem::uninitialized() }; // Fill this in.
         let ctx = PlanningContext {
             game: &scenario.game,
             start: CarState {

@@ -27,11 +27,11 @@ impl SegmentPlan for NullSegment {
         0.0
     }
 
-    fn run(&self) -> Box<SegmentRunner> {
+    fn run(&self) -> Box<dyn SegmentRunner> {
         Box::new(NullSegmentRunner::new())
     }
 
-    fn draw(&self, _ctx: &mut Context) {}
+    fn draw(&self, _ctx: &mut Context<'_>) {}
 }
 
 #[derive(new)]
@@ -42,7 +42,7 @@ impl SegmentRunner for NullSegmentRunner {
         name_of_type!(NullSegmentRunner)
     }
 
-    fn execute(&mut self, _ctx: &mut Context) -> SegmentRunAction {
+    fn execute(&mut self, _ctx: &mut Context<'_>) -> SegmentRunAction {
         SegmentRunAction::Success
     }
 }

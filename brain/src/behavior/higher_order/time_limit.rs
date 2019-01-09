@@ -4,7 +4,7 @@ use nameof::name_of_type;
 /// Execute `child` for at most `limit` seconds, then return.
 pub struct TimeLimit {
     limit: f32,
-    child: Box<Behavior>,
+    child: Box<dyn Behavior>,
     start: Option<f32>,
 }
 
@@ -23,7 +23,7 @@ impl Behavior for TimeLimit {
         name_of_type!(TimeLimit)
     }
 
-    fn execute(&mut self, ctx: &mut Context) -> Action {
+    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
         let now = ctx.packet.GameInfo.TimeSeconds;
         let start = *self.start.get_or_insert(now);
         let elapsed = now - start;

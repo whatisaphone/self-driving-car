@@ -55,7 +55,7 @@ clippy:
   image: rustlang/rust:nightly
   script:
     - rustup component add clippy
-    - cargo clippy -- -D clippy::all
+    - cargo clippy
 
 # Unfortunately testing can't happen in CI right now because we require Windows.
 .test:
