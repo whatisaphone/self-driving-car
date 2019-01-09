@@ -80,7 +80,7 @@ impl SegmentRunner for Braker {
         name_of_type!(Braker)
     }
 
-    fn execute(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction {
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction {
         let speed = ctx.me().Physics.vel_2d().norm();
         if speed < self.plan.target_speed {
             return SegmentRunAction::Success;

@@ -84,7 +84,7 @@ impl SegmentRunner for PowerslideTurnRunner {
         name_of_type!(PowerslideTurnRunner)
     }
 
-    fn execute(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction {
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction {
         let now = ctx.packet.GameInfo.TimeSeconds;
         let start_time = *self.start_time.get_or_insert(now);
         let elapsed = now - start_time;

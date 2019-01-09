@@ -368,7 +368,7 @@ impl Clone for Box<dyn SegmentPlan> {
 pub trait SegmentRunner: Send {
     fn name(&self) -> &str;
 
-    fn execute(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction;
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction;
 }
 
 pub enum SegmentRunAction {

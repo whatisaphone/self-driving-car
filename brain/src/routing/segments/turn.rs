@@ -115,7 +115,7 @@ impl SegmentRunner for Turner {
         name_of_type!(Turner)
     }
 
-    fn execute(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction {
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction {
         let me = ctx.me();
         let me_loc = me.Physics.loc_2d();
         let me_forward = me.Physics.forward_axis_2d();

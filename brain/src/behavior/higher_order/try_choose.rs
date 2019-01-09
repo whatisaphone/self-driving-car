@@ -46,12 +46,12 @@ impl Behavior for TryChoose {
         self.priority
     }
 
-    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
         ctx.eeg
             .draw(Drawable::print(self.choice_names.as_str(), color::GREEN));
 
         if let Some(chosen_index) = self.chosen_index {
-            return self.choices[chosen_index].execute(ctx);
+            return self.choices[chosen_index].execute_old(ctx);
         }
 
         // If we get here, we need to choose a child behavior. This will only happen on
@@ -63,7 +63,7 @@ impl Behavior for TryChoose {
         );
 
         for (index, behavior) in self.choices.iter_mut().enumerate() {
-            match behavior.execute(ctx) {
+            match behavior.execute_old(ctx) {
                 Action::Abort => continue,
                 Action::Return => continue,
                 action => {

@@ -51,8 +51,8 @@ impl SegmentRunner for Chainer {
         name_of_type!(Chainer)
     }
 
-    fn execute(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction {
-        let action = self.segments.front_mut().unwrap().execute(ctx);
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction {
+        let action = self.segments.front_mut().unwrap().execute_old(ctx);
         match action {
             SegmentRunAction::Yield(i) => return SegmentRunAction::Yield(i),
             SegmentRunAction::Success => true,
@@ -64,7 +64,7 @@ impl SegmentRunner for Chainer {
             SegmentRunAction::Success
         } else {
             ctx.eeg.log(self.name(), "next runner");
-            self.execute(ctx)
+            self.execute_old(ctx)
         }
     }
 }

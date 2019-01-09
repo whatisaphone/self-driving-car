@@ -14,7 +14,7 @@ pub trait Behavior: Send {
         Priority::Idle
     }
 
-    fn execute(&mut self, ctx: &mut Context<'_>) -> Action;
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action;
 }
 
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]

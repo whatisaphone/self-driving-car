@@ -53,7 +53,7 @@ where
         stringify!(GroundedHit)
     }
 
-    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
         let me = ctx.me();
 
         if IsSkidding.evaluate(&me.into()) {
@@ -64,7 +64,7 @@ where
             ctx.eeg.log(self.name(), name_of_type!(NotOnFlatGround));
             return Action::Abort;
         }
-        return_some!(self.same_ball_trajectory.execute(ctx));
+        return_some!(self.same_ball_trajectory.execute_old(ctx));
 
         let intercept = match self.intercept_loc(ctx) {
             Ok(i) => i,

@@ -42,7 +42,7 @@ impl SegmentRunner for NullSegmentRunner {
         name_of_type!(NullSegmentRunner)
     }
 
-    fn execute(&mut self, _ctx: &mut Context<'_>) -> SegmentRunAction {
+    fn execute_old(&mut self, _ctx: &mut Context<'_>) -> SegmentRunAction {
         SegmentRunAction::Success
     }
 }

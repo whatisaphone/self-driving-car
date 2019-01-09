@@ -31,7 +31,7 @@ impl Behavior for TepidHit {
         name_of_type!(TepidHit)
     }
 
-    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
         let (ctx, eeg) = ctx.split();
 
         let mut hits = ArrayVec::<[_; 4]>::new();

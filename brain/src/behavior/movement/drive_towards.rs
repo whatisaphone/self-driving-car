@@ -51,7 +51,7 @@ impl Behavior for DriveTowards {
         name_of_type!(DriveTowards)
     }
 
-    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
         Action::Yield(drive_towards(ctx, self.target_loc))
     }
 }

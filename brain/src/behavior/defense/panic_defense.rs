@@ -45,10 +45,10 @@ impl Behavior for PanicDefense {
         name_of_type!(PanicDefense)
     }
 
-    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
         ctx.eeg.track(Event::PanicDefense);
 
-        return_some!(self.same_ball_trajectory.execute(ctx));
+        return_some!(self.same_ball_trajectory.execute_old(ctx));
 
         if !GetToFlatGround::on_flat_ground(ctx.me()) {
             ctx.eeg.log(self.name(), "not on flat ground");
@@ -66,7 +66,7 @@ impl Behavior for PanicDefense {
             Phase::Start => unreachable!(),
             Phase::Rush { ref mut child, .. } => {
                 ctx.eeg.draw(Drawable::print("Rush", color::GREEN));
-                child.execute(ctx)
+                child.execute_old(ctx)
             }
             Phase::Turn { aim_hint, .. } => {
                 ctx.eeg.draw(Drawable::print("Turn", color::GREEN));

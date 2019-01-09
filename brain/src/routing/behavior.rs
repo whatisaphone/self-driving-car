@@ -47,7 +47,7 @@ impl Behavior for FollowRoute {
         name_of_type!(FollowRoute)
     }
 
-    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
         if self.current.is_none() {
             let planner = &*self.planner.take().unwrap();
             if let Err(action) = self.advance(planner, ctx) {
@@ -142,7 +142,7 @@ impl FollowRoute {
         ctx.eeg
             .draw(Drawable::print(current.plan.segment.name(), color::YELLOW));
 
-        let success = match current.runner.execute(ctx) {
+        let success = match current.runner.execute_old(ctx) {
             SegmentRunAction::Yield(i) => return Action::Yield(i),
             SegmentRunAction::Success => true,
             SegmentRunAction::Failure => false,

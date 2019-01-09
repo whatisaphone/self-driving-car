@@ -25,7 +25,7 @@ impl Behavior for Offense {
         name_of_type!(Offense)
     }
 
-    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
         ctx.eeg.track(Event::Offense);
 
         if can_we_shoot(ctx) {

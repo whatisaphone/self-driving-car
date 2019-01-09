@@ -115,7 +115,7 @@ impl Brain {
 
         ctx.eeg.print_time("possession", ctx.scenario.possession());
 
-        let result = self.runner.execute(&mut ctx);
+        let result = self.runner.execute_old(&mut ctx);
 
         let stop = Instant::now();
         let duration = stop - start;

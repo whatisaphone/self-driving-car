@@ -100,8 +100,8 @@ impl SegmentRunner for ForwardDodgeRunner {
         name_of_type!(ForwardDodgeRunner)
     }
 
-    fn execute(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction {
-        match self.behavior.execute(ctx) {
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction {
+        match self.behavior.execute_old(ctx) {
             Action::Yield(i) => SegmentRunAction::Yield(i),
             Action::Call(_) => panic!("Action::Call not supported in SegmentRunner"),
             Action::Return => SegmentRunAction::Success,

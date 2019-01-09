@@ -35,7 +35,7 @@ impl Behavior for Retreat {
         name_of_type!(Retreat)
     }
 
-    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
         let mut choices = Vec::<Box<dyn Behavior>>::new();
 
         if Self::behind_ball(ctx) && ctx.scenario.possession() >= -Scenario::POSSESSION_CONTESTABLE

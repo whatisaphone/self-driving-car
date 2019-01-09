@@ -57,7 +57,7 @@ impl Behavior for Defense {
         name_of_type!(Defense)
     }
 
-    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
         ctx.eeg.track(Event::Defense);
 
         // If we're not between the ball and our goal, get there.

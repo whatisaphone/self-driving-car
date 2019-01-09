@@ -136,7 +136,7 @@ impl SegmentRunner for StraightRunner {
         name_of_type!(StraightRunner)
     }
 
-    fn execute(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction {
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction {
         match self.plan.mode {
             StraightMode::Fake => {
                 ctx.eeg.log(self.name(), "stopping because mode is fake");

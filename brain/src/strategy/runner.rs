@@ -25,7 +25,7 @@ impl Runner {
         }
     }
 
-    pub fn execute(&mut self, ctx: &mut Context<'_>) -> rlbot::ffi::PlayerInput {
+    pub fn execute_old(&mut self, ctx: &mut Context<'_>) -> rlbot::ffi::PlayerInput {
         self.exec(0, ctx)
     }
 }
@@ -35,7 +35,7 @@ impl Behavior for Runner {
         name_of_type!(Runner)
     }
 
-    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
         Action::Yield(self.exec(0, ctx))
     }
 }
@@ -50,7 +50,7 @@ impl Runner {
         let behavior = self.choose_behavior(ctx);
         ctx.eeg
             .draw(Drawable::print(behavior.blurb(), color::YELLOW));
-        let action = behavior.execute(ctx);
+        let action = behavior.execute_old(ctx);
 
         match action {
             Action::Yield(i) => i,

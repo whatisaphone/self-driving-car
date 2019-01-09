@@ -41,7 +41,7 @@ impl Behavior for PushToOwnCorner {
         name_of_type!(PushToOwnCorner)
     }
 
-    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
         let impending_concede_soon = ctx
             .scenario
             .impending_concede()

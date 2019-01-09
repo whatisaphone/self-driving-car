@@ -41,7 +41,7 @@ impl Behavior for WallHit {
         Priority::Strike
     }
 
-    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
         let (ref ctx, ref mut eeg) = ctx.split();
 
         if !ctx.me().OnGround {

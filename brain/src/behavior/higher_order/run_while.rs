@@ -41,7 +41,7 @@ where
         self.child.priority()
     }
 
-    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
         if !self.predicate.evaluate(ctx) {
             ctx.eeg.log(self.name(), "terminating");
             return Action::Abort;
@@ -50,6 +50,6 @@ where
         ctx.eeg
             .draw(Drawable::print(self.child.blurb(), color::YELLOW));
 
-        self.child.execute(ctx)
+        self.child.execute_old(ctx)
     }
 }

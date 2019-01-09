@@ -53,7 +53,7 @@ impl Behavior for Chain {
         self.priority
     }
 
-    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
         ctx.eeg.draw(Drawable::print(
             self.children
                 .iter()
@@ -69,14 +69,14 @@ impl Behavior for Chain {
         };
         ctx.eeg.draw(Drawable::print(front.blurb(), color::YELLOW));
 
-        match front.execute(ctx) {
+        match front.execute_old(ctx) {
             Action::Yield(x) => Action::Yield(x),
             Action::Call(b) => {
                 self.children[0] = b;
                 self.blurb = Self::blurb(self.children.iter());
                 ctx.eeg
                     .log(self.name(), format!("child Call; becoming {}", self.blurb));
-                self.execute(ctx)
+                self.execute_old(ctx)
             }
             Action::Return => {
                 self.children.pop_front();
@@ -85,7 +85,7 @@ impl Behavior for Chain {
                     self.name(),
                     format!("child Return; becoming {}", self.blurb),
                 );
-                self.execute(ctx)
+                self.execute_old(ctx)
             }
             Action::Abort => {
                 ctx.eeg.log(self.name(), "child Abort");

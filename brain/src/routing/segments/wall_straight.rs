@@ -91,7 +91,7 @@ impl SegmentRunner for WallStraightRunner {
         name_of_type!(WallStraightRunner)
     }
 
-    fn execute(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction {
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction {
         let (_ctx, eeg) = ctx.split();
 
         // Assume the subsequent action will do this for us.

@@ -29,7 +29,7 @@ impl Behavior for Kickoff {
         name_of_type!(Kickoff)
     }
 
-    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
         if !Self::is_kickoff(&ctx.packet.GameBall) {
             ctx.eeg.log(self.name(), "not a kickoff");
             return Action::Abort;

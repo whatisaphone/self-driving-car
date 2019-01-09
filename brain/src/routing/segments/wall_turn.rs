@@ -107,7 +107,7 @@ impl SegmentRunner for WallTurnRunner {
         name_of_type!(WallTurnRunner)
     }
 
-    fn execute(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction {
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction {
         let me = ctx.me();
         let me_flat_loc = self.plan.flattener * me.Physics.loc();
         let me_flat_forward = self.plan.flattener * me.Physics.forward_axis();

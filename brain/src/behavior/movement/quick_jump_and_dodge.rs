@@ -54,7 +54,7 @@ impl Behavior for QuickJumpAndDodge {
         Priority::Force
     }
 
-    fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
         let start_time = *self
             .start_time
             .get_or_insert(ctx.packet.GameInfo.TimeSeconds);

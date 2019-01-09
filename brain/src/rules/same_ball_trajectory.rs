@@ -20,7 +20,7 @@ impl SameBallTrajectory {
         SameBallTrajectory { prediction: None }
     }
 
-    pub fn execute(&mut self, ctx: &mut Context<'_>) -> Option<Action> {
+    pub fn execute_old(&mut self, ctx: &mut Context<'_>) -> Option<Action> {
         if self.eval_vel_changed(ctx) {
             Some(Action::Abort)
         } else {

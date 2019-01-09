@@ -29,7 +29,7 @@ mod integration_tests {
             name_of_type!(SimpleSteerTowardsBall)
         }
 
-        fn execute(&mut self, ctx: &mut Context<'_>) -> Action {
+        fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
             let me = ctx.me();
             let ball = ctx.packet.GameBall;
             Action::Yield(rlbot::ffi::PlayerInput {
