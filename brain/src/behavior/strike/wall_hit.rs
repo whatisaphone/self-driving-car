@@ -76,7 +76,7 @@ impl Behavior for WallHit {
         };
 
         match calculate_approach(ctx, eeg, intercept_time, &path) {
-            Step::Drive(throttle, boost) => drive(&path, throttle, boost),
+            Step::Drive(throttle, boost) => drive(ctx.me(), &path, throttle, boost),
             Step::Jump => jump(&path),
         }
     }
@@ -257,13 +257,13 @@ enum Step {
     Jump,
 }
 
-fn drive(path: &Path, throttle: f32, boost: bool) -> Action {
+fn drive(me: &rlbot::ffi::PlayerInfo, path: &Path, throttle: f32, boost: bool) -> Action {
     let flat_forward_axis = car_forward_axis_2d(path.flat_start_rot);
     let steer = flat_forward_axis.angle_to(&(path.flat_target_loc - path.flat_start_loc).to_axis());
     Action::Yield(rlbot::ffi::PlayerInput {
         Throttle: throttle,
         Steer: (steer * 2.0).max(-1.0).min(1.0),
-        Boost: boost,
+        Boost: boost && me.Physics.vel().norm() < rl::CAR_ALMOST_MAX_SPEED,
         ..Default::default()
     })
 }
