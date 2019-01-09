@@ -21,7 +21,7 @@ pub trait Behavior: Send {
 pub enum Priority {
     Idle,
     Defense,
-    Striking,
+    Strike,
     Force,
 }
 

@@ -38,7 +38,7 @@ impl Behavior for WallHit {
     }
 
     fn priority(&self) -> Priority {
-        Priority::Striking
+        Priority::Strike
     }
 
     fn execute(&mut self, ctx: &mut Context) -> Action {

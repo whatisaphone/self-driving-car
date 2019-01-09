@@ -50,11 +50,11 @@ impl Behavior for TepidHit {
             });
 
         match hit {
-            Some((_, HitType::Wall)) => Action::call(chain!(Priority::Striking, [
+            Some((_, HitType::Wall)) => Action::call(chain!(Priority::Strike, [
                 FollowRoute::new(WallIntercept::new()),
                 WallHit::new(),
             ])),
-            Some((_, HitType::Ground)) | None => Action::call(chain!(Priority::Striking, [
+            Some((_, HitType::Ground)) | None => Action::call(chain!(Priority::Strike, [
                 FollowRoute::new(GroundIntercept::new()),
                 GroundedHit::hit_towards(time_wasting_hit),
             ])),
