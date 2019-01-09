@@ -1,28 +1,27 @@
 use crate::{
     eeg::EEG,
-    plan::ball::BallPredictor,
     strategy::{game::Game, scenario::Scenario, Team},
 };
 
 pub struct Context<'a> {
     pub packet: &'a rlbot::ffi::LiveDataPacket,
     pub game: &'a Game<'a>,
+    pub scenario: &'a Scenario<'a>,
     pub eeg: &'a mut EEG,
-    pub scenario: Scenario<'a>,
 }
 
 impl<'a> Context<'a> {
     pub fn new(
         game: &'a Game<'_>,
-        ball_predictor: &'a dyn BallPredictor,
         packet: &'a rlbot::ffi::LiveDataPacket,
+        scenario: &'a Scenario<'a>,
         eeg: &'a mut EEG,
     ) -> Self {
         Self {
             packet,
             game,
+            scenario,
             eeg,
-            scenario: Scenario::new(game, ball_predictor, packet),
         }
     }
 

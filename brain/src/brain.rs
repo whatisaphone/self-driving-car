@@ -3,7 +3,7 @@ use crate::strategy::Behavior;
 use crate::{
     eeg::{color, Drawable, EEG},
     plan::ball::{BallPredictor, ChipBallPrediction, FrameworkBallPrediction},
-    strategy::{infer_game_mode, Context, Dropshot, Game, Runner, Soccar},
+    strategy::{infer_game_mode, Context, Dropshot, Game, Runner, Scenario, Soccar},
     utils::FPSCounter,
 };
 use common::{prelude::*, ControllerInput, ExtendDuration};
@@ -111,7 +111,8 @@ impl Brain {
         let start = Instant::now();
 
         let game = Game::new(field_info, packet, self.player_index.unwrap() as usize);
-        let mut ctx = Context::new(&game, &*self.ball_predictor, packet, eeg);
+        let scenario = Scenario::new(&game, &*self.ball_predictor, packet);
+        let mut ctx = Context::new(&game, packet, &scenario, eeg);
 
         ctx.eeg.print_time("possession", ctx.scenario.possession());
 
