@@ -12,15 +12,6 @@ pub use crate::{
     math::linear_interpolate,
 };
 
-macro_rules! some_or_else {
-    ($e:expr, $b:block) => {
-        match $e {
-            Some(x) => x,
-            None => $b,
-        };
-    };
-}
-
 mod car;
 mod car1d;
 mod car_forward_dodge;

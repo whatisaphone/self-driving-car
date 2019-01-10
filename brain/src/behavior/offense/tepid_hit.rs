@@ -68,9 +68,7 @@ fn ground(ctx: &Context2<'_, '_>) -> Option<(f32, HitType)> {
 }
 
 fn wall<'ball>(ctx: &Context2<'_, 'ball>) -> Option<(f32, HitType)> {
-    let intercept = some_or_else!(WallIntercept::calc_intercept(ctx), {
-        return None;
-    });
+    let intercept = WallIntercept::calc_intercept(ctx)?;
     let push_angle = (intercept.loc.to_2d() - ctx.me().Physics.loc_2d())
         .angle_to(&(ctx.game.enemy_goal().center_2d - ctx.game.own_goal().center_2d));
     if push_angle >= PI / 3.0 {

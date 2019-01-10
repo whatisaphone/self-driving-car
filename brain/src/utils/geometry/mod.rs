@@ -98,9 +98,7 @@ impl Plane {
             return Ok(Isometry3::identity());
         }
 
-        let seam = some_or_else!(self.intersect(target), {
-            return Err(());
-        });
+        let seam = self.intersect(target).ok_or(())?;
         Ok(Isometry3::rotation_wrt_point(
             self.normal.rotation_to(&target.normal),
             seam.origin,

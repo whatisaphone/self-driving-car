@@ -15,18 +15,16 @@ pub fn avoid_plowing_into_goal_wall(
     start: &CarState,
     target_loc: Point2<f32>,
 ) -> Option<Box<dyn RoutePlanner>> {
-    match avoid_goal_wall_waypoint(start, target_loc) {
-        None => None,
-        Some(waypoint) => Some(Box::new(ChainedPlanner::chain(vec![
-            Box::new(PathingUnawareTurnPlanner::new(waypoint, None)),
-            Box::new(GroundStraightPlanner::new(
-                waypoint,
-                None,
-                0.0,
-                StraightMode::Asap,
-            )),
-        ]))),
-    }
+    let waypoint = avoid_goal_wall_waypoint(start, target_loc)?;
+    Some(Box::new(ChainedPlanner::chain(vec![
+        Box::new(PathingUnawareTurnPlanner::new(waypoint, None)),
+        Box::new(GroundStraightPlanner::new(
+            waypoint,
+            None,
+            0.0,
+            StraightMode::Asap,
+        )),
+    ])))
 }
 
 /// Calculate whether driving straight to `target_loc` would intersect the goal

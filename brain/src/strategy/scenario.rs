@@ -178,9 +178,7 @@ fn simulate_ball_blitz(
         sim.advance(ball.dt(), 1.0, true);
     }
 
-    let naive_result = some_or_else!(naive_result, {
-        return None;
-    });
+    let naive_result = naive_result?;
     let penalty = blitz_penalty(car, &naive_result);
     let ball = ball_prediction.at_time_or_last(naive_result.t + penalty);
     Some(NaiveIntercept {

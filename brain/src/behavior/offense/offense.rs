@@ -106,9 +106,7 @@ fn slow_play(ctx: &mut Context<'_>) -> Option<Action> {
         return None;
     }
 
-    let intercept = some_or_else!(ctx.scenario.me_intercept(), {
-        return None;
-    });
+    let intercept = ctx.scenario.me_intercept()?;
     let ball_loc = intercept.ball_loc.to_2d();
 
     if let Some(adjust) = readjust_for_shot(ctx, intercept.time) {

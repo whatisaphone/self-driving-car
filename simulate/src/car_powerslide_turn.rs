@@ -44,10 +44,7 @@ impl CarPowerslideTurn {
         let steer = target_rot_by.signum();
 
         let start_speed = start_vel.dot(&car_forward_axis_2d(start_rot)).max(0.0);
-        let reference = Self::reference_evaluate(start_speed, throttle, target_rot_by.abs());
-        let reference = some_or_else!(reference, {
-            return None;
-        });
+        let reference = Self::reference_evaluate(start_speed, throttle, target_rot_by.abs())?;
 
         // Transform the reference units back into input units.
         let mut reference_offset = reference.end_loc - reference.start_loc;
@@ -89,11 +86,7 @@ impl CarPowerslideTurn {
             .rot_2d_angle_cum
             .iter()
             .zip(upper.rot_2d_angle_cum)
-            .position(|(l, u)| (l + u) / 2.0 - start_rot >= target_rot_by);
-
-        let index = some_or_else!(index, {
-            return None;
-        });
+            .position(|(l, u)| (l + u) / 2.0 - start_rot >= target_rot_by)?;
         let index = ((index as f32) * 0.5) as usize;
 
         // TODO: interpolate between `lower` and `upper`

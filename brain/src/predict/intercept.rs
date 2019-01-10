@@ -41,7 +41,7 @@ where
         .with_speed(start.vel.norm())
         .with_boost(start.boost);
 
-    let sim_ball = ball.into_iter().find_map(|ball| {
+    let (sim_ball, data) = ball.into_iter().find_map(|ball| {
         let ball = ball.borrow();
 
         sim_car.advance(ball.dt(), 1.0, true);
@@ -54,11 +54,7 @@ where
         }
 
         None
-    });
-
-    let (sim_ball, data) = some_or_else!(sim_ball, {
-        return None;
-    });
+    })?;
 
     let intercept_loc = sim_ball.loc - (sim_ball.loc - start.loc).normalize() * RADII;
     let intercept = NaiveIntercept {
