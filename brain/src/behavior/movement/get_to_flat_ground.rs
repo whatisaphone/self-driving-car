@@ -7,10 +7,9 @@ use crate::{
     routing::{models::CarState, plan::avoid_goal_wall_waypoint},
     strategy::{Action, Behavior, Context, Priority},
 };
-use common::prelude::*;
+use common::{kinematics::kinematic_time, prelude::*, rl};
 use nalgebra::{Unit, Vector2, Vector3};
 use nameof::name_of_type;
-use simulate::linear_interpolate;
 use std::f32::consts::PI;
 
 pub struct GetToFlatGround;
@@ -125,24 +124,30 @@ impl Behavior for GetToFlatGround {
             // Boost towards the ground if we're floating helplessly
             let (forward, boost);
             if ctx.me().Boost > 0 {
-                let down_amount = linear_interpolate(
-                    &[500.0, 1000.0],
-                    &[0.0, 1.0],
-                    me.Physics.loc().z + me.Physics.vel().z.max(0.0) * 1.0,
-                );
-                forward = facing.rotation_to(&-Vector3::z_axis()).powf(down_amount) * facing;
+                let time_to_ground = kinematic_time(
+                    -me.Physics.loc().z + rl::OCTANE_NEUTRAL_Z,
+                    me.Physics.vel().z,
+                    rl::GRAVITY,
+                )
+                .unwrap();
+                let down = time_to_ground >= 0.5;
+                forward = if down {
+                    facing.rotation_to(&-Vector3::z_axis()).powf(0.8) * facing
+                } else {
+                    facing
+                };
 
                 let nose_down_angle = me.Physics.forward_axis().angle_to(&-Vector3::z_axis());
+                boost = down && nose_down_angle < PI / 3.0;
 
-                ctx.eeg
-                    .print_value("down_amount", format!("{:.2}", down_amount));
+                ctx.eeg.print_time("time_to_ground", time_to_ground);
+                ctx.eeg.print_value("down", format!("{}", down));
                 ctx.eeg.print_angle("nose_down_angle", nose_down_angle);
-
-                boost = down_amount > 0.0 && nose_down_angle < PI / 3.0;
             } else {
-                ctx.eeg.draw(Drawable::print("no boost", color::GREEN));
                 forward = facing;
                 boost = false;
+
+                ctx.eeg.draw(Drawable::print("no boost", color::GREEN));
             }
 
             let (pitch, yaw, roll) = dom::get_pitch_yaw_roll(ctx.me(), forward, Vector3::z_axis());
