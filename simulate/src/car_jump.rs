@@ -1,5 +1,5 @@
 use common::{
-    kinematics::{kinematic, kinematic_solve_for_t},
+    kinematics::{kinematic, kinematic_time},
     physics::car_roof_axis,
     rl,
 };
@@ -33,7 +33,7 @@ pub fn jump_duration(rot: &UnitQuaternion<f32>, target_dist: f32) -> Option<f32>
 
     let v_0 = axis * rl::CAR_JUMP_IMPULSE_SPEED;
     let a = axis * rl::CAR_JUMP_ACCEL + Vector3::z() * rl::GRAVITY;
-    if let Some(t) = kinematic_solve_for_t(target_dist, v_0.dot(&axis), a.dot(&axis)) {
+    if let Some(t) = kinematic_time(target_dist, v_0.dot(&axis), a.dot(&axis)) {
         if t < rl::CAR_JUMP_FORCE_TIME {
             return Some(t);
         }
@@ -44,9 +44,7 @@ pub fn jump_duration(rot: &UnitQuaternion<f32>, target_dist: f32) -> Option<f32>
 
     let (d_0, v_0) = kinematic(v_0, a, rl::CAR_JUMP_FORCE_TIME);
     let a = Vector3::z() * rl::GRAVITY;
-    if let Some(t) =
-        kinematic_solve_for_t(target_dist - d_0.dot(&axis), v_0.dot(&axis), a.dot(&axis))
-    {
+    if let Some(t) = kinematic_time(target_dist - d_0.dot(&axis), v_0.dot(&axis), a.dot(&axis)) {
         return Some(rl::CAR_JUMP_FORCE_TIME + t);
     }
 
