@@ -61,14 +61,10 @@ impl RoutePlanner for GroundIntercept {
 
         let turn = TurnPlanner::new(guess.loc.to_2d(), None).plan(ctx, dump)?;
 
-        let end_chop = 0.5;
-        let straight = GroundStraightPlanner::new(
-            guess.loc.to_2d(),
-            Some(guess.t - turn.segment.duration()),
-            end_chop,
-            StraightMode::Fake,
-        )
-        .allow_dodging(self.allow_dodging);
+        let straight = GroundStraightPlanner::new(guess.loc.to_2d(), StraightMode::Fake)
+            .target_time(guess.t - turn.segment.duration())
+            .end_chop(0.5)
+            .allow_dodging(self.allow_dodging);
 
         Ok(ChainedPlanner::join_planner(turn, Some(Box::new(straight))))
     }

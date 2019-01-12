@@ -138,9 +138,8 @@ impl RoutePlanner for GroundPowerslideEssence {
 
         // First pass to estimate the approach angle
         let blueprint = {
-            let end_chop = 1.0; // Leave some time for the actual slide.
-            let straight =
-                GroundStraightPlanner::new(self.target_loc, None, end_chop, StraightMode::Asap)
+            let straight = GroundStraightPlanner::new(self.target_loc, StraightMode::Asap)
+                    .end_chop(1.0) // Leave some time for the actual slide.
                     .plan(ctx, dump)?;
             let straight_end = straight.segment.end();
 
@@ -163,8 +162,7 @@ impl RoutePlanner for GroundPowerslideEssence {
             let straight_end_loc =
                 ctx.start.loc.to_2d() + start_to_target.normalize() * straight_dist;
             let straight =
-                GroundStraightPlanner::new(straight_end_loc, None, 0.0, StraightMode::Asap)
-                    .plan(ctx, dump)?;
+                GroundStraightPlanner::new(straight_end_loc, StraightMode::Asap).plan(ctx, dump)?;
             let straight_end = straight.segment.end();
 
             CarPowerslideTurn::evaluate(
@@ -178,8 +176,8 @@ impl RoutePlanner for GroundPowerslideEssence {
         };
 
         let straight_end_loc = self.target_loc - (blueprint.end_loc - blueprint.start_loc);
-        let straight = GroundStraightPlanner::new(straight_end_loc, None, 0.0, StraightMode::Asap)
-            .plan(ctx, dump)?;
+        let straight =
+            GroundStraightPlanner::new(straight_end_loc, StraightMode::Asap).plan(ctx, dump)?;
         let straight_end = straight.segment.end();
 
         let blueprint = CarPowerslideTurn::evaluate(

@@ -18,12 +18,7 @@ pub fn avoid_plowing_into_goal_wall(
     let waypoint = avoid_goal_wall_waypoint(start, target_loc)?;
     Some(Box::new(ChainedPlanner::chain(vec![
         Box::new(PathingUnawareTurnPlanner::new(waypoint, None)),
-        Box::new(GroundStraightPlanner::new(
-            waypoint,
-            None,
-            0.0,
-            StraightMode::Asap,
-        )),
+        Box::new(GroundStraightPlanner::new(waypoint, StraightMode::Asap)),
     ])))
 }
 

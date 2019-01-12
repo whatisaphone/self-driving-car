@@ -16,7 +16,7 @@ use simulate::{Car1D, CarForwardDodge, CarForwardDodge1D};
 
 /// Drive straight. Requires the car to already be facing the target (i.e., it
 /// won't steer left or right).
-#[derive(Clone, new)]
+#[derive(Clone)]
 pub struct GroundStraightPlanner {
     target_loc: Point2<f32>,
     target_time: Option<f32>,
@@ -25,11 +25,30 @@ pub struct GroundStraightPlanner {
     /// shoot, position itself, etc.
     end_chop: f32,
     mode: StraightMode,
-    #[new(value = "true")]
     allow_dodging: bool,
 }
 
 impl GroundStraightPlanner {
+    pub fn new(target_loc: Point2<f32>, mode: StraightMode) -> Self {
+        Self {
+            target_loc,
+            target_time: None,
+            end_chop: 0.0,
+            mode,
+            allow_dodging: true,
+        }
+    }
+
+    pub fn target_time(mut self, target_time: f32) -> Self {
+        self.target_time = Some(target_time);
+        self
+    }
+
+    pub fn end_chop(mut self, end_chop: f32) -> Self {
+        self.end_chop = end_chop;
+        self
+    }
+
     pub fn allow_dodging(mut self, allow_dodging: bool) -> Self {
         self.allow_dodging = allow_dodging;
         self
@@ -386,12 +405,10 @@ mod integration_tests {
                 car_vel: Vector3::new(0.0, 2000.0, 0.0),
                 ..Default::default()
             })
-            .behavior(FollowRoute::new(GroundStraightPlanner::new(
-                Point2::new(0.0, 1000.0),
-                Some(1.0),
-                0.0,
-                StraightMode::Fake,
-            )))
+            .behavior(FollowRoute::new(
+                GroundStraightPlanner::new(Point2::new(0.0, 1000.0), StraightMode::Fake)
+                    .target_time(1.0),
+            ))
             .run_for_millis(2000);
 
         let packet = test.sniff_packet();

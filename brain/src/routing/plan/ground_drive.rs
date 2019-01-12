@@ -49,7 +49,7 @@ impl RoutePlanner for GroundDrive {
 
         let turn = TurnPlanner::new(self.target_loc, None).plan(ctx, dump)?;
         let straight =
-            GroundStraightPlanner::new(self.target_loc, None, self.end_chop, StraightMode::Asap);
+            GroundStraightPlanner::new(self.target_loc, StraightMode::Asap).end_chop(self.end_chop);
         Ok(ChainedPlanner::join_planner(turn, Some(Box::new(straight))))
     }
 }

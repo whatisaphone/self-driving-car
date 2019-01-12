@@ -40,8 +40,8 @@ impl Behavior for Kickoff {
                 500.0 * ctx.me().Physics.loc().x.signum(),
                 900.0 * ctx.me().Physics.loc().y.signum(),
             );
-            let straight = GroundStraightPlanner::new(straight_loc, None, 0.0, StraightMode::Asap)
-                .allow_dodging(false);
+            let straight =
+                GroundStraightPlanner::new(straight_loc, StraightMode::Asap).allow_dodging(false);
             let turn_loc = Point2::new(100.0 * ctx.me().Physics.loc().x.signum(), 0.0);
             let turn = TurnPlanner::new(turn_loc, None);
             Box::new(ChainedPlanner::chain(vec![
@@ -53,8 +53,8 @@ impl Behavior for Kickoff {
                 100.0 * ctx.me().Physics.loc().x.signum(),
                 2500.0 * ctx.me().Physics.loc().y.signum(),
             );
-            let straight = GroundStraightPlanner::new(target_loc, None, 0.0, StraightMode::Asap)
-                .allow_dodging(false);
+            let straight =
+                GroundStraightPlanner::new(target_loc, StraightMode::Asap).allow_dodging(false);
             Box::new(ChainedPlanner::chain(vec![
                 Box::new(straight),
                 Box::new(GroundIntercept::new()),
