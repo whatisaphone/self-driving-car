@@ -79,7 +79,7 @@ fn wall<'ball>(ctx: &Context2<'_, 'ball>, eeg: &mut EEG) -> Option<(f32, HitType
 
     let push_angle = (intercept.loc.to_2d() - ctx.me().Physics.loc_2d())
         .angle_to(&(ctx.game.enemy_goal().center_2d - ctx.game.own_goal().center_2d));
-    if push_angle >= PI / 3.0 {
+    if push_angle >= 75.0_f32.to_radians() {
         eeg.log(
             name_of_type!(TepidHit),
             format!(
