@@ -1,7 +1,7 @@
 use crate::utils::geometry::Plane;
 use common::rl;
 use lazy_static::lazy_static;
-use nalgebra::{Point3, Vector3};
+use nalgebra::{Point3, Unit, Vector3};
 use ordered_float::NotNan;
 
 pub struct Pitch {
@@ -21,6 +21,9 @@ impl Pitch {
     }
 }
 
+const CORNER_WALL_X: f32 = 3518.0;
+const CORNER_WALL_Y: f32 = 4546.0;
+
 lazy_static! {
     /// I believe all soccar maps are the same as DFH Stadium.
     pub static ref DFH_STADIUM: Pitch = Pitch {
@@ -34,6 +37,24 @@ lazy_static! {
             Plane::point_normal(Point3::new(rl::FIELD_MAX_X, 0.0, 0.0), -Vector3::x_axis()),
             Plane::point_normal(Point3::new(0.0, -rl::FIELD_MAX_X, 0.0), Vector3::y_axis()),
             Plane::point_normal(Point3::new(0.0, rl::FIELD_MAX_X, 0.0), -Vector3::y_axis()),
+
+            // Corner walls
+            Plane::point_normal(
+                Point3::new(-CORNER_WALL_X, -CORNER_WALL_Y, 0.0),
+                Unit::new_normalize(Vector3::new(1.0, 1.0, 0.0)),
+            ),
+            Plane::point_normal(
+                Point3::new(CORNER_WALL_X, -CORNER_WALL_Y, 0.0),
+                Unit::new_normalize(Vector3::new(-1.0, 1.0, 0.0)),
+            ),
+            Plane::point_normal(
+                Point3::new(-CORNER_WALL_X, CORNER_WALL_Y, 0.0),
+                Unit::new_normalize(Vector3::new(1.0, -1.0, 0.0)),
+            ),
+            Plane::point_normal(
+                Point3::new(CORNER_WALL_X, CORNER_WALL_Y, 0.0),
+                Unit::new_normalize(Vector3::new(-1.0, -1.0, 0.0)),
+            ),
         ],
     };
 }
