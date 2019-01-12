@@ -107,15 +107,13 @@ impl Behavior for GetToFlatGround {
             ctx.eeg
                 .draw(Drawable::ghost_car_ground(target_loc, me.Physics.rot()));
             Action::Yield(drive_towards(ctx, target_loc))
-        } else if me.Physics.ang_vel().norm() >= 5.0 {
-            // This is a minor hack for statelessness. We're probably in the middle of a
-            // dodge. Just sit tight.
+        } else if me.Physics.ang_vel().norm() >= 5.25 {
+            // This is a minor hack for statelessness. A car's max angular velocity is 5.5
+            // rad/sec, so if we're near that limit, we're probably in the middle of a
+            // dodge. Just let it happen.
             ctx.eeg
                 .draw(Drawable::print("waiting until after flip", color::GREEN));
-            Action::Yield(rlbot::ffi::PlayerInput {
-                Throttle: 1.0,
-                ..Default::default()
-            })
+            Action::Yield(Default::default())
         } else {
             ctx.eeg.draw(Drawable::print("air rolling", color::GREEN));
 
