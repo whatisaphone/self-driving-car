@@ -52,10 +52,10 @@ check-simulate:
     crate: simulate
 
 clippy:
-  image: rustlang/rust:nightly
+  image: rust
   script:
     - rustup component add clippy
-    - cargo clippy
+    - cargo clippy --all-targets --features strict
 
 # Unfortunately testing can't happen in CI right now because we require Windows.
 .test:

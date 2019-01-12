@@ -72,7 +72,7 @@ repos:
       name: clippy
       language: system
       files: '[.]rs$'
-      entry: cargo +nightly clippy
+      entry: cargo clippy --all-targets --features strict
       pass_filenames: false
 
     - id: test
