@@ -44,7 +44,7 @@ impl RoutePlanError {
 
                 let ball_loc = ctx.scenario.ball_prediction().at_time_or_last(2.5).loc;
                 Some(Box::new(
-                    ResetBehindBall::behind_loc(ball_loc.to_2d()).never_recover(true),
+                    ResetBehindBall::behind_loc(ball_loc.to_2d(), 1500.0).never_recover(true),
                 ))
             }
             RoutePlanError::MustBeFacingTarget => {
@@ -55,7 +55,7 @@ impl RoutePlanError {
                         .log(stringify!(recover), "we gotta get things moving!");
                     let ball_loc = ctx.scenario.ball_prediction().at_time_or_last(2.5).loc;
                     return Some(Box::new(
-                        ResetBehindBall::behind_loc(ball_loc.to_2d()).never_recover(true),
+                        ResetBehindBall::behind_loc(ball_loc.to_2d(), 1500.0).never_recover(true),
                     ));
                 }
                 None

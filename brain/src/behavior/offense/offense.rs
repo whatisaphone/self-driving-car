@@ -136,9 +136,7 @@ fn slow_play(ctx: &mut Context<'_>) -> Option<Action> {
         name_of_type!(Offense),
         "swing around behind the ball for a better hit",
     );
-    Some(Action::call(
-        ResetBehindBall::behind_loc(ball_loc).distance(2000.0),
-    ))
+    Some(Action::call(ResetBehindBall::behind_loc(ball_loc, 2000.0)))
 }
 
 fn readjust_for_shot(ctx: &mut Context<'_>, intercept_time: f32) -> Option<Action> {
@@ -160,9 +158,7 @@ fn readjust_for_shot(ctx: &mut Context<'_>, intercept_time: f32) -> Option<Actio
 
     ctx.eeg
         .log(name_of_type!(Offense), "re-adjust for a possible shot");
-    Some(Action::call(
-        ResetBehindBall::behind_loc(ball_loc).distance(2000.0),
-    ))
+    Some(Action::call(ResetBehindBall::behind_loc(ball_loc, 2000.0)))
 }
 
 fn get_boost(ctx: &mut Context<'_>) -> Option<Box<dyn Behavior>> {

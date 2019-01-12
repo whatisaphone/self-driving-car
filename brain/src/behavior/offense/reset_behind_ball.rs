@@ -16,17 +16,12 @@ pub struct ResetBehindBall {
 }
 
 impl ResetBehindBall {
-    pub fn behind_loc(loc: Point2<f32>) -> Self {
+    pub fn behind_loc(loc: Point2<f32>, distance: f32) -> Self {
         Self {
             loc,
-            distance: 1500.0,
+            distance,
             never_recover: false,
         }
-    }
-
-    pub fn distance(mut self, distance: f32) -> Self {
-        self.distance = distance;
-        self
     }
 
     pub fn never_recover(mut self, never_recover: bool) -> Self {
