@@ -34,9 +34,8 @@ impl WallStraight {
             .with_speed(flat_start.vel.norm())
             .with_boost(flat_start.boost);
 
-        // HACK: set boost = false to limit the simulated range since driving on the
-        // wall is slower.
-        sim.advance_by_distance(flat_target_dist, 1.0, false);
+        // XXX: This ignores the fact that you lose speed when driving around a seam.
+        sim.advance_by_distance(flat_target_dist, 1.0, true);
 
         let flat_dir = (flat_target_loc - flat_start.loc).normalize();
         let flat_end_loc = flat_start.loc + flat_dir * sim.distance();
