@@ -1,7 +1,7 @@
 use crate::{
     behavior::strike::GroundedHit,
     plan::ball::{BallFrame, BallTrajectory},
-    predict::{naive_ground_intercept, naive_ground_intercept_2},
+    predict::naive_ground_intercept_2,
     routing::{
         models::{
             CarState, PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner,
@@ -60,9 +60,16 @@ impl RoutePlanner for GroundIntercept {
         });
 
         let turn = TurnPlanner::new(guess.loc.to_2d(), None).plan(ctx, dump)?;
-        let straight = GroundInterceptStraight {
-            allow_dodging: self.allow_dodging,
-        };
+
+        let end_chop = 0.5;
+        let straight = GroundStraightPlanner::new(
+            guess.loc.to_2d(),
+            Some(guess.t - turn.segment.duration()),
+            end_chop,
+            StraightMode::Fake,
+        )
+        .allow_dodging(self.allow_dodging);
+
         Ok(ChainedPlanner::join_planner(turn, Some(Box::new(straight))))
     }
 }
@@ -76,55 +83,5 @@ impl GroundIntercept {
             ball.loc.z < GroundedHit::MAX_BALL_Z
         })
         .map(|i| ball_prediction.at_time(i.time).unwrap())
-    }
-}
-
-#[derive(Clone)]
-struct GroundInterceptStraight {
-    allow_dodging: bool,
-}
-
-impl RoutePlanner for GroundInterceptStraight {
-    fn name(&self) -> &'static str {
-        name_of_type!(GroundInterceptStraight)
-    }
-
-    fn plan(
-        &self,
-        ctx: &PlanningContext<'_, '_>,
-        dump: &mut PlanningDump<'_>,
-    ) -> Result<RoutePlan, RoutePlanError> {
-        dump.log_start(self, &ctx.start);
-
-        guard!(
-            ctx.start,
-            NotOnFlatGround,
-            RoutePlanError::MustBeOnFlatGround,
-        );
-
-        let guess = naive_ground_intercept(
-            ctx.ball_prediction.iter(),
-            ctx.start.loc,
-            ctx.start.vel,
-            ctx.start.boost,
-            |ball| ball.loc.z < GroundedHit::MAX_BALL_Z,
-        )
-        .ok_or_else(|| RoutePlanError::UnknownIntercept)?;
-
-        dump.log_pretty(self, "guess.ball_loc", guess.ball_loc.to_2d());
-
-        guard!(ctx.start, IsSkidding, RoutePlanError::MustNotBeSkidding {
-            recover_target_loc: guess.car_loc.to_2d(),
-        });
-
-        let end_chop = 0.5;
-        GroundStraightPlanner::new(
-            guess.car_loc.to_2d(),
-            Some(guess.time),
-            end_chop,
-            StraightMode::Fake,
-        )
-        .allow_dodging(self.allow_dodging)
-        .plan(ctx, dump)
     }
 }
