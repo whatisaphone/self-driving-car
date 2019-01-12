@@ -2,7 +2,7 @@ use crate::{
     behavior::strike::{
         GroundedHit, GroundedHitAimContext, GroundedHitTarget, GroundedHitTargetAdjust, WallHit,
     },
-    eeg::{color, Drawable, Event},
+    eeg::{color, Drawable, Event, EEG},
     plan::hit_angle::{feasible_hit_angle_away, feasible_hit_angle_toward},
     routing::{
         behavior::FollowRoute,
@@ -36,7 +36,7 @@ impl Behavior for TepidHit {
 
         let mut hits = ArrayVec::<[_; 4]>::new();
         hits.push(ground(&ctx));
-        hits.push(wall(&ctx));
+        hits.push(wall(&ctx, eeg));
 
         let hit = hits
             .into_iter()
@@ -67,16 +67,34 @@ fn ground(ctx: &Context2<'_, '_>) -> Option<(f32, HitType)> {
         .map(|i| (i.t, HitType::Ground))
 }
 
-fn wall<'ball>(ctx: &Context2<'_, 'ball>) -> Option<(f32, HitType)> {
-    let intercept = WallIntercept::calc_intercept(ctx)?;
+fn wall<'ball>(ctx: &Context2<'_, 'ball>, eeg: &mut EEG) -> Option<(f32, HitType)> {
+    let intercept = some_or_else!(WallIntercept::calc_intercept(ctx), {
+        eeg.log(name_of_type!(TepidHit), "wall: WallIntercept drew a blank");
+        return None;
+    });
+    eeg.log(
+        name_of_type!(TepidHit),
+        format!("wall: intercept is {}", intercept.loc.pretty()),
+    );
+
     let push_angle = (intercept.loc.to_2d() - ctx.me().Physics.loc_2d())
         .angle_to(&(ctx.game.enemy_goal().center_2d - ctx.game.own_goal().center_2d));
     if push_angle >= PI / 3.0 {
+        eeg.log(
+            name_of_type!(TepidHit),
+            format!(
+                "wall: push_angle {:.0}° is not good enough",
+                push_angle.to_degrees(),
+            ),
+        );
         return None;
     }
+
     if intercept.loc.x.abs() < ctx.game.field_max_x() - 500.0 {
-        return None; // Must be side wall, not front or back wall.
+        eeg.log(name_of_type!(TepidHit), "wall: not side wall");
+        return None;
     }
+
     Some((intercept.t, HitType::Wall))
 }
 
