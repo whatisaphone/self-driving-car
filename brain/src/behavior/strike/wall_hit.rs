@@ -191,8 +191,7 @@ fn calculate_approach(
     target_time: f32,
     path: &Path,
 ) -> Step {
-    let jump_distance = path.ground_target_loc.z - rl::OCTANE_NEUTRAL_Z;
-    let jump_time = car_jump::jump_duration(&path.start_rot, jump_distance).unwrap_or(0.0);
+    let (jump_distance, jump_time) = calculate_jump(path);
     let drive_time = target_time - jump_time;
 
     if drive_time < 0.0 {
@@ -251,6 +250,13 @@ fn calculate_approach(
     Step::Drive(throttle, boost)
 }
 
+fn calculate_jump(path: &Path) -> (f32, f32) {
+    let jump_distance = path.ground_target_loc.z - rl::OCTANE_NEUTRAL_Z;
+    let jump_time = car_jump::jump_duration(&path.start_rot, jump_distance.max(0.001)).unwrap();
+    assert!(jump_time < 1.0, "{}", jump_time);
+    (jump_distance, jump_time)
+}
+
 enum Step {
     /// `(throttle, boost)`
     Drive(f32, bool),
@@ -269,9 +275,15 @@ fn drive(me: &rlbot::ffi::PlayerInfo, path: &Path, throttle: f32, boost: bool) -
 }
 
 fn jump(path: &Path) -> Action {
+    let (_jump_distance, jump_time) = calculate_jump(path);
+
+    if jump_time < 0.0 {
+        return Action::Return;
+    }
+
     Action::call(JumpAndTurn::new(
-        rl::CAR_JUMP_FORCE_TIME,
-        rl::CAR_JUMP_FORCE_TIME + 0.05,
+        jump_time.min(rl::CAR_JUMP_FORCE_TIME),
+        jump_time.min(rl::CAR_JUMP_FORCE_TIME) + 0.05,
         path.target_rot,
     ))
 }
