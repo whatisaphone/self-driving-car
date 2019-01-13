@@ -45,6 +45,8 @@ impl Behavior for Offense {
             return Action::Call(b);
         }
 
+        return_some!(swing_around(ctx));
+
         ctx.eeg
             .log(self.name(), "no good hit; going for a tepid hit");
         Action::call(TepidHit::new())
@@ -189,6 +191,28 @@ fn get_boost(ctx: &mut Context<'_>) -> Option<Box<dyn Behavior>> {
         return Some(Box::new(FollowRoute::new(get_dollar)));
     }
     None
+}
+
+fn swing_around(ctx: &mut Context<'_>) -> Option<Action> {
+    let goal_loc = ctx.game.enemy_goal().center_2d;
+    let me_loc = ctx.me().Physics.loc_2d();
+    let ball_loc = ctx.scenario.me_intercept()?.ball_loc.to_2d();
+
+    // If it's a tap in, don't lose focus of tapping it in.
+    if (goal_loc.x - ball_loc.x).abs() < ctx.game.enemy_goal().max_x
+        && (goal_loc.y - ball_loc.y).abs() < 500.0
+    {
+        return None;
+    }
+
+    let shot_angle = (ball_loc - me_loc)
+        .angle_to(&(goal_loc - ball_loc).to_axis())
+        .abs();
+    if shot_angle < 135.0_f32.to_radians() {
+        return None;
+    }
+
+    Some(Action::call(ResetBehindBall::behind_loc(ball_loc, 1500.0)))
 }
 
 #[cfg(test)]
