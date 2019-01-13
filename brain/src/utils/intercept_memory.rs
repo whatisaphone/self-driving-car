@@ -20,7 +20,10 @@ impl InterceptMemory {
         match self.calc(time, loc) {
             InterceptMemoryAction::Trust => {
                 self.current = Some(loc);
-                self.watch = None;
+                if self.watch.is_some() {
+                    eeg.log(name_of_type!(InterceptMemory), "abandoning watch");
+                    self.watch = None;
+                }
                 InterceptMemoryResult::Stable(loc)
             }
             InterceptMemoryAction::Watch => {
