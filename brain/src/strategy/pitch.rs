@@ -35,8 +35,8 @@ lazy_static! {
             // Walls
             Plane::point_normal(Point3::new(-rl::FIELD_MAX_X, 0.0, 0.0), Vector3::x_axis()),
             Plane::point_normal(Point3::new(rl::FIELD_MAX_X, 0.0, 0.0), -Vector3::x_axis()),
-            Plane::point_normal(Point3::new(0.0, -rl::FIELD_MAX_X, 0.0), Vector3::y_axis()),
-            Plane::point_normal(Point3::new(0.0, rl::FIELD_MAX_X, 0.0), -Vector3::y_axis()),
+            Plane::point_normal(Point3::new(0.0, -rl::FIELD_MAX_Y, 0.0), Vector3::y_axis()),
+            Plane::point_normal(Point3::new(0.0, rl::FIELD_MAX_Y, 0.0), -Vector3::y_axis()),
 
             // Corner walls
             Plane::point_normal(
