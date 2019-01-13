@@ -62,8 +62,16 @@ impl RoutePlanner for GroundIntercept {
 
         let turn = TurnPlanner::new(guess.loc.to_2d(), None).plan(ctx, dump)?;
 
+        let mut straight_time = guess.t - turn.segment.duration();
+        if straight_time < 0.0 {
+            dump.log(
+                self,
+                "the turn takes too long, but let's pretend we didn't notice",
+            );
+            straight_time = 0.0;
+        }
         let straight = GroundStraightPlanner::new(guess.loc.to_2d(), StraightMode::Fake)
-            .target_time(guess.t - turn.segment.duration())
+            .target_time(straight_time)
             .end_chop(0.5)
             .allow_dodging(self.allow_dodging);
 

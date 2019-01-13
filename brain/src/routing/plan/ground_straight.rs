@@ -40,6 +40,7 @@ impl GroundStraightPlanner {
     }
 
     pub fn target_time(mut self, target_time: f32) -> Self {
+        assert!(target_time >= 0.0);
         self.target_time = Some(target_time);
         self
     }
