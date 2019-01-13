@@ -214,7 +214,7 @@ fn poor_angle_swing_around(ctx: &mut Context<'_>) -> Option<Action> {
 
     ctx.eeg
         .log(name_of_type!(Offense), "poor angle swing-around");
-    Some(Action::call(ResetBehindBall::behind_loc(ball_loc, 1500.0)))
+    Some(Action::call(ResetBehindBall::behind_loc(ball_loc, 1700.0)))
 }
 
 #[cfg(test)]
