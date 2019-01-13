@@ -30,7 +30,7 @@ impl BounceShot {
     /// order to shoot at `aim_loc`?
     pub fn rough_shooting_spot(intercept: &NaiveIntercept, aim_loc: Point2<f32>) -> Point2<f32> {
         // This is not the greatest guess
-        let guess_final_ball_speed = 1700.0;
+        let guess_final_ball_speed = intercept.car_speed.max(1000.0).min(1700.0);
         let ball_to_aim = aim_loc - intercept.ball_loc.to_2d();
         if ball_to_aim.norm() < 0.1 {
             log::warn!("[rough_shooting_spot] ball_loc == aim_loc; bailing");
