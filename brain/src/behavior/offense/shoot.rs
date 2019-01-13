@@ -89,7 +89,7 @@ impl Behavior for Shoot {
             return Action::Abort;
         }
 
-        Action::call(Chain::new(Priority::Strike, vec![
+        Action::tail_call(Chain::new(Priority::Strike, vec![
             Box::new(FollowRoute::new(GroundIntercept::new())),
             Box::new(GroundedHit::hit_towards(Self::aim)),
         ]))

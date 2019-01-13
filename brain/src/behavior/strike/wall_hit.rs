@@ -282,7 +282,7 @@ fn jump(path: &Path) -> Action {
         return Action::Return;
     }
 
-    Action::call(chain!(Priority::Strike, [
+    Action::tail_call(chain!(Priority::Strike, [
         JumpAndTurn::new(
             (jump_time - 0.05).min(rl::CAR_JUMP_FORCE_TIME),
             (jump_time - 0.05).min(rl::CAR_JUMP_FORCE_TIME) + 0.05,

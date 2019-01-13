@@ -41,7 +41,7 @@ impl Behavior for GetToFlatGround {
         if me.OnGround && me.Physics.roof_axis().angle(&-Vector3::z_axis()) < PI / 10.0 {
             // We're probably upside down under the ceiling of a goal
             ctx.eeg.log(self.name(), "jumping while upside-down");
-            Action::call(Yielder::new(
+            Action::tail_call(Yielder::new(
                 rlbot::ffi::PlayerInput {
                     Jump: true,
                     ..Default::default()
@@ -96,7 +96,7 @@ impl Behavior for GetToFlatGround {
                     inputs.push(Box::new(Dodge::new().angle(angle)));
                 }
 
-                Action::call(Chain::new(Priority::Idle, inputs))
+                Action::tail_call(Chain::new(Priority::Idle, inputs))
             }
         } else if me.OnGround {
             ctx.eeg

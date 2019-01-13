@@ -45,7 +45,7 @@ impl Behavior for Retreat {
 
         choices.push(Box::new(PanicDefense::new()));
 
-        Action::call(TryChoose::new(Priority::Idle, choices))
+        Action::tail_call(TryChoose::new(Priority::Idle, choices))
     }
 }
 

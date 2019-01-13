@@ -37,7 +37,7 @@ impl Behavior for Dodge {
         let pitch = -self.angle.cos_angle();
         let yaw = self.angle.sin_angle();
 
-        Action::call(Chain::new(self.priority(), vec![Box::new(Yielder::new(
+        Action::tail_call(Chain::new(self.priority(), vec![Box::new(Yielder::new(
             rlbot::ffi::PlayerInput {
                 Pitch: pitch,
                 Yaw: yaw,

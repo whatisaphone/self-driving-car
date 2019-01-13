@@ -89,7 +89,7 @@ impl Behavior for PushToOwnCorner {
                     Action::Return
                 } else {
                     ctx.eeg.log(self.name(), "hitting away from goal");
-                    Action::call(HitToOwnCorner::new())
+                    Action::tail_call(HitToOwnCorner::new())
                 }
             }
             (None, _) => {
@@ -103,10 +103,10 @@ impl Behavior for PushToOwnCorner {
                     Action::Abort
                 } else if ctx.scenario.possession() >= Scenario::POSSESSION_CONTESTABLE {
                     ctx.eeg.log(self.name(), "swatting ball away from enemy");
-                    Action::call(HitToOwnCorner::new())
+                    Action::tail_call(HitToOwnCorner::new())
                 } else if ctx.scenario.possession() >= -Scenario::POSSESSION_CONTESTABLE {
                     ctx.eeg.log(self.name(), "defensive race");
-                    Action::call(HitToOwnCorner::new())
+                    Action::tail_call(HitToOwnCorner::new())
                 } else {
                     ctx.eeg.log(self.name(), "can't reach ball before enemy");
                     Action::Abort

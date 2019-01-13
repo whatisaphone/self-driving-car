@@ -33,7 +33,7 @@ pub enum Action {
 }
 
 impl Action {
-    pub fn call(behavior: impl Behavior + 'static) -> Self {
+    pub fn tail_call(behavior: impl Behavior + 'static) -> Self {
         Action::TailCall(Box::new(behavior))
     }
 }

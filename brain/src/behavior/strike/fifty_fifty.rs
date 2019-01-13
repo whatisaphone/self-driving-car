@@ -23,7 +23,7 @@ impl Behavior for FiftyFifty {
     }
 
     fn execute_old(&mut self, _ctx: &mut Context<'_>) -> Action {
-        Action::call(While::new(
+        Action::tail_call(While::new(
             WeDontWinTheRace,
             Chain::new(Priority::Idle, vec![
                 Box::new(FollowRoute::new(GroundIntercept::new())),

@@ -31,7 +31,7 @@ impl Behavior for HitToOwnCorner {
     fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
         ctx.eeg.track(Event::HitToOwnCorner);
 
-        Action::call(Chain::new(Priority::Strike, vec![
+        Action::tail_call(Chain::new(Priority::Strike, vec![
             Box::new(FollowRoute::new(GroundIntercept::new())),
             Box::new(GroundedHit::hit_towards(Self::aim)),
         ]))

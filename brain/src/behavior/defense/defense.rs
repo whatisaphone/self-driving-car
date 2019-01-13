@@ -62,19 +62,19 @@ impl Behavior for Defense {
 
         // If we're not between the ball and our goal, get there.
         if !Self::is_between_ball_and_own_goal(ctx) {
-            return Action::call(Retreat::new());
+            return Action::tail_call(Retreat::new());
         }
 
         // If we're already in goal, try to take control of the ball somehow.
         if ctx.scenario.possession() < Scenario::POSSESSION_CONTESTABLE {
             ctx.eeg
                 .log(self.name(), "already in goal; going for a defensive hit");
-            Action::call(Chain::new(Priority::Idle, vec![
+            Action::tail_call(Chain::new(Priority::Idle, vec![
                 Box::new(FollowRoute::new(GroundIntercept::new())),
                 Box::new(GroundedHit::hit_towards(defensive_hit)),
             ]))
         } else {
-            Action::call(TepidHit::new())
+            Action::tail_call(TepidHit::new())
         }
     }
 }

@@ -30,7 +30,7 @@ impl Behavior for Offense {
 
         if can_we_shoot(ctx) {
             ctx.eeg.log(self.name(), "taking the shot!");
-            return Action::call(Shoot::new());
+            return Action::tail_call(Shoot::new());
         }
 
         // TODO: if angle is almost good, slightly adjust path such that good_angle
@@ -49,7 +49,7 @@ impl Behavior for Offense {
 
         ctx.eeg
             .log(self.name(), "no good hit; going for a tepid hit");
-        Action::call(TepidHit::new())
+        Action::tail_call(TepidHit::new())
     }
 }
 
@@ -131,14 +131,16 @@ fn slow_play(ctx: &mut Context<'_>) -> Option<Action> {
             ball_loc.y + ctx.game.own_goal().center_2d.y.signum() * 2500.0,
         );
         let dollar = GetDollar::new(behind_ball).target_face(ball_loc);
-        return Some(Action::call(FollowRoute::new(dollar)));
+        return Some(Action::tail_call(FollowRoute::new(dollar)));
     }
 
     ctx.eeg.log(
         name_of_type!(Offense),
         "swing around behind the ball for a better hit",
     );
-    Some(Action::call(ResetBehindBall::behind_loc(ball_loc, 2000.0)))
+    Some(Action::tail_call(ResetBehindBall::behind_loc(
+        ball_loc, 2000.0,
+    )))
 }
 
 fn readjust_for_shot(ctx: &mut Context<'_>, intercept_time: f32) -> Option<Action> {
@@ -160,7 +162,9 @@ fn readjust_for_shot(ctx: &mut Context<'_>, intercept_time: f32) -> Option<Actio
 
     ctx.eeg
         .log(name_of_type!(Offense), "re-adjust for a possible shot");
-    Some(Action::call(ResetBehindBall::behind_loc(ball_loc, 2000.0)))
+    Some(Action::tail_call(ResetBehindBall::behind_loc(
+        ball_loc, 2000.0,
+    )))
 }
 
 fn get_boost(ctx: &mut Context<'_>) -> Option<Box<dyn Behavior>> {
@@ -214,7 +218,9 @@ fn poor_angle_swing_around(ctx: &mut Context<'_>) -> Option<Action> {
 
     ctx.eeg
         .log(name_of_type!(Offense), "poor angle swing-around");
-    Some(Action::call(ResetBehindBall::behind_loc(ball_loc, 1700.0)))
+    Some(Action::tail_call(ResetBehindBall::behind_loc(
+        ball_loc, 1700.0,
+    )))
 }
 
 #[cfg(test)]

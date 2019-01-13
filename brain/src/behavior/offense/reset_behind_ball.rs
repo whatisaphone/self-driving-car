@@ -40,7 +40,7 @@ impl Behavior for ResetBehindBall {
         let straight = GroundDrive::new(target_loc).end_chop(0.5);
         let turn = TurnPlanner::new(self.loc, None);
         let chain = ChainedPlanner::chain(vec![Box::new(straight), Box::new(turn)]);
-        Action::call(FollowRoute::new(chain).never_recover(self.never_recover))
+        Action::tail_call(FollowRoute::new(chain).never_recover(self.never_recover))
     }
 }
 
