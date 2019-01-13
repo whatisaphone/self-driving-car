@@ -14,7 +14,7 @@ use crate::{
         segments::StraightMode,
     },
 };
-use common::prelude::*;
+use common::{prelude::*, Time};
 use derive_new::new;
 use nameof::name_of_type;
 
@@ -53,11 +53,12 @@ impl RoutePlanner for GroundIntercept {
         let guess = Self::calc_intercept(&ctx.start, ctx.ball_prediction)
             .ok_or_else(|| RoutePlanError::UnknownIntercept)?;
 
-        dump.log_pretty(self, "guess ball loc", guess.loc.to_2d());
-
         guard!(ctx.start, IsSkidding, RoutePlanError::MustNotBeSkidding {
             recover_target_loc: guess.loc.to_2d(),
         });
+
+        dump.log_pretty(self, "guess ball time", Time(guess.t));
+        dump.log_pretty(self, "guess ball loc", guess.loc.to_2d());
 
         let turn = TurnPlanner::new(guess.loc.to_2d(), None).plan(ctx, dump)?;
 

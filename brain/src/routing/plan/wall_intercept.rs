@@ -13,6 +13,7 @@ use crate::{
     strategy::{Context2, Pitch},
     utils::geometry::{ExtendF32, Plane},
 };
+use common::Time;
 use derive_new::new;
 use nalgebra::Point3;
 use nameof::name_of_type;
@@ -33,7 +34,9 @@ impl RoutePlanner for WallIntercept {
     ) -> Result<RoutePlan, RoutePlanError> {
         dump.log_start(self, &ctx.start);
 
-        let (_ball, plan) = calc_plan(ctx)?;
+        let (ball, plan) = calc_plan(ctx)?;
+        dump.log_pretty(self, "intercept ball time", Time(ball.t));
+        dump.log_pretty(self, "intercept ball loc", ball.loc);
         Ok(plan)
     }
 }
