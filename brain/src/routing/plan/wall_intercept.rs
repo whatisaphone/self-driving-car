@@ -105,7 +105,7 @@ fn which_wall(pitch: &Pitch, loc: Point3<f32>) -> Option<&Plane> {
         // Must be a wall, not ceiling or floor.
         return None;
     }
-    if wall.distance_to_point(&loc) >= 500.0 {
+    if wall.distance_to_point(&loc) >= 300.0 {
         return None;
     }
     Some(wall)
