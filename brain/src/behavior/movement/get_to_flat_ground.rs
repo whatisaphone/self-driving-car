@@ -127,7 +127,7 @@ impl Behavior for GetToFlatGround {
                     rl::GRAVITY,
                 )
                 .unwrap();
-                let down = time_to_ground >= 0.5;
+                let down = time_to_ground >= 0.75;
                 forward = if down {
                     facing.rotation_to(&-Vector3::z_axis()).powf(0.8) * facing
                 } else {
