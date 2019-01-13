@@ -252,7 +252,7 @@ mod integration_tests {
             .soccar()
             .run_for_millis(3000);
         let packet = test.sniff_packet();
-        assert!(packet.GameBall.Physics.vel().y >= 1000.0);
+        assert!(packet.GameBall.Physics.vel().y >= 500.0);
     }
 
     #[test]
