@@ -45,7 +45,7 @@ impl Behavior for Offense {
             return Action::Call(b);
         }
 
-        return_some!(swing_around(ctx));
+        return_some!(poor_angle_swing_around(ctx));
 
         ctx.eeg
             .log(self.name(), "no good hit; going for a tepid hit");
@@ -193,7 +193,7 @@ fn get_boost(ctx: &mut Context<'_>) -> Option<Box<dyn Behavior>> {
     None
 }
 
-fn swing_around(ctx: &mut Context<'_>) -> Option<Action> {
+fn poor_angle_swing_around(ctx: &mut Context<'_>) -> Option<Action> {
     let goal_loc = ctx.game.enemy_goal().center_2d;
     let me_loc = ctx.me().Physics.loc_2d();
     let ball_loc = ctx.scenario.me_intercept()?.ball_loc.to_2d();
@@ -212,6 +212,8 @@ fn swing_around(ctx: &mut Context<'_>) -> Option<Action> {
         return None;
     }
 
+    ctx.eeg
+        .log(name_of_type!(Offense), "poor angle swing-around");
     Some(Action::call(ResetBehindBall::behind_loc(ball_loc, 1500.0)))
 }
 
