@@ -1,7 +1,7 @@
 use crate::{
     behavior::strike::GroundedHit,
     plan::ball::{BallFrame, BallTrajectory},
-    predict::naive_ground_intercept_2,
+    predict::{intercept::naive_intercept_penalty, naive_ground_intercept_2},
     routing::{
         models::{
             CarState, PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner,
@@ -84,9 +84,11 @@ impl GroundIntercept {
         start: &CarState,
         ball_prediction: &'ball BallTrajectory,
     ) -> Option<&'ball BallFrame> {
-        naive_ground_intercept_2(start, ball_prediction, |ball| {
+        let intercept = naive_ground_intercept_2(start, ball_prediction, |ball| {
             ball.loc.z < GroundedHit::MAX_BALL_Z
-        })
-        .map(|i| ball_prediction.at_time(i.time).unwrap())
+        })?;
+        let intercept = ball_prediction.at_time(intercept.time).unwrap();
+        let penalty = naive_intercept_penalty(start, intercept);
+        Some(ball_prediction.at_time_or_last(intercept.t + penalty))
     }
 }
