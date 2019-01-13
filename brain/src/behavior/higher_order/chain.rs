@@ -4,7 +4,7 @@ use crate::{
 };
 use itertools::Itertools;
 use nameof::name_of_type;
-use std::{collections::VecDeque, iter};
+use std::{collections::VecDeque, iter, mem};
 
 /// Run `children` in sequence.
 pub struct Chain {
@@ -72,23 +72,27 @@ impl Behavior for Chain {
         match front.execute_old(ctx) {
             Action::Yield(x) => Action::Yield(x),
             Action::Call(b) => {
-                self.children[0] = b;
-                self.blurb = Self::blurb(self.children.iter());
-                ctx.eeg
-                    .log(self.name(), format!("child Call; becoming {}", self.blurb));
-                self.execute_old(ctx)
-            }
-            Action::Return => {
-                self.children.pop_front();
+                let front = mem::replace(&mut self.children[0], b);
                 self.blurb = Self::blurb(self.children.iter());
                 ctx.eeg.log(
                     self.name(),
-                    format!("child Return; becoming {}", self.blurb),
+                    format!("Call from {}; becoming {}", front.name(), self.blurb),
+                );
+                self.execute_old(ctx)
+            }
+            Action::Return => {
+                let front = self.children.pop_front().unwrap();
+                self.blurb = Self::blurb(self.children.iter());
+                ctx.eeg.log(
+                    self.name(),
+                    format!("Return from {}; becoming {}", front.name(), self.blurb),
                 );
                 self.execute_old(ctx)
             }
             Action::Abort => {
-                ctx.eeg.log(self.name(), "child Abort");
+                let front = self.children.front().unwrap();
+                ctx.eeg
+                    .log(self.name(), format!("Abort from {}", front.name()));
                 Action::Abort
             }
         }
