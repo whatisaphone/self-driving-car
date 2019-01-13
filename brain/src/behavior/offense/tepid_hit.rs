@@ -95,7 +95,9 @@ fn wall<'ball>(ctx: &Context2<'_, 'ball>, eeg: &mut EEG) -> Option<(f32, HitType
         return None;
     }
 
-    if (intercept.loc.y - ctx.game.enemy_goal().center_2d.y).abs() < 1250.0 {
+    if (intercept.loc.y - ctx.game.own_goal().center_2d.y).abs() < 2000.0
+        || (intercept.loc.y - ctx.game.enemy_goal().center_2d.y).abs() < 1250.0
+    {
         // Big risk of missing due to the corner curve or inaccurate ball prediction.
         eeg.log(name_of_type!(TepidHit), "wall: too close to the corner");
         return None;
