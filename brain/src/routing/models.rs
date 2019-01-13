@@ -17,6 +17,14 @@ pub struct CarState {
 }
 
 impl CarState {
+    pub fn loc_2d(&self) -> Point2<f32> {
+        self.loc.to_2d()
+    }
+
+    pub fn vel_2d(&self) -> Vector2<f32> {
+        self.vel.to_2d()
+    }
+
     pub fn forward_axis(&self) -> Unit<Vector3<f32>> {
         physics::car_forward_axis(self.rot)
     }

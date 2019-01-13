@@ -101,3 +101,25 @@ impl<T> IntoInterceptData for Option<T> {
         self
     }
 }
+
+/// Very rough estimate of a penalty to `naive_ground_intercept` that accounts
+/// for turning. That function does not account for turning, and this tries to
+/// patch it up after the fact.
+pub fn naive_intercept_penalty(car: &CarState, ball: &BallFrame) -> f32 {
+    let ball_loc = ball.loc.to_2d();
+    let ball_vel = ball.vel.to_2d();
+    let car_vel = car.vel_2d();
+    let car_forward = car.forward_axis_2d();
+    let car_to_ball = ball_loc - car.loc_2d();
+
+    let rotation_penalty = car_forward.angle_to(&car_to_ball.to_axis()).abs() * 0.25;
+
+    let speed_towards_ball = (car_vel - ball_vel).dot(&car_to_ball.normalize());
+    let reverse_penalty = if speed_towards_ball < 0.0 {
+        speed_towards_ball / -2000.0
+    } else {
+        0.0
+    };
+
+    rotation_penalty + reverse_penalty
+}

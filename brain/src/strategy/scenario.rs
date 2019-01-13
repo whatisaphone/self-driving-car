@@ -1,6 +1,6 @@
 use crate::{
     plan::ball::{BallFrame, BallPredictor, BallTrajectory},
-    predict::intercept::NaiveIntercept,
+    predict::intercept::{naive_intercept_penalty, NaiveIntercept},
     strategy::game::Game,
     utils::{Wall, WallRayCalculator},
 };
@@ -179,7 +179,7 @@ fn simulate_ball_blitz(
     }
 
     let naive_result = naive_result?;
-    let penalty = blitz_penalty(car, &naive_result);
+    let penalty = naive_intercept_penalty(&car.into(), &naive_result);
     let ball = ball_prediction.at_time_or_last(naive_result.t + penalty);
     Some(NaiveIntercept {
         time: ball.t - ball_prediction.start().t,
@@ -189,23 +189,4 @@ fn simulate_ball_blitz(
         car_speed: ball.vel.norm(),
         data: (),
     })
-}
-
-fn blitz_penalty(car: &rlbot::ffi::PlayerInfo, ball: &BallFrame) -> f32 {
-    let ball_loc = ball.loc.to_2d();
-    let ball_vel = ball.vel.to_2d();
-    let car_vel = car.Physics.vel_2d();
-    let car_forward = car.Physics.forward_axis_2d();
-    let car_to_ball = ball_loc - car.Physics.loc_2d();
-
-    let rotation_penalty = car_forward.angle_to(&car_to_ball.to_axis()).abs() * 0.25;
-
-    let speed_towards_ball = (car_vel - ball_vel).dot(&car_to_ball.normalize());
-    let reverse_penalty = if speed_towards_ball < 0.0 {
-        speed_towards_ball / -2000.0
-    } else {
-        0.0
-    };
-
-    rotation_penalty + reverse_penalty
 }
