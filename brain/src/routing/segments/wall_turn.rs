@@ -4,7 +4,7 @@ use crate::{
     utils::geometry::{flattener::Flattener, Plane},
 };
 use common::{prelude::*, rl};
-use nalgebra::{Point2, Point3, UnitComplex};
+use nalgebra::{Point2, UnitComplex};
 use nameof::name_of_type;
 use std::f32::consts::PI;
 
@@ -17,7 +17,7 @@ pub struct WallTurn {
     radius: f32,
     flat_target_loc: Point2<f32>,
     sweep: f32,
-    face_loc: Point3<f32>,
+    flat_face_loc: Point2<f32>,
 }
 
 impl WallTurn {
@@ -28,7 +28,7 @@ impl WallTurn {
         flat_center: Point2<f32>,
         radius: f32,
         flat_target_loc: Point2<f32>,
-        face_loc: Point3<f32>,
+        flat_face_loc: Point2<f32>,
     ) -> Self {
         let flat_start_loc = flattener * start.loc;
         let sweep = (flat_start_loc - flat_center).angle_to(&(flat_target_loc - flat_center));
@@ -41,7 +41,7 @@ impl WallTurn {
             radius,
             flat_target_loc,
             sweep,
-            face_loc,
+            flat_face_loc,
         }
     }
 
@@ -119,7 +119,7 @@ impl SegmentRunner for WallTurnRunner {
 
         // Check two end conditions to decrease the chances that silly things happen.
 
-        let flat_face_dir = self.plan.flattener * self.plan.face_loc - me_flat_loc;
+        let flat_face_dir = self.plan.flat_face_loc - me_flat_loc;
         let steer = me_flat_forward.angle_to(&flat_face_dir);
         if steer.abs() < PI / 15.0 {
             return SegmentRunAction::Success;

@@ -9,7 +9,7 @@ pub struct InterceptMemory {
 }
 
 impl InterceptMemory {
-    const LOC_THRESHOLD: f32 = 200.0;
+    const LOC_THRESHOLD: f32 = 100.0;
     const TIME_THRESHOLD: f32 = 0.1;
 
     pub fn new() -> Self {

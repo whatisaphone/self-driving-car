@@ -62,7 +62,7 @@ impl RoutePlanner for WallTurnPlanner {
             turn.center,
             turn.radius,
             turn.tangent,
-            self.target_loc,
+            target_loc,
         );
         Ok(RoutePlan {
             segment: Box::new(segment),

@@ -64,9 +64,9 @@ impl Behavior for WallHit {
                 .update(ctx.packet.GameInfo.TimeSeconds, intercept.loc, eeg)
             {
                 InterceptMemoryResult::Stable(loc) => loc,
-                InterceptMemoryResult::Unstable(_) => {
-                    eeg.log(self.name(), "unstable intercept");
-                    return Action::Abort;
+                InterceptMemoryResult::Unstable(loc) => {
+                    eeg.log(self.name(), "trying unstable intercept");
+                    loc
                 }
             };
 
@@ -410,6 +410,24 @@ mod integration_tests {
             })
             .behavior(WallHit::new())
             .run_for_millis(2000);
+
+        let packet = test.sniff_packet();
+        assert!(packet.GameBall.Physics.vel().y >= 1000.0);
+    }
+
+    #[test]
+    fn from_the_corner() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(-3135.25, -3098.04, 106.81),
+                ball_vel: Vector3::new(-1808.0609, 1254.9609, -115.760994),
+                car_loc: Point3::new(-2169.3699, -4622.36, 16.97),
+                car_rot: Rotation3::from_unreal_angles(-0.009957742, -3.1173651, 0.00029480227),
+                car_vel: Vector3::new(-1587.4609, -12.1310005, 8.981),
+                ..Default::default()
+            })
+            .behavior(WallHit::new())
+            .run_for_millis(3000);
 
         let packet = test.sniff_packet();
         assert!(packet.GameBall.Physics.vel().y >= 1000.0);
