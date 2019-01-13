@@ -64,10 +64,19 @@ impl Behavior for GetToFlatGround {
                 // on our wheels.
                 ctx.eeg.log(self.name(), "jumping off the wall");
                 let mut inputs = Vec::<Box<dyn Behavior>>::with_capacity(3);
+
                 inputs.push(Box::new(Yielder::new(
                     rlbot::ffi::PlayerInput {
                         Pitch: 1.0,
                         Jump: true,
+                        ..Default::default()
+                    },
+                    0.2,
+                )));
+                inputs.push(Box::new(Yielder::new(
+                    rlbot::ffi::PlayerInput {
+                        Pitch: 1.0,
+                        Jump: false,
                         ..Default::default()
                     },
                     0.1,
@@ -84,16 +93,6 @@ impl Behavior for GetToFlatGround {
                     .to_2d()
                     .rotation_to(&(ctx.game.own_back_wall_center() - ctx.me().Physics.loc_2d()));
 
-                    // Let go of jump
-                    inputs.push(Box::new(Yielder::new(
-                        rlbot::ffi::PlayerInput {
-                            Pitch: 1.0,
-                            Jump: false,
-                            ..Default::default()
-                        },
-                        0.25,
-                    )));
-                    // Then dodge.
                     inputs.push(Box::new(Dodge::new().angle(angle)));
                 }
 
