@@ -1,5 +1,8 @@
 use crate::{
-    behavior::{movement::JumpAndTurn, strike::grounded_hit::car_ball_contact_with_pitch},
+    behavior::{
+        movement::{Dodge, JumpAndTurn},
+        strike::grounded_hit::car_ball_contact_with_pitch,
+    },
     eeg::EEG,
     plan::ball::BallFrame,
     routing::models::CarState,
@@ -149,7 +152,6 @@ fn flat_target(ctx: &Context2<'_, '_>, intercept_ball_loc: &Point3<f32>) -> Resu
     );
 
     Ok(Path {
-        start_rot: me.Physics.quat(),
         target_loc: ground_to_intercept * ground_target_loc,
         target_rot: ground_to_intercept.rotation * ground_target_rot,
 
@@ -167,7 +169,6 @@ fn flat_target(ctx: &Context2<'_, '_>, intercept_ball_loc: &Point3<f32>) -> Resu
 
 struct Path {
     // World coordinates
-    start_rot: UnitQuaternion<f32>,
     target_loc: Point3<f32>,
     target_rot: UnitQuaternion<f32>,
 
@@ -252,7 +253,7 @@ fn calculate_approach(
 
 fn calculate_jump(path: &Path) -> (f32, f32) {
     let jump_distance = path.ground_target_loc.z - rl::OCTANE_NEUTRAL_Z;
-    let jump_time = car_jump::jump_duration(&path.start_rot, jump_distance.max(0.001)).unwrap();
+    let jump_time = car_jump::jump_duration(&path.target_rot, jump_distance.max(0.001)).unwrap();
     assert!(jump_time < 1.0, "{}", jump_time);
     (jump_distance, jump_time)
 }
@@ -281,11 +282,14 @@ fn jump(path: &Path) -> Action {
         return Action::Return;
     }
 
-    Action::call(JumpAndTurn::new(
-        jump_time.min(rl::CAR_JUMP_FORCE_TIME),
-        jump_time.min(rl::CAR_JUMP_FORCE_TIME) + 0.05,
-        path.target_rot,
-    ))
+    Action::call(chain!(Priority::Strike, [
+        JumpAndTurn::new(
+            (jump_time - 0.05).min(rl::CAR_JUMP_FORCE_TIME),
+            (jump_time - 0.05).min(rl::CAR_JUMP_FORCE_TIME) + 0.05,
+            path.target_rot,
+        ),
+        Dodge::new(),
+    ]))
 }
 
 struct SimDrive {
