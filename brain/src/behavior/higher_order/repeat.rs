@@ -38,7 +38,7 @@ where
             .draw(Drawable::print(self.current.blurb(), color::YELLOW));
         match self.current.execute_old(ctx) {
             Action::Yield(i) => Action::Yield(i),
-            Action::Call(b) => Action::Call(b),
+            Action::TailCall(b) => Action::TailCall(b),
             Action::Return | Action::Abort => {
                 ctx.eeg.log(self.name(), "repeating");
                 self.current = (self.factory)();

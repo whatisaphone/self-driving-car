@@ -42,7 +42,7 @@ impl Behavior for Offense {
         return_some!(slow_play(ctx));
 
         if let Some(b) = get_boost(ctx) {
-            return Action::Call(b);
+            return Action::TailCall(b);
         }
 
         return_some!(poor_angle_swing_around(ctx));

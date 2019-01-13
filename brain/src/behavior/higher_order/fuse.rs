@@ -20,7 +20,7 @@ impl Behavior for Fuse {
     fn execute_old(&mut self, _ctx: &mut Context<'_>) -> Action {
         // `take()` leaves a None behind, so this can only match `Some` once.
         match self.child.take() {
-            Some(b) => Action::Call(b),
+            Some(b) => Action::TailCall(b),
             None => Action::Yield(Default::default()),
         }
     }

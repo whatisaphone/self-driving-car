@@ -27,13 +27,13 @@ pub enum Priority {
 
 pub enum Action {
     Yield(rlbot::ffi::PlayerInput),
-    Call(Box<dyn Behavior>),
+    TailCall(Box<dyn Behavior>),
     Return,
     Abort,
 }
 
 impl Action {
     pub fn call(behavior: impl Behavior + 'static) -> Self {
-        Action::Call(Box::new(behavior))
+        Action::TailCall(Box::new(behavior))
     }
 }

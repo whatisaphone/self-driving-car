@@ -53,7 +53,7 @@ impl Runner {
 
         match behavior.execute_old(ctx) {
             Action::Yield(i) => i,
-            Action::Call(b) => {
+            Action::TailCall(b) => {
                 ctx.eeg.log(self.name(), format!("> {}", b.name()));
                 self.current = Some(b);
                 self.exec(depth + 1, ctx)

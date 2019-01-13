@@ -71,12 +71,12 @@ impl Behavior for Chain {
 
         match front.execute_old(ctx) {
             Action::Yield(x) => Action::Yield(x),
-            Action::Call(b) => {
+            Action::TailCall(b) => {
                 let front = mem::replace(&mut self.children[0], b);
                 self.blurb = Self::blurb(self.children.iter());
                 ctx.eeg.log(
                     self.name(),
-                    format!("Call from {}; becoming {}", front.name(), self.blurb),
+                    format!("TailCall from {}; becoming {}", front.name(), self.blurb),
                 );
                 self.execute_old(ctx)
             }
