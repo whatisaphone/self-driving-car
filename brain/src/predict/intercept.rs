@@ -110,5 +110,5 @@ pub fn naive_intercept_penalty(car: &CarState, ball: &BallFrame) -> f32 {
     let car_forward = car.forward_axis_2d();
     let car_to_ball = ball_loc - car.loc_2d();
 
-    car_forward.angle_to(&car_to_ball.to_axis()).abs() * 0.25
+    car_forward.angle_to(&car_to_ball.to_axis()).abs() / 3.0
 }

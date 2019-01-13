@@ -274,7 +274,7 @@ mod integration_tests {
                 ..Default::default()
             })
             .soccar()
-            .run_for_millis(3000);
+            .run_for_millis(3500);
         let packet = test.sniff_packet();
         println!(
             "packet.GameBall.Physics.vel() = {:?}",

@@ -73,7 +73,6 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "TODO")]
     fn slow_no_boost() {
         let test = TestRunner::new()
             .scenario(TestScenario {
