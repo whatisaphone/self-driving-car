@@ -23,7 +23,7 @@ fn scenario_template() {
 #[ignore]
 fn recording_template() {
     let _test = TestRunner::new()
-        .preview_recording("../logs/play.csv", 100.0, 2.0, 5.0)
+        .preview_recording("../logs/play.csv", 100.0, 0.5, 5.0)
         .starting_boost(25.0)
         .soccar()
         .run_for_millis(7000);
