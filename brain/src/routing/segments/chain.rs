@@ -52,8 +52,7 @@ impl SegmentRunner for Chainer {
     }
 
     fn execute_old(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction {
-        let action = self.segments.front_mut().unwrap().execute_old(ctx);
-        match action {
+        match self.segments.front_mut().unwrap().execute_old(ctx) {
             SegmentRunAction::Yield(i) => return SegmentRunAction::Yield(i),
             SegmentRunAction::Success => true,
             SegmentRunAction::Failure => return SegmentRunAction::Failure,

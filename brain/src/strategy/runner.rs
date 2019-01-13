@@ -50,9 +50,8 @@ impl Runner {
         let behavior = self.choose_behavior(ctx);
         ctx.eeg
             .draw(Drawable::print(behavior.blurb(), color::YELLOW));
-        let action = behavior.execute_old(ctx);
 
-        match action {
+        match behavior.execute_old(ctx) {
             Action::Yield(i) => i,
             Action::Call(b) => {
                 ctx.eeg.log(self.name(), format!("> {}", b.name()));
