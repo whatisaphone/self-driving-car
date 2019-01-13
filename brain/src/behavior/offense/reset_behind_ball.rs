@@ -80,7 +80,7 @@ impl ResetBehindBall {
                 + Vector2::new(0.0, ctx.game.own_goal().center_2d.y.signum() * 250.0);
         }
 
-        let margin = 250.0;
+        let margin = 1000.0;
         let max_x = ctx.game.field_max_x() - margin;
         if target_loc.x.abs() >= max_x {
             ctx.eeg.log(self.name(), "clamping x");
