@@ -200,7 +200,8 @@ fn get_boost(ctx: &mut Context<'_>) -> Option<Box<dyn Behavior>> {
 fn poor_angle_swing_around(ctx: &mut Context<'_>) -> Option<Action> {
     let goal_loc = ctx.game.enemy_goal().center_2d;
     let me_loc = ctx.me().Physics.loc_2d();
-    let ball_loc = ctx.scenario.me_intercept()?.ball_loc.to_2d();
+    let me_intercept = ctx.scenario.me_intercept()?;
+    let ball_loc = me_intercept.ball_loc.to_2d();
 
     // If it's a tap in, don't lose focus of tapping it in.
     if (goal_loc.x - ball_loc.x).abs() < ctx.game.enemy_goal().max_x
@@ -218,8 +219,13 @@ fn poor_angle_swing_around(ctx: &mut Context<'_>) -> Option<Action> {
 
     ctx.eeg
         .log(name_of_type!(Offense), "poor angle swing-around");
+    let future_ball = ctx
+        .scenario
+        .ball_prediction()
+        .at_time_or_last(me_intercept.time.max(2.5));
     Some(Action::tail_call(ResetBehindBall::behind_loc(
-        ball_loc, 1700.0,
+        future_ball.loc.to_2d(),
+        1700.0,
     )))
 }
 
