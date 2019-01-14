@@ -151,7 +151,10 @@ fn flat_target(ctx: &Context2<'_, '_>, intercept_ball_loc: &Point3<f32>) -> Resu
         PI / 12.0,
     );
 
+    assert!(ground.offset == 0.0); // intercept_distance_from_surface relies on this
+
     Ok(Path {
+        intercept_distance_from_surface: ground_intercept_ball_loc.z,
         target_loc: ground_to_intercept * ground_target_loc,
         target_rot: ground_to_intercept.rotation * ground_target_rot,
 
@@ -169,6 +172,7 @@ fn flat_target(ctx: &Context2<'_, '_>, intercept_ball_loc: &Point3<f32>) -> Resu
 
 struct Path {
     // World coordinates
+    intercept_distance_from_surface: f32,
     target_loc: Point3<f32>,
     target_rot: UnitQuaternion<f32>,
 
@@ -241,6 +245,7 @@ fn calculate_approach(
     eeg.print_value("flat_loc", path.ground_start_loc);
     eeg.print_value("flat_target", path.ground_target_loc);
     eeg.print_distance("jump_distance", jump_distance);
+    eeg.print_distance("intercept_elevation", path.intercept_distance_from_surface);
     eeg.print_time("drive_time", drive_time);
     eeg.print_time("jump_time", jump_time);
     eeg.print_time("total_time", target_time);
@@ -278,7 +283,9 @@ fn drive(me: &rlbot::ffi::PlayerInfo, path: &Path, throttle: f32, boost: bool) -
 fn jump(path: &Path) -> Action {
     let (_jump_distance, jump_time) = calculate_jump(path);
 
-    if jump_time < 0.0 {
+    // If the ball is very close to the wall, don't jump. This way we retain more
+    // control of our car.
+    if path.intercept_distance_from_surface < rl::BALL_RADIUS + 25.0 {
         return Action::Return;
     }
 
