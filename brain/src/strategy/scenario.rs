@@ -1,7 +1,7 @@
 use crate::{
     plan::ball::{BallFrame, BallPredictor, BallTrajectory},
     predict::intercept::{naive_intercept_penalty, NaiveIntercept},
-    strategy::game::Game,
+    strategy::{game::Game, Goal},
     utils::{Wall, WallRayCalculator},
 };
 use common::prelude::*;
@@ -19,6 +19,7 @@ pub struct Scenario<'a> {
     enemy_intercept: LazyCell<Option<(&'a rlbot::ffi::PlayerInfo, NaiveIntercept)>>,
     possession: LazyCell<f32>,
     push_wall: LazyCell<Wall>,
+    impending_score: LazyCell<Option<BallFrame>>,
     impending_concede: LazyCell<Option<BallFrame>>,
     enemy_shoot_score_seconds: LazyCell<f32>,
 }
@@ -42,6 +43,7 @@ impl<'a> Scenario<'a> {
             possession: LazyCell::new(),
             push_wall: LazyCell::new(),
             impending_concede: LazyCell::new(),
+            impending_score: LazyCell::new(),
             enemy_shoot_score_seconds: LazyCell::new(),
         }
     }
@@ -113,15 +115,25 @@ impl<'a> Scenario<'a> {
         })
     }
 
+    /// If nobody touches the ball, will it end up in the enemy goal?
+    pub fn impending_score(&self) -> Option<&BallFrame> {
+        self.impending_score
+            .borrow_with(|| self.calc_impending_ball_in_goal(self.game.enemy_goal()))
+            .as_ref()
+    }
+
     /// If nobody touches the ball, will it end up in our goal?
     pub fn impending_concede(&self) -> Option<&BallFrame> {
         self.impending_concede
-            .borrow_with(|| {
-                self.ball_prediction()
-                    .iter_step_by(0.5)
-                    .find(|ball| self.game.own_goal().ball_is_scored(ball.loc))
-            })
+            .borrow_with(|| self.calc_impending_ball_in_goal(self.game.own_goal()))
             .as_ref()
+    }
+
+    /// If nobody touches the ball, will it end up in the given goal?
+    fn calc_impending_ball_in_goal(&self, goal: &Goal) -> Option<BallFrame> {
+        self.ball_prediction()
+            .iter_step_by(0.5)
+            .find(|ball| goal.ball_is_scored(ball.loc))
     }
 
     /// If the enemy can shoot, guesstimate the number of seconds before the

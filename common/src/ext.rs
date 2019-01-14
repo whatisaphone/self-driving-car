@@ -244,7 +244,10 @@ impl<N: Real> ExtendUnitVector3<N> for Unit<Vector3<N>> {
     }
 
     fn angle_to(&self, other: &Self) -> N {
-        self.rotation_to(other).angle()
+        match UnitQuaternion::rotation_between_axis(self, other) {
+            Some(r) => r.angle(),
+            None => N::pi(), // I'm only 90% sure this is 100% correct.
+        }
     }
 }
 

@@ -22,6 +22,7 @@ pub enum Priority {
     Idle,
     Defense,
     Strike,
+    Taunt,
     Force,
 }
 

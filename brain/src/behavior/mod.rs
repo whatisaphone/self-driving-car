@@ -7,3 +7,4 @@ mod kickoff;
 pub mod movement;
 pub mod offense;
 pub mod strike;
+pub mod taunt;

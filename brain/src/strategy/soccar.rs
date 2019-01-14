@@ -1,7 +1,12 @@
 use crate::{
     behavior::{
-        defense::Defense, higher_order::Chain, movement::GetToFlatGround, offense::Offense,
-        strike::FiftyFifty, Kickoff,
+        defense::Defense,
+        higher_order::{Chain, Predicate, While},
+        movement::GetToFlatGround,
+        offense::Offense,
+        strike::FiftyFifty,
+        taunt::TurtleSpin,
+        Kickoff,
     },
     strategy::{scenario::Scenario, strategy::Strategy, Behavior, Context, Priority},
     utils::{geometry::ExtendF32, Wall},
@@ -77,6 +82,13 @@ impl Strategy for Soccar {
             )])));
         }
 
+        if current.priority() < Priority::Taunt
+            && UnstoppableScore.evaluate(ctx)
+            && in_the_lead(ctx)
+        {
+            return Some(Box::new(While::new(UnstoppableScore, TurtleSpin::new())));
+        }
+
         None
     }
 }
@@ -103,6 +115,31 @@ fn enemy_can_shoot(ctx: &mut Context<'_>) -> bool {
             linear_interpolate(&[2500.0, 7500.0], &[PI / 2.0, PI / 4.0], dist_ball_to_goal);
         angle_diff < max_angle_diff
     })
+}
+
+struct UnstoppableScore;
+
+impl Predicate for UnstoppableScore {
+    fn name(&self) -> &str {
+        name_of_type!(UnstoppableScore)
+    }
+
+    fn evaluate(&mut self, ctx: &mut Context<'_>) -> bool {
+        let impending_score = some_or_else!(ctx.scenario.impending_score(), {
+            return false;
+        });
+        let (_enemy, enemy_intercept) = some_or_else!(ctx.scenario.enemy_intercept(), {
+            return true;
+        });
+        enemy_intercept.time >= impending_score.t + 1.5
+    }
+}
+
+fn in_the_lead(ctx: &mut Context<'_>) -> bool {
+    let scores = ctx.packet.match_score();
+    let us = scores[ctx.game.team.to_ffi() as usize];
+    let them = scores[ctx.game.enemy_team.to_ffi() as usize];
+    us - them > (ctx.packet.GameInfo.GameTimeRemaining / 30.0) as i32
 }
 
 #[cfg(test)]
