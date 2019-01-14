@@ -238,6 +238,14 @@ fn poor_angle_swing_around(ctx: &mut Context<'_>) -> Option<Action> {
         return None;
     }
 
+    if ctx.scenario.possession() < -Scenario::POSSESSION_CONTESTABLE {
+        ctx.eeg.log(
+            name_of_type!(Offense),
+            "poor_angle_swing_around: no possession",
+        );
+        return None;
+    }
+
     ctx.eeg.log(
         name_of_type!(Offense),
         "poor_angle_swing_around: proceeding",
