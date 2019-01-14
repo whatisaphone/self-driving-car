@@ -58,11 +58,13 @@ fn can_we_shoot(ctx: &mut Context<'_>) -> bool {
 
     if playing_goalie(ctx.game, ctx.scenario.ball_prediction().start()) {
         ctx.eeg
-            .log(name_of_type!(Offense), "playing goalie, so not shooting");
+            .log(name_of_type!(Offense), "can_we_shoot: playing goalie");
         return false;
     }
 
     let naive_intercept = some_or_else!(ctx.scenario.me_intercept(), {
+        ctx.eeg
+            .log(name_of_type!(Offense), "can_we_shoot: no intercept");
         return false;
     });
 
@@ -73,8 +75,10 @@ fn can_we_shoot(ctx: &mut Context<'_>) -> bool {
     );
 
     let shoot_intercept = some_or_else!(shoot_intercept, {
-        ctx.eeg
-            .log(name_of_type!(Offense), "no shootable intercept");
+        ctx.eeg.log(
+            name_of_type!(Offense),
+            "can_we_shoot: no shootable intercept",
+        );
         return false;
     });
 
@@ -87,8 +91,10 @@ fn can_we_shoot(ctx: &mut Context<'_>) -> bool {
     // Don't just sit there for days waiting for the ball to roll. The more
     // possession we have, the longer we're willing to wait.
     if shoot_intercept.time >= naive_intercept + 2.0 {
-        ctx.eeg
-            .log(name_of_type!(Offense), "we can shoot, but not soon enough");
+        ctx.eeg.log(
+            name_of_type!(Offense),
+            "can_we_shoot: yes but not soon enough",
+        );
         return false;
     }
 
@@ -105,6 +111,8 @@ fn playing_goalie(game: &Game<'_>, ball: &BallFrame) -> bool {
 fn slow_play(ctx: &mut Context<'_>) -> Option<Action> {
     // Only slow play if we have enough time.
     if ctx.scenario.possession() < 2.0 {
+        ctx.eeg
+            .log(name_of_type!(Offense), "slow_play: need possession");
         return None;
     }
 
@@ -118,13 +126,15 @@ fn slow_play(ctx: &mut Context<'_>) -> Option<Action> {
     // Check if we're already behind the ball; if so, no special action is needed.
     let ball_to_goal = RayCoordinateSystem::segment(ball_loc, ctx.game.enemy_goal().center_2d);
     if ball_to_goal.project(ctx.me().Physics.loc_2d()) < 0.0 {
+        ctx.eeg
+            .log(name_of_type!(Offense), "slow_play: already behind the ball");
         return None;
     }
 
     if ctx.me().Boost < 50 {
         ctx.eeg.log(
             name_of_type!(Offense),
-            "getting boost conveniently behind the ball",
+            "slow_play: getting boost conveniently behind the ball",
         );
         let behind_ball = Point2::new(
             ball_loc.x,
@@ -134,10 +144,7 @@ fn slow_play(ctx: &mut Context<'_>) -> Option<Action> {
         return Some(Action::tail_call(FollowRoute::new(dollar)));
     }
 
-    ctx.eeg.log(
-        name_of_type!(Offense),
-        "swing around behind the ball for a better hit",
-    );
+    ctx.eeg.log(name_of_type!(Offense), "slow_play: proceeding");
     Some(Action::tail_call(ResetBehindBall::behind_loc(
         ball_loc, 2000.0,
     )))
@@ -153,15 +160,23 @@ fn readjust_for_shot(ctx: &mut Context<'_>, intercept_time: f32) -> Option<Actio
 
     // We failed to shoot above, but if we adjust, maybe we can shoot
     if ball_loc.x.abs() >= 2000.0 || ball_loc.y.abs() >= 3000.0 {
+        ctx.eeg.log(
+            name_of_type!(Offense),
+            "readjust_for_shot: too close to edge of field",
+        );
         return None;
     }
 
     if ctx.game.enemy_goal().shot_angle_2d(ball_loc) >= PI / 4.0 {
+        ctx.eeg.log(
+            name_of_type!(Offense),
+            "readjust_for_shot: not a good enough angle",
+        );
         return None;
     }
 
     ctx.eeg
-        .log(name_of_type!(Offense), "re-adjust for a possible shot");
+        .log(name_of_type!(Offense), "readjust_for_shot: proceeding");
     Some(Action::tail_call(ResetBehindBall::behind_loc(
         ball_loc, 2000.0,
     )))
@@ -169,6 +184,8 @@ fn readjust_for_shot(ctx: &mut Context<'_>, intercept_time: f32) -> Option<Actio
 
 fn get_boost(ctx: &mut Context<'_>) -> Option<Box<dyn Behavior>> {
     if ctx.me().Boost > 50 {
+        ctx.eeg
+            .log(name_of_type!(Offense), "get_boost: already have enough");
         return None;
     }
     if ctx.scenario.possession() < -Scenario::POSSESSION_CONTESTABLE
@@ -207,6 +224,10 @@ fn poor_angle_swing_around(ctx: &mut Context<'_>) -> Option<Action> {
     if (goal_loc.x - ball_loc.x).abs() < ctx.game.enemy_goal().max_x
         && (goal_loc.y - ball_loc.y).abs() < 500.0
     {
+        ctx.eeg.log(
+            name_of_type!(Offense),
+            "poor_angle_swing_around: rather just tap it in",
+        );
         return None;
     }
 
@@ -217,8 +238,10 @@ fn poor_angle_swing_around(ctx: &mut Context<'_>) -> Option<Action> {
         return None;
     }
 
-    ctx.eeg
-        .log(name_of_type!(Offense), "poor angle swing-around");
+    ctx.eeg.log(
+        name_of_type!(Offense),
+        "poor_angle_swing_around: proceeding",
+    );
     let future_ball = ctx
         .scenario
         .ball_prediction()
