@@ -92,10 +92,8 @@ where
             .map(|f| f.loc)
             .unwrap_or(intercept.ball_loc);
 
-        let steer = me
-            .Physics
-            .forward_axis_2d()
-            .angle_to(&(target_loc - me.Physics.loc()).to_2d().to_axis());
+        let me_forward = me.Physics.forward_axis_2d();
+        let steer = me_forward.angle_to(&(target_loc - me.Physics.loc()).to_2d().to_axis());
         if steer.abs() >= PI / 3.0 {
             ctx.eeg.log(self.name(), "not facing the target");
             return Action::Abort;
