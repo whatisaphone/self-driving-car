@@ -98,8 +98,10 @@ impl Behavior for KickoffStrike {
         let me_loc = ctx.me().Physics.loc_2d();
         let me_to_ball = ball_loc - me_loc;
 
-        // 0.05 for the jump, and the rest is rotating the car 1/4 a turn.
-        let jump_flip_time = 0.05 + (rl::CAR_MAX_ANGULAR_VELOCITY / (PI * 2.0)) / 4.0;
+        const RPS: f32 = rl::CAR_MAX_ANGULAR_VELOCITY / (PI * 2.0);
+        // 0.05 for the jump, and the rest is how  long it takes to rotate the car a
+        // certain fraction of a turn.
+        let jump_flip_time = 0.05 + RPS * 0.2;
         let fifty_distance = ctx.me().Physics.vel_2d().norm() * jump_flip_time;
         let fifty_offset = fifty_distance - me_to_ball.norm();
         if fifty_offset >= -130.0 {
@@ -114,17 +116,23 @@ impl Behavior for KickoffStrike {
 
 impl KickoffStrike {
     fn drive(&self, ctx: &mut Context<'_>) -> Action {
-        let ball_loc = ctx.packet.GameBall.Physics.loc_2d();
+        let target_loc = Point2::new(30.0 * ctx.me().Physics.loc().x.signum(), 0.0);
         Action::Yield(rlbot::ffi::PlayerInput {
             Boost: true,
-            ..drive_towards(ctx, ball_loc)
+            ..drive_towards(ctx, target_loc)
         })
     }
 
     /// Either 50/50 or chip, depending on how close the enemy is.
     fn commit(&self, ctx: &mut Context<'_>) -> Action {
         match self.commit_action(ctx) {
-            CommitAction::Dodge => Action::tail_call(QuickJumpAndDodge::new()),
+            CommitAction::Dodge => {
+                let me_forward = ctx.me().Physics.forward_axis_2d();
+                let me_extrapolated_loc = ctx.packet.GameBall.Physics.loc_2d()
+                    - (ctx.me().Physics.loc_2d() + ctx.me().Physics.vel_2d() * 0.05);
+                let angle = me_forward.angle_to(&me_extrapolated_loc.to_axis());
+                Action::tail_call(QuickJumpAndDodge::new().angle(PI / 8.0 * angle.signum()))
+            }
             CommitAction::Chip => Action::tail_call(RoughAngledChip::new()),
         }
     }
@@ -191,11 +199,12 @@ mod integration_tests {
             .one_v_one(&*recordings::KICKOFF_CENTER, 107.0)
             .starting_boost(33.0)
             .soccar()
-            .run_for_millis(2500);
+            .run_for_millis(3000);
 
         let packet = test.sniff_packet();
-        let ball = extrapolate_ball(&packet, 10.0);
-        assert!(ball.y >= -5000.0);
+        let ball = extrapolate_ball(&packet, 3.0);
+        // Assert that the ball is not in our goal.
+        assert!(!is_enemy_scored(ball));
     }
 
     #[test]
@@ -244,5 +253,9 @@ mod integration_tests {
 
     fn is_scored(ball: Point3<f32>) -> bool {
         ball.x.abs() < 1000.0 && ball.y >= 5000.0
+    }
+
+    fn is_enemy_scored(ball: Point3<f32>) -> bool {
+        ball.x.abs() < 1000.0 && ball.y < -5000.0
     }
 }
