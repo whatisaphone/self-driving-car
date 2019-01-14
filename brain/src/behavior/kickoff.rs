@@ -58,13 +58,11 @@ impl Behavior for Kickoff {
                 100.0 * ctx.me().Physics.loc().x.signum(),
                 2500.0 * ctx.me().Physics.loc().y.signum(),
             );
-            let straight =
-                GroundStraightPlanner::new(target_loc, StraightMode::Asap).allow_dodging(false);
-            Box::new(ChainedPlanner::chain(vec![
-                Box::new(straight),
-                Box::new(GroundIntercept::new()),
-            ]))
+            Box::new(
+                GroundStraightPlanner::new(target_loc, StraightMode::Asap).allow_dodging(false),
+            )
         } else {
+            // This is basically a nop since the segment runs with `StraightMode::Fake`.
             Box::new(GroundIntercept::new().allow_dodging(false))
         };
 
