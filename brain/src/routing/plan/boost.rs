@@ -113,7 +113,18 @@ impl GetDollar {
             return Err(RoutePlanError::OtherError("TODO: easier to flip to pad"));
         }
 
-        GroundPowerslideTurn::new(pickup.loc, self.target_face, None).plan(ctx, dump)
+        // Minor hack – if we're retreating to grab boost, chances are we want to be
+        // defensive. Force facing our goal because usually the other way ends up being
+        // awkward.
+        let mut target_face = self.target_face;
+        if (ctx.game.own_goal().center_2d.y - pickup.loc.y).abs() < 1500.0
+            && (pickup.loc.y - ctx.start.loc.y).abs() >= 2000.0
+        {
+            dump.log(self, "overriding target_face to be defensive");
+            target_face = ctx.game.own_goal().center_2d;
+        }
+
+        GroundPowerslideTurn::new(pickup.loc, target_face, None).plan(ctx, dump)
     }
 
     fn chooose_pickup<'a>(
