@@ -65,6 +65,10 @@ impl<'a> Scenario<'a> {
         self.enemy_intercept.borrow().unwrap().as_ref()
     }
 
+    pub fn primary_enemy(&self) -> Option<&'a rlbot::ffi::PlayerInfo> {
+        self.enemy_intercept().map(|&(enemy, ref _intercept)| enemy)
+    }
+
     /// Number of seconds I can reach the ball before the opponent
     pub fn possession(&self) -> f32 {
         if !self.me_intercept.filled() {

@@ -60,6 +60,11 @@ pub const CAR_NORMAL_SPEED: f32 = 1410.001;
 /// This value was observed in data from `collect`.
 pub const CAR_MAX_SPEED: f32 = 2299.981;
 
+/// The maximum norm of the car's angular velocity vector, in rad/s.
+///
+/// Source: A Rocket Science video
+pub const CAR_MAX_ANGULAR_VELOCITY: f32 = 5.5;
+
 /// Almost max speed. This is a placeholder for behaviors where some sort of
 /// boost hysteresis would have been appropriate but I was too lazy to
 /// implement it.

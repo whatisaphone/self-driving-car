@@ -1,5 +1,8 @@
 use crate::{
-    behavior::{defense::defensive_hit, higher_order::Chain, strike::GroundedHit},
+    behavior::{
+        higher_order::Chain,
+        movement::{drive_towards, QuickJumpAndDodge},
+    },
     routing::{
         behavior::FollowRoute,
         models::RoutePlanner,
@@ -8,9 +11,11 @@ use crate::{
     },
     strategy::{Action, Behavior, Context, Priority},
 };
-use common::prelude::*;
+use common::{prelude::*, rl};
+use derive_new::new;
 use nalgebra::Point2;
 use nameof::name_of_type;
+use std::f32::consts::PI;
 
 pub struct Kickoff;
 
@@ -65,7 +70,7 @@ impl Behavior for Kickoff {
 
         Action::tail_call(Chain::new(Priority::Idle, vec![
             Box::new(FollowRoute::new_boxed(approach)),
-            Box::new(GroundedHit::hit_towards(defensive_hit)),
+            Box::new(KickoffStrike::new()),
         ]))
     }
 }
@@ -78,6 +83,95 @@ fn is_off_center_kickoff(ctx: &mut Context<'_>) -> bool {
 fn is_diagonal_kickoff(ctx: &mut Context<'_>) -> bool {
     let car_x = ctx.me().Physics.loc().x;
     car_x.abs() >= 1000.0
+}
+
+#[derive(new)]
+struct KickoffStrike;
+
+impl Behavior for KickoffStrike {
+    fn name(&self) -> &str {
+        name_of_type!(KickoffStrike)
+    }
+
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
+        let ball_loc = ctx.packet.GameBall.Physics.loc_2d();
+        let me_loc = ctx.me().Physics.loc_2d();
+        let me_to_ball = ball_loc - me_loc;
+
+        // 0.05 for the jump, and the rest is rotating the car 1/4 a turn.
+        let jump_flip_time = 0.05 + (rl::CAR_MAX_ANGULAR_VELOCITY / (PI * 2.0)) / 4.0;
+        let fifty_distance = ctx.me().Physics.vel_2d().norm() * jump_flip_time;
+        let fifty_offset = fifty_distance - me_to_ball.norm();
+        if fifty_offset >= -130.0 {
+            // This frame is the "ideal" time to dodge, so now is when we need to make the
+            // decision whether to dodge or not.
+            return self.commit(ctx);
+        }
+
+        self.drive(ctx)
+    }
+}
+
+impl KickoffStrike {
+    fn drive(&self, ctx: &mut Context<'_>) -> Action {
+        let ball_loc = ctx.packet.GameBall.Physics.loc_2d();
+        Action::Yield(rlbot::ffi::PlayerInput {
+            Boost: true,
+            ..drive_towards(ctx, ball_loc)
+        })
+    }
+
+    /// Either 50/50 or chip, depending on how close the enemy is.
+    fn commit(&self, ctx: &mut Context<'_>) -> Action {
+        match self.commit_action(ctx) {
+            CommitAction::Dodge => Action::tail_call(QuickJumpAndDodge::new()),
+            CommitAction::Chip => Action::tail_call(RoughAngledChip::new()),
+        }
+    }
+
+    fn commit_action(&self, ctx: &mut Context<'_>) -> CommitAction {
+        let me = ctx.me();
+        let enemy = some_or_else!(ctx.scenario.primary_enemy(), {
+            return CommitAction::Chip;
+        });
+
+        let ball_loc = ctx.packet.GameBall.Physics.loc_2d();
+        let me_to_ball = ball_loc - me.Physics.loc_2d();
+        let enemy_to_ball = ball_loc - enemy.Physics.loc_2d();
+
+        // If we are much closer to the ball than the enemy, they are probably faking so
+        // try to chip it over their head.
+        if enemy_to_ball.norm() / 2.0 >= me_to_ball.norm() {
+            CommitAction::Chip
+        } else {
+            CommitAction::Dodge
+        }
+    }
+}
+
+#[derive(new)]
+struct RoughAngledChip;
+
+impl Behavior for RoughAngledChip {
+    fn name(&self) -> &str {
+        name_of_type!(RoughAngledChip)
+    }
+
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
+        let ball_loc = ctx.packet.GameBall.Physics.loc_2d();
+        let kicking_off = (ball_loc - Point2::origin()).norm() == 0.0;
+        if kicking_off {
+            let target_loc = Point2::new(140.0 * ctx.me().Physics.loc().x.signum(), 0.0);
+            Action::Yield(drive_towards(ctx, target_loc))
+        } else {
+            Action::Return
+        }
+    }
+}
+
+enum CommitAction {
+    Dodge,
+    Chip,
 }
 
 #[cfg(test)]
