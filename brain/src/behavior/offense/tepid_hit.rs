@@ -126,6 +126,11 @@ fn time_wasting_hit(ctx: &mut GroundedHitAimContext<'_, '_>) -> Result<GroundedH
         ctx.eeg
             .draw(Drawable::print("toward enemy goal", color::GREEN));
         feasible_hit_angle_toward(ball_loc, me_loc, offense_aim, PI / 6.0)
+    } else if (ball_loc - defense_avoid).norm() < 1000.0 {
+        ctx.eeg.track(Event::TepidHitBlockAngleToGoal);
+        ctx.eeg
+            .draw(Drawable::print("blocking angle to goal", color::GREEN));
+        GroundedHit::opposite_of_self(ctx.car, ctx.intercept_ball_loc)
     } else {
         ctx.eeg.track(Event::TepidHitAwayFromOwnGoal);
         ctx.eeg
@@ -168,4 +173,29 @@ fn is_chippable(ctx: &mut GroundedHitAimContext<'_, '_>, aim_loc: Point2<f32>) -
         && ctx.intercept_ball_loc.z < 130.0
         && shot_angle < PI / 4.0
         && goalward_angle < PI / 2.0
+}
+
+#[cfg(test)]
+mod integration_tests {
+    use crate::{eeg::Event, integration_tests::helpers::TestRunner};
+    use brain_test_data::recordings;
+    use common::{prelude::*, rl};
+    use nalgebra::Point2;
+
+    #[test]
+    fn tepid_save() {
+        let test = TestRunner::new()
+            .one_v_one(&*recordings::TEPID_SAVE, 187.5)
+            .soccar()
+            .run_for_millis(2500);
+
+        assert!(!test.enemy_has_scored());
+        let packet = test.sniff_packet();
+        let own_goal = Point2::new(0.0, -rl::FIELD_MAX_Y);
+        let goal_to_ball_dist = (packet.GameBall.Physics.loc_2d() - own_goal).norm();
+        assert!(goal_to_ball_dist >= 1000.0);
+        test.examine_events(|events| {
+            assert!(events.contains(&Event::TepidHitBlockAngleToGoal));
+        });
+    }
 }

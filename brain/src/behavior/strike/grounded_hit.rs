@@ -43,6 +43,11 @@ where
 impl GroundedHit<fn(&mut GroundedHitAimContext<'_, '_>) -> Result<GroundedHitTarget, ()>> {
     const CONTACT_Z_OFFSET: f32 = -70.0; // This is misguided and should probably go away.
     pub const MAX_BALL_Z: f32 = 220.0 - Self::CONTACT_Z_OFFSET; // TODO: how high can I jump
+
+    /// A preset for `Aim` that hits the ball straight ahead.
+    pub fn opposite_of_self(car: &rlbot::ffi::PlayerInfo, ball: Point3<f32>) -> Point2<f32> {
+        ball.to_2d() + (ball.to_2d() - car.Physics.loc_2d())
+    }
 }
 
 impl<Aim> Behavior for GroundedHit<Aim>
