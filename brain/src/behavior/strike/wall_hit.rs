@@ -144,6 +144,7 @@ fn flat_target(
         return Err(());
     }
 
+    // Build the origami structure
     let me_to_ground = me_surface.unfold(&ground)?;
     let intercept_to_me = intercept_surface.unfold(&me_surface)?;
     let intercept_to_ground = me_to_ground * intercept_to_me;
@@ -152,8 +153,18 @@ fn flat_target(
     let me_to_flat = Flattener::new(me_to_ground);
     let intercept_to_flat = Flattener::new(intercept_to_ground);
 
+    // "Unfold" the path onto the ground
     let ground_start_loc = me_to_ground * me.Physics.loc();
     let ground_intercept_ball_loc = intercept_to_ground * intercept_ball_loc;
+
+    // Make sure we're not facing wildly the wrong direction
+    let me_forward = me.Physics.forward_axis_2d();
+    let me_to_ball = (ground_intercept_ball_loc - me.Physics.loc()).to_2d();
+    let steer = me_forward.angle_to(&me_to_ball.to_axis());
+    if steer.abs() >= PI / 3.0 {
+        eeg.log(name_of_type!(WallHit), "not facing the target");
+        return Err(());
+    }
 
     let (ground_target_loc, ground_target_rot) = car_ball_contact_with_pitch(
         ctx.game,
