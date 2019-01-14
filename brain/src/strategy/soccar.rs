@@ -101,7 +101,7 @@ fn enemy_can_shoot(ctx: &mut Context<'_>) -> bool {
     let ball_loc = intercept.ball_loc.to_2d();
     let goal = ctx.game.own_goal();
     let dist_ball_to_goal = (ball_loc - goal.center_2d).norm();
-    if dist_ball_to_goal >= 7500.0 {
+    if ctx.scenario.possession() >= -Scenario::POSSESSION_CONTESTABLE {
         return false;
     }
     ctx.enemy_cars().any(|enemy| {
