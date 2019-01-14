@@ -202,7 +202,7 @@ impl Goal {
 
     pub fn ball_is_scored(&self, ball_loc: Point3<f32>) -> bool {
         // This is just an estimate, it doesn't take into account ball radius, etc.
-        self.is_y_within_range(ball_loc.y, ..0.0)
+        ball_loc.x.abs() < self.max_x && self.is_y_within_range(ball_loc.y, ..0.0)
     }
 
     pub fn shot_angle_2d(&self, ball_loc: Point2<f32>) -> f32 {
