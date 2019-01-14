@@ -70,7 +70,7 @@ impl Behavior for WallHit {
                 }
             };
 
-        let path = match flat_target(ctx, &intercept_ball_loc) {
+        let path = match flat_target(ctx, eeg, &intercept_ball_loc) {
             Ok(x) => x,
             Err(()) => {
                 eeg.log(self.name(), "error finding target");
@@ -127,11 +127,22 @@ fn check_intercept(ctx: &Context2<'_, '_>, ball: &BallFrame) -> Result<(), ()> {
     Ok(())
 }
 
-fn flat_target(ctx: &Context2<'_, '_>, intercept_ball_loc: &Point3<f32>) -> Result<Path, ()> {
+fn flat_target(
+    ctx: &Context2<'_, '_>,
+    eeg: &mut EEG,
+    intercept_ball_loc: &Point3<f32>,
+) -> Result<Path, ()> {
     let me = ctx.me();
     let me_surface = ctx.game.pitch().closest_plane(&me.Physics.loc());
     let intercept_surface = ctx.game.pitch().closest_plane(&intercept_ball_loc);
     let ground = ctx.game.pitch().ground();
+
+    if me_surface.normal == ground.normal && intercept_surface.normal == ground.normal {
+        // Other behaviors are better at ground play, so step out of the way so one of
+        // them can take over.
+        eeg.log(name_of_type!(WallHit), "no walls are involved");
+        return Err(());
+    }
 
     let me_to_ground = me_surface.unfold(&ground)?;
     let intercept_to_me = intercept_surface.unfold(&me_surface)?;
