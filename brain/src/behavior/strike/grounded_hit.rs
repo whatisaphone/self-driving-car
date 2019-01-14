@@ -8,7 +8,7 @@ use crate::{
     predict::{intercept::NaiveIntercept, naive_ground_intercept},
     routing::recover::{IsSkidding, NotOnFlatGround},
     rules::SameBallTrajectory,
-    strategy::{Action, Behavior, Context, Game, Scenario},
+    strategy::{Action, Behavior, Context, Game, Priority, Scenario},
 };
 use common::{physics, prelude::*, rl, Coordinate, Distance};
 use derive_new::new;
@@ -320,7 +320,7 @@ where
             return Action::Return;
         }
 
-        Action::tail_call(Chain::new(self.priority(), vec![
+        Action::tail_call(Chain::new(Priority::Strike, vec![
             Box::new(JumpAndTurn::new(jump_time - 0.05, jump_time, target_rot)),
             Box::new(Dodge::new().angle(dodge_angle)),
         ]))
