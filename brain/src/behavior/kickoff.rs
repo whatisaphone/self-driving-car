@@ -96,6 +96,11 @@ impl Behavior for KickoffStrike {
     }
 
     fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
+        if !Kickoff::is_kickoff(&ctx.packet.GameBall) {
+            ctx.eeg.log(self.name(), "not a kickoff");
+            return Action::Abort;
+        }
+
         let ball_loc = ctx.packet.GameBall.Physics.loc_2d();
         let me_loc = ctx.me().Physics.loc_2d();
         let me_to_ball = ball_loc - me_loc;
@@ -171,14 +176,12 @@ impl Behavior for RoughAngledChip {
     }
 
     fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
-        let ball_loc = ctx.packet.GameBall.Physics.loc_2d();
-        let kicking_off = (ball_loc - Point2::origin()).norm() == 0.0;
-        if kicking_off {
-            let target_loc = Point2::new(140.0 * ctx.me().Physics.loc().x.signum(), 0.0);
-            Action::Yield(drive_towards(ctx, target_loc))
-        } else {
-            Action::Return
+        if !Kickoff::is_kickoff(&ctx.packet.GameBall) {
+            return Action::Return;
         }
+
+        let target_loc = Point2::new(140.0 * ctx.me().Physics.loc().x.signum(), 0.0);
+        Action::Yield(drive_towards(ctx, target_loc))
     }
 }
 
