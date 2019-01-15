@@ -38,6 +38,12 @@ impl QuickJumpAndDodge {
         }
     }
 
+    pub fn jump_time(mut self, jump_time: f32) -> Self {
+        assert!(jump_time >= Self::MIN_PHASE_TIME);
+        self.dodge_time = jump_time + Self::MIN_PHASE_TIME;
+        self
+    }
+
     pub fn angle(mut self, angle: f32) -> Self {
         self.pitch = -angle.cos();
         self.yaw = angle.sin();

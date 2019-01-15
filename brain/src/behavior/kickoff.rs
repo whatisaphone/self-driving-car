@@ -86,6 +86,10 @@ fn is_diagonal_kickoff(ctx: &mut Context<'_>) -> bool {
 #[derive(new)]
 struct KickoffStrike;
 
+impl KickoffStrike {
+    const JUMP_TIME: f32 = 0.15;
+}
+
 impl Behavior for KickoffStrike {
     fn name(&self) -> &str {
         name_of_type!(KickoffStrike)
@@ -96,10 +100,10 @@ impl Behavior for KickoffStrike {
         let me_loc = ctx.me().Physics.loc_2d();
         let me_to_ball = ball_loc - me_loc;
 
+        // RPS = 360° rotations per second
         const RPS: f32 = rl::CAR_MAX_ANGULAR_VELOCITY / (PI * 2.0);
-        // 0.05 for the jump, and the rest is how  long it takes to rotate the car a
-        // certain fraction of a turn.
-        let jump_flip_time = 0.05 + RPS * 0.2;
+        // The time for the jump plus rotating the car a certain fraction of a turn.
+        let jump_flip_time = Self::JUMP_TIME + RPS * 0.2;
         let fifty_distance = ctx.me().Physics.vel_2d().norm() * jump_flip_time;
         let fifty_offset = fifty_distance - me_to_ball.norm();
         if fifty_offset >= -130.0 {
@@ -126,10 +130,13 @@ impl KickoffStrike {
         match self.commit_action(ctx) {
             CommitAction::Dodge => {
                 let me_forward = ctx.me().Physics.forward_axis_2d();
-                let me_extrapolated_loc = ctx.packet.GameBall.Physics.loc_2d()
-                    - (ctx.me().Physics.loc_2d() + ctx.me().Physics.vel_2d() * 0.05);
-                let angle = me_forward.angle_to(&me_extrapolated_loc.to_axis());
-                Action::tail_call(QuickJumpAndDodge::new().angle(PI / 8.0 * angle.signum()))
+                let me_to_ball = ctx.packet.GameBall.Physics.loc_2d() - ctx.me().Physics.loc_2d();
+                let angle = me_forward.angle_to(&me_to_ball.to_axis());
+                Action::tail_call(
+                    QuickJumpAndDodge::new()
+                        .jump_time(Self::JUMP_TIME)
+                        .angle(PI / 8.0 * angle.signum()),
+                )
             }
             CommitAction::Chip => Action::tail_call(RoughAngledChip::new()),
         }
