@@ -4,7 +4,8 @@ use crate::{
     utils::{geometry::ExtendF32, WallRayCalculator},
 };
 use common::prelude::*;
-use nalgebra::Point2;
+use nalgebra::{Point2, UnitComplex};
+use simulate::linear_interpolate;
 use std::f32::consts::PI;
 
 pub struct BounceShot {
@@ -29,20 +30,32 @@ impl BounceShot {
     /// Roughly where should the car be when it makes contact with the ball, in
     /// order to shoot at `aim_loc`?
     pub fn rough_shooting_spot(intercept: &NaiveIntercept, aim_loc: Point2<f32>) -> Point2<f32> {
-        // This is not the greatest guess
-        let guess_final_ball_speed = intercept.car_speed.max(1000.0).min(1700.0);
-        let ball_to_aim = aim_loc - intercept.ball_loc.to_2d();
-        if ball_to_aim.norm() < 0.1 {
+        let ball_loc = intercept.ball_loc.to_2d();
+        let ball_vel = intercept.ball_vel.to_2d();
+        let car_loc = intercept.car_loc.to_2d();
+
+        let ball_to_aim = aim_loc - ball_loc;
+        if ball_to_aim.norm() < 1e-3 {
             log::warn!("[rough_shooting_spot] ball_loc == aim_loc; bailing");
             // This happened in a Dropshot game when WallRayCalculator was still using the
             // standard Soccar mesh. It's a degenerate case, but we at least shouldn't start
             // spewing NaN everywhere.
-            return intercept.car_loc.to_2d();
+            return car_loc;
         }
+        // This is not the greatest guess
+        let guess_final_ball_speed = intercept.car_speed.min(1700.0);
         let desired_vel = ball_to_aim.normalize() * guess_final_ball_speed;
-        let intercept_vel = intercept.ball_vel.to_2d();
-        let impulse = desired_vel - intercept_vel;
-        intercept.ball_loc.to_2d() - impulse.normalize() * 200.0
+        let impulse = desired_vel - ball_vel;
+        let naive = ball_loc - impulse.normalize() * 200.0;
+
+        // Clamp our attack angle based on the ball speed. With slower speeds, we should
+        // hit the ball more head-on, otherwise we'll end up plunking it at a pathetic
+        // speed and that's no good.
+        let angle = (car_loc - ball_loc).angle_to(&(naive - ball_loc));
+        let max_angle_diff =
+            linear_interpolate(&[500.0, 2000.0], &[PI / 6.0, PI / 3.0], ball_vel.norm());
+        let adjust = UnitComplex::new(angle.max(-max_angle_diff).min(max_angle_diff));
+        ball_loc + adjust * (car_loc - ball_loc).normalize() * 200.0
     }
 }
 
