@@ -15,16 +15,37 @@ pub struct BounceShot {
 impl BounceShot {
     /// Given a ball location, where should we aim the shot?
     pub fn aim_loc(goal: &Goal, car_loc: Point2<f32>, ball_loc: Point2<f32>) -> Point2<f32> {
+        // If the angle across the goal is tight, bias towards the far post so we don't
+        // accidentally clip the near post and miss.
+        let shoot_across_the_goal = linear_interpolate(
+            &[PI / 4.0, PI / 3.0],
+            &[0.0, 0.3333333333333],
+            (ball_loc - goal.closest_point(ball_loc))
+                .angle_to(&goal.normal_2d)
+                .abs(),
+        );
+        let ideal_aim_loc = Point2::new(
+            shoot_across_the_goal * goal.max_x * -ball_loc.x.signum(),
+            goal.center_2d.y,
+        );
+
         // If the ball is very close to goal, aim for a point in goal opposite from the
         // ball for an easy shot. If there's some distance, aim at the middle of goal
         // so we're less likely to miss.
-        let y_dist = (goal.center_2d.y - ball_loc.y).abs();
+        let y_dist = (ideal_aim_loc.y - ball_loc.y).abs();
         let allow_angle_diff = ((1000.0 - y_dist) / 1000.0).max(0.0) * PI / 12.0;
         let naive_angle = car_loc.negated_difference_and_angle_to(ball_loc);
-        let goal_angle = ball_loc.negated_difference_and_angle_to(goal.center_2d);
+        let goal_angle = ball_loc.negated_difference_and_angle_to(ideal_aim_loc);
         let adjust = (naive_angle - goal_angle).normalize_angle();
         let aim_angle = goal_angle + adjust.max(-allow_angle_diff).min(allow_angle_diff);
-        WallRayCalculator::calc_ray(ball_loc, aim_angle)
+        let aim_loc = WallRayCalculator::calc_ray(ball_loc, aim_angle);
+        Point2::new(
+            aim_loc
+                .x
+                .max(-goal.max_x + shoot_across_the_goal * goal.max_x * -ball_loc.x.signum())
+                .min(goal.max_x + shoot_across_the_goal * goal.max_x * -ball_loc.x.signum()),
+            aim_loc.y,
+        )
     }
 
     /// Roughly where should the car be when it makes contact with the ball, in

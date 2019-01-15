@@ -187,6 +187,12 @@ impl Goal {
         }
     }
 
+    /// Returns the point on the surface of the goal which is closest to the
+    /// given point.
+    pub fn closest_point(&self, target: Point2<f32>) -> Point2<f32> {
+        Point2::new(target.x.max(-self.max_x).min(self.max_x), self.center_2d.y)
+    }
+
     /// Returns true if the given y value is less than `range.end` uu in front
     /// of the goal.
     pub fn is_y_within_range(&self, y: f32, range: RangeTo<f32>) -> bool {
