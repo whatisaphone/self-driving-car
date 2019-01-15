@@ -1,13 +1,14 @@
 use crate::{
     behavior::{
         defense::Defense,
-        higher_order::{Chain, Predicate, While},
-        movement::GetToFlatGround,
+        higher_order::{Chain, Predicate, TryChoose, While},
+        movement::{GetToFlatGround, Land},
         offense::Offense,
-        strike::FiftyFifty,
+        strike::{FiftyFifty, WallHit},
         taunt::TurtleSpin,
         Kickoff,
     },
+    routing::{behavior::FollowRoute, plan::WallIntercept},
     strategy::{scenario::Scenario, strategy::Strategy, Behavior, Context, Priority},
     utils::{geometry::ExtendF32, Wall},
 };
@@ -16,14 +17,27 @@ use derive_new::new;
 use nameof::name_of_type;
 use simulate::linear_interpolate;
 use std::f32::consts::PI;
+use vec_box::vec_box;
 
 #[derive(new)]
 pub struct Soccar;
 
 impl Strategy for Soccar {
     fn baseline(&mut self, ctx: &mut Context<'_>) -> Box<dyn Behavior> {
+        // If we have no wheel contact, i.e. we're floating in the air
+        if !ctx.me().OnGround {
+            return Box::new(Land::new());
+        }
+
+        // If we have wheel contact, but we're not on the ground
         if !GetToFlatGround::on_flat_ground(ctx.me()) {
-            return Box::new(GetToFlatGround::new());
+            return Box::new(TryChoose::new(Priority::Idle, vec_box![
+                Chain::new(Priority::Strike, vec_box![
+                    FollowRoute::new(WallIntercept::new()),
+                    WallHit::new(),
+                ]),
+                GetToFlatGround::new()
+            ]));
         }
 
         match ctx.scenario.push_wall() {
