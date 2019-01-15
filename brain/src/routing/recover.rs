@@ -77,7 +77,7 @@ fn check_easy_flip_recover(ctx: &mut Context<'_>) -> Option<Box<dyn Behavior>> {
     let angle_to_ball = me_forward.angle_to(&(ball.loc.to_2d() - me_loc).to_axis());
     let own_goal_loc = ctx.game.own_goal().center_2d;
     let angle_to_own_goal = me_forward.angle_to(&(own_goal_loc - me_loc).to_axis());
-    if (me_loc - ball.loc.to_2d()).norm() < 400.0
+    if (me_loc - ball.loc.to_2d()).norm() < 350.0
         && ball.loc.z < 120.0
         && ball.vel.z.abs() < 50.0
         && angle_to_ball.abs() < PI / 3.0
