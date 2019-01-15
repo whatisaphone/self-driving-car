@@ -9,6 +9,7 @@ use crate::{
 use common::prelude::*;
 use nalgebra::Vector3;
 use nameof::name_of_type;
+use simulate::linear_interpolate;
 use std::f32::consts::PI;
 
 pub struct GetToFlatGround;
@@ -53,7 +54,12 @@ impl Behavior for GetToFlatGround {
             ));
         }
 
-        if me.Physics.forward_axis().angle(&Vector3::z_axis()) < PI / 4.0 {
+        let backup_cutoff = linear_interpolate(
+            &[0.0, 2000.0],
+            &[PI / 4.0, PI / 6.0],
+            me.Physics.vel().dot(&me.Physics.forward_axis()),
+        );
+        if me.Physics.forward_axis().angle(&Vector3::z_axis()) < backup_cutoff {
             // Our nose is pointed towards the sky. It's quicker to jump down than to drive.
             ctx.eeg
                 .draw(Drawable::print("nose pointed upwards", color::GREEN));
