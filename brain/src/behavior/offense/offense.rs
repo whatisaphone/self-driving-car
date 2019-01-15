@@ -321,11 +321,9 @@ mod integration_tests {
             .soccar()
             .run_for_millis(3500);
         let packet = test.sniff_packet();
-        println!(
-            "packet.GameBall.Physics.vel() = {:?}",
-            packet.GameBall.Physics.vel(),
-        );
-        assert!(packet.GameBall.Physics.vel().y >= 500.0);
+        println!("ball vel = {:?}", packet.GameBall.Physics.vel(),);
+        assert!(packet.GameBall.Physics.vel().y >= 100.0);
+        assert!(packet.GameBall.Physics.vel().norm() >= 500.0);
     }
 
     #[test]

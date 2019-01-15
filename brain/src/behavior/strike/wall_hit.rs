@@ -423,7 +423,9 @@ mod integration_tests {
             .run_for_millis(2000);
 
         let packet = test.sniff_packet();
-        assert!(packet.GameBall.Physics.vel().y >= 500.0);
+        println!("ball vel = {:?}", packet.GameBall.Physics.vel());
+        assert!(packet.GameBall.Physics.vel().x < -500.0);
+        assert!(packet.GameBall.Physics.vel().y >= 100.0);
     }
 
     #[test]

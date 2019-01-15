@@ -260,8 +260,7 @@ mod integration_tests {
 
         let packet = test.sniff_packet();
         println!("{:?}", packet.GameBall.Physics.vel());
-        assert!(packet.GameBall.Physics.vel().x < -700.0);
-        assert!(packet.GameBall.Physics.vel().y > 500.0);
+        assert!(packet.GameBall.Physics.vel().x < -800.0);
     }
 
     #[test]
