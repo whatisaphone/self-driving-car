@@ -27,7 +27,13 @@ impl Strategy for Soccar {
         }
 
         match ctx.scenario.push_wall() {
-            Wall::OwnGoal | Wall::OwnBackWall => return Box::new(Defense::new()),
+            Wall::OwnGoal | Wall::OwnBackWall => {
+                ctx.eeg.log(
+                    name_of_type!(Soccar),
+                    "path to ball extrapolates to back wall",
+                );
+                return Box::new(Defense::new());
+            }
             _ => {}
         }
 
@@ -43,6 +49,7 @@ impl Strategy for Soccar {
         // doesn't account for boost pads that you pick up on the way, so it dodges and
         // goes too slow.
         if current.priority() < Priority::Force && Kickoff::is_kickoff(&ctx.packet.GameBall) {
+            ctx.eeg.log(name_of_type!(Soccar), "forcing kickoff");
             return Some(Box::new(Chain::new(Priority::Force, vec![Box::new(
                 Kickoff::new(),
             )])));
