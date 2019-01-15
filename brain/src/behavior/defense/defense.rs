@@ -34,7 +34,20 @@ impl Defense {
         let goal_to_ball_axis = (ball_loc - goal_loc).to_axis();
         let ball_dist = (ball_loc - goal_loc).dot(&goal_to_ball_axis);
         let me_dist = (me_loc - goal_loc).dot(&goal_to_ball_axis);
-        if ball_dist <= me_dist {
+
+        // If the play is rapidly moving towards the danger zone and we don't have
+        // possession, the danger of a shot is high and if we try to stop it we'll get
+        // beat to the ball. Bias towards panicking rather than trying to intercept,
+        // this way at least we're between the ball and our goal.
+        let panic_factor = if ctx.scenario.panicky_retreat()
+            && ctx.scenario.possession() < -Scenario::POSSESSION_CONTESTABLE
+        {
+            2000.0
+        } else {
+            0.0
+        };
+
+        if ball_dist <= me_dist + panic_factor {
             return false;
         }
 

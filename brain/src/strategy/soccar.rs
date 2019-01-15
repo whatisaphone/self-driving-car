@@ -37,6 +37,13 @@ impl Strategy for Soccar {
             _ => {}
         }
 
+        if ctx.scenario.panicky_retreat()
+            && ctx.scenario.possession() < -Scenario::POSSESSION_CONTESTABLE
+        {
+            ctx.eeg.log(name_of_type!(Soccar), "panicky_retreat");
+            return Box::new(Defense::new());
+        }
+
         Box::new(Offense::new())
     }
 
