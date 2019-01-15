@@ -251,6 +251,7 @@ pub enum RoutePlanError {
     MovingTooFast,
     TurningRadiusTooTight,
     CannotOperateWall,
+    NoWallIntercept,
     OtherError(&'static str),
 }
 
@@ -264,6 +265,7 @@ impl fmt::Debug for RoutePlanError {
             RoutePlanError::MovingTooFast => f.write_str(stringify!(MovingTooFast)),
             RoutePlanError::TurningRadiusTooTight => f.write_str(stringify!(TurningRadiusTooTight)),
             RoutePlanError::CannotOperateWall => f.write_str(stringify!(CannotOperateWall)),
+            RoutePlanError::NoWallIntercept => f.write_str(stringify!(NoWallIntercept)),
             RoutePlanError::OtherError(msg) => write!(f, "{}({:?})", stringify!(OtherError), msg),
         }
     }

@@ -51,7 +51,11 @@ impl Behavior for TepidHit {
 
         match hit {
             Some((_, HitType::Wall)) => Action::tail_call(chain!(Priority::Strike, [
-                FollowRoute::new(WallIntercept::new()),
+                FollowRoute::new(
+                    WallIntercept::new()
+                        .must_be_wall(true)
+                        .must_be_side_wall(true)
+                ),
                 WallHit::new(),
             ])),
             Some((_, HitType::Ground)) | None => Action::tail_call(chain!(Priority::Strike, [
@@ -68,40 +72,24 @@ fn ground(ctx: &Context2<'_, '_>) -> Option<(f32, HitType)> {
 }
 
 fn wall<'ball>(ctx: &Context2<'_, 'ball>, eeg: &mut EEG) -> Option<(f32, HitType)> {
-    let intercept = some_or_else!(WallIntercept::calc_intercept(ctx), {
-        eeg.log(name_of_type!(TepidHit), "wall: WallIntercept drew a blank");
-        return None;
-    });
+    let intercept = match WallIntercept::new()
+        .must_be_wall(true)
+        .must_be_side_wall(true)
+        .calc_intercept(ctx)
+    {
+        Ok(i) => i,
+        Err(reason) => {
+            eeg.log(
+                name_of_type!(TepidHit),
+                format!("wall: no because {}", reason),
+            );
+            return None;
+        }
+    };
     eeg.log(
         name_of_type!(TepidHit),
         format!("wall: intercept is {}", intercept.loc.pretty()),
     );
-
-    let push_angle = (intercept.loc.to_2d() - ctx.me().Physics.loc_2d())
-        .angle_to(&(ctx.game.enemy_goal().center_2d - ctx.game.own_goal().center_2d));
-    if push_angle >= 75.0_f32.to_radians() {
-        eeg.log(
-            name_of_type!(TepidHit),
-            format!(
-                "wall: push_angle {:.0}° is not good enough",
-                push_angle.to_degrees(),
-            ),
-        );
-        return None;
-    }
-
-    if intercept.loc.x.abs() < ctx.game.field_max_x() - 500.0 {
-        eeg.log(name_of_type!(TepidHit), "wall: not side wall");
-        return None;
-    }
-
-    if (intercept.loc.y - ctx.game.own_goal().center_2d.y).abs() < 2000.0
-        || (intercept.loc.y - ctx.game.enemy_goal().center_2d.y).abs() < 1250.0
-    {
-        // Big risk of missing due to the corner curve or inaccurate ball prediction.
-        eeg.log(name_of_type!(TepidHit), "wall: too close to the corner");
-        return None;
-    }
 
     Some((intercept.t, HitType::Wall))
 }

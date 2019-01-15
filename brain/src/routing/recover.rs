@@ -62,6 +62,7 @@ impl RoutePlanError {
             }
             RoutePlanError::MovingTooFast
             | RoutePlanError::CannotOperateWall
+            | RoutePlanError::NoWallIntercept
             | RoutePlanError::OtherError(_) => None,
         }
     }
