@@ -1,6 +1,6 @@
 use crate::{
     behavior::{
-        movement::{Dodge, JumpAndTurn},
+        movement::{Dodge, JumpAndTurn, Yielder},
         strike::grounded_hit::car_ball_contact_with_pitch,
     },
     eeg::{Event, EEG},
@@ -306,11 +306,20 @@ fn drive(me: &rlbot::ffi::PlayerInfo, path: &Path, throttle: f32, boost: bool) -
 fn jump(eeg: &mut EEG, path: &Path) -> Action {
     let (_jump_distance, jump_time) = calculate_jump(path);
 
-    // If the ball is very close to the wall, don't jump. This way we retain more
-    // control of our car.
+    // If the ball is very close to the wall, don't jump; instead, just chip it off
+    // the wall. This way we retain more control of our car.
     if path.intercept_distance_from_surface < rl::BALL_RADIUS + 25.0 {
         eeg.track(Event::WallHitFinishedWithoutJump);
-        return Action::Return;
+        // At this point we haven't _quite_ made contact yet (since we're
+        // skipping the time where we assumed we would be jumping). Follow
+        // through for maximum power.
+        return Action::tail_call(Yielder::new(
+            rlbot::ffi::PlayerInput {
+                Throttle: 1.0,
+                ..Default::default()
+            },
+            jump_time + 0.05,
+        ));
     }
 
     Action::tail_call(chain!(Priority::Strike, [
