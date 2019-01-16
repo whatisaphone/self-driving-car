@@ -123,7 +123,7 @@ impl Behavior for KickoffStrike {
 
 impl KickoffStrike {
     fn drive(&self, ctx: &mut Context<'_>) -> Action {
-        let target_loc = Point2::new(30.0 * ctx.me().Physics.loc().x.signum(), 0.0);
+        let target_loc = Point2::new(40.0 * ctx.me().Physics.loc().x.signum(), 0.0);
         Action::Yield(rlbot::ffi::PlayerInput {
             Boost: true,
             ..drive_towards(ctx, target_loc)
