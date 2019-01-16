@@ -122,11 +122,13 @@ impl SegmentRunner for WallTurnRunner {
         let flat_face_dir = self.plan.flat_face_loc - me_flat_loc;
         let steer = me_flat_forward.angle_to(&flat_face_dir);
         if steer.abs() < PI / 15.0 {
+            ctx.eeg.log(self.name(), "steer is low enough");
             return SegmentRunAction::Success;
         }
 
         let swept = self.plan.sweep_to(me_flat_loc);
         if swept.abs() >= self.plan.sweep.abs() - 3.0_f32.to_radians() {
+            ctx.eeg.log(self.name(), "sweep has reached target");
             return SegmentRunAction::Success;
         }
 
