@@ -14,12 +14,14 @@ enum Phase {
     Jump,
     And,
     Dodge,
+    FollowThrough,
     Finished,
 }
 
 impl QuickJumpAndDodge {
     const MIN_PHASE_TIME: f32 = 0.05;
     pub const MIN_DODGE_TIME: f32 = Self::MIN_PHASE_TIME * 2.0;
+    pub const FOLLOW_THROUGH_TIME: f32 = 1.0;
 
     pub fn new() -> Self {
         Self {
@@ -92,17 +94,28 @@ impl Behavior for QuickJumpAndDodge {
             self.phase = Phase::Dodge;
 
             Action::Yield(result)
-        } else if self.phase == Phase::Dodge || elapsed < self.dodge_time + Self::MIN_PHASE_TIME {
+        } else if self.phase == Phase::Dodge || elapsed < self.dodge_time + 0.1 {
             if ctx.me().OnGround {
                 ctx.eeg.log(self.name(), "goomba stomped?");
                 return Action::Abort;
             }
 
-            self.phase = Phase::Finished;
+            self.phase = Phase::FollowThrough;
 
             result.Jump = true;
             result.Pitch = self.pitch;
             result.Yaw = self.yaw;
+            Action::Yield(result)
+        } else if self.phase == Phase::FollowThrough
+            || elapsed < self.dodge_time + Self::FOLLOW_THROUGH_TIME
+        {
+            if ctx.me().OnGround {
+                ctx.eeg.log(self.name(), "we landed early somehow");
+                return Action::Return;
+            }
+
+            self.phase = Phase::Finished;
+
             Action::Yield(result)
         } else {
             Action::Return
