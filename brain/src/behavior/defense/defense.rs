@@ -574,4 +574,19 @@ mod integration_tests {
 
         assert!(!test.enemy_has_scored());
     }
+
+    #[test]
+    fn wide_shots_are_not_safe() {
+        let test = TestRunner::new()
+            .one_v_one(&*recordings::WIDE_SHOTS_ARE_NOT_SAFE, 301.0)
+            .starting_boost(12.0)
+            .enemy_starting_boost(12.0)
+            .soccar()
+            .run_for_millis(2500);
+
+        let packet = test.sniff_packet();
+        println!("ball loc = {:?}", packet.GameBall.Physics.loc());
+        // Push the ball to the corner instead of leaving it
+        assert!(packet.GameBall.Physics.loc().x >= 2500.0);
+    }
 }

@@ -59,7 +59,7 @@ impl Behavior for PushToOwnCorner {
                 naive_ground_intercept_2(&enemy.into(), ctx.scenario.ball_prediction(), |ball| {
                     let own_goal = ctx.game.own_goal().center_2d;
                     ball.loc.z < GroundedHit::MAX_BALL_Z
-                        && Self::shot_angle(ball.loc, enemy.Physics.loc(), own_goal) < PI / 3.0
+                        && Self::shot_angle(ball.loc, enemy.Physics.loc(), own_goal) < PI / 2.0
                         && Self::goal_angle(ball.loc, ctx.game.own_goal()) < PI / 3.0
                 })
             })
