@@ -145,7 +145,7 @@ impl PanicDefense {
                     .center_2d
                     .negated_difference_and_angle_to(aim_hint);
                 return Some(Phase::Turn {
-                    aim_hint: calc_aim_hint(ctx),
+                    aim_hint,
                     start_time: ctx.packet.GameInfo.TimeSeconds,
                     target_yaw,
                 });
