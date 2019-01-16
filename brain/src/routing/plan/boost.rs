@@ -11,7 +11,6 @@ use common::prelude::*;
 use nalgebra::Point2;
 use nameof::name_of_type;
 use ordered_float::NotNan;
-use std::f32::consts::PI;
 
 #[derive(Clone)]
 pub struct GetDollar {
@@ -100,18 +99,6 @@ impl GetDollar {
         guard!(ctx.start, IsSkidding, RoutePlanError::MustNotBeSkidding {
             recover_target_loc: pickup.loc,
         });
-
-        if (pickup.loc - ctx.start.loc.to_2d()).norm() < 500.0
-            && ctx.start.vel.to_2d().norm() < 100.0
-            && ctx
-                .start
-                .forward_axis_2d()
-                .angle_to(&(pickup.loc - ctx.start.loc.to_2d()).to_axis())
-                .abs()
-                >= PI / 3.0
-        {
-            return Err(RoutePlanError::OtherError("TODO: easier to flip to pad"));
-        }
 
         // Minor hack – if we're retreating to grab boost, chances are we want to be
         // defensive. Force facing our goal because usually the other way ends up being
