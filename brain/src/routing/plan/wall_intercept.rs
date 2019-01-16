@@ -176,7 +176,7 @@ impl WallIntercept {
         if self.must_be_vanilla_safe_offensive {
             let push_angle = (intercept_loc.to_2d() - car_loc.to_2d())
                 .angle_to(&(game.enemy_goal().center_2d - game.own_goal().center_2d));
-            if push_angle >= 75.0_f32.to_radians() {
+            if push_angle.abs() >= 75.0_f32.to_radians() {
                 return Err("push_angle is not good enough");
             }
         }
