@@ -129,11 +129,13 @@ impl SegmentRunner for Turner {
 
         let yaw_diff = me_forward.angle_to(&(self.plan.target_loc - me_loc).to_axis());
         if yaw_diff.abs() < 3.0_f32.to_radians() {
+            ctx.eeg.log(self.name(), "yaw_diff is low enough");
             return SegmentRunAction::Success;
         }
 
         let swept = self.plan.sweep_to(me_loc);
         if swept.abs() >= self.plan.sweep.abs() - 3.0_f32.to_radians() {
+            ctx.eeg.log(self.name(), "sweep has reached target");
             return SegmentRunAction::Success;
         }
 
