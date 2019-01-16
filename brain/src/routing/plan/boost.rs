@@ -1,16 +1,17 @@
 use crate::{
     routing::{
         models::{PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner},
-        plan::ground_powerslide::GroundPowerslideTurn,
+        plan::{ground_drive::GroundDrive, ground_powerslide::GroundPowerslideTurn},
         recover::{IsSkidding, NotOnFlatGround},
         segments::JumpAndDodge,
     },
     strategy::BoostPickup,
 };
 use common::prelude::*;
-use nalgebra::Point2;
+use nalgebra::{Point2, Vector2};
 use nameof::name_of_type;
 use ordered_float::NotNan;
+use std::f32::consts::PI;
 
 #[derive(Clone)]
 pub struct GetDollar {
@@ -100,18 +101,16 @@ impl GetDollar {
             recover_target_loc: pickup.loc,
         });
 
-        // Minor hack – if we're retreating to grab boost, chances are we want to be
-        // defensive. Force facing our goal because usually the other way ends up being
-        // awkward.
-        let mut target_face = self.target_face;
-        if (ctx.game.own_goal().center_2d.y - pickup.loc.y).abs() < 1500.0
-            && (pickup.loc.y - ctx.start.loc.y).abs() >= 2000.0
-        {
-            dump.log(self, "overriding target_face to be defensive");
-            target_face = ctx.game.own_goal().center_2d;
+        match self.powerslide_target_face(ctx, pickup) {
+            Some(target_face) => {
+                let planner = GroundPowerslideTurn::new(pickup.loc, target_face, None);
+                planner.plan(ctx, dump)
+            }
+            None => {
+                let planner = GroundDrive::new(pickup.loc);
+                planner.plan(ctx, dump)
+            }
         }
-
-        GroundPowerslideTurn::new(pickup.loc, target_face, None).plan(ctx, dump)
     }
 
     fn chooose_pickup<'a>(
@@ -150,5 +149,31 @@ impl GetDollar {
             let penalty = along_penalty.powi(2) + ortho_penalty.powi(2) + detour_penalty.powi(2);
             NotNan::new(penalty).unwrap()
         })
+    }
+
+    fn powerslide_target_face(
+        &self,
+        ctx: &PlanningContext<'_, '_>,
+        pickup: &BoostPickup,
+    ) -> Option<Point2<f32>> {
+        let approach = pickup.loc - ctx.start.loc.to_2d();
+        let threshold = PI / 6.0;
+
+        // Midfield boost pads
+        if pickup.loc.y == 0.0 {
+            return None;
+        }
+
+        if approach.angle_to(&-Vector2::y_axis()).abs() < threshold
+            || approach.angle_to(&Vector2::y_axis()).abs() < threshold
+        {
+            Some(Point2::new(0.0, pickup.loc.y))
+        } else if approach.angle_to(&-Vector2::x_axis()).abs() < threshold
+            || approach.angle_to(&Vector2::x_axis()).abs() < threshold
+        {
+            Some(Point2::new(pickup.loc.x, 0.0))
+        } else {
+            Some(self.target_face)
+        }
     }
 }
