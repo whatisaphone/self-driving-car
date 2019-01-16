@@ -22,6 +22,7 @@ use vec_box::vec_box;
 pub struct WallIntercept {
     must_be_wall: bool,
     must_be_side_wall: bool,
+    forbid_goal_walls: bool,
     must_be_vanilla_safe_offensive: bool,
 }
 
@@ -30,6 +31,7 @@ impl WallIntercept {
         Self {
             must_be_wall: false,
             must_be_side_wall: false,
+            forbid_goal_walls: false,
             must_be_vanilla_safe_offensive: true,
         }
     }
@@ -41,6 +43,11 @@ impl WallIntercept {
 
     pub fn must_be_side_wall(mut self, must_be_side_wall: bool) -> Self {
         self.must_be_side_wall = must_be_side_wall;
+        self
+    }
+
+    pub fn forbid_goal_walls(mut self, forbid_goal_walls: bool) -> Self {
+        self.forbid_goal_walls = forbid_goal_walls;
         self
     }
 }
@@ -149,6 +156,9 @@ impl WallIntercept {
             return None;
         }
         if self.must_be_side_wall && plane.normal.x.abs() != 1.0 {
+            return None;
+        }
+        if self.forbid_goal_walls && plane.normal.y.abs() == 1.0 {
             return None;
         }
         if plane.distance_to_point(&loc) >= 300.0 {

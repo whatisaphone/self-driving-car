@@ -33,7 +33,7 @@ impl Strategy for Soccar {
         if !GetToFlatGround::on_flat_ground(ctx.me()) {
             return Box::new(TryChoose::new(Priority::Idle, vec_box![
                 Chain::new(Priority::Strike, vec_box![
-                    FollowRoute::new(WallIntercept::new()),
+                    FollowRoute::new(WallIntercept::new().forbid_goal_walls(true)),
                     WallHit::new(),
                 ]),
                 GetToFlatGround::new()
