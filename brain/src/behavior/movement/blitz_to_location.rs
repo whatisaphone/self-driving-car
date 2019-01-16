@@ -61,7 +61,9 @@ impl Behavior for BlitzToLocation {
             && me.Physics.rot().pitch().to_degrees() < 1.0
             && (800.0 <= speed && speed < 2200.0)
         {
-            let flip_dist = me.Physics.vel().norm() * 3.0;
+            // In theory this value should be 1.25, but leave some leeway for recovery.
+            let assumed_flip_duration = 2.5;
+            let flip_dist = me.Physics.vel().norm() * assumed_flip_duration;
             if (distance > flip_dist && steer.abs() < PI / 24.0)
                 || (distance > flip_dist * 1.5 && steer.abs() < PI / 8.0)
             {
