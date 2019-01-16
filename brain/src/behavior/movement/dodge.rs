@@ -4,6 +4,7 @@ use crate::{
 };
 use nalgebra::UnitComplex;
 use nameof::name_of_type;
+use vec_box::vec_box;
 
 pub struct Dodge {
     angle: UnitComplex<f32>,
@@ -37,14 +38,19 @@ impl Behavior for Dodge {
         let pitch = -self.angle.cos_angle();
         let yaw = self.angle.sin_angle();
 
-        Action::tail_call(Chain::new(self.priority(), vec![Box::new(Yielder::new(
-            rlbot::ffi::PlayerInput {
-                Pitch: pitch,
-                Yaw: yaw,
-                Jump: true,
-                ..Default::default()
-            },
-            0.05,
-        ))]))
+        Action::tail_call(Chain::new(self.priority(), vec_box![
+            // Dodge
+            Yielder::new(
+                rlbot::ffi::PlayerInput {
+                    Pitch: pitch,
+                    Yaw: yaw,
+                    Jump: true,
+                    ..Default::default()
+                },
+                0.05,
+            ),
+            // Follow-through
+            Yielder::new(rlbot::ffi::PlayerInput::default(), 0.95),
+        ]))
     }
 }
