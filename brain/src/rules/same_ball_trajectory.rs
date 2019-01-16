@@ -2,7 +2,7 @@ use crate::strategy::{Action, Context};
 use nalgebra::Point3;
 use nameof::name_of_type;
 
-const ERROR_THRESHOLD: f32 = 25.0;
+const ERROR_THRESHOLD: f32 = 50.0;
 
 /// Track the ball's trajectory vs. our prediction, and if they differ by too
 /// much, abort.
