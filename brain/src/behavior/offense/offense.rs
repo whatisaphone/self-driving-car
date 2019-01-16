@@ -256,9 +256,10 @@ fn poor_angle_swing_around(ctx: &mut Context<'_>) -> Option<Action> {
         .scenario
         .ball_prediction()
         .at_time_or_last(me_intercept.time.max(2.5));
+    let distance = reset_distance(ctx, future_ball.loc.to_2d());
     Some(Action::tail_call(ResetBehindBall::behind_loc(
         future_ball.loc.to_2d(),
-        1700.0,
+        distance,
     )))
 }
 
