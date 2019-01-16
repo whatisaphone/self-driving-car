@@ -134,7 +134,14 @@ impl SegmentRunner for Turner {
         }
 
         let swept = self.plan.sweep_to(me_loc);
-        if swept.abs() >= self.plan.sweep.abs() - 3.0_f32.to_radians() {
+        let degenerate_sweep = swept.abs() >= PI * (11.0 / 6.0);
+        if degenerate_sweep {
+            // Our angular momentum seems to be propelling us the wrong way, but don't
+            // worry, it will correct itself soon.
+            ctx.eeg
+                .draw(Drawable::print("degenerate sweep", color::GREEN));
+        }
+        if !degenerate_sweep && swept.abs() >= self.plan.sweep.abs() - 3.0_f32.to_radians() {
             ctx.eeg.log(self.name(), "sweep has reached target");
             return SegmentRunAction::Success;
         }
