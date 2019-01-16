@@ -7,20 +7,32 @@ use crate::routing::{
     recover::{IsSkidding, NotOnFlatGround},
     segments::StraightMode,
 };
-use derive_new::new;
 use nalgebra::Point2;
 use nameof::name_of_type;
 
-#[derive(Clone, new)]
+#[derive(Clone)]
 pub struct GroundDrive {
     target_loc: Point2<f32>,
-    #[new(value = "0.0")]
     end_chop: f32,
+    straight_mode: StraightMode,
 }
 
 impl GroundDrive {
+    pub fn new(target_loc: Point2<f32>) -> Self {
+        Self {
+            target_loc,
+            end_chop: 0.0,
+            straight_mode: StraightMode::Asap,
+        }
+    }
+
     pub fn end_chop(mut self, end_chop: f32) -> Self {
         self.end_chop = end_chop;
+        self
+    }
+
+    pub fn straight_mode(mut self, straight_mode: StraightMode) -> Self {
+        self.straight_mode = straight_mode;
         self
     }
 }
@@ -49,7 +61,7 @@ impl RoutePlanner for GroundDrive {
 
         let turn = TurnPlanner::new(self.target_loc, None).plan(ctx, dump)?;
         let straight =
-            GroundStraightPlanner::new(self.target_loc, StraightMode::Asap).end_chop(self.end_chop);
+            GroundStraightPlanner::new(self.target_loc, self.straight_mode).end_chop(self.end_chop);
         Ok(ChainedPlanner::join_planner(turn, Some(Box::new(straight))))
     }
 }

@@ -1,17 +1,23 @@
 use crate::{
     behavior::{
-        higher_order::{Predicate, TimeLimit, While},
+        higher_order::{Predicate, TimeLimit, TryChoose, While},
         movement::{DriveTowards, GetToFlatGround, QuickJumpAndDodge, SkidRecover},
         offense::ResetBehindBall,
     },
-    routing::models::{CarState, RoutePlanError},
-    strategy::{Behavior, Context, Scenario},
+    routing::{
+        behavior::FollowRoute,
+        models::{CarState, RoutePlanError},
+        plan::GroundDrive,
+        StraightMode,
+    },
+    strategy::{Behavior, Context, Priority, Scenario},
 };
 use common::{physics::car_forward_axis, prelude::*};
 use derive_new::new;
 use nalgebra::Point2;
 use nameof::name_of_type;
 use std::f32::consts::PI;
+use vec_box::vec_box;
 
 const SKIDDING_THRESHOLD: f32 = 0.95;
 
@@ -43,9 +49,13 @@ impl RoutePlanError {
                 }
 
                 let ball_loc = ctx.scenario.ball_prediction().at_time_or_last(2.5).loc;
-                Some(Box::new(
+                Some(Box::new(TryChoose::new(Priority::Idle, vec_box![
+                    FollowRoute::new(
+                        GroundDrive::new(ball_loc.to_2d()).straight_mode(StraightMode::Fake)
+                    )
+                    .never_recover(true),
                     ResetBehindBall::behind_loc(ball_loc.to_2d(), 1500.0).never_recover(true),
-                ))
+                ])))
             }
             RoutePlanError::MustBeFacingTarget => {
                 if ctx.me().Physics.vel_2d().norm() < 400.0
