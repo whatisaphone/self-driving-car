@@ -22,6 +22,8 @@ pub enum Event {
     TepidHitBlockAngleToGoal,
     TepidHitAwayFromOwnGoal,
     PanicDefense,
+    WallHitFinishedWithoutJump,
+    WallHitNotFacingTarget,
 }
 
 impl EEG {

@@ -3,7 +3,7 @@ use crate::{
         movement::{Dodge, JumpAndTurn},
         strike::grounded_hit::car_ball_contact_with_pitch,
     },
-    eeg::EEG,
+    eeg::{Event, EEG},
     plan::ball::BallFrame,
     routing::models::CarState,
     strategy::{Action, Behavior, Context, Context2, Priority},
@@ -80,7 +80,7 @@ impl Behavior for WallHit {
 
         match calculate_approach(ctx, eeg, intercept_time, &path) {
             Step::Drive(throttle, boost) => drive(ctx.me(), &path, throttle, boost),
-            Step::Jump => jump(&path),
+            Step::Jump => jump(eeg, &path),
         }
     }
 }
@@ -158,10 +158,11 @@ fn flat_target(
     let ground_intercept_ball_loc = intercept_to_ground * intercept_ball_loc;
 
     // Make sure we're not facing wildly the wrong direction
-    let me_forward = me.Physics.forward_axis_2d();
-    let me_to_ball = (ground_intercept_ball_loc - me.Physics.loc()).to_2d();
+    let me_forward = me_to_flat * me.Physics.forward_axis();
+    let me_to_ball = intercept_to_flat * *intercept_ball_loc - me_to_flat * me.Physics.loc();
     let steer = me_forward.angle_to(&me_to_ball.to_axis());
     if steer.abs() >= PI / 3.0 {
+        eeg.track(Event::WallHitNotFacingTarget);
         eeg.log(name_of_type!(WallHit), "not facing the target");
         return Err(());
     }
@@ -302,12 +303,13 @@ fn drive(me: &rlbot::ffi::PlayerInfo, path: &Path, throttle: f32, boost: bool) -
     })
 }
 
-fn jump(path: &Path) -> Action {
+fn jump(eeg: &mut EEG, path: &Path) -> Action {
     let (_jump_distance, jump_time) = calculate_jump(path);
 
     // If the ball is very close to the wall, don't jump. This way we retain more
     // control of our car.
     if path.intercept_distance_from_surface < rl::BALL_RADIUS + 25.0 {
+        eeg.track(Event::WallHitFinishedWithoutJump);
         return Action::Return;
     }
 
@@ -384,6 +386,7 @@ impl SimJump {
 mod integration_tests {
     use crate::{
         behavior::strike::WallHit,
+        eeg::Event,
         integration_tests::helpers::{TestRunner, TestScenario},
     };
     use common::prelude::*;
@@ -462,5 +465,29 @@ mod integration_tests {
 
         let packet = test.sniff_packet();
         assert!(packet.GameBall.Physics.vel().y >= 1000.0);
+    }
+
+    #[test]
+    fn angle_check_dont_bail() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(-3500.0, 1600.0, 98.0),
+                ball_vel: Vector3::new(-1800.0, 1000.0, 0.0),
+                car_loc: Point3::new(-3500.0, 1000.0, 17.01),
+                car_rot: Rotation3::from_unreal_angles(0.0, 3.1, 0.0),
+                car_vel: Vector3::new(-1800.0, 200.0, 0.0),
+                ..Default::default()
+            })
+            .starting_boost(0.0)
+            .behavior(WallHit::new())
+            .run_for_millis(2000);
+
+        let packet = test.sniff_packet();
+        println!("ball vel = {:?}", packet.GameBall.Physics.vel());
+        assert!(packet.GameBall.Physics.vel().y >= 1000.0);
+        test.examine_events(|events| {
+            assert!(events.contains(&Event::WallHitFinishedWithoutJump));
+            assert!(!events.contains(&Event::WallHitNotFacingTarget));
+        });
     }
 }
