@@ -111,13 +111,13 @@ impl FollowRoute {
         error: RoutePlanError,
         log: impl IntoIterator<Item = String>,
     ) -> Action {
+        for line in log {
+            ctx.eeg.log(self.name(), line);
+        }
         ctx.eeg.log(
             self.name(),
             format!("error {:?} from planner {}", error, planner_name),
         );
-        for line in log {
-            ctx.eeg.log(self.name(), line);
-        }
 
         match error.recover(ctx) {
             Some(b) => {
