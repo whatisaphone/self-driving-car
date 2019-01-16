@@ -87,7 +87,7 @@ fn is_diagonal_kickoff(ctx: &mut Context<'_>) -> bool {
 struct KickoffStrike;
 
 impl KickoffStrike {
-    const JUMP_TIME: f32 = 0.15;
+    const JUMP_TIME: f32 = 0.1;
 }
 
 impl Behavior for KickoffStrike {
