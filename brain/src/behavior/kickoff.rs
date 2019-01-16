@@ -43,7 +43,7 @@ impl Behavior for Kickoff {
         let approach: Box<dyn RoutePlanner> = if is_diagonal_kickoff(ctx) {
             let straight_loc = Point2::new(
                 500.0 * ctx.me().Physics.loc().x.signum(),
-                900.0 * ctx.me().Physics.loc().y.signum(),
+                1000.0 * ctx.me().Physics.loc().y.signum(),
             );
             let straight =
                 GroundStraightPlanner::new(straight_loc, StraightMode::Asap).allow_dodging(false);
