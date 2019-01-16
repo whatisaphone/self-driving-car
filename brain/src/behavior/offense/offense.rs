@@ -7,9 +7,10 @@ use crate::{
     strategy::{Action, Behavior, Context, Game, Scenario},
     utils::geometry::RayCoordinateSystem,
 };
-use common::prelude::*;
+use common::{prelude::*, Angle, Distance};
 use nalgebra::{Point2, Vector2};
 use nameof::name_of_type;
+use simulate::linear_interpolate;
 use std::f32::consts::PI;
 
 pub struct Offense;
@@ -175,10 +176,29 @@ fn readjust_for_shot(ctx: &mut Context<'_>, intercept_time: f32) -> Option<Actio
         return None;
     }
 
+    // If we get here, we're committed.
+
+    // Now choose how far to back up. If we're retreating, we can turn on a dime
+    // (powerslide), so we don't need as much space. If we're moving across the
+    // field, we'll be moving faster and we'll need more space to turn.
+    let goal = ctx.game.enemy_goal();
+    let me_loc = ctx.me().Physics.loc().to_2d();
+    let behind_ball_loc = ball_loc + (ball_loc - goal.center_2d).normalize() * 1000.0;
+    let shot_angle = (behind_ball_loc - me_loc).angle_to(&goal.normal_2d).abs();
+    let distance = linear_interpolate(&[PI / 4.0, PI / 2.0], &[1000.0, 2000.0], shot_angle);
+
     ctx.eeg
         .log(name_of_type!(Offense), "readjust_for_shot: proceeding");
+    ctx.eeg
+        .log_pretty(name_of_type!(Offense), "shot_angle", Angle(shot_angle));
+    ctx.eeg.log_pretty(
+        name_of_type!(Offense),
+        "distance_behind",
+        Distance(distance),
+    );
+
     Some(Action::tail_call(ResetBehindBall::behind_loc(
-        ball_loc, 2000.0,
+        ball_loc, distance,
     )))
 }
 
@@ -267,6 +287,7 @@ mod integration_tests {
         eeg::Event,
         integration_tests::helpers::{TestRunner, TestScenario},
     };
+    use brain_test_data::recordings;
     use common::prelude::*;
     use nalgebra::{Point3, Rotation3, Vector3};
     use std::f32::consts::PI;
@@ -434,5 +455,24 @@ mod integration_tests {
             .run_for_millis(7000);
 
         assert!(test.has_scored());
+    }
+
+    #[test]
+    fn swing_around_while_retreating_but_not_too_far() {
+        let test = TestRunner::new()
+            .one_v_one(
+                &*recordings::SWING_AROUND_WHILE_RETREATING_BUT_NOT_TOO_FAR,
+                70.1,
+            )
+            .starting_boost(0.0)
+            .enemy_starting_boost(40.0)
+            .soccar()
+            .run_for_millis(5000);
+
+        assert!(!test.enemy_has_scored());
+        let packet = test.sniff_packet();
+        let ball_loc = packet.GameBall.Physics.loc();
+        println!("ball loc = {:?}", ball_loc);
+        assert!(ball_loc.y >= -1000.0);
     }
 }

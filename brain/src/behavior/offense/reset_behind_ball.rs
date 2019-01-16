@@ -1,8 +1,5 @@
 use crate::{
-    routing::{
-        behavior::FollowRoute,
-        plan::{ChainedPlanner, GroundDrive, TurnPlanner},
-    },
+    routing::{behavior::FollowRoute, plan::GroundDrive},
     strategy::{Action, Behavior, Context},
 };
 use common::prelude::*;
@@ -38,9 +35,7 @@ impl Behavior for ResetBehindBall {
     fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
         let target_loc = self.get_sane_drive_loc(ctx);
         let straight = GroundDrive::new(target_loc).end_chop(0.5);
-        let turn = TurnPlanner::new(self.loc, None);
-        let chain = ChainedPlanner::chain(vec![Box::new(straight), Box::new(turn)]);
-        Action::tail_call(FollowRoute::new(chain).never_recover(self.never_recover))
+        Action::tail_call(FollowRoute::new(straight).never_recover(self.never_recover))
     }
 }
 
