@@ -281,4 +281,21 @@ mod integration_tests {
 
         assert!(test.has_scored());
     }
+
+    #[test]
+    fn another_forward_shot() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(-2723.44, -441.38, 105.6),
+                ball_vel: Vector3::new(161.55101, 822.9509, -354.241),
+                car_loc: Point3::new(-2829.92, -1540.23, 16.5),
+                car_rot: Rotation3::from_unreal_angles(-0.008225171, 1.4523904, -0.00015447255),
+                car_vel: Vector3::new(75.461, 606.49097, 17.271),
+                ..Default::default()
+            })
+            .soccar()
+            .run_for_millis(3500);
+
+        assert!(test.has_scored());
+    }
 }

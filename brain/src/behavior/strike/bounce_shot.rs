@@ -4,7 +4,7 @@ use crate::{
     utils::{geometry::ExtendF32, WallRayCalculator},
 };
 use common::prelude::*;
-use nalgebra::{Point2, UnitComplex};
+use nalgebra::{Point2, UnitComplex, Vector2};
 use simulate::linear_interpolate;
 use std::f32::consts::PI;
 
@@ -63,24 +63,56 @@ impl BounceShot {
             // spewing NaN everywhere.
             return car_loc;
         }
+
         // This is not the greatest guess
         let guess_final_ball_speed = intercept.car_speed.min(1700.0);
         let desired_vel = ball_to_aim.normalize() * guess_final_ball_speed;
         let impulse = desired_vel - ball_vel;
-        let naive = ball_loc - impulse.normalize() * 200.0;
+        let spot = ball_loc - impulse.normalize() * 200.0;
 
-        if (intercept.ball_loc.to_2d() - aim_loc).norm() < 500.0 {
+        if (ball_loc - aim_loc).norm() < 500.0 {
             // Minor hack: skip the angle-clamping logic below if we're very close to the
             // aim loc.
-            return naive;
+            return spot;
         }
 
-        // Clamp our attack angle based on the ball speed. With slower speeds, we should
-        // hit the ball more head-on, otherwise we'll end up plunking it at a pathetic
-        // speed and that's no good.
-        let angle = (car_loc - ball_loc).angle_to(&(naive - ball_loc));
+        let spot = Self::ball_speed_clamp(ball_loc, ball_vel, car_loc, spot);
+        let spot = Self::angle_change_clamp(ball_loc, ball_vel, car_loc, aim_loc, spot);
+        spot
+    }
+
+    /// Clamp our attack angle based on the ball speed. With slower speeds, we
+    /// should hit the ball more head-on, otherwise we'll end up plunking it at
+    /// a pathetic speed and that's no good.
+    fn ball_speed_clamp(
+        ball_loc: Point2<f32>,
+        ball_vel: Vector2<f32>,
+        car_loc: Point2<f32>,
+        spot: Point2<f32>,
+    ) -> Point2<f32> {
         let max_angle_diff =
             linear_interpolate(&[500.0, 2000.0], &[PI / 6.0, PI / 3.0], ball_vel.norm());
+
+        let angle = (car_loc - ball_loc).angle_to(&(spot - ball_loc));
+        let adjust = UnitComplex::new(angle.max(-max_angle_diff).min(max_angle_diff));
+        ball_loc + adjust * (car_loc - ball_loc).normalize() * 200.0
+    }
+
+    fn angle_change_clamp(
+        ball_loc: Point2<f32>,
+        ball_vel: Vector2<f32>,
+        car_loc: Point2<f32>,
+        aim_loc: Point2<f32>,
+        spot: Point2<f32>,
+    ) -> Point2<f32> {
+        let change_angle = f32::max(
+            ball_vel.angle_to(&(aim_loc - ball_loc)).abs(),
+            (ball_loc - car_loc).angle_to(&(aim_loc - ball_loc)).abs(),
+        );
+        let factor = linear_interpolate(&[0.0, 500.0], &[2.0, 1.25], ball_vel.norm());
+        let max_angle_diff = change_angle * factor;
+
+        let angle = (car_loc - ball_loc).angle_to(&(spot - ball_loc));
         let adjust = UnitComplex::new(angle.max(-max_angle_diff).min(max_angle_diff));
         ball_loc + adjust * (car_loc - ball_loc).normalize() * 200.0
     }
