@@ -69,6 +69,12 @@ impl BounceShot {
         let impulse = desired_vel - ball_vel;
         let naive = ball_loc - impulse.normalize() * 200.0;
 
+        if (intercept.ball_loc.to_2d() - aim_loc).norm() < 500.0 {
+            // Minor hack: skip the angle-clamping logic below if we're very close to the
+            // aim loc.
+            return naive;
+        }
+
         // Clamp our attack angle based on the ball speed. With slower speeds, we should
         // hit the ball more head-on, otherwise we'll end up plunking it at a pathetic
         // speed and that's no good.
