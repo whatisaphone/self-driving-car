@@ -98,19 +98,20 @@ impl GetDollar {
         dump: &mut PlanningDump<'_>,
         pickup: &BoostPickup,
     ) -> Result<RoutePlan, RoutePlanError> {
+        let start_forward_axis = ctx.start.forward_axis_2d();
+
         guard!(ctx.start, IsSkidding, RoutePlanError::MustNotBeSkidding {
             recover_target_loc: pickup.loc,
         });
 
-        match self.powerslide_target_face(ctx, pickup) {
-            Some(target_face) => {
-                let planner = GroundPowerslideTurn::new(pickup.loc, target_face, None);
-                planner.plan(ctx, dump)
-            }
-            None => {
-                let planner = GroundDrive::new(pickup.loc);
-                planner.plan(ctx, dump)
-            }
+        let target_face = self.powerslide_target_face(ctx, pickup);
+        let turn_angle = start_forward_axis.angle_to(&(target_face - pickup.loc).to_axis());
+        if turn_angle.abs() < PI / 6.0 {
+            let planner = GroundDrive::new(pickup.loc);
+            planner.plan(ctx, dump)
+        } else {
+            let planner = GroundPowerslideTurn::new(pickup.loc, target_face, None);
+            planner.plan(ctx, dump)
         }
     }
 
@@ -156,7 +157,7 @@ impl GetDollar {
         &self,
         ctx: &PlanningContext<'_, '_>,
         pickup: &BoostPickup,
-    ) -> Option<Point2<f32>> {
+    ) -> Point2<f32> {
         let approach = pickup.loc - ctx.start.loc.to_2d();
 
         // The faster we're moving, the more likely we are to force the slide direction
@@ -169,29 +170,28 @@ impl GetDollar {
         );
 
         // Midfield boost pads
-        if pickup.loc.y == 0.0 {
+        if pickup.loc.y < 1.0 {
             if approach.angle_to(&-Vector2::y_axis()).abs() < threshold
                 || approach.angle_to(&Vector2::y_axis()).abs() < threshold
             {
-                return Some(Point2::new(
-                    pickup.loc.x,
-                    -ctx.start.loc.y.signum() * 1000.0,
-                ));
+                return Point2::new(pickup.loc.x, -ctx.start.loc.y.signum() * 1000.0);
             }
         }
 
         // Corner boost pads
-        if approach.angle_to(&-Vector2::y_axis()).abs() < threshold
-            || approach.angle_to(&Vector2::y_axis()).abs() < threshold
-        {
-            Some(Point2::new(0.0, pickup.loc.y))
-        } else if approach.angle_to(&-Vector2::x_axis()).abs() < threshold
-            || approach.angle_to(&Vector2::x_axis()).abs() < threshold
-        {
-            Some(Point2::new(pickup.loc.x, 0.0))
-        } else {
-            Some(self.target_face)
+        if pickup.loc.y >= 1.0 {
+            if approach.angle_to(&-Vector2::y_axis()).abs() < threshold
+                || approach.angle_to(&Vector2::y_axis()).abs() < threshold
+            {
+                return Point2::new(0.0, pickup.loc.y);
+            } else if approach.angle_to(&-Vector2::x_axis()).abs() < threshold
+                || approach.angle_to(&Vector2::x_axis()).abs() < threshold
+            {
+                return Point2::new(pickup.loc.x, 0.0);
+            }
         }
+
+        self.target_face
     }
 }
 
