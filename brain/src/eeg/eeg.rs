@@ -14,6 +14,7 @@ pub struct EEG {
 #[derive(Eq, PartialEq, Hash)]
 pub enum Event {
     Defense,
+    Retreat,
     HitToOwnCorner,
     PushFromLeftToRight,
     PushFromRightToLeft,

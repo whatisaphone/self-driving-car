@@ -3,7 +3,8 @@ use crate::{
         defense::{PanicDefense, PushToOwnCorner},
         higher_order::TryChoose,
     },
-    strategy::{Action, Behavior, Context, Priority, Scenario},
+    eeg::Event,
+    strategy::{Action, Behavior, Context, Priority},
 };
 use common::prelude::*;
 use nameof::name_of_type;
@@ -41,10 +42,11 @@ impl Behavior for Retreat {
     }
 
     fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
+        ctx.eeg.track(Event::Retreat);
+
         let mut choices = Vec::<Box<dyn Behavior>>::new();
 
-        if Self::behind_ball(ctx) && ctx.scenario.possession() >= -Scenario::POSSESSION_CONTESTABLE
-        {
+        if Self::behind_ball(ctx) {
             choices.push(Box::new(PushToOwnCorner::new()));
         }
 
@@ -56,8 +58,9 @@ impl Behavior for Retreat {
 
 #[cfg(test)]
 mod integration_tests {
-    use crate::integration_tests::helpers::TestRunner;
+    use crate::{eeg::Event, integration_tests::helpers::TestRunner};
     use brain_test_data::recordings;
+    use common::prelude::*;
 
     #[test]
     fn retreating_hit_to_own_corner() {
@@ -71,5 +74,25 @@ mod integration_tests {
         assert!(packet.GameBall.Physics.Location.X < -1500.0);
         assert!(packet.GameBall.Physics.Velocity.X < -500.0);
         assert!(!test.enemy_has_scored());
+    }
+
+    #[test]
+    fn last_ditch_intercept() {
+        let test = TestRunner::new()
+            .one_v_one(&*recordings::LAST_DITCH_INTERCEPT, 275.0)
+            .starting_boost(0.0)
+            .soccar()
+            .run_for_millis(4000);
+
+        assert!(!test.enemy_has_scored());
+
+        test.examine_events(|events| {
+            assert!(events.contains(&Event::Retreat));
+        });
+
+        let packet = test.sniff_packet();
+        let ball_loc = packet.GameBall.Physics.loc();
+        println!("ball_loc = {:?}", ball_loc);
+        assert!(ball_loc.x >= 2000.0);
     }
 }

@@ -96,21 +96,38 @@ impl Behavior for PushToOwnCorner {
                 ctx.eeg.log(self.name(), "can't reach ball");
                 Action::Abort
             }
-            (Some(_), Some(_)) => {
+            (Some(me_intercept), Some(_enemy_intercept)) => {
                 if ctx.scenario.possession() >= 3.0 {
                     ctx.eeg
                         .log(self.name(), "we have all the time in the world");
-                    Action::Abort
+                    return Action::Abort;
                 } else if ctx.scenario.possession() >= Scenario::POSSESSION_CONTESTABLE {
                     ctx.eeg.log(self.name(), "swatting ball away from enemy");
-                    Action::tail_call(HitToOwnCorner::new())
+                    return Action::tail_call(HitToOwnCorner::new());
                 } else if ctx.scenario.possession() >= -Scenario::POSSESSION_CONTESTABLE {
                     ctx.eeg.log(self.name(), "defensive race");
-                    Action::tail_call(HitToOwnCorner::new())
-                } else {
-                    ctx.eeg.log(self.name(), "can't reach ball before enemy");
-                    Action::Abort
+                    return Action::tail_call(HitToOwnCorner::new());
                 }
+
+                // Things are looking bad. No possession and we're behind the ball. What are our
+                // options?
+                ctx.eeg.log(self.name(), "things are looking dire");
+
+                let retreat_angle = (me_intercept.ball_loc.to_2d() - ctx.me().Physics.loc_2d())
+                    .angle_to(&(ctx.game.own_goal().center_2d - me_intercept.ball_loc.to_2d()));
+                if retreat_angle.abs() < PI / 6.0 {
+                    ctx.eeg.log(self.name(), "the ball is on the way back");
+                    return Action::tail_call(HitToOwnCorner::new());
+                }
+
+                if (ctx.game.own_goal().center_2d - me_intercept.ball_loc.to_2d()).norm() < 1000.0 {
+                    ctx.eeg
+                        .log(self.name(), "the ball will be right by the goal");
+                    return Action::tail_call(HitToOwnCorner::new());
+                }
+
+                ctx.eeg.log(self.name(), "all hope is lost");
+                Action::Abort
             }
         }
     }
