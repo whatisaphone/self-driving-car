@@ -20,12 +20,17 @@ impl Retreat {
         let intercept = some_or_else!(ctx.scenario.me_intercept(), {
             return false;
         });
-        let ball_loc = intercept.ball_loc.to_2d();
         let goal_loc = ctx.game.own_goal().center_2d;
-        let goal_to_ball_axis = (ball_loc - goal_loc).to_axis();
+        let ball_loc = intercept.ball_loc.to_2d();
+        let me_loc = ctx.me().Physics.loc_2d();
 
-        let ball_dist = (ball_loc - goal_loc).norm();
-        let me_dist = (ctx.me().Physics.loc_2d() - goal_loc).dot(&goal_to_ball_axis);
+        if ctx.game.own_goal().is_y_within_range(me_loc.y, ..0.0) {
+            return true;
+        }
+
+        let axis = (me_loc - goal_loc).to_axis();
+        let ball_dist = (ball_loc - goal_loc).dot(&axis);
+        let me_dist = (me_loc - goal_loc).dot(&axis);
         me_dist > ball_dist + 500.0
     }
 }
