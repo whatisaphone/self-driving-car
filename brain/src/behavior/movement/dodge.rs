@@ -50,7 +50,7 @@ impl Behavior for Dodge {
                 0.05,
             ),
             // Follow-through
-            Yielder::new(rlbot::ffi::PlayerInput::default(), 0.95),
+            Yielder::new(rlbot::ffi::PlayerInput::default(), 0.45),
         ]))
     }
 }

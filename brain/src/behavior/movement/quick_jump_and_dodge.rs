@@ -21,7 +21,7 @@ enum Phase {
 impl QuickJumpAndDodge {
     const MIN_PHASE_TIME: f32 = 0.05;
     pub const MIN_DODGE_TIME: f32 = Self::MIN_PHASE_TIME * 2.0;
-    pub const FOLLOW_THROUGH_TIME: f32 = 1.0;
+    pub const FOLLOW_THROUGH_TIME: f32 = 0.5;
 
     pub fn new() -> Self {
         Self {
