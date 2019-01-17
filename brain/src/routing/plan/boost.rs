@@ -11,6 +11,7 @@ use common::prelude::*;
 use nalgebra::{Point2, Vector2};
 use nameof::name_of_type;
 use ordered_float::NotNan;
+use simulate::{linear_interpolate, Car1D};
 use std::f32::consts::PI;
 
 #[derive(Clone)]
@@ -157,13 +158,29 @@ impl GetDollar {
         pickup: &BoostPickup,
     ) -> Option<Point2<f32>> {
         let approach = pickup.loc - ctx.start.loc.to_2d();
-        let threshold = PI / 6.0;
+
+        // The faster we're moving, the more likely we are to force the slide direction
+        // away from the wall. This way we hopefully avoid sliding up the wall like an
+        // idiot.
+        let threshold = linear_interpolate(
+            &[500.0, 4000.0],
+            &[PI / 12.0, PI / 4.0],
+            wild_guess_approach_speed(ctx, pickup),
+        );
 
         // Midfield boost pads
         if pickup.loc.y == 0.0 {
-            return None;
+            if approach.angle_to(&-Vector2::y_axis()).abs() < threshold
+                || approach.angle_to(&Vector2::y_axis()).abs() < threshold
+            {
+                return Some(Point2::new(
+                    pickup.loc.x,
+                    -ctx.start.loc.y.signum() * 1000.0,
+                ));
+            }
         }
 
+        // Corner boost pads
         if approach.angle_to(&-Vector2::y_axis()).abs() < threshold
             || approach.angle_to(&Vector2::y_axis()).abs() < threshold
         {
@@ -176,4 +193,19 @@ impl GetDollar {
             Some(self.target_face)
         }
     }
+}
+
+fn wild_guess_approach_speed(ctx: &PlanningContext<'_, '_>, pickup: &BoostPickup) -> f32 {
+    let slide_chop = 500.0;
+    let travel = pickup.loc - ctx.start.loc_2d();
+    let approach_dist = travel.norm() - slide_chop;
+    if approach_dist <= 0.0 {
+        return ctx.start.vel_2d().norm();
+    }
+
+    let mut car = Car1D::new()
+        .with_speed(ctx.start.vel.norm())
+        .with_boost(ctx.start.boost);
+    car.advance_by_distance(approach_dist, 1.0, true);
+    car.speed()
 }
