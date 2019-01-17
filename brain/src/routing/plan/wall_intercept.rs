@@ -16,6 +16,7 @@ use crate::{
 use common::{prelude::*, Time};
 use nalgebra::Point3;
 use nameof::name_of_type;
+use std::f32::consts::PI;
 use vec_box::vec_box;
 
 #[derive(Clone)]
@@ -125,7 +126,7 @@ impl WallIntercept {
             Err(reason) => return Err((Skip::No, Some(reason))),
         }
 
-        let turn = WallTurnPlanner::new(ball.loc);
+        let turn = WallTurnPlanner::new(ball.loc).maximum_turn_angle(PI * 0.75);
         let straight = WallStraightPlanner::new(ball.loc);
         let planner = ChainedPlanner::chain(vec_box![turn, straight]);
 

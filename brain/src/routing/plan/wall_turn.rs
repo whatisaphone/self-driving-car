@@ -6,15 +6,30 @@ use crate::{
     },
     utils::geometry::flattener::Flattener,
 };
-use derive_new::new;
 use nalgebra::Point3;
 use nameof::name_of_type;
+use std::f32::consts::PI;
 
 const SLOWEST_TURNING_SPEED: f32 = 900.0;
 
-#[derive(Clone, new)]
+#[derive(Clone)]
 pub struct WallTurnPlanner {
     target_loc: Point3<f32>,
+    maximum_turn_angle: f32,
+}
+
+impl WallTurnPlanner {
+    pub fn new(target_loc: Point3<f32>) -> Self {
+        Self {
+            target_loc,
+            maximum_turn_angle: 2.0 * PI,
+        }
+    }
+
+    pub fn maximum_turn_angle(mut self, maximum_turn_angle: f32) -> Self {
+        self.maximum_turn_angle = maximum_turn_angle;
+        self
+    }
 }
 
 impl RoutePlanner for WallTurnPlanner {
@@ -55,6 +70,11 @@ impl RoutePlanner for WallTurnPlanner {
                 });
             }
         };
+
+        if turn.sweep().abs() >= self.maximum_turn_angle {
+            return Err(RoutePlanError::TurnAngleTooLarge);
+        }
+
         let segment = WallTurn::new(
             ctx.start.clone(),
             *start_surface,

@@ -134,7 +134,7 @@ impl SegmentRunner for WallTurnRunner {
 
         SegmentRunAction::Yield(rlbot::ffi::PlayerInput {
             Throttle: 1.0,
-            Steer: steer.signum(),
+            Steer: self.plan.sweep.signum(),
             ..Default::default()
         })
     }

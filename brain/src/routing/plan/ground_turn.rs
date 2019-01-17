@@ -244,6 +244,7 @@ pub fn calculate_circle_turn(
     };
     Ok(Some(CircleTurn {
         center: turn_center,
+        start_loc,
         radius: turn_radius,
         tangent,
     }))
@@ -252,5 +253,16 @@ pub fn calculate_circle_turn(
 pub struct CircleTurn {
     pub center: Point2<f32>,
     pub radius: f32,
+    /// The point on the circle where the turn starts.
+    pub start_loc: Point2<f32>,
+    /// The point on the circle where the turn ends.
     pub tangent: Point2<f32>,
+}
+
+impl CircleTurn {
+    pub fn sweep(&self) -> f32 {
+        // Go the long way around the circle (more than 180°) if necessary. This avoids
+        // an impossible route with discontinuous reversals at each tangent.
+        (self.start_loc - self.center).angle_to(&(self.tangent - self.center))
+    }
 }

@@ -73,6 +73,7 @@ impl RoutePlanError {
             RoutePlanError::MovingTooFast
             | RoutePlanError::CannotOperateWall
             | RoutePlanError::NoWallIntercept
+            | RoutePlanError::TurnAngleTooLarge
             | RoutePlanError::OtherError(_) => None,
         }
     }

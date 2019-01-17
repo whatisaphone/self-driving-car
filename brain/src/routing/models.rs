@@ -252,6 +252,7 @@ pub enum RoutePlanError {
     TurningRadiusTooTight,
     CannotOperateWall,
     NoWallIntercept,
+    TurnAngleTooLarge,
     OtherError(&'static str),
 }
 
@@ -266,6 +267,7 @@ impl fmt::Debug for RoutePlanError {
             RoutePlanError::TurningRadiusTooTight => f.write_str(stringify!(TurningRadiusTooTight)),
             RoutePlanError::CannotOperateWall => f.write_str(stringify!(CannotOperateWall)),
             RoutePlanError::NoWallIntercept => f.write_str(stringify!(NoWallIntercept)),
+            RoutePlanError::TurnAngleTooLarge => f.write_str(stringify!(TurnAngleTooLarge)),
             RoutePlanError::OtherError(msg) => write!(f, "{}({:?})", stringify!(OtherError), msg),
         }
     }
