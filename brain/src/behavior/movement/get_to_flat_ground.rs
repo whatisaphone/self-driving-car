@@ -118,7 +118,11 @@ fn backup_down_the_wall(ctx: &mut Context<'_>) -> Action {
                 "... and dodging to get back quick",
             );
 
-            let angle = (me.Physics.forward_axis().unwrap() + me.Physics.roof_axis().unwrap())
+            let forward = me.Physics.forward_axis().unwrap();
+            let roof = me.Physics.roof_axis().unwrap();
+            // The roof is meant to add some instability so we don't end up with weird flips
+            // that somehow put us exactly vertical.
+            let angle = (forward + roof / 3.0)
                 .to_2d()
                 .rotation_to(&(ctx.game.own_back_wall_center() - ctx.me().Physics.loc_2d()));
 
