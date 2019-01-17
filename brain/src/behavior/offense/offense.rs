@@ -237,6 +237,10 @@ fn poor_angle_swing_around(ctx: &mut Context<'_>) -> Option<Action> {
         .angle_to(&(goal_loc - ball_loc).to_axis())
         .abs();
     if shot_angle < 135.0_f32.to_radians() {
+        ctx.eeg.log(
+            name_of_type!(Offense),
+            "poor_angle_swing_around: angle not poor enough",
+        );
         return None;
     }
 
