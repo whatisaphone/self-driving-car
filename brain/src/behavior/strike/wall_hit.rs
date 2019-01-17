@@ -28,6 +28,8 @@ pub struct WallHit {
 }
 
 impl WallHit {
+    pub const MAX_BALL_DISTANCE_FROM_SURFACE: f32 = 300.0;
+
     pub fn new() -> Self {
         Self {
             intercept: InterceptMemory::new(),
@@ -164,6 +166,11 @@ fn flat_target(
     if steer.abs() >= PI / 3.0 {
         eeg.track(Event::WallHitNotFacingTarget);
         eeg.log(name_of_type!(WallHit), "not facing the target");
+        return Err(());
+    }
+
+    if ground_intercept_ball_loc.z >= WallHit::MAX_BALL_DISTANCE_FROM_SURFACE {
+        eeg.log(name_of_type!(WallHit), "intercept is too far from surface");
         return Err(());
     }
 

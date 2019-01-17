@@ -1,4 +1,5 @@
 use crate::{
+    behavior::strike::WallHit,
     plan::ball::BallFrame,
     routing::{
         models::{
@@ -162,7 +163,7 @@ impl WallIntercept {
         if self.forbid_goal_walls && plane.normal.y.abs() == 1.0 {
             return None;
         }
-        if plane.distance_to_point(&loc) >= 300.0 {
+        if plane.distance_to_point(&loc) >= WallHit::MAX_BALL_DISTANCE_FROM_SURFACE {
             return None;
         }
         Some(plane)
