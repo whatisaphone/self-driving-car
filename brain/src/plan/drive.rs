@@ -22,5 +22,5 @@ fn steer_penalty(car: &rlbot::ffi::PlayerInfo, desired_aim: f32) -> f32 {
         .normalize_angle()
         .abs();
     // Literally just guessing here
-    turn * 3.0 / 4.0
+    turn * 0.5
 }

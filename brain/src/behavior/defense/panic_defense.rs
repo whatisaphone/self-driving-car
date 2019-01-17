@@ -9,6 +9,7 @@ use crate::{
 use common::{prelude::*, Distance};
 use nalgebra::Point2;
 use nameof::name_of_type;
+use std::f32::consts::PI;
 
 pub struct PanicDefense {
     use_boost: bool,
@@ -84,7 +85,36 @@ impl Behavior for PanicDefense {
 
 impl PanicDefense {
     fn blitz_loc(ctx: &mut Context<'_>, aim_loc: Point2<f32>) -> Point2<f32> {
-        Point2::new(800.0 * -aim_loc.x.signum(), ctx.game.own_goal().center_2d.y)
+        let goal = ctx.game.own_goal();
+        let me_loc = ctx.me().Physics.loc_2d();
+        let me_forward_axis = ctx.me().Physics.forward_axis_2d();
+
+        // If we're already very close, we don't have enough time to steer.
+        let future_loc = me_loc + ctx.me().Physics.vel_2d() * 1.0;
+        let y_cutoff = Self::rush_y_cutoff(ctx);
+        let already_close = goal.is_y_within_range(future_loc.y, ..y_cutoff);
+
+        let approach_angle = me_forward_axis.angle_to(&-goal.normal_2d);
+        let wide_angle = approach_angle.abs() >= PI / 3.0;
+
+        if already_close && !wide_angle {
+            // We don't have time to steer, just pick the closest corner.
+            let left_post = Point2::new(-800.0, goal.center_2d.y);
+            let right_post = Point2::new(800.0, goal.center_2d.y);
+            let angle_to_left_post = me_forward_axis.angle_to(&(left_post - me_loc));
+            let angle_to_right_post = me_forward_axis.angle_to(&(right_post - me_loc));
+            if angle_to_left_post.abs() < angle_to_right_post.abs() {
+                left_post
+            } else {
+                right_post
+            }
+        } else {
+            Point2::new(800.0 * -aim_loc.x.signum(), goal.center_2d.y)
+        }
+    }
+
+    fn rush_y_cutoff(ctx: &mut Context<'_>) -> f32 {
+        ctx.me().Physics.vel().y.abs() * 0.75
     }
 
     fn next_phase(&mut self, ctx: &mut Context<'_>) -> Option<Phase> {
@@ -92,9 +122,14 @@ impl PanicDefense {
 
         if let Phase::Start = self.phase {
             let aim_hint = calc_aim_hint(ctx);
+            let blitz_loc = Self::blitz_loc(ctx, aim_hint);
             return Some(Phase::Rush {
-                aim_hint,
-                child: BlitzToLocation::new(Self::blitz_loc(ctx, aim_hint)),
+                // Powerslide towards the post opposite the one we're driving to.
+                aim_hint: Point2::new(
+                    blitz_loc.x.signum() * -2000.0,
+                    ctx.game.own_goal().center_2d.y,
+                ),
+                child: BlitzToLocation::new(blitz_loc),
             });
         }
 
@@ -131,7 +166,7 @@ impl PanicDefense {
         }
 
         if let Phase::Rush { aim_hint, .. } = self.phase {
-            let cutoff = me.Physics.vel().y.abs() * 0.75;
+            let cutoff = Self::rush_y_cutoff(ctx);
             ctx.eeg
                 .print_value("cutoff_distance", Distance(me.Physics.loc().y - cutoff));
             if ctx
