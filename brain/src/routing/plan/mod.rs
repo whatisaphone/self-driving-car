@@ -5,7 +5,7 @@ pub use self::{
 };
 
 macro_rules! guard {
-    ($start:expr, $predicate:expr, $return:expr $(,)*) => {
+    ($start:expr, $predicate:expr, $return:expr $(,)?) => {
         if $predicate.evaluate(&$start) {
             return Err($return);
         }

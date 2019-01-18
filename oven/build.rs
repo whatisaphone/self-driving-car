@@ -55,7 +55,7 @@ fn compile_csv(name: &str, mut csv: csv::Reader<impl Read>, w: &mut impl Write, 
     }
 
     macro_rules! write_array {
-        ($name:expr, $type:expr, $items:expr $(,)*) => {
+        ($name:expr, $type:expr, $items:expr $(,)?) => {
             let items = $items;
             writeln!(w, "    pub const {}: &[{}] = &[", $name, $type).unwrap();
             for x in items {

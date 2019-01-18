@@ -51,7 +51,7 @@ fn translate_csv(name: &str, csv: &mut csv::Reader<impl Read>, out: &mut impl Wr
     }
 
     macro_rules! write_array {
-        ($name:expr, $type:expr, $items:expr $(,)*) => {
+        ($name:expr, $type:expr, $items:expr $(,)?) => {
             let items = $items;
             writeln!(out, "    pub const {}: &[{}] = &[", $name, $type).unwrap();
             for x in items {

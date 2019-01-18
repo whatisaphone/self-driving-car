@@ -16,7 +16,7 @@ pub struct Chain {
 }
 
 macro_rules! chain {
-    ($priority:expr, [$($child:expr),+ $(,)*] $(,)*) => {{
+    ($priority:expr, [$($child:expr),+ $(,)?] $(,)?) => {{
         use crate::behavior::higher_order::Chain;
         Chain::new($priority, vec![$(Box::new($child)),+])
     }}

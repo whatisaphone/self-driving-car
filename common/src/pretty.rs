@@ -8,7 +8,7 @@ pub trait PrettyPrint {
 }
 
 macro_rules! delegate {
-    ($type:ty $(,)*) => {
+    ($type:ty $(,)?) => {
         impl PrettyPrint for $type {
             type PrettyPrinter = Self;
 
@@ -20,11 +20,11 @@ macro_rules! delegate {
 }
 
 macro_rules! inherent {
-    ($printer:ident, $type:ty, $fmt:expr $(,)*) => {
+    ($printer:ident, $type:ty, $fmt:expr $(,)?) => {
         inherent!($printer, $type, $fmt, |x| x);
     };
 
-    ($printer:ident, $type:ty, $fmt:expr, | $x:pat | ($($map:expr),+ $(,)*) $(,)*) => {
+    ($printer:ident, $type:ty, $fmt:expr, | $x:pat | ($($map:expr),+ $(,)?) $(,)?) => {
         impl PrettyPrint for $type {
             type PrettyPrinter = $printer;
 
@@ -49,11 +49,11 @@ macro_rules! inherent {
 }
 
 macro_rules! wrap {
-    ($name:ident, $type:ty, $fmt:expr $(,)*) => {
+    ($name:ident, $type:ty, $fmt:expr $(,)?) => {
         wrap!($name, $type, $fmt, |x| x);
     };
 
-    ($name:ident, $type:ty, $fmt:expr, | $x:pat | $map:expr $(,)*) => {
+    ($name:ident, $type:ty, $fmt:expr, | $x:pat | $map:expr $(,)?) => {
         #[derive(Copy, Clone)]
         pub struct $name(pub $type);
 
