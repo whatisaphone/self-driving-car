@@ -62,22 +62,46 @@ impl Behavior for TryChoose {
             format!("choosing between {}", self.choice_names),
         );
 
-        for (index, behavior) in self.choices.iter_mut().enumerate() {
-            match behavior.execute_old(ctx) {
-                Action::Abort => continue,
-                Action::Return => continue,
-                action => {
-                    self.chosen_index = Some(index);
-                    ctx.eeg.log(
-                        self.name(),
-                        format!("chose index {}: {}", index, self.choices[index].blurb()),
-                    );
-                    return action;
-                }
+        self.exec(ctx)
+    }
+}
+
+impl TryChoose {
+    fn exec(&mut self, ctx: &mut Context<'_>) -> Action {
+        for index in 0..self.choices.len() {
+            if let Some(action) = self.try_index(ctx, index) {
+                self.chosen_index = Some(index);
+                return action;
             }
         }
 
         ctx.eeg.log(self.name(), "none suitable");
         Action::Abort
+    }
+
+    fn try_index(&mut self, ctx: &mut Context<'_>, index: usize) -> Option<Action> {
+        match self.choices[index].execute_old(ctx) {
+            Action::Yield(input) => {
+                ctx.eeg.log(
+                    self.name(),
+                    format!("choosing index {}: {}", index, self.choices[index].blurb()),
+                );
+                return Some(Action::Yield(input));
+            }
+            Action::TailCall(behavior) => {
+                self.choices[index] = behavior;
+                ctx.eeg.log(
+                    self.name(),
+                    format!(
+                        "diving into index {}: {}",
+                        index,
+                        self.choices[index].blurb(),
+                    ),
+                );
+                return self.try_index(ctx, index);
+            }
+            Action::Return => None,
+            Action::Abort => None,
+        }
     }
 }
