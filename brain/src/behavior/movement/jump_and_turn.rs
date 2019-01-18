@@ -41,6 +41,11 @@ impl Behavior for JumpAndTurn {
             return Action::Return;
         }
 
+        if elapsed >= 0.1 && ctx.me().OnGround {
+            ctx.eeg.log(self.name(), "I thought I jumped");
+            return Action::Abort;
+        }
+
         ctx.eeg.print_value("target_rot", self.target_rot);
 
         let jump = elapsed < self.jump_duration;
