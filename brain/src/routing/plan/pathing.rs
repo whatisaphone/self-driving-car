@@ -34,8 +34,12 @@ pub fn avoid_goal_wall_waypoint(start: &CarState, target_loc: Point2<f32>) -> Op
     if (brink - start.loc.y).signum() == (brink - target_loc.y).signum() {
         return None;
     }
-    // This is a degenerate state where we're starting outside the field?
-    if start.loc.x.abs() >= rl::GOALPOST_X {
+
+    // Detect the degenerate state where we're starting outside the field. Add a
+    // buffer zone since the routing before this point might have been a little
+    // sloppy and put us in a not-so-precise location.
+    if start.loc.x.abs() >= rl::GOALPOST_X + 200.0 {
+        log::warn!("avoid_goal_wall_waypoint: starting position outside field?");
         return None;
     }
 
