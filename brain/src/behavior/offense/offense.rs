@@ -85,9 +85,15 @@ fn can_we_shoot(ctx: &mut Context<'_>) -> bool {
 
     let naive_intercept = naive_intercept.time.min(shoot_intercept.time);
 
+    let acceptable_delay = if ctx.scenario.possession() >= 2.0 {
+        2.0
+    } else {
+        0.5
+    };
+
     // Don't just sit there for days waiting for the ball to roll. The more
     // possession we have, the longer we're willing to wait.
-    if shoot_intercept.time >= naive_intercept + 2.0 {
+    if shoot_intercept.time >= naive_intercept + acceptable_delay {
         ctx.eeg.log(
             name_of_type!(Offense),
             "can_we_shoot: yes but not soon enough",
@@ -478,5 +484,19 @@ mod integration_tests {
         let ball_loc = packet.GameBall.Physics.loc();
         println!("ball loc = {:?}", ball_loc);
         assert!(ball_loc.y >= -1000.0);
+    }
+
+    #[test]
+    fn dont_delay_shot_without_possession() {
+        let test = TestRunner::new()
+            .one_v_one(&*recordings::DONT_DELAY_SHOT_WITHOUT_POSSESSION, 27.0)
+            .starting_boost(0.0)
+            .soccar()
+            .run_for_millis(2000);
+
+        let packet = test.sniff_packet();
+        let ball_vel = packet.GameBall.Physics.vel();
+        println!("ball_vel = {:?}", ball_vel);
+        assert!(ball_vel.y >= 0.0);
     }
 }
