@@ -153,6 +153,8 @@ impl PanicDefense {
         } = self.phase
         {
             let theta = (me.Physics.rot().yaw() - target_yaw).normalize_angle();
+            // We're powersliding, so account for the time we'll spend recovering.
+            let theta = (theta + me.Physics.ang_vel().z * 0.25).normalize_angle();
             if theta.abs() <= 15.0_f32.to_radians() {
                 ctx.eeg.log(self.name(), "done, facing the right way");
                 return Some(Phase::Finished);
