@@ -83,11 +83,7 @@ fn can_we_shoot(ctx: &mut Context<'_>) -> bool {
         return false;
     });
 
-    let naive_intercept = if naive_intercept.time < shoot_intercept.time {
-        naive_intercept.time
-    } else {
-        shoot_intercept.time
-    };
+    let naive_intercept = naive_intercept.time.min(shoot_intercept.time);
 
     // Don't just sit there for days waiting for the ball to roll. The more
     // possession we have, the longer we're willing to wait.
