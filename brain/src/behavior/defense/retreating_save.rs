@@ -429,4 +429,24 @@ mod integration_tests {
             assert!(events.contains(&Event::RetreatingSave));
         });
     }
+
+    #[test]
+    fn anticipate_shot() {
+        let test = TestRunner::new()
+            .one_v_one(&*recordings::ANTICIPATE_SHOT, 321.0)
+            .starting_boost(0.0)
+            .soccar()
+            .run_for_millis(6000);
+
+        assert!(!test.enemy_has_scored());
+
+        let packet = test.sniff_packet();
+        let ball_loc = packet.GameBall.Physics.loc();
+        println!("ball_loc = {:?}", ball_loc);
+        assert!((ball_loc.to_2d() - SOCCAR_GOAL_BLUE.center_2d).norm() >= 1000.0);
+
+        test.examine_events(|events| {
+            assert!(events.contains(&Event::RetreatingSave));
+        });
+    }
 }

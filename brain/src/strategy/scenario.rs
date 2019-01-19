@@ -180,8 +180,12 @@ impl<'a> Scenario<'a> {
             };
 
             let goal_to_ball_axis = (ball_loc - goal_loc).to_axis();
+            let me_retreating = me_vel.dot(&goal_to_ball_axis);
+            let enemy_charging = enemy_vel.dot(&goal_to_ball_axis);
 
-            me_vel.dot(&goal_to_ball_axis) < -500.0 && enemy_vel.dot(&goal_to_ball_axis) < -1000.0
+            me_retreating < -500.0
+                && enemy_charging < -500.0
+                && (me_retreating + enemy_charging) < -1500.0
         })
     }
 }
