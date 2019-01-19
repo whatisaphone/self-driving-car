@@ -1,6 +1,6 @@
 use crate::{
-    behavior::movement::{QuickJumpAndDodge, Yielder},
-    eeg::{Drawable, Event},
+    behavior::movement::{GetToFlatGround, QuickJumpAndDodge, Yielder},
+    eeg::{color, Drawable, Event},
     plan::hit_angle::feasible_hit_angle_away,
     predict::naive_ground_intercept_2,
     routing::models::CarState,
@@ -21,13 +21,22 @@ impl RetreatingSave {
     const BALL_Z_FOR_DODGE: f32 = 120.0;
 
     fn applicable(ctx: &mut Context<'_>) -> Result<(), &'static str> {
-        let _impending_concede = some_or_else!(ctx.scenario.impending_concede(), {
-            return Err("no impending concede");
-        });
-        let _intercept = some_or_else!(ctx.scenario.me_intercept(), {
-            return Err("unknown intercept");
-        });
-        return Ok(());
+        if ctx.scenario.impending_concede().map(|b| b.t < 5.0) == Some(true) {
+            ctx.eeg.draw(Drawable::print("concede", color::GREEN));
+            return Ok(());
+        }
+        let ball_extrap = WallRayCalculator::calc_from_motion(
+            ctx.packet.GameBall.Physics.loc_2d(),
+            ctx.packet.GameBall.Physics.vel_2d(),
+        );
+        match WallRayCalculator::wall_for_point(ctx.game, ball_extrap) {
+            Wall::OwnGoal | Wall::OwnBackWall if ball_extrap.x.abs() < 1500.0 => {
+                ctx.eeg.draw(Drawable::print("back wall", color::GREEN));
+                return Ok(());
+            }
+            _ => {}
+        }
+        Err("no impending doom")
     }
 
     pub fn new() -> Self {
@@ -46,6 +55,11 @@ impl Behavior for RetreatingSave {
             return Action::Abort;
         }
 
+        if !GetToFlatGround::on_flat_ground(ctx.me()) {
+            ctx.eeg.log(self.name(), "not on flat ground");
+            return Action::Abort;
+        }
+
         let plan = some_or_else!(self.intercept(ctx), {
             ctx.eeg.log(self.name(), "no intercept");
             return Action::Abort;
@@ -58,10 +72,14 @@ impl Behavior for RetreatingSave {
             ctx.me().Physics.rot(),
         ));
 
-        match self.estimate_drive(ctx, plan.target_loc, plan.target_time) {
-            Step::Drive(throttle, boost) => self.drive(ctx, plan.target_loc, throttle, boost),
-            Step::Dodge => self.dodge(ctx),
+        let (ball_loc, car) = self.simulate_jump(ctx);
+        if (ball_loc.to_2d() - car.loc_2d()).norm() < 200.0 {
+            ctx.eeg.log(self.name(), "we are close enough");
+            return self.dodge(ctx);
         }
+
+        let (throttle, boost) = self.calc_drive(ctx, plan.target_loc, plan.target_time);
+        self.drive(ctx, plan.target_loc, throttle, boost)
     }
 }
 
@@ -69,26 +87,13 @@ impl RetreatingSave {
     fn intercept(&self, ctx: &mut Context<'_>) -> Option<Plan> {
         let own_goal = ctx.game.own_goal();
 
-        let danger = {
-            let ball_loc = ctx.packet.GameBall.Physics.loc_2d();
-            let ball_vel = ctx.packet.GameBall.Physics.vel_2d();
-            let ball_trajectory = WallRayCalculator::calculate(ball_loc, ball_loc + ball_vel);
-            own_goal.closest_point(ball_trajectory)
-        };
-
         let car_loc = ctx.me().Physics.loc_2d();
         let car_forward_axis = ctx.me().Physics.forward_axis_2d();
 
         let intercept =
             naive_ground_intercept_2(&ctx.me().into(), ctx.scenario.ball_prediction(), |ball| {
-                let drive_angle = car_forward_axis
-                    .angle_to(&(ball.loc.to_2d() - car_loc))
-                    .abs();
-                let aim_loc = feasible_hit_angle_away(ball.loc.to_2d(), car_loc, danger, PI / 6.0);
-                let aim_loc = WallRayCalculator::calculate(ball.loc.to_2d(), aim_loc);
-                if WallRayCalculator::wall_for_point(ctx.game, aim_loc) == Wall::OwnGoal {
-                    return false;
-                }
+                let drive_angle = car_forward_axis.angle_to(&(ball.loc.to_2d() - car_loc));
+
                 drive_angle.abs() < PI / 6.0
                     && ball.loc.z < Self::MAX_BALL_Z
                     && !own_goal.ball_is_scored(ball.loc)
@@ -97,9 +102,8 @@ impl RetreatingSave {
         let ball_loc = intercept.ball_loc.to_2d();
         let ball_vel = intercept.ball_vel.to_2d();
 
-        let side = car_forward_axis.angle_to(&(ball_loc - car_loc)).signum();
-        let target_angle = ball_vel.to_axis().ortho() * side;
-        let target_loc = ball_loc + target_angle.normalize() * 200.0;
+        let aim_loc = feasible_hit_angle_away(ball_loc, car_loc, ball_loc + ball_vel, PI / 6.0);
+        let target_loc = ball_loc + (ball_loc - aim_loc).normalize() * 200.0;
         Some(Plan {
             intercept_ball_loc: intercept.ball_loc,
             target_loc,
@@ -107,17 +111,16 @@ impl RetreatingSave {
         })
     }
 
-    fn estimate_drive(
+    fn calc_drive(
         &mut self,
         ctx: &mut Context<'_>,
         target_loc: Point2<f32>,
         target_time: f32,
-    ) -> Step {
-        let jump_duration = 0.1;
-        let drive_time = target_time - jump_duration;
-
+    ) -> (f32, bool) {
+        let drive_time = target_time - Self::JUMP_TIME;
         if drive_time < 0.0 {
-            return Step::Dodge;
+            // Sit tight and wait for the ball to come to us.
+            return (-1.0, false);
         }
 
         let drive = SimGroundDrive::new(target_loc);
@@ -158,7 +161,7 @@ impl RetreatingSave {
             .print_value("throttle_offset", Distance(throttle_offset));
         ctx.eeg.print_value("boost_offset", Distance(boost_offset));
 
-        Step::Drive(throttle, boost)
+        (throttle, boost)
     }
 
     fn drive(
@@ -174,7 +177,7 @@ impl RetreatingSave {
         Action::Yield(rlbot::ffi::PlayerInput {
             Throttle: throttle,
             Steer: (theta * 2.0).max(-1.0).min(1.0),
-            Boost: boost,
+            Boost: boost && ctx.me().Boost > 0,
             ..Default::default()
         })
     }
@@ -226,18 +229,14 @@ struct Plan {
     target_time: f32,
 }
 
-enum Step {
-    Drive(f32, bool),
-    Dodge,
-}
-
 #[cfg(test)]
 mod integration_tests {
     use crate::{
-        behavior::defense::retreating_save::RetreatingSave,
         eeg::Event,
         integration_tests::helpers::{TestRunner, TestScenario},
+        strategy::SOCCAR_GOAL_BLUE,
     };
+    use brain_test_data::recordings;
     use common::{prelude::*, rl};
     use nalgebra::{Point2, Point3, Rotation3, Vector3};
 
@@ -365,6 +364,46 @@ mod integration_tests {
     }
 
     #[test]
+    fn catching_up_to_the_play() {
+        let test = TestRunner::new()
+            .one_v_one(&*recordings::CATCHING_UP_TO_THE_PLAY, 217.5)
+            .starting_boost(15.0)
+            .soccar()
+            .run_for_millis(4000);
+
+        assert!(!test.enemy_has_scored());
+
+        let packet = test.sniff_packet();
+        let ball_loc = packet.GameBall.Physics.loc();
+        println!("ball_loc = {:?}", ball_loc);
+        assert!(ball_loc.x < -2500.0);
+
+        test.examine_events(|events| {
+            assert!(events.contains(&Event::RetreatingSave));
+        });
+    }
+
+    #[test]
+    fn landing_awkwardly_close_to_the_ball() {
+        let test = TestRunner::new()
+            .one_v_one(&*recordings::LANDING_AWKWARDLY_CLOSE_TO_THE_BALL, 218.5)
+            .starting_boost(15.0)
+            .soccar()
+            .run_for_millis(3000);
+
+        assert!(!test.enemy_has_scored());
+
+        let packet = test.sniff_packet();
+        let ball_loc = packet.GameBall.Physics.loc();
+        println!("ball_loc = {:?}", ball_loc);
+        assert!((SOCCAR_GOAL_BLUE.center_2d - ball_loc.to_2d()).norm() >= 2500.0);
+
+        test.examine_events(|events| {
+            assert!(events.contains(&Event::RetreatingSave));
+        });
+    }
+
+    #[test]
     fn driving_alongside_rolling_ball() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -376,7 +415,7 @@ mod integration_tests {
                 ..Default::default()
             })
             .starting_boost(10.0)
-            .behavior(RetreatingSave::new())
+            .soccar()
             .run_for_millis(2000);
 
         assert!(!test.enemy_has_scored());

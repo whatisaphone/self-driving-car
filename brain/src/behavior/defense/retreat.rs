@@ -1,6 +1,6 @@
 use crate::{
     behavior::{
-        defense::{PanicDefense, PushToOwnCorner},
+        defense::{retreating_save::RetreatingSave, PanicDefense, PushToOwnCorner},
         higher_order::TryChoose,
     },
     eeg::Event,
@@ -48,6 +48,9 @@ impl Behavior for Retreat {
 
         if Self::out_of_position(ctx) {
             choices.push(Box::new(PushToOwnCorner::new()));
+        // PushToOwnCorner might end up in RetreatingSave, so no need to duplicate.
+        } else {
+            choices.push(Box::new(RetreatingSave::new()));
         }
         choices.push(Box::new(PanicDefense::new()));
 

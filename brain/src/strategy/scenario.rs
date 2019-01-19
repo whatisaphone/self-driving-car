@@ -172,12 +172,7 @@ impl<'a> Scenario<'a> {
     pub fn panicky_retreat(&self) -> bool {
         *self.panicky_retreat.borrow_with(|| {
             let goal_loc = self.game.own_goal().center_2d;
-            let ball_loc = match self.me_intercept() {
-                Some(i) => i.ball_loc.to_2d(),
-                None => self.ball_prediction().last().loc.to_2d(),
-            };
-            let ball_vel = self.packet.GameBall.Physics.vel_2d();
-
+            let ball_loc = self.packet.GameBall.Physics.loc_2d();
             let me_vel = self.game.me().Physics.vel_2d();
             let enemy_vel = match self.primary_enemy() {
                 Some(e) => e.Physics.vel_2d(),
@@ -186,9 +181,7 @@ impl<'a> Scenario<'a> {
 
             let goal_to_ball_axis = (ball_loc - goal_loc).to_axis();
 
-            ball_vel.dot(&goal_to_ball_axis) < -500.0
-                && me_vel.dot(&goal_to_ball_axis) < -500.0
-                && enemy_vel.dot(&goal_to_ball_axis) < -1000.0
+            me_vel.dot(&goal_to_ball_axis) < -500.0 && enemy_vel.dot(&goal_to_ball_axis) < -1000.0
         })
     }
 }

@@ -39,9 +39,7 @@ impl Defense {
         // possession, the danger of a shot is high and if we try to stop it we'll get
         // beat to the ball. Bias towards panicking rather than trying to intercept,
         // this way at least we're between the ball and our goal.
-        let panic_factor = if ctx.scenario.panicky_retreat()
-            && ctx.scenario.possession() < -Scenario::POSSESSION_CONTESTABLE
-        {
+        let panic_factor = if ctx.scenario.panicky_retreat() {
             2000.0
         } else {
             0.0
