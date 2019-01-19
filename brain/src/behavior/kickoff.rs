@@ -21,7 +21,7 @@ pub struct Kickoff;
 
 impl Kickoff {
     pub fn new() -> Self {
-        Kickoff
+        Self
     }
 
     pub fn is_kickoff(ball: &rlbot::ffi::BallInfo) -> bool {

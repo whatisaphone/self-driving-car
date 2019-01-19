@@ -19,7 +19,7 @@ impl HitToOwnCorner {
     pub const MAX_BALL_Z: f32 = GroundedHitTarget::MAX_BALL_Z;
 
     pub fn new() -> Self {
-        HitToOwnCorner
+        Self
     }
 }
 

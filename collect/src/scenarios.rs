@@ -150,7 +150,7 @@ pub struct Coast;
 
 impl Coast {
     pub fn new() -> Self {
-        Coast
+        Self
     }
 }
 

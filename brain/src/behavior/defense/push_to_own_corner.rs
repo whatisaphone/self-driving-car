@@ -23,7 +23,7 @@ impl PushToOwnCorner {
     const MAX_BALL_Z: f32 = HitToOwnCorner::MAX_BALL_Z;
 
     pub fn new() -> Self {
-        PushToOwnCorner
+        Self
     }
 
     fn shot_angle(ball_loc: Point3<f32>, car_loc: Point3<f32>, aim_loc: Point2<f32>) -> f32 {

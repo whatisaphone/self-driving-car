@@ -13,7 +13,7 @@ pub struct FiftyFifty;
 
 impl FiftyFifty {
     pub fn new() -> Self {
-        FiftyFifty
+        Self
     }
 }
 

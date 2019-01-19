@@ -4,8 +4,8 @@ use nameof::name_of_type;
 pub struct NullBehavior;
 
 impl NullBehavior {
-    pub fn new() -> NullBehavior {
-        NullBehavior
+    pub fn new() -> Self {
+        Self
     }
 }
 

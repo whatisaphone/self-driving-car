@@ -22,7 +22,7 @@ pub struct TepidHit;
 
 impl TepidHit {
     pub fn new() -> Self {
-        TepidHit
+        Self
     }
 }
 

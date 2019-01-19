@@ -18,8 +18,8 @@ use std::f32::consts::PI;
 pub struct Shoot;
 
 impl Shoot {
-    pub fn new() -> Shoot {
-        Shoot
+    pub fn new() -> Self {
+        Self
     }
 
     pub fn viable_shot(

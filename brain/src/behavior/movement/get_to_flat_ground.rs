@@ -16,8 +16,8 @@ use std::f32::consts::PI;
 pub struct GetToFlatGround;
 
 impl GetToFlatGround {
-    pub fn new() -> GetToFlatGround {
-        GetToFlatGround
+    pub fn new() -> Self {
+        Self
     }
 
     pub fn on_flat_ground(car: &rlbot::ffi::PlayerInfo) -> bool {

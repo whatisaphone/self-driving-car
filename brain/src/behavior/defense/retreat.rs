@@ -13,7 +13,7 @@ pub struct Retreat;
 
 impl Retreat {
     pub fn new() -> Self {
-        Retreat
+        Self
     }
 
     /// Returns `true` if the ball is between me and my goal.

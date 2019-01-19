@@ -17,7 +17,7 @@ pub struct Offense;
 
 impl Offense {
     pub fn new() -> Self {
-        Offense
+        Self
     }
 }
 

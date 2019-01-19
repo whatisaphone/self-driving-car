@@ -18,8 +18,8 @@ use std::f32::consts::PI;
 pub struct Defense;
 
 impl Defense {
-    pub fn new() -> Defense {
-        Defense
+    pub fn new() -> Self {
+        Self
     }
 
     fn is_between_ball_and_own_goal(ctx: &mut Context<'_>) -> bool {
