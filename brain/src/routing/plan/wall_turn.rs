@@ -57,6 +57,13 @@ impl RoutePlanner for WallTurnPlanner {
         let start_to_2d = Flattener::new(start_to_ground);
         let target_to_2d = Flattener::new(start_to_ground * target_to_start);
 
+        let ground_start = start_to_ground * ctx.start.loc;
+        if ground_start.z < 0.0 {
+            // If our unfolded position is under the ground, most likely we're inside a goal
+            // on the wall. There's no way anything sane can happen from here, so abort.
+            return Err(RoutePlanError::CannotOperateWall);
+        }
+
         let start = ctx.start.flatten(&start_to_2d);
         let target_loc = target_to_2d * self.target_loc;
 
