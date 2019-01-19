@@ -78,7 +78,7 @@ mod integration_tests {
                 ..Default::default()
             })
             .soccar()
-            .run_for_millis(4000);
+            .run_for_millis(3000);
 
         assert!(!test.enemy_has_scored());
         let packet = test.sniff_packet();

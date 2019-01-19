@@ -197,7 +197,7 @@ mod integration_tests {
         integration_tests::helpers::{TestRunner, TestScenario},
     };
     use brain_test_data::recordings;
-    use common::prelude::*;
+    use common::{prelude::*, rl};
     use nalgebra::{Point3, Rotation3};
     use std::f32::consts::PI;
 
@@ -227,8 +227,8 @@ mod integration_tests {
             .run_for_millis(2500);
 
         let packet = test.sniff_packet();
-        let ball = extrapolate_ball(&packet, 3.0);
-        assert!(is_scored(ball));
+        let ball = extrapolate_ball(&packet, 4.0);
+        assert!(ball.y >= rl::FIELD_MAX_Y);
     }
 
     #[test]
@@ -257,10 +257,6 @@ mod integration_tests {
         eprintln!("ball_loc = {:?}", ball_loc);
         eprintln!("ball_vel = {:?}", ball_vel);
         ball_loc + ball_vel * seconds
-    }
-
-    fn is_scored(ball: Point3<f32>) -> bool {
-        ball.x.abs() < 1000.0 && ball.y >= 5000.0
     }
 
     fn is_enemy_scored(ball: Point3<f32>) -> bool {

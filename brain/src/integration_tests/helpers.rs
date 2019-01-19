@@ -338,8 +338,9 @@ fn test_thread(
     let mut packets = rlbot.packeteer();
     let mut physicist = rlbot.physicist();
 
-    // Wait for RoundActive
+    // Wait for things to stabilize.
     while !packets.next().unwrap().GameInfo.RoundActive {}
+    while packets.next().unwrap().GameCars[0].Demolished {}
 
     for i in 0..match_settings.NumPlayers {
         rlbot.update_player_input(Default::default(), i).unwrap();
