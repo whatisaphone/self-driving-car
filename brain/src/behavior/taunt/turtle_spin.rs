@@ -3,13 +3,22 @@ use crate::{
     strategy::{Action, Behavior, Context, Priority},
 };
 use common::prelude::*;
-use derive_new::new;
+use dom::get_pitch_yaw_roll;
 use nalgebra::Vector3;
 use nameof::name_of_type;
 use std::f32::consts::PI;
 
-#[derive(new)]
-pub struct TurtleSpin;
+pub struct TurtleSpin {
+    has_been_upside_down: bool,
+}
+
+impl TurtleSpin {
+    pub fn new() -> Self {
+        Self {
+            has_been_upside_down: false,
+        }
+    }
+}
 
 impl Behavior for TurtleSpin {
     fn name(&self) -> &str {
@@ -36,13 +45,22 @@ impl Behavior for TurtleSpin {
             );
         }
 
-        if should_air_roll_upside_down(ctx) {
+        if !self.has_been_upside_down && should_air_roll_upside_down(ctx) {
+            let (pitch, yaw, roll) = get_pitch_yaw_roll(
+                ctx.me(),
+                ctx.me().Physics.forward_axis(),
+                -Vector3::z_axis(),
+            );
             return Action::Yield(rlbot::ffi::PlayerInput {
-                Roll: 1.0,
+                Pitch: pitch,
+                Yaw: yaw,
+                Roll: roll,
                 Boost: ctx.me().Boost > 0,
                 ..Default::default()
             });
         }
+
+        self.has_been_upside_down = true;
 
         if !ctx.me().DoubleJumped {
             return Action::Yield(rlbot::ffi::PlayerInput {
@@ -67,7 +85,7 @@ fn should_air_roll_upside_down(ctx: &mut Context<'_>) -> bool {
     }
 
     let angle = ctx.me().Physics.roof_axis().angle_to(&-Vector3::z_axis());
-    angle >= PI / 12.0
+    angle >= PI / 6.0
 }
 
 #[cfg(test)]
@@ -87,7 +105,7 @@ mod integration_tests {
                 ..Default::default()
             })
             .behavior(Repeat::new(TurtleSpin::new))
-            .run_for_millis(4000);
+            .run_for_millis(2000);
         let packet = test.sniff_packet();
         assert!(packet.GameCars[0].Physics.Rotation.Roll.abs() >= 3.0);
     }
