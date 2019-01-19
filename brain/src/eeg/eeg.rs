@@ -18,6 +18,7 @@ pub enum Event {
     HitToOwnCorner,
     PushFromLeftToRight,
     PushFromRightToLeft,
+    RetreatingSave,
     Offense,
     TepidHitTowardEnemyGoal,
     TepidHitBlockAngleToGoal,

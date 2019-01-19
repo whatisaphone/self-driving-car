@@ -17,7 +17,7 @@ impl Retreat {
     }
 
     /// Returns `true` if the ball is between me and my goal.
-    pub fn behind_ball(ctx: &mut Context<'_>) -> bool {
+    pub fn out_of_position(ctx: &mut Context<'_>) -> bool {
         let intercept = some_or_else!(ctx.scenario.me_intercept(), {
             return false;
         });
@@ -46,10 +46,9 @@ impl Behavior for Retreat {
 
         let mut choices = Vec::<Box<dyn Behavior>>::new();
 
-        if Self::behind_ball(ctx) {
+        if Self::out_of_position(ctx) {
             choices.push(Box::new(PushToOwnCorner::new()));
         }
-
         choices.push(Box::new(PanicDefense::new()));
 
         Action::tail_call(TryChoose::new(Priority::Idle, choices))

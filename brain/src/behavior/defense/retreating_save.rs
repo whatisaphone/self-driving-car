@@ -1,6 +1,6 @@
 use crate::{
-    behavior::movement::QuickJumpAndDodge,
-    eeg::Drawable,
+    behavior::movement::{QuickJumpAndDodge, Yielder},
+    eeg::{Drawable, Event},
     plan::hit_angle::feasible_hit_angle_away,
     predict::naive_ground_intercept_2,
     routing::models::CarState,
@@ -18,8 +18,18 @@ pub struct RetreatingSave;
 impl RetreatingSave {
     const MAX_BALL_Z: f32 = 150.0;
     const JUMP_TIME: f32 = 0.1;
+    const BALL_Z_FOR_DODGE: f32 = 120.0;
 
-    #[cfg(test)]
+    fn applicable(ctx: &mut Context<'_>) -> Result<(), &'static str> {
+        let _impending_concede = some_or_else!(ctx.scenario.impending_concede(), {
+            return Err("no impending concede");
+        });
+        let _intercept = some_or_else!(ctx.scenario.me_intercept(), {
+            return Err("unknown intercept");
+        });
+        return Ok(());
+    }
+
     pub fn new() -> Self {
         Self
     }
@@ -31,11 +41,17 @@ impl Behavior for RetreatingSave {
     }
 
     fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
+        if let Err(reason) = Self::applicable(ctx) {
+            ctx.eeg.log(self.name(), reason);
+            return Action::Abort;
+        }
+
         let plan = some_or_else!(self.intercept(ctx), {
             ctx.eeg.log(self.name(), "no intercept");
             return Action::Abort;
         });
 
+        ctx.eeg.track(Event::RetreatingSave);
         ctx.eeg.draw(Drawable::ghost_ball(plan.intercept_ball_loc));
         ctx.eeg.draw(Drawable::ghost_car_ground(
             plan.target_loc,
@@ -163,10 +179,10 @@ impl RetreatingSave {
         })
     }
 
-    fn simulate_jump(&self, ctx: &mut Context<'_>) -> (Point2<f32>, CarState) {
+    fn simulate_jump(&self, ctx: &mut Context<'_>) -> (Point3<f32>, CarState) {
         // Simulate the ball motion.
-        let ball_loc = ctx.packet.GameBall.Physics.loc_2d();
-        let ball_vel = ctx.packet.GameBall.Physics.vel_2d();
+        let ball_loc = ctx.packet.GameBall.Physics.loc();
+        let ball_vel = ctx.packet.GameBall.Physics.vel();
         let ball_loc = ball_loc + ball_vel * Self::JUMP_TIME;
 
         // Simulate the car motion.
@@ -177,7 +193,25 @@ impl RetreatingSave {
 
     fn dodge(&self, ctx: &mut Context<'_>) -> Action {
         let (ball_loc, apex) = self.simulate_jump(ctx);
-        let theta = apex.forward_axis_2d().angle_to(&(ball_loc - apex.loc_2d()));
+
+        // This is a dangerous situation as it is. Skip the dodge if we can, because we
+        // want to:
+        // - Keep control of our car.
+        // - Not propel the ball any faster towards our net than we need to.
+        if ball_loc.z < Self::BALL_Z_FOR_DODGE && ctx.packet.GameBall.Physics.vel().norm() >= 2000.0
+        {
+            return Action::tail_call(Yielder::new(
+                rlbot::ffi::PlayerInput {
+                    Throttle: 0.1,
+                    ..Default::default()
+                },
+                Self::JUMP_TIME,
+            ));
+        }
+
+        let theta = apex
+            .forward_axis_2d()
+            .angle_to(&(ball_loc.to_2d() - apex.loc_2d()));
         Action::tail_call(
             QuickJumpAndDodge::new()
                 .jump_time(Self::JUMP_TIME)
@@ -201,6 +235,7 @@ enum Step {
 mod integration_tests {
     use crate::{
         behavior::defense::retreating_save::RetreatingSave,
+        eeg::Event,
         integration_tests::helpers::{TestRunner, TestScenario},
     };
     use common::{prelude::*, rl};
@@ -350,5 +385,9 @@ mod integration_tests {
         let ball_loc = packet.GameBall.Physics.loc();
         println!("ball_loc = {:?}", ball_loc);
         assert!(ball_loc.x < -1000.0);
+
+        test.examine_events(|events| {
+            assert!(events.contains(&Event::RetreatingSave));
+        });
     }
 }

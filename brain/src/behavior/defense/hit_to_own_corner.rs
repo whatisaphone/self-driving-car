@@ -32,7 +32,7 @@ impl Behavior for HitToOwnCorner {
         ctx.eeg.track(Event::HitToOwnCorner);
 
         Action::tail_call(Chain::new(Priority::Strike, vec![
-            Box::new(FollowRoute::new(GroundIntercept::new())),
+            Box::new(FollowRoute::new(GroundIntercept::new()).never_recover(true)),
             Box::new(GroundedHit::hit_towards(Self::aim)),
         ]))
     }
