@@ -31,5 +31,6 @@ mod plan;
 mod predict;
 mod routing;
 mod rules;
+mod sim;
 mod strategy;
 mod utils;
