@@ -100,9 +100,8 @@ impl RetreatingSave {
             })?;
 
         let ball_loc = intercept.ball_loc.to_2d();
-        let ball_vel = intercept.ball_vel.to_2d();
 
-        let aim_loc = feasible_hit_angle_away(ball_loc, car_loc, ball_loc + ball_vel, PI / 6.0);
+        let aim_loc = feasible_hit_angle_away(ball_loc, car_loc, own_goal.center_2d, PI / 6.0);
         let target_loc = ball_loc + (ball_loc - aim_loc).normalize() * 200.0;
         Some(Plan {
             intercept_ball_loc: intercept.ball_loc,
@@ -471,7 +470,38 @@ mod integration_tests {
         let packet = test.sniff_packet();
         let ball_loc = packet.GameBall.Physics.loc();
         println!("ball_loc = {:?}", ball_loc);
-        assert!(ball_loc.x >= 2000.0);
+        assert!(ball_loc.x >= 1500.0);
+
+        test.examine_events(|events| {
+            assert!(events.contains(&Event::RetreatingSave));
+        });
+    }
+
+    #[test]
+    fn switch_sides_to_goalside() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(1243.13, -730.49, 93.15),
+                ball_rot: Rotation3::from_unreal_angles(-0.1369289, -2.3818758, 2.5309741),
+                ball_vel: Vector3::new(80.321, -1693.861, 0.0),
+                car_loc: Point3::new(1277.12, -2066.16, 17.0),
+                car_rot: Rotation3::from_unreal_angles(-0.009600522, -1.3817543, -0.00002118205),
+                car_vel: Vector3::new(435.031, -2252.741, 8.411),
+                enemy_loc: Point3::new(1301.86, -526.81, 17.01),
+                enemy_rot: Rotation3::from_unreal_angles(-0.009597596, -1.5676318, -0.00014488742),
+                enemy_vel: Vector3::new(-36.440998, -1721.351, 8.331),
+                ..Default::default()
+            })
+            .starting_boost(18.0)
+            .soccar()
+            .run_for_millis(2000);
+
+        assert!(!test.enemy_has_scored());
+
+        let packet = test.sniff_packet();
+        let ball_loc = packet.GameBall.Physics.loc();
+        println!("ball_loc = {:?}", ball_loc);
+        assert!(ball_loc.x >= 1500.0);
 
         test.examine_events(|events| {
             assert!(events.contains(&Event::RetreatingSave));
