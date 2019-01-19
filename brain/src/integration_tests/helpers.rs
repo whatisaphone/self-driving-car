@@ -465,6 +465,8 @@ fn set_state(
                 .velocity(car.vel)
                 .angular_velocity(car.ang_vel),
         )
+        .jumped(false)
+        .double_jumped(false)
         .boost_amount(car_boost);
     let enemy_state = rlbot::state::DesiredCarState::new()
         .physics(

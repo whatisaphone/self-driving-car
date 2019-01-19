@@ -4,10 +4,11 @@ use crate::{
         movement::{dodge::Dodge, drive_towards::drive_towards, land::Land, yielder::Yielder},
     },
     eeg::{color, Drawable},
+    plan::telepathy::predict_enemy_hit_direction,
     strategy::{Action, Behavior, Context, Priority},
 };
 use common::prelude::*;
-use nalgebra::Vector3;
+use nalgebra::{Point2, Vector3};
 use nameof::name_of_type;
 use simulate::linear_interpolate;
 use std::f32::consts::PI;
@@ -63,7 +64,7 @@ impl Behavior for GetToFlatGround {
             // Our nose is pointed towards the sky. It's quicker to jump down than to drive.
             ctx.eeg
                 .draw(Drawable::print("nose pointed upwards", color::GREEN));
-            return backup_down_the_wall(ctx);
+            return jump_down_from_the_wall(ctx);
         }
 
         ctx.eeg
@@ -76,7 +77,7 @@ impl Behavior for GetToFlatGround {
     }
 }
 
-fn backup_down_the_wall(ctx: &mut Context<'_>) -> Action {
+fn jump_down_from_the_wall(ctx: &mut Context<'_>) -> Action {
     let me = ctx.me();
 
     if me.Physics.vel().z >= 0.0 || me.Physics.loc().z >= 1000.0 {
@@ -110,25 +111,43 @@ fn backup_down_the_wall(ctx: &mut Context<'_>) -> Action {
             0.1,
         )));
 
-        if Land::defensiveness(ctx) < 0.5 {
-            // We're probably way out of the game. Dodge towards our goal to get back to
-            // defense quicker.
-            ctx.eeg.log(
-                name_of_type!(GetToFlatGround),
-                "... and dodging to get back quick",
-            );
-
-            let forward = me.Physics.forward_axis().unwrap();
-            let roof = me.Physics.roof_axis().unwrap();
-            // The roof is meant to add some instability so we don't end up with weird flips
-            // that somehow put us exactly vertical.
-            let angle = (forward + roof / 3.0)
-                .to_2d()
-                .rotation_to(&(ctx.game.own_back_wall_center() - ctx.me().Physics.loc_2d()));
-
-            inputs.push(Box::new(Dodge::new().angle(angle)));
+        if let Some(target_loc) = dodge_target(ctx) {
+            inputs.push(Box::new(Dodge::new().towards(target_loc)));
         }
 
         return Action::tail_call(Chain::new(Priority::Idle, inputs));
     }
+}
+
+fn dodge_target(ctx: &mut Context<'_>) -> Option<Point2<f32>> {
+    if Land::defensiveness(ctx) < 0.5 {
+        // We're probably way out of the game. Dodge towards our goal to get back to
+        // defense quicker.
+        ctx.eeg.log(
+            name_of_type!(GetToFlatGround),
+            "assume we are out of the game",
+        );
+        return Some(ctx.game.own_back_wall_center());
+    }
+
+    let ball = ctx.scenario.ball_prediction().at_time_or_last(2.0);
+    if (ball.loc.to_2d() - ctx.me().Physics.loc_2d()).norm() < 2000.0 {
+        ctx.eeg
+            .log(name_of_type!(GetToFlatGround), "the ball will be close");
+        return None;
+    }
+
+    if let Some(enemy_hit_direction) = predict_enemy_hit_direction(ctx) {
+        let danger = enemy_hit_direction.angle_to(&-ctx.game.own_goal().normal_2d);
+        if danger >= PI / 3.0 {
+            ctx.eeg
+                .log(name_of_type!(GetToFlatGround), "enemy can advance the ball");
+            return Some(ctx.game.own_back_wall_center());
+        }
+    }
+
+    ctx.eeg
+        .log(name_of_type!(GetToFlatGround), "assuming offense");
+    let goal_point = ctx.game.enemy_goal().closest_point(ball.loc.to_2d());
+    Some(ball.loc.to_2d() + (ball.loc.to_2d() - goal_point).normalize() * 1000.0)
 }

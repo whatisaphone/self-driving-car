@@ -2,24 +2,35 @@ use crate::{
     behavior::{higher_order::Chain, movement::yielder::Yielder},
     strategy::{Action, Behavior, Context},
 };
-use nalgebra::UnitComplex;
+use common::prelude::*;
+use nalgebra::{Point2, UnitComplex};
 use nameof::name_of_type;
 use vec_box::vec_box;
 
 pub struct Dodge {
-    angle: UnitComplex<f32>,
+    direction: Direction,
+}
+
+enum Direction {
+    Angle(UnitComplex<f32>),
+    Towards(Point2<f32>),
 }
 
 impl Dodge {
     pub fn new() -> Self {
         Self {
-            angle: UnitComplex::identity(),
+            direction: Direction::Angle(UnitComplex::identity()),
         }
     }
 
     /// The angle of the dodge, where 0° means straight forward.
     pub fn angle(mut self, angle: UnitComplex<f32>) -> Self {
-        self.angle = angle;
+        self.direction = Direction::Angle(angle);
+        self
+    }
+
+    pub fn towards(mut self, target_loc: Point2<f32>) -> Self {
+        self.direction = Direction::Towards(target_loc);
         self
     }
 }
@@ -35,8 +46,10 @@ impl Behavior for Dodge {
             return Action::Abort;
         }
 
-        let pitch = -self.angle.cos_angle();
-        let yaw = self.angle.sin_angle();
+        let (pitch, yaw) = match self.direction {
+            Direction::Angle(angle) => (-angle.cos_angle(), angle.sin_angle()),
+            Direction::Towards(target_loc) => towards(ctx.me(), target_loc),
+        };
 
         Action::tail_call(Chain::new(self.priority(), vec_box![
             // Dodge
@@ -52,5 +65,60 @@ impl Behavior for Dodge {
             // Follow-through
             Yielder::new(rlbot::ffi::PlayerInput::default(), 0.45),
         ]))
+    }
+}
+
+fn towards(car: &rlbot::ffi::PlayerInfo, target_loc: Point2<f32>) -> (f32, f32) {
+    let car_loc = car.Physics.loc_2d();
+    let car_forward_axis = car.Physics.forward_axis();
+
+    let me_to_target = (target_loc - car_loc).to_axis();
+    let dodge_dir = car_forward_axis.to_2d().rotation_to(&me_to_target);
+    (-dodge_dir.cos_angle(), dodge_dir.sin_angle())
+}
+
+#[cfg(test)]
+mod integration_tests {
+    use crate::{
+        behavior::{higher_order::Chain, movement::Dodge},
+        integration_tests::helpers::{TestRunner, TestScenario},
+        strategy::Priority,
+    };
+    use common::prelude::*;
+    use nalgebra::{Point2, Point3, Rotation3};
+    use vec_box::vec_box;
+
+    #[test]
+    #[ignore(note = "this is a slow test, and unlikely to break")]
+    fn all_directions() {
+        let angles = [-3.0, -1.5, 0.0, 1.5, 3.0];
+        let targets = [
+            Point2::new(1000.0, 0.0),
+            Point2::new(0.0, 1000.0),
+            Point2::new(-1000.0, 0.0),
+            Point2::new(0.0, -1000.0),
+        ];
+        for &pitch in &angles {
+            for &roll in &angles {
+                for &target in &targets {
+                    let test = TestRunner::new()
+                        .scenario(TestScenario {
+                            car_loc: Point3::new(0.1, 0.0, 1000.0),
+                            car_rot: Rotation3::from_unreal_angles(pitch, 0.0, roll),
+                            ..Default::default()
+                        })
+                        .behavior(Chain::new(Priority::Idle, vec_box![
+                            Dodge::new().towards(target)
+                        ]))
+                        .run_for_millis(250);
+                    let packet = test.sniff_packet();
+                    let loc = packet.GameCars[0].Physics.loc_2d();
+                    println!("loc = {:?}", loc);
+                    let origin = Point2::origin();
+                    let error = (target - origin).angle_to(&(loc - origin));
+                    assert!(error.abs() < 5.0_f32.to_radians())
+                }
+            }
+        }
     }
 }
