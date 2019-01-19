@@ -51,7 +51,10 @@ impl Behavior for TryChoose {
             .draw(Drawable::print(self.choice_names.as_str(), color::GREEN));
 
         if let Some(chosen_index) = self.chosen_index {
-            return self.choices[chosen_index].execute_old(ctx);
+            let behavior = &mut self.choices[chosen_index];
+            ctx.eeg
+                .draw(Drawable::print(behavior.name(), color::YELLOW));
+            return behavior.execute_old(ctx);
         }
 
         // If we get here, we need to choose a child behavior. This will only happen on
