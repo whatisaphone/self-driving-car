@@ -449,4 +449,32 @@ mod integration_tests {
             assert!(events.contains(&Event::RetreatingSave));
         });
     }
+
+    #[test]
+    fn facing_slightly_away() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(672.2, -2429.41, 93.15),
+                ball_rot: Rotation3::from_unreal_angles(-0.23775424, 1.7249714, -2.5660312),
+                ball_vel: Vector3::new(-54.611, -2040.121, 0.0),
+                car_loc: Point3::new(83.63, -2711.49, 39.01),
+                car_rot: Rotation3::from_unreal_angles(0.39634022, -1.8297973, 0.009631016),
+                car_vel: Vector3::new(-540.47095, -2108.1008, -234.171),
+                ..Default::default()
+            })
+            .starting_boost(0.0)
+            .soccar()
+            .run_for_millis(2000);
+
+        assert!(!test.enemy_has_scored());
+
+        let packet = test.sniff_packet();
+        let ball_loc = packet.GameBall.Physics.loc();
+        println!("ball_loc = {:?}", ball_loc);
+        assert!(ball_loc.x >= 2000.0);
+
+        test.examine_events(|events| {
+            assert!(events.contains(&Event::RetreatingSave));
+        });
+    }
 }

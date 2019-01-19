@@ -52,6 +52,10 @@ impl Behavior for PushToOwnCorner {
             .map(|f| f.t < 5.0)
             .unwrap_or_default();
 
+        if impending_concede_soon {
+            return Action::tail_call(hit_to_safety(ctx));
+        }
+
         let me_intercept =
             naive_ground_intercept_2(&ctx.me().into(), ctx.scenario.ball_prediction(), |ball| {
                 ball.loc.z < Self::MAX_BALL_Z
@@ -88,13 +92,8 @@ impl Behavior for PushToOwnCorner {
 
         match (me_intercept, enemy_shootable_intercept) {
             (_, None) => {
-                if !impending_concede_soon {
-                    ctx.eeg.log(self.name(), "safe for now");
-                    Action::Return
-                } else {
-                    ctx.eeg.log(self.name(), "hitting away from goal");
-                    Action::tail_call(hit_to_safety(ctx))
-                }
+                ctx.eeg.log(self.name(), "safe for now");
+                Action::Return
             }
             (None, _) => {
                 ctx.eeg.log(self.name(), "can't reach ball");
