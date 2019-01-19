@@ -195,10 +195,15 @@ impl Goal {
 
     /// Returns true if the given y value is less than `range.end` uu in front
     /// of the goal.
+    ///
+    /// Possible values for `range`:
+    ///
+    /// - `..400` – 400 uu in front of the goal. Pretty close to being scored
+    ///   on.
+    /// - `..0` – On or behind the goal-line. At least half the ball is
+    ///   shimmering.
+    /// - `..-rl::BALL_RADIUS` – The ball has entered and will never return.
     pub fn is_y_within_range(&self, y: f32, range: RangeTo<f32>) -> bool {
-        // range < 0 would be behind the goal, which we have no use for supporting.
-        assert!(range.end >= 0.0);
-
         if self.center_2d.y < 0.0 {
             y < self.center_2d.y + range.end
         } else {
@@ -209,6 +214,11 @@ impl Goal {
     pub fn ball_is_scored(&self, ball_loc: Point3<f32>) -> bool {
         // This is just an estimate, it doesn't take into account ball radius, etc.
         ball_loc.x.abs() < self.max_x && self.is_y_within_range(ball_loc.y, ..0.0)
+    }
+
+    pub fn ball_is_scored_conservative(&self, ball_loc: Point3<f32>) -> bool {
+        ball_loc.x.abs() < self.max_x - rl::BALL_RADIUS
+            && self.is_y_within_range(ball_loc.y, ..-rl::BALL_RADIUS)
     }
 
     pub fn shot_angle_2d(&self, ball_loc: Point2<f32>) -> f32 {

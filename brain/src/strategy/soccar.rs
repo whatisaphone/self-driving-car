@@ -153,7 +153,7 @@ impl Predicate for UnstoppableScore {
     }
 
     fn evaluate(&mut self, ctx: &mut Context<'_>) -> bool {
-        let impending_score = some_or_else!(ctx.scenario.impending_score(), {
+        let impending_score = some_or_else!(ctx.scenario.impending_score_conservative(), {
             return false;
         });
         let (_enemy, enemy_intercept) = some_or_else!(ctx.scenario.enemy_intercept(), {
