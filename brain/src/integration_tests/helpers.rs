@@ -408,6 +408,9 @@ fn test_thread(
         let input = brain.tick(&field_info, &packet, &mut eeg);
         rlbot.update_player_input(input, 0).unwrap();
         eeg.show(&packet);
+        if let Some(chat) = eeg.quick_chat {
+            rlbot.quick_chat(chat, 0).unwrap();
+        }
     }
 
     // For tidiness, make the cars stop moving when the test is finished.

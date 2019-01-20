@@ -120,8 +120,11 @@ fn bot_loop(rlbot: &rlbot::RLBot, player_index: i32, bot: &mut FormulaNone<'_>) 
     loop {
         let rigid_body_tick = physics.next_flat().unwrap();
         let packet = get_packet_and_inject_rigid_body_tick(&rlbot, rigid_body_tick).unwrap();
-        let input = bot.tick(rigid_body_tick, &packet);
+        let (input, quick_chat) = bot.tick(rigid_body_tick, &packet);
         rlbot.update_player_input(input, player_index).unwrap();
+        if let Some(chat) = quick_chat {
+            rlbot.quick_chat(chat, player_index).unwrap();
+        }
     }
 }
 
@@ -172,7 +175,10 @@ impl<'a> FormulaNone<'a> {
         &mut self,
         rigid_body_tick: rlbot::flat::RigidBodyTick<'_>,
         packet: &rlbot::ffi::LiveDataPacket,
-    ) -> rlbot::ffi::PlayerInput {
+    ) -> (
+        rlbot::ffi::PlayerInput,
+        Option<rlbot::flat::QuickChatSelection>,
+    ) {
         if !packet.GameInfo.RoundActive {
             return Default::default();
         }
@@ -188,6 +194,6 @@ impl<'a> FormulaNone<'a> {
         }
         self.eeg.show(&packet);
 
-        input
+        (input, self.eeg.quick_chat)
     }
 }

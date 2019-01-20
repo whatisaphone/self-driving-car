@@ -268,6 +268,11 @@ impl<N: Real> ExtendUnitVector2<N> for Unit<Vector2<N>> {
 
 pub trait ExtendRLBot {
     fn get_field_info(&self) -> Result<rlbot::ffi::FieldInfo, Box<dyn Error>>;
+    fn quick_chat(
+        &self,
+        selection: rlbot::flat::QuickChatSelection,
+        player_index: i32,
+    ) -> Result<(), ()>;
 }
 
 impl ExtendRLBot for rlbot::RLBot {
@@ -276,4 +281,27 @@ impl ExtendRLBot for rlbot::RLBot {
         self.update_field_info(&mut field_info)?;
         Ok(field_info)
     }
+
+    fn quick_chat(
+        &self,
+        selection: rlbot::flat::QuickChatSelection,
+        player_index: i32,
+    ) -> Result<(), ()> {
+        self.send_quick_chat(build_quick_chat(selection, player_index).finished_data())
+            .map_err(|_| ())
+    }
+}
+
+fn build_quick_chat(
+    selection: rlbot::flat::QuickChatSelection,
+    player_index: i32,
+) -> flatbuffers::FlatBufferBuilder<'static> {
+    let mut builder = flatbuffers::FlatBufferBuilder::new_with_capacity(32);
+    let root = rlbot::flat::QuickChat::create(&mut builder, &rlbot::flat::QuickChatArgs {
+        quickChatSelection: selection,
+        playerIndex: player_index,
+        teamOnly: false,
+    });
+    builder.finish(root, None);
+    builder
 }

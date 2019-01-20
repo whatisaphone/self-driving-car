@@ -9,6 +9,9 @@ pub struct EEG {
     current_packet_time: f32,
     draw_list: DrawList,
     pub events: Option<HashSet<Event>>,
+    // I added quick-chat here only for convenience before a tournament, but it should really be
+    // somewhere else…
+    pub quick_chat: Option<rlbot::flat::QuickChatSelection>,
 }
 
 #[derive(Eq, PartialEq, Hash)]
@@ -36,6 +39,7 @@ impl EEG {
             current_packet_time: 0.0,
             draw_list: DrawList::new(),
             events: None,
+            quick_chat: None,
         }
     }
 
@@ -46,6 +50,23 @@ impl EEG {
 }
 
 impl EEG {
+    /// Call this at the start of each frame.
+    pub fn begin(&mut self, packet: &rlbot::ffi::LiveDataPacket) {
+        self.current_packet_time = packet.GameInfo.TimeSeconds;
+        assert!(self.draw_list.drawables.is_empty());
+        self.quick_chat = None;
+    }
+
+    /// Call this at the end of each frame.
+    pub fn show(&mut self, packet: &rlbot::ffi::LiveDataPacket) {
+        let drawables = mem::replace(&mut self.draw_list.drawables, Vec::new());
+        self.window.draw(packet.clone(), drawables);
+    }
+
+    pub fn quick_chat(&mut self, selection: rlbot::flat::QuickChatSelection) {
+        self.quick_chat = Some(selection);
+    }
+
     pub fn draw(&mut self, drawable: Drawable) {
         self.draw_list.draw(drawable);
     }
@@ -66,10 +87,6 @@ impl EEG {
         self.draw_list.print_value(label, Distance(distance));
     }
 
-    pub fn begin(&mut self, packet: &rlbot::ffi::LiveDataPacket) {
-        self.current_packet_time = packet.GameInfo.TimeSeconds;
-    }
-
     pub fn log(&mut self, tag: &str, message: impl Into<String>) {
         println!(
             "{:>8.3} [{}] {}",
@@ -87,11 +104,6 @@ impl EEG {
         if let Some(ref mut events) = self.events {
             events.insert(event);
         }
-    }
-
-    pub fn show(&mut self, packet: &rlbot::ffi::LiveDataPacket) {
-        let drawables = mem::replace(&mut self.draw_list.drawables, Vec::new());
-        self.window.draw(packet.clone(), drawables);
     }
 }
 

@@ -194,6 +194,7 @@ name = "common"
 version = "0.1.0"
 dependencies = [
  "chip 0.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "flatbuffers 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "nalgebra 0.16.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "rlbot 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
