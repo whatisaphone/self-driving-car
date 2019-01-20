@@ -7,7 +7,7 @@ use crate::{
     plan::telepathy::predict_enemy_hit_direction,
     strategy::{Action, Behavior, Context, Priority},
 };
-use common::prelude::*;
+use common::{kinematics::kinematic_time, prelude::*, rl};
 use nalgebra::{Point2, Vector3};
 use nameof::name_of_type;
 use simulate::linear_interpolate;
@@ -80,7 +80,13 @@ impl Behavior for GetToFlatGround {
 fn jump_down_from_the_wall(ctx: &mut Context<'_>) -> Action {
     let me = ctx.me();
 
-    if me.Physics.vel().z >= 0.0 || me.Physics.loc().z >= 1000.0 {
+    let fall_time = kinematic_time(
+        -me.Physics.loc().z + rl::OCTANE_NEUTRAL_Z,
+        me.Physics.vel().z,
+        rl::GRAVITY,
+    )
+    .unwrap();
+    if fall_time >= 1.5 || me.Physics.loc().z >= 1000.0 {
         // Phase one of the reverse dismount: back up so we don't jump into the sky
         ctx.eeg.draw(Drawable::print("backing up", color::GREEN));
         return Action::Yield(rlbot::ffi::PlayerInput {
@@ -97,7 +103,13 @@ fn jump_down_from_the_wall(ctx: &mut Context<'_>) -> Action {
         // Do nothing briefly. In case we've just landed on the wall in the past few
         // frames, this lets the car's suspension stabilize a bit so we get the full
         // force coming off the wall.
-        inputs.push(Box::new(Yielder::new(Default::default(), 0.1)));
+        inputs.push(Box::new(Yielder::new(
+            rlbot::ffi::PlayerInput {
+                Handbrake: true,
+                ..Default::default()
+            },
+            0.1,
+        )));
         // Press jump.
         inputs.push(Box::new(Yielder::new(
             rlbot::ffi::PlayerInput {
