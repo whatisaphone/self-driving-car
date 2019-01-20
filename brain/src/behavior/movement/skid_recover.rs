@@ -1,6 +1,7 @@
 use crate::{
     behavior::movement::get_to_flat_ground::GetToFlatGround,
     eeg::Drawable,
+    routing::recover::IsSkidding,
     strategy::{Action, Behavior, Context},
 };
 use common::{physics::CAR_LOCAL_FORWARD_AXIS_2D, prelude::*, AngularVelocity};
@@ -22,6 +23,10 @@ impl Behavior for SkidRecover {
         if !GetToFlatGround::on_flat_ground(ctx.me()) {
             ctx.eeg.log(self.name(), "must be on flat ground");
             return Action::Abort;
+        }
+
+        if !IsSkidding.evaluate(&ctx.me().into()) {
+            return Action::Return;
         }
 
         let me = ctx.me();
