@@ -409,7 +409,9 @@ fn test_thread(
         rlbot.update_player_input(input, 0).unwrap();
         eeg.show(&packet);
         if let Some(chat) = eeg.quick_chat {
-            rlbot.quick_chat(chat, 0).unwrap();
+            if let Err(_) = rlbot.quick_chat(chat, 0) {
+                log::warn!("could not quick chat {:?}", chat);
+            }
         }
     }
 
