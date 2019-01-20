@@ -1,6 +1,7 @@
 use crate::{
     behavior::{
         higher_order::Chain,
+        movement::SkidRecover,
         strike::{GroundedHit, GroundedHitAimContext, GroundedHitTarget, GroundedHitTargetAdjust},
     },
     eeg::{color, Drawable, Event},
@@ -31,7 +32,12 @@ impl Behavior for HitToOwnCorner {
     fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
         ctx.eeg.track(Event::HitToOwnCorner);
 
+        let skid_recover_loc = ctx.scenario.ball_prediction().at_time_or_last(0.1).loc;
+
         Action::tail_call(Chain::new(Priority::Strike, vec![
+            // We do want skid recovery. We don't want ResetBehindBall-type stuff. Just single
+            // skids out for now…
+            Box::new(SkidRecover::new(skid_recover_loc.to_2d())),
             Box::new(FollowRoute::new(GroundIntercept::new()).never_recover(true)),
             Box::new(GroundedHit::hit_towards(Self::aim)),
         ]))
