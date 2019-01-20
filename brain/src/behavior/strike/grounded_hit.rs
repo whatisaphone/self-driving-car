@@ -128,7 +128,7 @@ where
         };
         let target = (self.aim)(&mut aim_context)
             .map_err(|_| ctx.eeg.log(self.name(), "error getting aim location"))?;
-        let (target_loc, _target_rot, _jump) = Self::preliminary_target(ctx, &intercept, &target);
+        let (target_loc, _target_rot) = Self::preliminary_target(ctx, &intercept, &target);
         let ball_max_z = JUMP_MAX_Z + (intercept.ball_loc.z - target_loc.z);
 
         // Second pass: Get a more accurate intercept based on how high we need to jump.
@@ -159,7 +159,7 @@ where
         };
         let target = (self.aim)(&mut aim_context)?;
 
-        let (target_loc, target_rot, jump) = Self::preliminary_target(ctx, intercept, &target);
+        let (target_loc, target_rot) = Self::preliminary_target(ctx, intercept, &target);
 
         // TODO: iteratively find contact point which hits the ball towards aim_loc
 
@@ -175,7 +175,8 @@ where
             intercept_time: target.intercept_time,
             target_loc,
             target_rot,
-            jump,
+            jump: target.jump,
+            dodge: target.dodge,
         })
     }
 
@@ -183,7 +184,7 @@ where
         ctx: &mut Context<'_>,
         intercept: &NaiveIntercept,
         target: &GroundedHitTarget,
-    ) -> (Point3<f32>, UnitQuaternion<f32>, bool) {
+    ) -> (Point3<f32>, UnitQuaternion<f32>) {
         // Pitch the nose higher if the target is further away.
         let pitch = linear_interpolate(
             &[1000.0, 5000.0],
@@ -204,7 +205,7 @@ where
             }
             GroundedHitTargetAdjust::StraightOn => naive_target_loc,
         };
-        (target_loc, target_rot, target.jump)
+        (target_loc, target_rot)
     }
 
     #[allow(clippy::if_same_then_else)]
@@ -294,14 +295,17 @@ where
             return Action::Return;
         }
 
-        Action::tail_call(Chain::new(Priority::Strike, vec![
-            Box::new(JumpAndTurn::new(
-                jump_time - 0.05,
-                jump_time,
-                plan.target_rot,
-            )),
-            Box::new(Dodge::new().angle(dodge_angle)),
-        ]))
+        let mut steps = Vec::<Box<dyn Behavior>>::new();
+        steps.push(Box::new(JumpAndTurn::new(
+            jump_time - 0.05,
+            jump_time,
+            plan.target_rot,
+        )));
+        if plan.dodge {
+            steps.push(Box::new(Dodge::new().angle(dodge_angle)));
+        }
+
+        Action::tail_call(Chain::new(Priority::Strike, steps))
     }
 
     fn jump_duration(z: f32) -> f32 {
@@ -351,6 +355,8 @@ pub struct GroundedHitTarget {
     aim_loc: Point2<f32>,
     #[new(value = "true")]
     jump: bool,
+    #[new(value = "true")]
+    dodge: bool,
 }
 
 impl GroundedHitTarget {
@@ -358,6 +364,11 @@ impl GroundedHitTarget {
 
     pub fn jump(mut self, jump: bool) -> Self {
         self.jump = jump;
+        self
+    }
+
+    pub fn dodge(mut self, dodge: bool) -> Self {
+        self.dodge = dodge;
         self
     }
 }
@@ -372,6 +383,7 @@ struct Plan {
     target_loc: Point3<f32>,
     target_rot: UnitQuaternion<f32>,
     jump: bool,
+    dodge: bool,
 }
 
 enum Do {

@@ -127,8 +127,8 @@ fn time_wasting_hit(ctx: &mut GroundedHitAimContext<'_, '_>) -> Result<GroundedH
     };
 
     let aim_loc = WallRayCalculator::calculate(ball_loc, aim_loc);
-
-    if WallRayCalculator::wall_for_point(ctx.game, aim_loc) == Wall::OwnGoal {
+    let aim_wall = WallRayCalculator::wall_for_point(ctx.game, aim_loc);
+    if aim_wall == Wall::OwnGoal {
         ctx.eeg.log(name_of_type!(TepidHit), "refusing to own goal");
         return Err(());
     }
@@ -138,7 +138,8 @@ fn time_wasting_hit(ctx: &mut GroundedHitAimContext<'_, '_>) -> Result<GroundedH
         GroundedHitTargetAdjust::RoughAim,
         aim_loc,
     )
-    .jump(!is_chippable(ctx, aim_loc)))
+    .jump(!is_chippable(ctx, aim_loc))
+    .dodge(should_dodge(ctx, aim_wall)))
 }
 
 fn is_chippable(ctx: &mut GroundedHitAimContext<'_, '_>, aim_loc: Point2<f32>) -> bool {
@@ -161,6 +162,19 @@ fn is_chippable(ctx: &mut GroundedHitAimContext<'_, '_>, aim_loc: Point2<f32>) -
         && ctx.intercept_ball_loc.z < 130.0
         && shot_angle < PI / 4.0
         && goalward_angle < PI / 2.0
+}
+
+fn should_dodge(ctx: &mut GroundedHitAimContext<'_, '_>, aim_wall: Wall) -> bool {
+    // Don't dodge when hitting it into the back wall since that would probably
+    // put us even further out of position.
+    if aim_wall != Wall::EnemyBackWall {
+        return true;
+    }
+    let enemy_goal = ctx.game.enemy_goal();
+    if !enemy_goal.is_y_within_range(ctx.scenario.ball_prediction().start().loc.y, ..1500.0) {
+        return true;
+    }
+    false
 }
 
 #[cfg(test)]
