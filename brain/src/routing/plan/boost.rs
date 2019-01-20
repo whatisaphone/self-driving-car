@@ -98,15 +98,14 @@ impl GetDollar {
         dump: &mut PlanningDump<'_>,
         pickup: &BoostPickup,
     ) -> Result<RoutePlan, RoutePlanError> {
-        let start_forward_axis = ctx.start.forward_axis_2d();
-
         guard!(ctx.start, IsSkidding, RoutePlanError::MustNotBeSkidding {
             recover_target_loc: pickup.loc,
         });
 
+        let travel_axis = (pickup.loc - ctx.start.loc_2d()).to_axis();
         let target_face = self.powerslide_target_face(ctx, pickup);
-        let turn_angle = start_forward_axis.angle_to(&(target_face - pickup.loc).to_axis());
-        if turn_angle.abs() < PI / 6.0 {
+        let turn_angle = travel_axis.angle_to(&(target_face - pickup.loc).to_axis());
+        if turn_angle.abs() < PI / 3.0 {
             let planner = GroundDrive::new(pickup.loc);
             planner.plan(ctx, dump)
         } else {
