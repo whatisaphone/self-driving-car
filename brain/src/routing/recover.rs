@@ -28,16 +28,10 @@ impl RoutePlanError {
                 NotOnFlatGround,
                 GetToFlatGround::new(),
             ))),
-            RoutePlanError::MustNotBeSkidding { recover_target_loc } => {
-                if let Some(b) = check_easy_flip_recover(ctx) {
-                    return Some(b);
-                }
-
-                Some(Box::new(While::new(
-                    IsSkidding,
-                    SkidRecover::new(recover_target_loc),
-                )))
-            }
+            RoutePlanError::MustNotBeSkidding { recover_target_loc } => Some(Box::new(While::new(
+                IsSkidding,
+                SkidRecover::new(recover_target_loc),
+            ))),
             RoutePlanError::UnknownIntercept => {
                 let target_loc = ctx.scenario.ball_prediction().last().loc;
                 let wander = DriveTowards::new(target_loc.to_2d());
