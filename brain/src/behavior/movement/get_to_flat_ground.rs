@@ -92,8 +92,13 @@ fn jump_down_from_the_wall(ctx: &mut Context<'_>) -> Action {
         // `Land` and we'll land on our wheels.
         ctx.eeg
             .log(name_of_type!(GetToFlatGround), "jumping off the wall");
-        let mut inputs = Vec::<Box<dyn Behavior>>::with_capacity(3);
+        let mut inputs = Vec::<Box<dyn Behavior>>::new();
 
+        // Do nothing briefly. In case we've just landed on the wall in the past few
+        // frames, this lets the car's suspension stabilize a bit so we get the full
+        // force coming off the wall.
+        inputs.push(Box::new(Yielder::new(Default::default(), 0.1)));
+        // Press jump.
         inputs.push(Box::new(Yielder::new(
             rlbot::ffi::PlayerInput {
                 Pitch: 1.0,
@@ -102,6 +107,7 @@ fn jump_down_from_the_wall(ctx: &mut Context<'_>) -> Action {
             },
             0.2,
         )));
+        // Release jump.
         inputs.push(Box::new(Yielder::new(
             rlbot::ffi::PlayerInput {
                 Pitch: 1.0,
@@ -110,7 +116,7 @@ fn jump_down_from_the_wall(ctx: &mut Context<'_>) -> Action {
             },
             0.1,
         )));
-
+        // Maybe dodge.
         if let Some(target_loc) = dodge_target(ctx) {
             inputs.push(Box::new(Dodge::new().towards(target_loc)));
         }
