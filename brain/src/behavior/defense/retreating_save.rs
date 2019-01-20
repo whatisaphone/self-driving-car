@@ -78,8 +78,7 @@ impl Behavior for RetreatingSave {
             return self.dodge(ctx);
         }
 
-        let (throttle, boost) = self.calc_drive(ctx, plan.target_loc, plan.target_time);
-        self.drive(ctx, plan.target_loc, throttle, boost)
+        self.drive(ctx, &plan)
     }
 }
 
@@ -111,7 +110,7 @@ impl RetreatingSave {
     }
 
     fn calc_drive(
-        &mut self,
+        &self,
         ctx: &mut Context<'_>,
         target_loc: Point2<f32>,
         target_time: f32,
@@ -163,16 +162,11 @@ impl RetreatingSave {
         (throttle, boost)
     }
 
-    fn drive(
-        &self,
-        ctx: &mut Context<'_>,
-        target_loc: Point2<f32>,
-        throttle: f32,
-        boost: bool,
-    ) -> Action {
+    fn drive(&self, ctx: &mut Context<'_>, plan: &Plan) -> Action {
+        let (throttle, boost) = self.calc_drive(ctx, plan.target_loc, plan.target_time);
         let start_loc = ctx.me().Physics.loc_2d();
         let start_forward_axis = ctx.me().Physics.forward_axis_2d();
-        let theta = start_forward_axis.angle_to(&(target_loc - start_loc));
+        let theta = start_forward_axis.angle_to(&(plan.target_loc - start_loc));
         Action::Yield(rlbot::ffi::PlayerInput {
             Throttle: throttle,
             Steer: (theta * 2.0).max(-1.0).min(1.0),
