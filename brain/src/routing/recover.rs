@@ -44,7 +44,9 @@ impl RoutePlanError {
                 let ball_loc = ctx.scenario.ball_prediction().at_time_or_last(2.5).loc;
                 Some(Box::new(TryChoose::new(Priority::Idle, vec_box![
                     FollowRoute::new(
-                        GroundDrive::new(ball_loc.to_2d()).straight_mode(StraightMode::Fake)
+                        GroundDrive::new(ball_loc.to_2d())
+                            .end_chop(0.5)
+                            .straight_mode(StraightMode::Fake)
                     )
                     .never_recover(true),
                     ResetBehindBall::behind_loc(ball_loc.to_2d(), 1500.0).never_recover(true),
