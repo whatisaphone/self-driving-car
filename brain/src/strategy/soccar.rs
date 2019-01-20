@@ -116,6 +116,10 @@ impl Strategy for Soccar {
         {
             return Some(Box::new(While::new(UnstoppableScore, TurtleSpin::new())));
         }
+        if current.priority() < Priority::Taunt && ScoringVerySoon.evaluate(ctx) {
+            // Maybe do some wacky twists and stuff that might look cool.
+            return Some(Box::new(While::new(ScoringVerySoon, TurtleSpin::new())));
+        }
 
         None
     }
@@ -163,11 +167,29 @@ impl Predicate for UnstoppableScore {
     }
 }
 
+struct ScoringVerySoon;
+
+impl Predicate for ScoringVerySoon {
+    fn name(&self) -> &str {
+        name_of_type!(ScoringVerySoon)
+    }
+
+    fn evaluate(&mut self, ctx: &mut Context<'_>) -> bool {
+        let impending_score = some_or_else!(ctx.scenario.impending_score_conservative(), {
+            return false;
+        });
+        let (_enemy, enemy_intercept) = some_or_else!(ctx.scenario.enemy_intercept(), {
+            return true;
+        });
+        impending_score.t < 0.25 && enemy_intercept.time >= 1.0
+    }
+}
+
 fn in_the_lead(ctx: &mut Context<'_>) -> bool {
     let scores = ctx.packet.match_score();
     let us = scores[ctx.game.team.to_ffi() as usize];
     let them = scores[ctx.game.enemy_team.to_ffi() as usize];
-    us - them > (ctx.packet.GameInfo.GameTimeRemaining / 30.0) as i32
+    us - them >= (ctx.packet.GameInfo.GameTimeRemaining / 60.0) as i32
 }
 
 #[cfg(test)]
