@@ -111,9 +111,11 @@ impl FollowRoute {
         error: RoutePlanError,
         log: impl IntoIterator<Item = String>,
     ) -> Action {
-        for line in log {
+        // You can print the plan trace if necessary for debugging
+        for line in log.into_iter().take(0) {
             ctx.eeg.log(self.name(), line);
         }
+
         ctx.eeg.log(
             self.name(),
             format!("error {:?} from planner {}", error, planner_name),
