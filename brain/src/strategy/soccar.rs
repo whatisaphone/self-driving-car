@@ -51,10 +51,11 @@ impl Strategy for Soccar {
             _ => {}
         }
 
-        if ctx.scenario.panicky_retreat()
+        if ctx.scenario.slightly_panicky_retreat()
             && ctx.scenario.possession() < Scenario::POSSESSION_CONTESTABLE
         {
-            ctx.eeg.log(name_of_type!(Soccar), "panicky_retreat");
+            ctx.eeg
+                .log(name_of_type!(Soccar), "slightly_panicky_retreat");
             return Box::new(Defense::new());
         }
 
@@ -105,6 +106,13 @@ impl Strategy for Soccar {
                     ctx.scenario.possession(),
                 ),
             );
+            return Some(Box::new(Chain::new(Priority::Defense, vec![Box::new(
+                Defense::new(),
+            )])));
+        }
+
+        if current.priority() < Priority::Defense && ctx.scenario.very_panicky_retreat() {
+            ctx.eeg.log(name_of_type!(Soccar), "very_panicky_retreat");
             return Some(Box::new(Chain::new(Priority::Defense, vec![Box::new(
                 Defense::new(),
             )])));

@@ -23,7 +23,8 @@ pub struct Scenario<'a> {
     impending_score_conservative: LazyCell<Option<BallFrame>>,
     impending_concede: LazyCell<Option<BallFrame>>,
     enemy_shoot_score_seconds: LazyCell<f32>,
-    panicky_retreat: LazyCell<bool>,
+    slightly_panicky_retreat: LazyCell<bool>,
+    very_panicky_retreat: LazyCell<bool>,
 }
 
 impl<'a> Scenario<'a> {
@@ -47,7 +48,8 @@ impl<'a> Scenario<'a> {
             impending_concede: LazyCell::new(),
             impending_score_conservative: LazyCell::new(),
             enemy_shoot_score_seconds: LazyCell::new(),
-            panicky_retreat: LazyCell::new(),
+            slightly_panicky_retreat: LazyCell::new(),
+            very_panicky_retreat: LazyCell::new(),
         }
     }
 
@@ -177,9 +179,10 @@ impl<'a> Scenario<'a> {
     }
 
     /// Is the ball and everyone around it moving towards our goal?
-    pub fn panicky_retreat(&self) -> bool {
-        *self.panicky_retreat.borrow_with(|| {
-            let goal_loc = self.game.own_goal().center_2d;
+    pub fn slightly_panicky_retreat(&self) -> bool {
+        *self.slightly_panicky_retreat.borrow_with(|| {
+            let goal = self.game.own_goal();
+            let goal_loc = goal.center_2d;
             let ball_loc = self.packet.GameBall.Physics.loc_2d();
             let ball_vel = self.packet.GameBall.Physics.vel_2d();
             let me_loc = self.game.me().Physics.loc_2d();
@@ -194,14 +197,43 @@ impl<'a> Scenario<'a> {
             let me_retreating = me_vel.dot(&goal_to_ball_axis);
             let enemy_charging = enemy_vel.dot(&goal_to_ball_axis);
             let ball_encroaching = ball_vel.dot(&goal_to_ball_axis);
-            let goalside = (ball_loc - me_loc).dot(&goal_to_ball_axis);
+            let goalside_of_ball = (ball_loc - me_loc).dot(&goal_to_ball_axis);
             let ball_is_awkward = me_forward_axis.angle_to(&(ball_loc - me_loc)).abs() >= PI / 2.0;
 
-            me_retreating < -500.0
+            !goal.is_y_within_range(me_loc.y, ..2000.0)
+                && me_retreating < -500.0
                 && enemy_charging < -200.0
                 && ball_encroaching < -200.0
                 && enemy_charging + ball_encroaching < -800.0
-                && goalside < 2000.0
+                && goalside_of_ball < 2000.0
+                && ball_is_awkward
+        })
+    }
+
+    /// Is the ball and everyone around it moving towards our goal?
+    pub fn very_panicky_retreat(&self) -> bool {
+        *self.very_panicky_retreat.borrow_with(|| {
+            let goal = self.game.own_goal();
+            let goal_loc = goal.center_2d;
+            let ball_loc = self.packet.GameBall.Physics.loc_2d();
+            let ball_vel = self.packet.GameBall.Physics.vel_2d();
+            let me_loc = self.game.me().Physics.loc_2d();
+            let me_forward_axis = self.game.me().Physics.forward_axis_2d();
+            let enemy_vel = match self.primary_enemy() {
+                Some(e) => e.Physics.vel_2d(),
+                None => Vector2::zeros(), // 🤔
+            };
+
+            let goal_to_ball_axis = (ball_loc - goal_loc).to_axis();
+            let enemy_charging = enemy_vel.dot(&goal_to_ball_axis);
+            let ball_encroaching = ball_vel.dot(&goal_to_ball_axis);
+            let goalside_of_ball = (ball_loc - me_loc).dot(&goal_to_ball_axis);
+            let ball_is_awkward = me_forward_axis.angle_to(&(ball_loc - me_loc)).abs() >= PI / 2.0;
+
+            !goal.is_y_within_range(me_loc.y, ..2000.0)
+                && enemy_charging < -800.0
+                && ball_encroaching < -800.0
+                && goalside_of_ball < 2000.0
                 && ball_is_awkward
         })
     }
