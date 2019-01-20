@@ -9,12 +9,12 @@ use crate::{
 };
 use derive_new::new;
 
-pub fn segment_plan_tester(plan: impl SegmentPlan + Clone + 'static) -> impl Behavior {
-    FollowRoute::new(CookedPlanner::new(plan))
+pub fn route_planner_tester(planner: impl RoutePlanner + 'static) -> impl Behavior {
+    FollowRoute::new(planner)
 }
 
 #[derive(new, Clone)]
-struct CookedPlanner<P>
+pub struct CookedPlanner<P>
 where
     P: SegmentPlan + Clone + 'static,
 {

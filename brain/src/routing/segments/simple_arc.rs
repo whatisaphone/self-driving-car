@@ -216,7 +216,10 @@ impl SegmentRunner for SimpleArcRunner {
 mod integration_tests {
     use crate::{
         integration_tests::helpers::{TestRunner, TestScenario},
-        routing::{segments::SimpleArc, test::segment_plan_tester},
+        routing::{
+            segments::SimpleArc,
+            test::{route_planner_tester, CookedPlanner},
+        },
     };
     use nalgebra::{Point2, Point3, Vector2, Vector3};
 
@@ -229,7 +232,7 @@ mod integration_tests {
                 car_vel: Vector3::new(100.0, 0.0, 0.0),
                 ..Default::default()
             })
-            .behavior(segment_plan_tester(
+            .behavior(route_planner_tester(CookedPlanner::new(
                 SimpleArc::new(
                     Point2::origin(),
                     1000.0,
@@ -240,7 +243,7 @@ mod integration_tests {
                 )
                 .ok()
                 .unwrap(),
-            ))
+            )))
             .run_for_millis(10_000);
     }
 }
