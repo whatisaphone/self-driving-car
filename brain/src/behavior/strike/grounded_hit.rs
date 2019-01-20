@@ -93,7 +93,7 @@ where
 
         match self.estimate_approach(ctx, &plan) {
             Do::Drive(throttle, boost) => self.drive(ctx, &plan, throttle, boost),
-            Do::Jump => self.jump(ctx, &plan),
+            Do::Jump => self.jump(&plan),
         }
     }
 }
@@ -275,21 +275,9 @@ where
         })
     }
 
-    fn jump(&self, ctx: &mut Context<'_>, plan: &Plan) -> Action {
+    fn jump(&self, plan: &Plan) -> Action {
         // Simulate the jump to predict our exact location at the peak.
         let jump_time = Self::jump_duration(plan.target_loc.z);
-
-        let dodge_loc = ctx.me().Physics.loc_2d() + ctx.me().Physics.vel_2d() * jump_time;
-        // If we're on a slanted wall, we're pretty much screwed, but try to compensate
-        // anyway.
-        let dodge_loc = dodge_loc
-            + ctx.me().Physics.roof_axis().unwrap().to_2d()
-                * (plan.target_loc.z - rl::OCTANE_NEUTRAL_Z);
-
-        let ball = ctx.scenario.ball_prediction().at_time(jump_time).unwrap();
-
-        let me_forward = ctx.me().Physics.forward_axis_2d();
-        let dodge_angle = me_forward.rotation_to(&(ball.loc.to_2d() - dodge_loc).to_axis());
 
         if !plan.jump {
             return Action::Return;
@@ -302,7 +290,7 @@ where
             plan.target_rot,
         )));
         if plan.dodge {
-            steps.push(Box::new(Dodge::new().angle(dodge_angle)));
+            steps.push(Box::new(Dodge::new().towards_ball()));
         }
 
         Action::tail_call(Chain::new(Priority::Strike, steps))

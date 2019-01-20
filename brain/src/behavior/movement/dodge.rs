@@ -14,6 +14,7 @@ pub struct Dodge {
 enum Direction {
     Angle(UnitComplex<f32>),
     Towards(Point2<f32>),
+    TowardsBall,
 }
 
 impl Dodge {
@@ -24,6 +25,7 @@ impl Dodge {
     }
 
     /// The angle of the dodge, where 0° means straight forward.
+    #[allow(dead_code)]
     pub fn angle(mut self, angle: UnitComplex<f32>) -> Self {
         self.direction = Direction::Angle(angle);
         self
@@ -31,6 +33,11 @@ impl Dodge {
 
     pub fn towards(mut self, target_loc: Point2<f32>) -> Self {
         self.direction = Direction::Towards(target_loc);
+        self
+    }
+
+    pub fn towards_ball(mut self) -> Self {
+        self.direction = Direction::TowardsBall;
         self
     }
 }
@@ -49,6 +56,7 @@ impl Behavior for Dodge {
         let (pitch, yaw) = match self.direction {
             Direction::Angle(angle) => (-angle.cos_angle(), angle.sin_angle()),
             Direction::Towards(target_loc) => towards(ctx.me(), target_loc),
+            Direction::TowardsBall => towards(ctx.me(), ctx.packet.GameBall.Physics.loc_2d()),
         };
 
         Action::tail_call(Chain::new(self.priority(), vec_box![
