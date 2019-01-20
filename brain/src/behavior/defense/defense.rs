@@ -26,6 +26,7 @@ impl Defense {
         let goal = ctx.game.own_goal();
         let goal_loc = goal.center_2d;
         let me_loc = ctx.me().Physics.loc_2d();
+        let me_forward_axis = ctx.me().Physics.forward_axis_2d();
         let ball_loc = match ctx.scenario.me_intercept() {
             Some(i) => i.ball_loc.to_2d(),
             None => ctx.scenario.ball_prediction().last().loc.to_2d(),
@@ -34,6 +35,11 @@ impl Defense {
         let panic_cutoff = PanicDefense::rush_y_cutoff(ctx).max(500.0);
         if goal.is_y_within_range(me_loc.y, ..panic_cutoff) {
             return true;
+        }
+
+        if me_forward_axis.angle_to(&(goal_loc - me_loc)).abs() < PI / 3.0 {
+            // Orientation is important too. Go back and turn around.
+            return false;
         }
 
         // Project our location on a line drawn from the goal to the ball.
