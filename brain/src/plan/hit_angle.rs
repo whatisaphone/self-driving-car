@@ -22,3 +22,16 @@ pub fn feasible_hit_angle_away(
     let adjust = UnitComplex::new(max_angle_adjust * -avoid.signum());
     ball_loc + adjust * (ball_loc - car_loc)
 }
+
+/// Rotate `mobile` around `center` as far as possible towards `ideal` without
+/// exceeding `max_angle_diff`.
+pub fn feasible_angle_near(
+    center: Point2<f32>,
+    mobile: Point2<f32>,
+    ideal: Point2<f32>,
+    max_angle_diff: f32,
+) -> Point2<f32> {
+    let turn = (mobile - center).angle_to(&(ideal - center));
+    let adjust = UnitComplex::new(turn.max(-max_angle_diff).min(max_angle_diff));
+    center + adjust * (mobile - center)
+}

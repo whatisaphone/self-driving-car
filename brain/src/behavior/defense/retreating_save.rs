@@ -1,7 +1,7 @@
 use crate::{
     behavior::movement::{GetToFlatGround, QuickJumpAndDodge, Yielder},
     eeg::{color, Drawable, Event},
-    plan::hit_angle::feasible_hit_angle_away,
+    plan::hit_angle::feasible_angle_near,
     predict::naive_ground_intercept_2,
     routing::models::CarState,
     sim::{SimGroundDrive, SimJump},
@@ -11,6 +11,7 @@ use crate::{
 use common::{prelude::*, Distance};
 use nalgebra::{Point2, Point3};
 use nameof::name_of_type;
+use simulate::linear_interpolate;
 use std::f32::consts::PI;
 
 pub struct RetreatingSave;
@@ -73,7 +74,7 @@ impl Behavior for RetreatingSave {
         ));
 
         let (ball_loc, car) = self.simulate_jump(ctx);
-        if (ball_loc.to_2d() - car.loc_2d()).norm() < 200.0 {
+        if (ball_loc.to_2d() - car.loc_2d()).norm() < 220.0 {
             ctx.eeg.log(self.name(), "we are close enough");
             return self.dodge(ctx);
         }
@@ -86,45 +87,56 @@ impl RetreatingSave {
     fn intercept(&self, ctx: &mut Context<'_>) -> Option<Plan> {
         let own_goal = ctx.game.own_goal();
 
+        let danger = {
+            let ball_loc = ctx.packet.GameBall.Physics.loc_2d();
+            let ball_vel = ctx.packet.GameBall.Physics.vel_2d();
+            WallRayCalculator::calculate(ball_loc, ball_loc + ball_vel)
+        };
+
         let car_loc = ctx.me().Physics.loc_2d();
         let car_forward_axis = ctx.me().Physics.forward_axis_2d();
 
         let intercept =
             naive_ground_intercept_2(&ctx.me().into(), ctx.scenario.ball_prediction(), |ball| {
+                let me_to_ball = car_loc - ball.loc.to_2d();
                 let drive_angle = car_forward_axis.angle_to(&(ball.loc.to_2d() - car_loc));
+                let acceptable_drive_angle =
+                    linear_interpolate(&[500.0, 2000.0], &[PI / 6.0, PI / 2.0], me_to_ball.norm());
 
-                drive_angle.abs() < PI / 6.0
+                drive_angle.abs() < acceptable_drive_angle
                     && ball.loc.z < Self::MAX_BALL_Z
                     && !own_goal.ball_is_scored(ball.loc)
             })?;
 
-        let ball_loc = intercept.ball_loc.to_2d();
+        let intercept_ball_loc = intercept.ball_loc.to_2d();
 
-        let aim_loc = feasible_hit_angle_away(ball_loc, car_loc, own_goal.center_2d, PI / 6.0);
-        let target_loc = ball_loc + (ball_loc - aim_loc).normalize() * 200.0;
+        // Clamp to a convenient blocking angle given our current location.
+        let target_loc = feasible_angle_near(intercept_ball_loc, car_loc, danger, PI / 6.0);
+        // If the convenient angle is not blocking enough of the danger point, force a
+        // less convenient angle.
+        let target_loc =
+            feasible_angle_near(intercept_ball_loc, own_goal.center_2d, target_loc, PI / 6.0);
+        // Target a fixed distance away from the ball.
+        let target_loc = intercept_ball_loc + (target_loc - intercept_ball_loc).normalize() * 200.0;
         Some(Plan {
             intercept_ball_loc: intercept.ball_loc,
             target_loc,
+            target_steer_loc: target_loc,
             target_time: intercept.time,
         })
     }
 
-    fn calc_drive(
-        &self,
-        ctx: &mut Context<'_>,
-        target_loc: Point2<f32>,
-        target_time: f32,
-    ) -> (f32, bool) {
-        let drive_time = target_time - Self::JUMP_TIME;
+    fn calc_drive(&self, ctx: &mut Context<'_>, plan: &Plan) -> (f32, bool) {
+        let drive_time = plan.target_time - Self::JUMP_TIME;
         if drive_time < 0.0 {
             // Sit tight and wait for the ball to come to us.
             return (-1.0, false);
         }
 
-        let drive = SimGroundDrive::new(target_loc);
+        let drive = SimGroundDrive::new(plan.target_loc);
         let jump = SimJump;
 
-        let axis = (target_loc - ctx.me().Physics.loc_2d()).to_axis();
+        let axis = (plan.target_steer_loc - ctx.me().Physics.loc_2d()).to_axis();
 
         let calc_offset = |throttle, boost| {
             let state = ctx.me().into();
@@ -132,7 +144,7 @@ impl RetreatingSave {
             let state = jump.simulate(&state, Self::JUMP_TIME, &state.rot);
 
             // Return the distance ahead of the target location.
-            (state.loc_2d() - target_loc).dot(&axis)
+            (state.loc_2d() - plan.target_loc).dot(&axis)
         };
 
         let coast_offset = calc_offset(0.0, false);
@@ -151,9 +163,9 @@ impl RetreatingSave {
             (1.0, true)
         };
 
-        ctx.eeg.print_value("target", target_loc);
+        ctx.eeg.print_value("target", plan.target_loc);
         ctx.eeg.print_time("drive_time", drive_time);
-        ctx.eeg.print_time("target_time", target_time);
+        ctx.eeg.print_time("target_time", plan.target_time);
         ctx.eeg.print_value("coast_offset", Distance(coast_offset));
         ctx.eeg
             .print_value("throttle_offset", Distance(throttle_offset));
@@ -163,10 +175,10 @@ impl RetreatingSave {
     }
 
     fn drive(&self, ctx: &mut Context<'_>, plan: &Plan) -> Action {
-        let (throttle, boost) = self.calc_drive(ctx, plan.target_loc, plan.target_time);
+        let (throttle, boost) = self.calc_drive(ctx, plan);
         let start_loc = ctx.me().Physics.loc_2d();
         let start_forward_axis = ctx.me().Physics.forward_axis_2d();
-        let theta = start_forward_axis.angle_to(&(plan.target_loc - start_loc));
+        let theta = start_forward_axis.angle_to(&(plan.target_steer_loc - start_loc));
         Action::Yield(rlbot::ffi::PlayerInput {
             Throttle: throttle,
             Steer: (theta * 2.0).max(-1.0).min(1.0),
@@ -219,6 +231,7 @@ impl RetreatingSave {
 struct Plan {
     intercept_ball_loc: Point3<f32>,
     target_loc: Point2<f32>,
+    target_steer_loc: Point2<f32>,
     target_time: f32,
 }
 
@@ -488,14 +501,34 @@ mod integration_tests {
             })
             .starting_boost(18.0)
             .soccar()
-            .run_for_millis(2000);
+            .run_for_millis(3000);
 
         assert!(!test.enemy_has_scored());
 
         let packet = test.sniff_packet();
         let ball_loc = packet.GameBall.Physics.loc();
         println!("ball_loc = {:?}", ball_loc);
-        assert!(ball_loc.x >= 1500.0);
+        assert!((ball_loc.to_2d() - SOCCAR_GOAL_BLUE.center_2d).norm() >= 2000.0);
+
+        test.examine_events(|events| {
+            assert!(events.contains(&Event::RetreatingSave));
+        });
+    }
+
+    #[test]
+    fn slow_dribble_behind_us() {
+        let test = TestRunner::new()
+            .one_v_one(&*recordings::SLOW_DRIBBLE_BEHIND_US, 154.0)
+            .starting_boost(70.0)
+            .soccar()
+            .run_for_millis(4000);
+
+        assert!(!test.enemy_has_scored());
+
+        let packet = test.sniff_packet();
+        let ball_loc = packet.GameBall.Physics.loc();
+        println!("ball_loc = {:?}", ball_loc);
+        assert!((ball_loc.to_2d() - SOCCAR_GOAL_BLUE.center_2d).norm() >= 2000.0);
 
         test.examine_events(|events| {
             assert!(events.contains(&Event::RetreatingSave));
