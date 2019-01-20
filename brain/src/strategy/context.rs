@@ -2,6 +2,7 @@ use crate::{
     eeg::EEG,
     strategy::{game::Game, scenario::Scenario, Team},
 };
+use common::prelude::*;
 
 pub struct Context<'a> {
     pub packet: &'a rlbot::ffi::LiveDataPacket,
@@ -47,6 +48,16 @@ impl<'a> Context<'a> {
             scenario: &self.scenario,
         };
         (ctx, self.eeg)
+    }
+
+    pub fn quick_chat(&mut self, probability: f32, choices: &[rlbot::flat::QuickChatSelection]) {
+        // Use physics data to keep things deterministic :)
+        let random1 = self.me().Physics.loc_2d().x.abs().fract();
+        let random2 = self.me().Physics.loc_2d().y.abs().fract();
+        if random1 < probability {
+            let choice = choices[(random2 * choices.len() as f32) as usize];
+            self.eeg.quick_chat(choice);
+        }
     }
 }
 

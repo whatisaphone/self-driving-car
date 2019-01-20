@@ -10,7 +10,10 @@ use nameof::name_of_type;
 use std::f32::consts::PI;
 
 #[derive(new)]
-pub struct Land;
+pub struct Land {
+    #[new(value = "false")]
+    chatted: bool,
+}
 
 impl Behavior for Land {
     fn name(&self) -> &str {
@@ -22,6 +25,15 @@ impl Behavior for Land {
 
         if me.OnGround {
             return Action::Return;
+        }
+
+        if !self.chatted {
+            ctx.quick_chat(0.01, &[
+                rlbot::flat::QuickChatSelection::Reactions_Whew,
+                rlbot::flat::QuickChatSelection::Reactions_Okay,
+                rlbot::flat::QuickChatSelection::PostGame_Gg,
+            ]);
+            self.chatted = true;
         }
 
         if me.Physics.ang_vel().norm() >= 5.25 {

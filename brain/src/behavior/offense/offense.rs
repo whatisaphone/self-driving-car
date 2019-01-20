@@ -31,6 +31,9 @@ impl Behavior for Offense {
 
         if can_we_shoot(ctx) {
             ctx.eeg.log(self.name(), "taking the shot!");
+            ctx.quick_chat(0.1, &[
+                rlbot::flat::QuickChatSelection::Information_Incoming,
+            ]);
             return Action::tail_call(Shoot::new());
         }
 
@@ -40,13 +43,22 @@ impl Behavior for Offense {
         // TODO: otherwise drive to a point where me.y < ball.y, then slam the ball
         // sideways
 
-        return_some!(slow_play(ctx));
+        if let Some(action) = slow_play(ctx) {
+            ctx.quick_chat(0.01, &[rlbot::flat::QuickChatSelection::Information_IGotIt]);
+            return action;
+        }
 
         if let Some(b) = get_boost(ctx) {
+            ctx.quick_chat(0.1, &[
+                rlbot::flat::QuickChatSelection::Information_NeedBoost,
+            ]);
             return Action::TailCall(b);
         }
 
-        return_some!(poor_angle_swing_around(ctx));
+        if let Some(action) = poor_angle_swing_around(ctx) {
+            ctx.quick_chat(0.01, &[rlbot::flat::QuickChatSelection::Information_IGotIt]);
+            return action;
+        }
 
         ctx.eeg
             .log(self.name(), "no good hit; going for a tepid hit");

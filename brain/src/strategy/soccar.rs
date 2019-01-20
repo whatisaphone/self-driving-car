@@ -114,11 +114,13 @@ impl Strategy for Soccar {
             && UnstoppableScore.evaluate(ctx)
             && in_the_lead(ctx)
         {
-            return Some(Box::new(While::new(UnstoppableScore, TurtleSpin::new())));
+            let spin = TurtleSpin::new().quick_chat_probability(0.75);
+            return Some(Box::new(While::new(UnstoppableScore, spin)));
         }
         if current.priority() < Priority::Taunt && ScoringVerySoon.evaluate(ctx) {
             // Maybe do some wacky twists and stuff that might look cool.
-            return Some(Box::new(While::new(ScoringVerySoon, TurtleSpin::new())));
+            let spin = TurtleSpin::new();
+            return Some(Box::new(While::new(ScoringVerySoon, spin)));
         }
 
         None

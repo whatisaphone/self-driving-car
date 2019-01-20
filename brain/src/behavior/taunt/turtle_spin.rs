@@ -9,14 +9,23 @@ use nameof::name_of_type;
 use std::f32::consts::PI;
 
 pub struct TurtleSpin {
+    quick_chat_probability: f32,
+    has_chatted: bool,
     has_oriented: bool,
 }
 
 impl TurtleSpin {
     pub fn new() -> Self {
         Self {
+            quick_chat_probability: 0.0,
+            has_chatted: false,
             has_oriented: false,
         }
+    }
+
+    pub fn quick_chat_probability(mut self, quick_chat_probability: f32) -> Self {
+        self.quick_chat_probability = quick_chat_probability;
+        self
     }
 }
 
@@ -30,6 +39,34 @@ impl Behavior for TurtleSpin {
     }
 
     fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
+        if !self.has_chatted {
+            ctx.quick_chat(self.quick_chat_probability, &[
+                rlbot::flat::QuickChatSelection::Compliments_WhatAPlay,
+                rlbot::flat::QuickChatSelection::Reactions_OMG,
+                rlbot::flat::QuickChatSelection::Reactions_Wow,
+                rlbot::flat::QuickChatSelection::Reactions_CloseOne,
+                rlbot::flat::QuickChatSelection::Reactions_NoWay,
+                rlbot::flat::QuickChatSelection::Reactions_HolyCow,
+                rlbot::flat::QuickChatSelection::Reactions_Whew,
+                rlbot::flat::QuickChatSelection::Reactions_Siiiick,
+                rlbot::flat::QuickChatSelection::Reactions_Savage,
+                rlbot::flat::QuickChatSelection::Apologies_NoProblem,
+                rlbot::flat::QuickChatSelection::Apologies_Sorry,
+                rlbot::flat::QuickChatSelection::Apologies_MyBad,
+                rlbot::flat::QuickChatSelection::Apologies_Oops,
+                rlbot::flat::QuickChatSelection::Apologies_MyFault,
+                rlbot::flat::QuickChatSelection::PostGame_Gg,
+                rlbot::flat::QuickChatSelection::PostGame_WellPlayed,
+                rlbot::flat::QuickChatSelection::PostGame_ThatWasFun,
+                rlbot::flat::QuickChatSelection::PostGame_Rematch,
+                rlbot::flat::QuickChatSelection::PostGame_WhatAGame,
+                rlbot::flat::QuickChatSelection::PostGame_NiceMoves,
+                rlbot::flat::QuickChatSelection::PostGame_EverybodyDance,
+                rlbot::flat::QuickChatSelection::Custom_Useful_Faking,
+            ]);
+            self.has_chatted = true;
+        }
+
         if ctx.me().OnGround {
             return Action::tail_call(
                 Yielder::new(

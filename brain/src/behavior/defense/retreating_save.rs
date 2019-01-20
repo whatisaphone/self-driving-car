@@ -14,7 +14,9 @@ use nameof::name_of_type;
 use simulate::linear_interpolate;
 use std::f32::consts::PI;
 
-pub struct RetreatingSave;
+pub struct RetreatingSave {
+    chatted: bool,
+}
 
 impl RetreatingSave {
     const MAX_BALL_Z: f32 = 150.0;
@@ -22,7 +24,7 @@ impl RetreatingSave {
     const BALL_Z_FOR_DODGE: f32 = 120.0;
 
     pub fn new() -> Self {
-        Self
+        Self { chatted: false }
     }
 
     fn applicable(ctx: &mut Context<'_>) -> Result<(), &'static str> {
@@ -84,6 +86,17 @@ impl Behavior for RetreatingSave {
             ctx.eeg.log(self.name(), "no intercept");
             return Action::Abort;
         });
+
+        if !self.chatted {
+            ctx.quick_chat(0.01, &[
+                rlbot::flat::QuickChatSelection::Information_TakeTheShot,
+                rlbot::flat::QuickChatSelection::Information_Defending,
+                rlbot::flat::QuickChatSelection::Information_GoForIt,
+                rlbot::flat::QuickChatSelection::Information_InPosition,
+                rlbot::flat::QuickChatSelection::Compliments_GreatPass,
+            ]);
+            self.chatted = true;
+        }
 
         ctx.eeg.track(Event::RetreatingSave);
         ctx.eeg.draw(Drawable::ghost_ball(plan.intercept_ball_loc));

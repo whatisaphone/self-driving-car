@@ -66,6 +66,8 @@ impl Behavior for Kickoff {
             Box::new(GroundIntercept::new().allow_dodging(false))
         };
 
+        ctx.quick_chat(1.0, &[rlbot::flat::QuickChatSelection::Information_IGotIt]);
+
         Action::tail_call(Chain::new(Priority::Idle, vec![
             Box::new(FollowRoute::new_boxed(approach)),
             Box::new(KickoffStrike::new()),

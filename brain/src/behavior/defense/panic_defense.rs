@@ -121,6 +121,15 @@ impl PanicDefense {
         let me = ctx.me();
 
         if let Phase::Start = self.phase {
+            ctx.quick_chat(0.01, &[
+                rlbot::flat::QuickChatSelection::Reactions_OMG,
+                rlbot::flat::QuickChatSelection::Reactions_Noooo,
+                rlbot::flat::QuickChatSelection::Apologies_Cursing,
+                rlbot::flat::QuickChatSelection::Custom_Toxic_WasteCPU,
+                rlbot::flat::QuickChatSelection::Custom_Toxic_DeAlloc,
+                rlbot::flat::QuickChatSelection::Custom_Toxic_CatchVirus,
+            ]);
+
             let aim_hint = calc_aim_hint(ctx);
             let blitz_loc = Self::blitz_loc(ctx, aim_hint);
             return Some(Phase::Rush {
