@@ -9,6 +9,7 @@ use vec_box::vec_box;
 
 pub struct Dodge {
     direction: Direction,
+    follow_through_time: f32,
 }
 
 enum Direction {
@@ -21,6 +22,7 @@ impl Dodge {
     pub fn new() -> Self {
         Self {
             direction: Direction::Angle(UnitComplex::identity()),
+            follow_through_time: 0.45,
         }
     }
 
@@ -38,6 +40,11 @@ impl Dodge {
 
     pub fn towards_ball(mut self) -> Self {
         self.direction = Direction::TowardsBall;
+        self
+    }
+
+    pub fn follow_through_time(mut self, follow_through_time: f32) -> Self {
+        self.follow_through_time = follow_through_time;
         self
     }
 }
@@ -71,7 +78,7 @@ impl Behavior for Dodge {
                 0.05,
             ),
             // Follow-through
-            Yielder::new(rlbot::ffi::PlayerInput::default(), 0.45),
+            Yielder::new(rlbot::ffi::PlayerInput::default(), self.follow_through_time),
         ]))
     }
 }

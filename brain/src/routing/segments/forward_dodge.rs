@@ -1,5 +1,8 @@
 use crate::{
-    behavior::{higher_order::Chain, movement::Yielder},
+    behavior::{
+        higher_order::Chain,
+        movement::{Dodge, Yielder},
+    },
     eeg::{color, Drawable},
     routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner},
     strategy::{Action, Behavior, Context, Priority},
@@ -76,14 +79,11 @@ impl ForwardDodgeRunner {
                 },
                 plan.dodge.wait_duration,
             )),
-            Box::new(Yielder::new(
-                rlbot::ffi::PlayerInput {
-                    Pitch: -1.0,
-                    Jump: true,
-                    ..Default::default()
-                },
-                6.0 / 120.0,
-            )),
+            Box::new(
+                Dodge::new()
+                    .towards(plan.end().loc.to_2d())
+                    .follow_through_time(0.0),
+            ),
             Box::new(Yielder::new(
                 rlbot::ffi::PlayerInput {
                     ..Default::default()
