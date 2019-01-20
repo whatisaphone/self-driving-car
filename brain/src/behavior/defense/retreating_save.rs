@@ -21,7 +21,14 @@ impl RetreatingSave {
     const JUMP_TIME: f32 = 0.1;
     const BALL_Z_FOR_DODGE: f32 = 120.0;
 
+    pub fn new() -> Self {
+        Self
+    }
+
     fn applicable(ctx: &mut Context<'_>) -> Result<(), &'static str> {
+        if !Self::goalside(ctx) {
+            return Err("not goalside");
+        }
         if ctx.scenario.impending_concede().map(|b| b.t < 5.0) == Some(true) {
             ctx.eeg.draw(Drawable::print("concede", color::GREEN));
             return Ok(());
@@ -40,8 +47,20 @@ impl RetreatingSave {
         Err("no impending doom")
     }
 
-    pub fn new() -> Self {
-        Self
+    /// Returns `true` if we're between the ball and our goal.
+    fn goalside(ctx: &mut Context<'_>) -> bool {
+        let goal_loc = ctx.game.own_goal().center_2d;
+        let ball_loc = ctx.packet.GameBall.Physics.loc_2d();
+        let me_loc = ctx.me().Physics.loc_2d();
+
+        if ctx.game.own_goal().is_y_within_range(me_loc.y, ..0.0) {
+            return true;
+        }
+
+        let axis = (ball_loc - goal_loc).to_axis();
+        let ball_dist = (ball_loc - goal_loc).dot(&axis);
+        let me_dist = (me_loc - goal_loc).dot(&axis);
+        me_dist < ball_dist + 500.0
     }
 }
 
