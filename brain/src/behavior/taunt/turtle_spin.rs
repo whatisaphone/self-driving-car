@@ -9,13 +9,13 @@ use nameof::name_of_type;
 use std::f32::consts::PI;
 
 pub struct TurtleSpin {
-    has_been_upside_down: bool,
+    has_oriented: bool,
 }
 
 impl TurtleSpin {
     pub fn new() -> Self {
         Self {
-            has_been_upside_down: false,
+            has_oriented: false,
         }
     }
 }
@@ -45,22 +45,12 @@ impl Behavior for TurtleSpin {
             );
         }
 
-        if !self.has_been_upside_down && should_air_roll_upside_down(ctx) {
-            let (pitch, yaw, roll) = get_pitch_yaw_roll(
-                ctx.me(),
-                ctx.me().Physics.forward_axis(),
-                -Vector3::z_axis(),
-            );
-            return Action::Yield(rlbot::ffi::PlayerInput {
-                Pitch: pitch,
-                Yaw: yaw,
-                Roll: roll,
-                Boost: ctx.me().Boost > 0,
-                ..Default::default()
-            });
+        if !self.has_oriented {
+            match self.rotate_self(ctx) {
+                Some(action) => return action,
+                None => self.has_oriented = true,
+            }
         }
-
-        self.has_been_upside_down = true;
 
         if !ctx.me().DoubleJumped {
             return Action::Yield(rlbot::ffi::PlayerInput {
@@ -74,6 +64,30 @@ impl Behavior for TurtleSpin {
             Jump: !ctx.me().DoubleJumped,
             ..Default::default()
         })
+    }
+}
+
+impl TurtleSpin {
+    fn rotate_self(&self, ctx: &mut Context<'_>) -> Option<Action> {
+        let me_forward = ctx.me().Physics.forward_axis();
+
+        if me_forward.angle_to(&Vector3::z_axis()).abs() < PI / 4.0 && ctx.me().Boost > 50 {
+            // I believe I can fly
+            return None;
+        }
+
+        if should_air_roll_upside_down(ctx) {
+            let (pitch, yaw, _roll) = get_pitch_yaw_roll(ctx.me(), me_forward, -Vector3::z_axis());
+            return Some(Action::Yield(rlbot::ffi::PlayerInput {
+                Pitch: pitch,
+                Yaw: yaw,
+                Roll: 1.0,
+                Boost: ctx.me().Boost > 0,
+                ..Default::default()
+            }));
+        }
+
+        None
     }
 }
 
