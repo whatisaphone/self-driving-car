@@ -57,7 +57,7 @@ impl Behavior for GetToFlatGround {
 
         let backup_cutoff = linear_interpolate(
             &[0.0, 2000.0],
-            &[PI / 4.0, PI / 6.0],
+            &[PI / 4.0, 0.0],
             me.Physics.vel().dot(&me.Physics.forward_axis()),
         );
         if me.Physics.forward_axis().angle(&Vector3::z_axis()) < backup_cutoff {
