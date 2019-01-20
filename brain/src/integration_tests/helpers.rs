@@ -331,7 +331,11 @@ fn test_thread(
 
     rlbot.start_match(match_settings).unwrap();
 
-    let mut eeg = EEG::new().with_tracked_events();
+    let mut eeg = EEG::new();
+    eeg.log_to_stdout();
+    eeg.show_window();
+    eeg.track_events();
+
     let mut brain = Brain::with_behavior(NullBehavior::new());
     brain.set_player_index(0);
 

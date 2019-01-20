@@ -20,7 +20,9 @@ fn main() {
         init_options,
         should_start_match,
         should_recover_from_panics,
-        should_log,
+        log_game_data,
+        log_to_stdout,
+        show_window,
         player_index,
     } = parse_args().expect("Error parsing command-line arguments");
 
@@ -31,29 +33,45 @@ fn main() {
         start_match(&rlbot).expect("Error starting match");
     }
 
+    let run_the_bot = || {
+        run_bot(
+            rlbot,
+            player_index,
+            log_game_data,
+            log_to_stdout,
+            show_window,
+        );
+    };
+
     if !should_recover_from_panics {
         // In dev mode, halt on panics so they can't be ignored.
-        run_bot(rlbot, player_index, should_log);
+        run_the_bot();
     } else {
         // This is probably tournament mode, so we want to get back in action asap.
-        deny_climate_change(|| run_bot(rlbot, player_index, should_log));
+        deny_climate_change(run_the_bot);
     }
 }
 
 fn parse_args() -> Result<StartArgs, ()> {
     match rlbot::parse_framework_args()? {
+        // If we're running in the framework:
         Some(args) => Ok(StartArgs {
             player_index: args.player_index,
             init_options: args.into(),
             should_start_match: false,
             should_recover_from_panics: true,
-            should_log: false,
+            log_game_data: false,
+            log_to_stdout: false,
+            show_window: false,
         }),
+        // If we're running standalone:
         None => Ok(StartArgs {
             init_options: rlbot::InitOptions::new(),
             should_start_match: true,
             should_recover_from_panics: false,
-            should_log: true,
+            log_game_data: true,
+            log_to_stdout: true,
+            show_window: true,
             player_index: 0,
         }),
     }
@@ -63,7 +81,9 @@ struct StartArgs {
     init_options: rlbot::InitOptions,
     should_start_match: bool,
     should_recover_from_panics: bool,
-    should_log: bool,
+    log_game_data: bool,
+    log_to_stdout: bool,
+    show_window: bool,
     player_index: i32,
 }
 
@@ -94,7 +114,13 @@ fn deny_climate_change<R>(f: impl Fn() -> R) -> R {
     }
 }
 
-fn run_bot(rlbot: &'static rlbot::RLBot, player_index: i32, should_log: bool) {
+fn run_bot(
+    rlbot: &'static rlbot::RLBot,
+    player_index: i32,
+    log_game_data: bool,
+    log_to_stdout: bool,
+    show_window: bool,
+) {
     let field_info = rlbot.get_field_info().unwrap();
     let brain = match Brain::infer_game_mode(&field_info) {
         rlbot::ffi::GameMode::Soccer => Brain::soccar(),
@@ -103,12 +129,18 @@ fn run_bot(rlbot: &'static rlbot::RLBot, player_index: i32, should_log: bool) {
         mode => panic!("unexpected game mode {:?}", mode),
     };
 
-    let collector = if should_log {
+    let collector = if log_game_data {
         Some(create_collector())
     } else {
         None
     };
-    let eeg = EEG::new();
+    let mut eeg = EEG::new();
+    if log_to_stdout {
+        eeg.log_to_stdout();
+    }
+    if show_window {
+        eeg.show_window();
+    }
     let mut bot = FormulaNone::new(&field_info, collector, eeg, brain);
     bot.set_player_index(player_index);
     bot_loop(&rlbot, player_index, &mut bot);

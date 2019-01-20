@@ -5,7 +5,8 @@ use nalgebra::{Point2, Point3, Rotation3};
 use std::{collections::HashSet, mem};
 
 pub struct EEG {
-    window: Window,
+    log_to_stdout: bool,
+    window: Option<Window>,
     current_packet_time: f32,
     draw_list: DrawList,
     pub events: Option<HashSet<Event>>,
@@ -35,7 +36,8 @@ impl EEG {
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         EEG {
-            window: Window::new(),
+            log_to_stdout: false,
+            window: None,
             current_packet_time: 0.0,
             draw_list: DrawList::new(),
             events: None,
@@ -43,9 +45,16 @@ impl EEG {
         }
     }
 
-    pub fn with_tracked_events(mut self) -> Self {
+    pub fn log_to_stdout(&mut self) {
+        self.log_to_stdout = true;
+    }
+
+    pub fn show_window(&mut self) {
+        self.window = Some(Window::new());
+    }
+
+    pub fn track_events(&mut self) {
         self.events = Some(HashSet::new());
-        self
     }
 }
 
@@ -60,7 +69,9 @@ impl EEG {
     /// Call this at the end of each frame.
     pub fn show(&mut self, packet: &rlbot::ffi::LiveDataPacket) {
         let drawables = mem::replace(&mut self.draw_list.drawables, Vec::new());
-        self.window.draw(packet.clone(), drawables);
+        if let Some(window) = &self.window {
+            window.draw(packet.clone(), drawables);
+        }
     }
 
     pub fn quick_chat(&mut self, selection: rlbot::flat::QuickChatSelection) {
@@ -88,6 +99,9 @@ impl EEG {
     }
 
     pub fn log(&mut self, tag: &str, message: impl Into<String>) {
+        if !self.log_to_stdout {
+            return;
+        }
         println!(
             "{:>8.3} [{}] {}",
             self.current_packet_time,
