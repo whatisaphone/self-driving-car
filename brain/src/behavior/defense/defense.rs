@@ -37,11 +37,6 @@ impl Defense {
             return true;
         }
 
-        if me_forward_axis.angle_to(&(goal_loc - me_loc)).abs() < PI / 3.0 {
-            // Orientation is important too. Go back and turn around.
-            return false;
-        }
-
         // Project our location on a line drawn from the goal to the ball.
         let goal_to_ball_axis = (ball_loc - goal_loc).to_axis();
         let ball_dist = (ball_loc - goal_loc).dot(&goal_to_ball_axis);
@@ -58,6 +53,14 @@ impl Defense {
         };
 
         if ball_dist <= me_dist + panic_factor {
+            return false;
+        }
+
+        if ball_dist <= me_dist + 2000.0
+            && me_forward_axis.angle_to(&(goal_loc - me_loc)).abs() < PI / 3.0
+        {
+            // Orientation is important too. If we're not already ahead of the play, retreat
+            // and turn around.
             return false;
         }
 
