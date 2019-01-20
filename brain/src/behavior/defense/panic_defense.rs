@@ -113,7 +113,7 @@ impl PanicDefense {
         }
     }
 
-    fn rush_y_cutoff(ctx: &mut Context<'_>) -> f32 {
+    pub fn rush_y_cutoff(ctx: &mut Context<'_>) -> f32 {
         ctx.me().Physics.vel().y.abs() * 0.75
     }
 

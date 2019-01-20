@@ -1,6 +1,6 @@
 use crate::{
     behavior::{
-        defense::retreat::Retreat,
+        defense::{retreat::Retreat, PanicDefense},
         higher_order::Chain,
         offense::TepidHit,
         strike::{GroundedHit, GroundedHitAimContext, GroundedHitTarget, GroundedHitTargetAdjust},
@@ -23,12 +23,18 @@ impl Defense {
     }
 
     fn is_between_ball_and_own_goal(ctx: &mut Context<'_>) -> bool {
-        let goal_loc = ctx.game.own_goal().center_2d;
+        let goal = ctx.game.own_goal();
+        let goal_loc = goal.center_2d;
         let me_loc = ctx.me().Physics.loc_2d();
         let ball_loc = match ctx.scenario.me_intercept() {
             Some(i) => i.ball_loc.to_2d(),
             None => ctx.scenario.ball_prediction().last().loc.to_2d(),
         };
+
+        let panic_cutoff = PanicDefense::rush_y_cutoff(ctx).max(500.0);
+        if goal.is_y_within_range(me_loc.y, ..panic_cutoff) {
+            return true;
+        }
 
         // Project our location on a line drawn from the goal to the ball.
         let goal_to_ball_axis = (ball_loc - goal_loc).to_axis();
