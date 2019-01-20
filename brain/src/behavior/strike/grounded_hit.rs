@@ -128,7 +128,7 @@ where
         };
         let target = (self.aim)(&mut aim_context)
             .map_err(|_| ctx.eeg.log(self.name(), "error getting aim location"))?;
-        let (target_loc, _target_rot, _dodge) = Self::preliminary_target(ctx, &intercept, &target);
+        let (target_loc, _target_rot, _jump) = Self::preliminary_target(ctx, &intercept, &target);
         let ball_max_z = JUMP_MAX_Z + (intercept.ball_loc.z - target_loc.z);
 
         // Second pass: Get a more accurate intercept based on how high we need to jump.
@@ -159,7 +159,7 @@ where
         };
         let target = (self.aim)(&mut aim_context)?;
 
-        let (target_loc, target_rot, dodge) = Self::preliminary_target(ctx, intercept, &target);
+        let (target_loc, target_rot, jump) = Self::preliminary_target(ctx, intercept, &target);
 
         // TODO: iteratively find contact point which hits the ball towards aim_loc
 
@@ -175,7 +175,7 @@ where
             intercept_time: target.intercept_time,
             target_loc,
             target_rot,
-            dodge,
+            jump,
         })
     }
 
@@ -204,7 +204,7 @@ where
             }
             GroundedHitTargetAdjust::StraightOn => naive_target_loc,
         };
-        (target_loc, target_rot, target.dodge)
+        (target_loc, target_rot, target.jump)
     }
 
     #[allow(clippy::if_same_then_else)]
@@ -290,7 +290,7 @@ where
         let me_forward = ctx.me().Physics.forward_axis_2d();
         let dodge_angle = me_forward.rotation_to(&(ball.loc.to_2d() - dodge_loc).to_axis());
 
-        if !plan.dodge {
+        if !plan.jump {
             return Action::Return;
         }
 
@@ -350,14 +350,14 @@ pub struct GroundedHitTarget {
     adjust: GroundedHitTargetAdjust,
     aim_loc: Point2<f32>,
     #[new(value = "true")]
-    dodge: bool,
+    jump: bool,
 }
 
 impl GroundedHitTarget {
     pub const MAX_BALL_Z: f32 = GroundedHit::MAX_BALL_Z;
 
-    pub fn dodge(mut self, dodge: bool) -> Self {
-        self.dodge = dodge;
+    pub fn jump(mut self, jump: bool) -> Self {
+        self.jump = jump;
         self
     }
 }
@@ -371,7 +371,7 @@ struct Plan {
     intercept_time: f32,
     target_loc: Point3<f32>,
     target_rot: UnitQuaternion<f32>,
-    dodge: bool,
+    jump: bool,
 }
 
 enum Do {

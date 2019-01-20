@@ -138,7 +138,7 @@ fn time_wasting_hit(ctx: &mut GroundedHitAimContext<'_, '_>) -> Result<GroundedH
         GroundedHitTargetAdjust::RoughAim,
         aim_loc,
     )
-    .dodge(!is_chippable(ctx, aim_loc)))
+    .jump(!is_chippable(ctx, aim_loc)))
 }
 
 fn is_chippable(ctx: &mut GroundedHitAimContext<'_, '_>, aim_loc: Point2<f32>) -> bool {
