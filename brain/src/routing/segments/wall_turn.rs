@@ -125,12 +125,24 @@ impl SegmentRunner for WallTurnRunner {
             ctx.eeg.log(self.name(), "steer is low enough");
             return SegmentRunAction::Success;
         }
+        if steer.signum() != self.plan.sweep.signum() {
+            ctx.eeg.log(self.name(), "oversteered?");
+            // Things can get pretty wonky when multiple walls are involved, since the seam
+            // is a discontinuity. Let's just squint and pretend everything is okay!
+            return SegmentRunAction::Success;
+        }
 
         let swept = self.plan.sweep_to(me_flat_loc);
         if swept.abs() >= self.plan.sweep.abs() - 3.0_f32.to_radians() {
             ctx.eeg.log(self.name(), "sweep has reached target");
             return SegmentRunAction::Success;
         }
+
+        ctx.eeg.print_value("flat_loc", me_flat_loc);
+        ctx.eeg.print_value("flat_forward", me_flat_forward);
+        ctx.eeg.print_angle("steer", steer);
+        ctx.eeg.print_angle("swept", swept);
+        ctx.eeg.print_angle("plan_sweep", self.plan.sweep);
 
         SegmentRunAction::Yield(rlbot::ffi::PlayerInput {
             Throttle: 1.0,
