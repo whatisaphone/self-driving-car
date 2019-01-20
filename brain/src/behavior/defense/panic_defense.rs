@@ -53,7 +53,7 @@ impl Behavior for PanicDefense {
 
         if !GetToFlatGround::on_flat_ground(ctx.me()) {
             ctx.eeg.log(self.name(), "not on flat ground");
-            return Action::Abort;
+            return Action::tail_call(GetToFlatGround::new());
         }
 
         if let Some(phase) = self.next_phase(ctx) {

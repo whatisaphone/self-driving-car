@@ -1,7 +1,7 @@
 use crate::{
     behavior::{
         higher_order::Chain,
-        movement::SkidRecover,
+        movement::{GetToFlatGround, SkidRecover},
         strike::{GroundedHit, GroundedHitAimContext, GroundedHitTarget, GroundedHitTargetAdjust},
     },
     eeg::{color, Drawable, Event},
@@ -36,7 +36,8 @@ impl Behavior for HitToOwnCorner {
 
         Action::tail_call(Chain::new(Priority::Strike, vec![
             // We do want skid recovery. We don't want ResetBehindBall-type stuff. Just single
-            // skids out for now…
+            // out the basics for now…
+            Box::new(GetToFlatGround::new()),
             Box::new(SkidRecover::new(skid_recover_loc.to_2d())),
             Box::new(FollowRoute::new(GroundIntercept::new()).never_recover(true)),
             Box::new(GroundedHit::hit_towards(Self::aim)),
