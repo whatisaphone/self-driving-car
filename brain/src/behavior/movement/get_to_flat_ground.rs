@@ -151,3 +151,36 @@ fn dodge_target(ctx: &mut Context<'_>) -> Option<Point2<f32>> {
     let goal_point = ctx.game.enemy_goal().closest_point(ball.loc.to_2d());
     Some(ball.loc.to_2d() + (ball.loc.to_2d() - goal_point).normalize() * 1000.0)
 }
+
+#[cfg(test)]
+mod demo {
+    use crate::{
+        behavior::{
+            higher_order::Chain,
+            movement::{GetToFlatGround, Land},
+        },
+        integration_tests::helpers::{TestRunner, TestScenario},
+        strategy::Priority,
+    };
+    use common::prelude::*;
+    use nalgebra::{Point3, Rotation3, Vector3};
+    use std::f32::consts::PI;
+    use vec_box::vec_box;
+
+    #[test]
+    #[ignore(note = "not a test; just a demo")]
+    fn demo_jump() {
+        TestRunner::new()
+            .scenario(TestScenario {
+                car_loc: Point3::new(3900.0, 0.0, 500.0),
+                car_vel: Vector3::new(1000.0, 0.0, 0.2),
+                car_rot: Rotation3::from_unreal_angles(PI / 2.0, 0.0, 0.2),
+                ..Default::default()
+            })
+            .behavior(Chain::new(Priority::Idle, vec_box![
+                Land::new(),
+                GetToFlatGround::new()
+            ]))
+            .run_for_millis(3000);
+    }
+}
