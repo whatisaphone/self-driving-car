@@ -262,23 +262,17 @@ impl RoutePlanner for StraightWithDodge {
             0.0,
             StraightMode::Asap,
         );
+
         let dodge = ForwardDodge::new(before.end(), dodge.dodge);
-        let dodge_end = dodge.end();
-        let after = Straight::new(
-            CarState2D {
-                loc: dodge_end.loc.to_2d(),
-                rot: dodge_end.rot.to_2d(),
-                vel: dodge_end.vel.to_2d(),
-                boost: dodge_end.boost,
-            },
-            self.target_loc,
-            self.end_chop,
-            self.mode,
-        );
-        let segment = Chain::new(vec![Box::new(before), Box::new(dodge), Box::new(after)]);
+
+        let mut after = GroundStraightPlanner::new(self.target_loc, self.mode);
+        after.target_time = self.target_time;
+        after.end_chop = self.end_chop;
+
+        let segment = Chain::new(vec![Box::new(before), Box::new(dodge)]);
         Ok(RoutePlan {
             segment: Box::new(segment),
-            next: None,
+            next: Some(Box::new(after)),
         })
     }
 }
