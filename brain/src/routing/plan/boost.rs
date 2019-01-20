@@ -5,7 +5,7 @@ use crate::{
         recover::{IsSkidding, NotOnFlatGround},
         segments::JumpAndDodge,
     },
-    strategy::BoostPickup,
+    strategy::{BoostPickup, Goal},
 };
 use common::prelude::*;
 use nalgebra::{Point2, Vector2};
@@ -122,6 +122,7 @@ impl GetDollar {
             ctx.game.boost_dollars().iter(),
             ctx.start.loc.to_2d(),
             destination_hint,
+            ctx.game.enemy_goal(),
         )
     }
 
@@ -129,6 +130,7 @@ impl GetDollar {
         pickups: impl Iterator<Item = &'a BoostPickup>,
         start_loc: Point2<f32>,
         destination_hint: Point2<f32>,
+        enemy_goal: &Goal,
     ) -> Option<&'a BoostPickup> {
         // Draw a line segment, and try to find a pickup along that segment.
         let line_start_loc = start_loc;
@@ -147,8 +149,21 @@ impl GetDollar {
                 d if d >= line_span.norm() => d - line_span.norm(),
                 _ => 0.0,
             };
-            let penalty = along_penalty.powi(2) + ortho_penalty.powi(2) + detour_penalty.powi(2);
-            NotNan::new(penalty).unwrap()
+            let convenience_penalty =
+                along_penalty.powi(2) + ortho_penalty.powi(2) + detour_penalty.powi(2);
+
+            let is_enemy_boost = (pickup.loc.y - enemy_goal.center_2d.y).abs() < 2000.0;
+            let positioning_penalty = if is_enemy_boost {
+                let danger_distance = (pickup.loc - start_loc).dot(&-enemy_goal.normal_2d);
+                let threshold = 3000.0;
+                // Cube the distance beyond the threshold. That is a VERY STIFF penalty,
+                // essentially a hard rejection.
+                (danger_distance - threshold).max(0.0).powi(3)
+            } else {
+                0.0
+            };
+
+            NotNan::new(convenience_penalty + positioning_penalty).unwrap()
         })
     }
 
