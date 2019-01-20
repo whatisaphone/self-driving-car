@@ -121,4 +121,42 @@ mod integration_tests {
 
         assert!(test.has_scored());
     }
+
+    #[test]
+    fn tight_angle_with_no_boost() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(-2815.55, 4677.98, 233.65),
+                ball_rot: Rotation3::from_unreal_angles(-0.3859388, -0.9047023, 2.4510245),
+                ball_vel: Vector3::new(882.251, -325.971, -76.541),
+                car_loc: Point3::new(-3025.66, 3546.3599, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.009533787, 0.71604276, -0.000059155664),
+                car_vel: Vector3::new(820.001, 709.05096, 8.311),
+                ..Default::default()
+            })
+            .starting_boost(0.0)
+            .soccar()
+            .run_for_millis(2500);
+
+        assert!(test.has_scored());
+    }
+
+    #[test]
+    fn tight_angle_with_boost() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(-2815.55, 4677.98, 233.65),
+                ball_rot: Rotation3::from_unreal_angles(-0.3859388, -0.9047023, 2.4510245),
+                ball_vel: Vector3::new(882.251, -325.971, -76.541),
+                car_loc: Point3::new(-3025.66, 3546.3599, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.009533787, 0.71604276, -0.000059155664),
+                car_vel: Vector3::new(820.001, 709.05096, 8.311),
+                ..Default::default()
+            })
+            .starting_boost(50.0)
+            .soccar()
+            .run_for_millis(2500);
+
+        assert!(test.has_scored());
+    }
 }
