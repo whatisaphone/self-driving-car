@@ -1,6 +1,6 @@
 use crate::{
     behavior::{
-        higher_order::{Predicate, TimeLimit, TryChoose, While},
+        higher_order::{Predicate, TimeLimit, TryChoose},
         movement::{DriveTowards, GetToFlatGround, QuickJumpAndDodge, SkidRecover},
         offense::ResetBehindBall,
     },
@@ -24,10 +24,7 @@ const SKIDDING_THRESHOLD: f32 = 0.95;
 impl RoutePlanError {
     pub fn recover(&self, ctx: &mut Context<'_>) -> Option<Box<dyn Behavior>> {
         match *self {
-            RoutePlanError::MustBeOnFlatGround => Some(Box::new(While::new(
-                NotOnFlatGround,
-                GetToFlatGround::new(),
-            ))),
+            RoutePlanError::MustBeOnFlatGround => Some(Box::new(GetToFlatGround::new())),
             RoutePlanError::MustNotBeSkidding { recover_target_loc } => {
                 Some(Box::new(SkidRecover::new(recover_target_loc)))
             }
