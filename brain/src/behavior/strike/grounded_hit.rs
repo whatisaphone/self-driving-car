@@ -16,7 +16,7 @@ use nalgebra::{Point2, Point3, UnitQuaternion};
 use nameof::name_of_type;
 use simulate::{
     car_single_jump::{time_to_z, JUMP_MAX_Z},
-    linear_interpolate, Car1D, CarSimulateError,
+    linear_interpolate, Car1D,
 };
 use std::f32::consts::PI;
 
@@ -76,8 +76,7 @@ where
             Err(()) => return Action::Abort,
         };
 
-        let (intercept_time, target_loc, target_rot, dodge) = match self.target_loc(ctx, &intercept)
-        {
+        let plan = match self.plan(ctx, &intercept) {
             Ok(x) => x,
             Err(()) => {
                 ctx.eeg.log(self.name(), "error finding target_loc");
@@ -85,28 +84,16 @@ where
             }
         };
 
-        let intercept_ball_loc = ctx
-            .scenario
-            .ball_prediction()
-            .at_time(intercept_time)
-            .map(|f| f.loc)
-            .unwrap_or(intercept.ball_loc);
-
         let me_forward = me.Physics.forward_axis_2d();
-        let steer = me_forward.angle_to(&(target_loc - me.Physics.loc()).to_2d().to_axis());
+        let steer = me_forward.angle_to(&(plan.target_loc - me.Physics.loc()).to_2d().to_axis());
         if steer.abs() >= PI / 3.0 {
             ctx.eeg.log(self.name(), "not facing the target");
             return Action::Abort;
         }
 
-        match self.estimate_approach(ctx, intercept_time, intercept_ball_loc, target_loc) {
-            Ok(Do::Drive(throttle, boost)) => self.drive(ctx, target_loc, throttle, boost),
-            Ok(Do::Jump) => self.jump(ctx, intercept_ball_loc, target_loc, target_rot, dodge),
-            Err(error) => {
-                ctx.eeg
-                    .log(self.name(), format!("can't estimate approach: {:?}", error));
-                Action::Abort
-            }
+        match self.estimate_approach(ctx, &plan) {
+            Do::Drive(throttle, boost) => self.drive(ctx, &plan, throttle, boost),
+            Do::Jump => self.jump(ctx, &plan),
         }
     }
 }
@@ -160,11 +147,7 @@ where
         Ok(intercept)
     }
 
-    fn target_loc(
-        &mut self,
-        ctx: &mut Context<'_>,
-        intercept: &NaiveIntercept,
-    ) -> Result<(f32, Point3<f32>, UnitQuaternion<f32>, bool), ()> {
+    fn plan(&mut self, ctx: &mut Context<'_>, intercept: &NaiveIntercept) -> Result<Plan, ()> {
         let me = ctx.me();
         let mut aim_context = GroundedHitAimContext {
             game: &ctx.game,
@@ -188,7 +171,12 @@ where
         ctx.eeg
             .draw(Drawable::GhostCar(target_loc, me.Physics.rot()));
 
-        Ok((target.intercept_time, target_loc, target_rot, dodge))
+        Ok(Plan {
+            intercept_time: target.intercept_time,
+            target_loc,
+            target_rot,
+            dodge,
+        })
     }
 
     fn preliminary_target(
@@ -220,19 +208,13 @@ where
     }
 
     #[allow(clippy::if_same_then_else)]
-    fn estimate_approach(
-        &mut self,
-        ctx: &mut Context<'_>,
-        intercept_time: f32,
-        intercept_ball_loc: Point3<f32>,
-        target_loc: Point3<f32>,
-    ) -> Result<Do, CarSimulateError> {
-        let total_time = intercept_time;
-        let jump_duration = Self::jump_duration(target_loc.z);
+    fn estimate_approach(&mut self, ctx: &mut Context<'_>, plan: &Plan) -> Do {
+        let total_time = plan.intercept_time;
+        let jump_duration = Self::jump_duration(plan.target_loc.z);
         let drive_time = total_time - jump_duration;
 
         if drive_time < 0.0 {
-            return Ok(Do::Jump);
+            return Do::Jump;
         }
 
         let would_reach = |throttle, boost| {
@@ -242,7 +224,7 @@ where
                 .with_boost(ctx.me().Boost as f32);
             drive.advance(drive_time, throttle, boost);
             let drive_start_loc = ctx.me().Physics.loc_2d();
-            let drive_forward = (target_loc.to_2d() - drive_start_loc).to_axis();
+            let drive_forward = (plan.target_loc.to_2d() - drive_start_loc).to_axis();
             let drive_end_loc = drive_start_loc + drive_forward.as_ref() * drive.distance();
             let drive_end_vel = drive_forward.as_ref() * drive.speed();
 
@@ -250,7 +232,7 @@ where
             let jump_end_loc = drive_end_loc + drive_end_vel * jump_duration;
 
             // Calculate how far ahead/behind the target location
-            (jump_end_loc - target_loc.to_2d()).dot(&drive_forward)
+            (jump_end_loc - plan.target_loc.to_2d()).dot(&drive_forward)
         };
 
         // Aim for a few uu behind the ball so we don't make contact before we dodge.
@@ -270,8 +252,7 @@ where
             (1.0, true)
         };
 
-        ctx.eeg.print_value("i_ball", intercept_ball_loc);
-        ctx.eeg.print_value("target", target_loc);
+        ctx.eeg.print_value("target", plan.target_loc);
         ctx.eeg.print_time("drive_time", drive_time);
         ctx.eeg.print_time("total_time", total_time);
         ctx.eeg.print_value("coast_offset", Distance(coast_offset));
@@ -279,18 +260,12 @@ where
             .print_value("throttle_offset", Distance(throttle_offset));
         ctx.eeg.print_value("blitz_offset", Distance(blitz_offset));
 
-        Ok(Do::Drive(throttle, boost))
+        Do::Drive(throttle, boost)
     }
 
-    fn drive(
-        &self,
-        ctx: &mut Context<'_>,
-        target_loc: Point3<f32>,
-        throttle: f32,
-        boost: bool,
-    ) -> Action {
+    fn drive(&self, ctx: &mut Context<'_>, plan: &Plan, throttle: f32, boost: bool) -> Action {
         let me = ctx.me();
-        let steer = simple_steer_towards(&me.Physics, target_loc.to_2d());
+        let steer = simple_steer_towards(&me.Physics, plan.target_loc.to_2d());
         Action::Yield(rlbot::ffi::PlayerInput {
             Throttle: throttle,
             Steer: steer,
@@ -299,32 +274,32 @@ where
         })
     }
 
-    fn jump(
-        &self,
-        ctx: &mut Context<'_>,
-        intercept_ball_loc: Point3<f32>,
-        target_loc: Point3<f32>,
-        target_rot: UnitQuaternion<f32>,
-        dodge: bool,
-    ) -> Action {
+    fn jump(&self, ctx: &mut Context<'_>, plan: &Plan) -> Action {
         // Simulate the jump to predict our exact location at the peak.
-        let jump_time = Self::jump_duration(target_loc.z);
+        let jump_time = Self::jump_duration(plan.target_loc.z);
+
         let dodge_loc = ctx.me().Physics.loc_2d() + ctx.me().Physics.vel_2d() * jump_time;
         // If we're on a slanted wall, we're pretty much screwed, but try to compensate
         // anyway.
         let dodge_loc = dodge_loc
-            + ctx.me().Physics.roof_axis().unwrap().to_2d() * (target_loc.z - rl::OCTANE_NEUTRAL_Z);
+            + ctx.me().Physics.roof_axis().unwrap().to_2d()
+                * (plan.target_loc.z - rl::OCTANE_NEUTRAL_Z);
+
+        let ball = ctx.scenario.ball_prediction().at_time(jump_time).unwrap();
 
         let me_forward = ctx.me().Physics.forward_axis_2d();
-        let dodge_angle =
-            me_forward.rotation_to(&(intercept_ball_loc.to_2d() - dodge_loc).to_axis());
+        let dodge_angle = me_forward.rotation_to(&(ball.loc.to_2d() - dodge_loc).to_axis());
 
-        if !dodge {
+        if !plan.dodge {
             return Action::Return;
         }
 
         Action::tail_call(Chain::new(Priority::Strike, vec![
-            Box::new(JumpAndTurn::new(jump_time - 0.05, jump_time, target_rot)),
+            Box::new(JumpAndTurn::new(
+                jump_time - 0.05,
+                jump_time,
+                plan.target_rot,
+            )),
             Box::new(Dodge::new().angle(dodge_angle)),
         ]))
     }
@@ -390,6 +365,13 @@ impl GroundedHitTarget {
 pub enum GroundedHitTargetAdjust {
     StraightOn,
     RoughAim,
+}
+
+struct Plan {
+    intercept_time: f32,
+    target_loc: Point3<f32>,
+    target_rot: UnitQuaternion<f32>,
+    dodge: bool,
 }
 
 enum Do {
