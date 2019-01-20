@@ -181,8 +181,10 @@ impl<'a> Scenario<'a> {
         *self.panicky_retreat.borrow_with(|| {
             let goal_loc = self.game.own_goal().center_2d;
             let ball_loc = self.packet.GameBall.Physics.loc_2d();
+            let ball_vel = self.packet.GameBall.Physics.vel_2d();
             let me_loc = self.game.me().Physics.loc_2d();
             let me_vel = self.game.me().Physics.vel_2d();
+            let me_forward_axis = self.game.me().Physics.forward_axis_2d();
             let enemy_vel = match self.primary_enemy() {
                 Some(e) => e.Physics.vel_2d(),
                 None => Vector2::zeros(), // 🤔
@@ -191,12 +193,16 @@ impl<'a> Scenario<'a> {
             let goal_to_ball_axis = (ball_loc - goal_loc).to_axis();
             let me_retreating = me_vel.dot(&goal_to_ball_axis);
             let enemy_charging = enemy_vel.dot(&goal_to_ball_axis);
+            let ball_encroaching = ball_vel.dot(&goal_to_ball_axis);
             let goalside = (ball_loc - me_loc).dot(&goal_to_ball_axis);
+            let ball_is_awkward = me_forward_axis.angle_to(&(ball_loc - me_loc)).abs() >= PI / 2.0;
 
             me_retreating < -500.0
-                && enemy_charging < -500.0
-                && (me_retreating + enemy_charging) < -1500.0
-                && goalside < 1000.0
+                && enemy_charging < -200.0
+                && ball_encroaching < -200.0
+                && enemy_charging + ball_encroaching < -800.0
+                && goalside < 2000.0
+                && ball_is_awkward
         })
     }
 }
