@@ -106,7 +106,7 @@ impl Behavior for RetreatingSave {
         ));
 
         let (ball_loc, car) = self.simulate_jump(ctx);
-        if (ball_loc.to_2d() - car.loc_2d()).norm() < 220.0 {
+        if (ball_loc.to_2d() - car.loc_2d()).norm() < 250.0 {
             ctx.eeg.log(self.name(), "we are close enough");
             return self.dodge(ctx);
         }
@@ -126,6 +126,7 @@ impl RetreatingSave {
         };
 
         let car_loc = ctx.me().Physics.loc_2d();
+        let car_vel = ctx.me().Physics.vel_2d();
         let car_forward_axis = ctx.me().Physics.forward_axis_2d();
 
         let intercept =
@@ -133,7 +134,7 @@ impl RetreatingSave {
                 let me_to_ball = car_loc - ball.loc.to_2d();
                 let drive_angle = car_forward_axis.angle_to(&(ball.loc.to_2d() - car_loc));
                 let acceptable_drive_angle =
-                    linear_interpolate(&[500.0, 2000.0], &[PI / 6.0, PI / 2.0], me_to_ball.norm());
+                    linear_interpolate(&[500.0, 2000.0], &[PI / 6.0, PI / 3.0], me_to_ball.norm());
 
                 drive_angle.abs() < acceptable_drive_angle
                     && ball.loc.z < Self::MAX_BALL_Z
@@ -146,10 +147,16 @@ impl RetreatingSave {
         let target_loc = feasible_angle_near(intercept_ball_loc, car_loc, danger, PI / 6.0);
         // If the convenient angle is not blocking enough of the danger point, force a
         // less convenient angle.
-        let target_loc =
-            feasible_angle_near(intercept_ball_loc, own_goal.center_2d, target_loc, PI / 6.0);
+        let clamp_angle = linear_interpolate(&[500.0, 2000.0], &[0.0, PI / 3.0], car_vel.norm());
+        let target_loc = feasible_angle_near(
+            intercept_ball_loc,
+            own_goal.center_2d,
+            target_loc,
+            clamp_angle,
+        );
         // Target a fixed distance away from the ball.
         let target_loc = intercept_ball_loc + (target_loc - intercept_ball_loc).normalize() * 200.0;
+
         Some(Plan {
             intercept_ball_loc: intercept.ball_loc,
             target_loc,
@@ -551,6 +558,26 @@ mod integration_tests {
     fn slow_dribble_behind_us() {
         let test = TestRunner::new()
             .one_v_one(&*recordings::SLOW_DRIBBLE_BEHIND_US, 154.0)
+            .starting_boost(70.0)
+            .soccar()
+            .run_for_millis(4000);
+
+        assert!(!test.enemy_has_scored());
+
+        let packet = test.sniff_packet();
+        let ball_loc = packet.GameBall.Physics.loc();
+        println!("ball_loc = {:?}", ball_loc);
+        assert!((ball_loc.to_2d() - SOCCAR_GOAL_BLUE.center_2d).norm() >= 2000.0);
+
+        test.examine_events(|events| {
+            assert!(events.contains(&Event::RetreatingSave));
+        });
+    }
+
+    #[test]
+    fn turn_for_bouncing_ball() {
+        let test = TestRunner::new()
+            .one_v_one(&*recordings::TURN_FOR_BOUNCING_BALL, 30.0)
             .starting_boost(70.0)
             .soccar()
             .run_for_millis(4000);
