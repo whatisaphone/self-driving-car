@@ -79,12 +79,15 @@ delegate!(bool);
 delegate!(String);
 
 inherent!(P2PP, Point2<f32>, "({:.0}, {:.0})", |v| (v.x, v.y));
-inherent!(V2PP, Vector2<f32>, "({:.0}, {:.0})", |v| (v.x, v.y));
 inherent!(P3PP, Point3<f32>, "({:.0}, {:.0}, {:.0})", |v| (
     v.x, v.y, v.z,
 ));
+inherent!(V2PP, Vector2<f32>, "({:.0}, {:.0})", |v| (v.x, v.y));
 inherent!(V3PP, Vector3<f32>, "({:.0}, {:.0}, {:.0})", |v| (
     v.x, v.y, v.z,
+));
+inherent!(UV2PP, Unit<Vector2<f32>>, "({:.2}, {:.2})", |v| (
+    v.x, v.y,
 ));
 inherent!(UV3PP, Unit<Vector3<f32>>, "({:.2}, {:.2}, {:.2})", |v| (
     v.x, v.y, v.z,
