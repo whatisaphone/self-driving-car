@@ -8,7 +8,7 @@ use crate::{
     eeg::Event,
     routing::{behavior::FollowRoute, plan::GroundIntercept},
     strategy::{Action, Behavior, Context, Priority, Scenario},
-    utils::geometry::ExtendF32,
+    utils::{geometry::ExtendF32, WallRayCalculator},
 };
 use common::prelude::*;
 use nalgebra::{Point2, Vector2};
@@ -121,22 +121,31 @@ impl Behavior for Defense {
 /// For `GroundedHit::hit_towards`, calculate an aim location which puts us
 /// between the ball and our own goal.
 pub fn defensive_hit(ctx: &mut GroundedHitAimContext<'_, '_>) -> Result<GroundedHitTarget, ()> {
+    let goal_center = ctx.game.own_goal().center_2d;
+    let ball_loc = ctx.intercept_ball_loc.to_2d();
+    let car_loc = ctx.car.Physics.loc_2d();
+
     let target_angle = blocking_angle(
         ctx.intercept_ball_loc.to_2d(),
-        ctx.car.Physics.loc_2d(),
-        ctx.game.own_goal().center_2d,
+        car_loc,
+        goal_center,
         PI / 6.0,
     );
-    let aim_loc = ctx.intercept_ball_loc.to_2d() - Vector2::unit(target_angle) * 4000.0;
-    let dist_defense = (ctx.game.own_goal().center_2d - ctx.car.Physics.loc_2d()).norm();
-    let defense_angle = (ctx.intercept_ball_loc.to_2d() - ctx.game.own_goal().center_2d)
-        .angle_to(&(ctx.intercept_ball_loc.to_2d() - ctx.car.Physics.loc_2d()));
+    let aim_loc = ball_loc - Vector2::unit(target_angle) * 4000.0;
+    let dist_defense = (goal_center - car_loc).norm();
+    let defense_angle = (ball_loc - goal_center).angle_to(&(ball_loc - car_loc));
+
     let adjust = if dist_defense < 2500.0 && defense_angle.abs() < PI / 3.0 {
         GroundedHitTargetAdjust::StraightOn
     } else {
         GroundedHitTargetAdjust::RoughAim
     };
-    Ok(GroundedHitTarget::new(ctx.intercept_time, adjust, aim_loc))
+
+    let aim_loc = WallRayCalculator::calculate(ball_loc, aim_loc);
+    let aim_wall = WallRayCalculator::wall_for_point(ctx.game, aim_loc);
+    let dodge = TepidHit::should_dodge(ctx, aim_wall);
+
+    Ok(GroundedHitTarget::new(ctx.intercept_time, adjust, aim_loc).dodge(dodge))
 }
 
 /// Calculate an angle from `ball_loc` to `car_loc`, trying to get between

@@ -167,7 +167,7 @@ fn time_wasting_hit(ctx: &mut GroundedHitAimContext<'_, '_>) -> Result<GroundedH
         aim_loc,
     )
     .jump(!is_chippable(ctx, aim_loc))
-    .dodge(should_dodge(ctx, aim_wall)))
+    .dodge(TepidHit::should_dodge(ctx, aim_wall)))
 }
 
 fn is_chippable(ctx: &mut GroundedHitAimContext<'_, '_>, aim_loc: Point2<f32>) -> bool {
@@ -192,17 +192,19 @@ fn is_chippable(ctx: &mut GroundedHitAimContext<'_, '_>, aim_loc: Point2<f32>) -
         && goalward_angle < PI / 2.0
 }
 
-fn should_dodge(ctx: &mut GroundedHitAimContext<'_, '_>, aim_wall: Wall) -> bool {
-    // Don't dodge when hitting it into the back wall since that would probably
-    // put us even further out of position.
-    if aim_wall != Wall::EnemyBackWall {
-        return true;
+impl TepidHit {
+    pub fn should_dodge(ctx: &mut GroundedHitAimContext<'_, '_>, aim_wall: Wall) -> bool {
+        // Don't dodge when hitting it into the back wall since that would probably put
+        // us even further out of position.
+        if aim_wall != Wall::EnemyBackWall {
+            return true;
+        }
+        let enemy_goal = ctx.game.enemy_goal();
+        if !enemy_goal.is_y_within_range(ctx.scenario.ball_prediction().start().loc.y, ..2000.0) {
+            return true;
+        }
+        false
     }
-    let enemy_goal = ctx.game.enemy_goal();
-    if !enemy_goal.is_y_within_range(ctx.scenario.ball_prediction().start().loc.y, ..1500.0) {
-        return true;
-    }
-    false
 }
 
 #[cfg(test)]
