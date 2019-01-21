@@ -11,6 +11,10 @@ use std::{error::Error, fs, panic, path::PathBuf, thread::sleep, time::Duration}
 mod logging;
 
 fn main() {
+    println!("Self-Driving Car");
+    println!("Built 2019-01-20");
+    println!("See http://www.rlbot.org/ for more info!");
+
     env_logger::Builder::new()
         .parse("brain") // Only log the brain crate
         .format(logging::format)
