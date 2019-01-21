@@ -6,7 +6,7 @@ use crate::{
     plan::hit_angle::{feasible_hit_angle_away, feasible_hit_angle_toward},
     routing::{
         behavior::FollowRoute,
-        plan::{GroundIntercept, WallIntercept},
+        plan::{GetDollar, GroundIntercept, WallIntercept},
     },
     strategy::{Action, Behavior, Context, Context2, Priority},
     utils::{Wall, WallRayCalculator},
@@ -35,7 +35,7 @@ impl Behavior for TepidHit {
         let (ctx, eeg) = ctx.split();
 
         let mut hits = ArrayVec::<[_; 4]>::new();
-        hits.push(ground(&ctx));
+        hits.push(ground(&ctx, eeg));
         hits.push(wall(&ctx, eeg));
 
         let hit = hits
@@ -58,17 +58,36 @@ impl Behavior for TepidHit {
                 ),
                 WallHit::new(),
             ])),
-            Some((_, HitType::Ground)) | None => Action::tail_call(chain!(Priority::Strike, [
+            Some((_, HitType::Ground)) => Action::tail_call(chain!(Priority::Strike, [
                 FollowRoute::new(GroundIntercept::new()),
                 GroundedHit::hit_towards(time_wasting_hit),
             ])),
+            None => {
+                let future_ball = ctx.scenario.ball_prediction().at_time_or_last(3.0);
+                Action::tail_call(FollowRoute::new(GetDollar::new(future_ball.loc.to_2d())))
+            }
         }
     }
 }
 
-fn ground(ctx: &Context2<'_, '_>) -> Option<(f32, HitType)> {
-    GroundIntercept::calc_intercept(&ctx.me().into(), ctx.scenario.ball_prediction())
-        .map(|i| (i.t, HitType::Ground))
+fn ground(ctx: &Context2<'_, '_>, eeg: &mut EEG) -> Option<(f32, HitType)> {
+    let intercept =
+        GroundIntercept::calc_intercept(&ctx.me().into(), ctx.scenario.ball_prediction())?;
+
+    let own_goal = ctx.game.own_goal();
+    let enemy_goal = ctx.game.enemy_goal();
+    let near_back_wall = enemy_goal.is_y_within_range(intercept.loc.y, ..2000.0);
+    let approach_angle = own_goal
+        .normal_2d
+        .angle_to(&(intercept.loc.to_2d() - ctx.me().Physics.loc_2d()));
+    if near_back_wall && approach_angle.abs() < PI / 3.0 && ctx.me().Boost < 50 {
+        eeg.log(
+            name_of_type!(TepidHit),
+            format!("too dangerous with no boost"),
+        );
+        return None;
+    }
+    Some((intercept.t, HitType::Ground))
 }
 
 fn wall<'ball>(ctx: &Context2<'_, 'ball>, eeg: &mut EEG) -> Option<(f32, HitType)> {
