@@ -120,7 +120,7 @@ impl Strategy for Soccar {
 
         if current.priority() < Priority::Taunt
             && UnstoppableScore.evaluate(ctx)
-            && in_the_lead(ctx)
+            && commanding_lead(ctx)
         {
             let spin = TurtleSpin::new().quick_chat_probability(0.75);
             return Some(Box::new(While::new(UnstoppableScore, spin)));
@@ -195,11 +195,12 @@ impl Predicate for ScoringVerySoon {
     }
 }
 
-fn in_the_lead(ctx: &mut Context<'_>) -> bool {
+fn commanding_lead(ctx: &mut Context<'_>) -> bool {
+    let minutes_remaining = (ctx.packet.GameInfo.GameTimeRemaining / 60.0) as i32;
     let scores = ctx.packet.match_score();
     let us = scores[ctx.game.team.to_ffi() as usize];
     let them = scores[ctx.game.enemy_team.to_ffi() as usize];
-    us - them >= (ctx.packet.GameInfo.GameTimeRemaining / 60.0) as i32
+    us - them >= minutes_remaining
 }
 
 #[cfg(test)]
