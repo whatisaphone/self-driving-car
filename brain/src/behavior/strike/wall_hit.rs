@@ -105,6 +105,11 @@ fn check_intercept(ctx: &Context2<'_, '_>, ball: &BallFrame) -> Result<(), ()> {
     let target_surface = ctx.game.pitch().closest_plane(&target);
     let ground = ctx.game.pitch().ground();
 
+    if target_surface.normal.y == ctx.game.enemy_goal().normal_2d.y {
+        // HACK: Suppress enemy wall hits, they are almost never useful.
+        return Err(());
+    }
+
     let me_to_ground = me_surface.unfold(&ground)?;
     let target_to_me = target_surface.unfold(&me_surface)?;
     let target_to_ground = me_to_ground * target_to_me;
