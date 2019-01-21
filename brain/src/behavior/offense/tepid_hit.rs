@@ -13,7 +13,7 @@ use crate::{
 };
 use arrayvec::ArrayVec;
 use common::{prelude::*, PrettyPrint, Time};
-use nalgebra::Point2;
+use nalgebra::{Point2, Point3};
 use nameof::name_of_type;
 use ordered_float::NotNan;
 use std::f32::consts::PI;
@@ -74,13 +74,7 @@ fn ground(ctx: &Context2<'_, '_>, eeg: &mut EEG) -> Option<(f32, HitType)> {
     let intercept =
         GroundIntercept::calc_intercept(&ctx.me().into(), ctx.scenario.ball_prediction())?;
 
-    let own_goal = ctx.game.own_goal();
-    let enemy_goal = ctx.game.enemy_goal();
-    let near_back_wall = enemy_goal.is_y_within_range(intercept.loc.y, ..2000.0);
-    let approach_angle = own_goal
-        .normal_2d
-        .angle_to(&(intercept.loc.to_2d() - ctx.me().Physics.loc_2d()));
-    if near_back_wall && approach_angle.abs() < PI / 3.0 && ctx.me().Boost < 50 {
+    if TepidHit::dangerous_back_wall_with_little_boost(ctx, intercept.loc) {
         eeg.log(
             name_of_type!(TepidHit),
             format!("too dangerous with no boost"),
@@ -88,6 +82,21 @@ fn ground(ctx: &Context2<'_, '_>, eeg: &mut EEG) -> Option<(f32, HitType)> {
         return None;
     }
     Some((intercept.t, HitType::Ground))
+}
+
+impl TepidHit {
+    pub fn dangerous_back_wall_with_little_boost(
+        ctx: &Context2<'_, '_>,
+        intercept_loc: Point3<f32>,
+    ) -> bool {
+        let own_goal = ctx.game.own_goal();
+        let enemy_goal = ctx.game.enemy_goal();
+        let near_back_wall = enemy_goal.is_y_within_range(intercept_loc.y, ..2000.0);
+        let approach_angle = own_goal
+            .normal_2d
+            .angle_to(&(intercept_loc.to_2d() - ctx.me().Physics.loc_2d()));
+        near_back_wall && approach_angle.abs() < PI / 3.0 && ctx.me().Boost < 50
+    }
 }
 
 fn wall<'ball>(ctx: &Context2<'_, 'ball>, eeg: &mut EEG) -> Option<(f32, HitType)> {

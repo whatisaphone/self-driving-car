@@ -95,6 +95,19 @@ impl Behavior for Defense {
         if ctx.scenario.possession() < Scenario::POSSESSION_CONTESTABLE {
             ctx.eeg
                 .log(self.name(), "already in goal; going for a defensive hit");
+
+            let need_boost = match ctx.scenario.me_intercept() {
+                Some(i) => {
+                    let (ctx, _eeg) = &ctx.split();
+                    TepidHit::dangerous_back_wall_with_little_boost(ctx, i.ball_loc)
+                }
+                None => false,
+            };
+            if need_boost {
+                // TepidHit will grab boost.
+                return Action::tail_call(TepidHit::new());
+            }
+
             Action::tail_call(Chain::new(Priority::Idle, vec![
                 Box::new(FollowRoute::new(GroundIntercept::new())),
                 Box::new(GroundedHit::hit_towards(defensive_hit)),
