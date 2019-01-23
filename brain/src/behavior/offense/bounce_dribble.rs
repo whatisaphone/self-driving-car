@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod integration_tests {
-    use crate::integration_tests::helpers::{TestRunner, TestScenario};
+    use crate::integration_tests::{TestRunner, TestScenario};
     use common::prelude::*;
     use nalgebra::{Point3, Rotation3, Vector3};
 

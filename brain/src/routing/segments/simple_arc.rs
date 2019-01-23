@@ -215,7 +215,7 @@ impl SegmentRunner for SimpleArcRunner {
 #[cfg(test)]
 mod integration_tests {
     use crate::{
-        integration_tests::helpers::{TestRunner, TestScenario},
+        integration_tests::{TestRunner, TestScenario},
         routing::{
             segments::SimpleArc,
             test::{route_planner_tester, CookedPlanner},

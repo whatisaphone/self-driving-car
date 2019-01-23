@@ -383,7 +383,7 @@ struct StraightDodge {
 #[cfg(test)]
 mod integration_tests {
     use crate::{
-        integration_tests::helpers::{TestRunner, TestScenario},
+        integration_tests::{TestRunner, TestScenario},
         routing::{
             behavior::FollowRoute, plan::ground_straight::GroundStraightPlanner,
             segments::StraightMode,

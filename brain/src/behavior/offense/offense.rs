@@ -307,7 +307,7 @@ mod integration_tests {
     use crate::{
         behavior::offense::Offense,
         eeg::Event,
-        integration_tests::helpers::{TestRunner, TestScenario},
+        integration_tests::{TestRunner, TestScenario},
     };
     use brain_test_data::recordings;
     use common::prelude::*;

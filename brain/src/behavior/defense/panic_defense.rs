@@ -214,7 +214,7 @@ fn calc_aim_hint(ctx: &mut Context<'_>) -> Point2<f32> {
 mod integration_tests {
     use crate::{
         behavior::defense::PanicDefense,
-        integration_tests::helpers::{TestRunner, TestScenario},
+        integration_tests::{TestRunner, TestScenario},
     };
     use common::prelude::*;
     use nalgebra::{Point3, Rotation3, Vector3};

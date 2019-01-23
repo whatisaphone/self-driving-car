@@ -100,7 +100,7 @@ impl Behavior for Shoot {
 mod integration_tests {
     use crate::{
         behavior::offense::Shoot,
-        integration_tests::helpers::{TestRunner, TestScenario},
+        integration_tests::{TestRunner, TestScenario},
     };
     use common::prelude::*;
     use nalgebra::{Point3, Rotation3, Vector3};

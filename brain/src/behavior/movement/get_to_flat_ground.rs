@@ -177,7 +177,7 @@ mod demo {
             higher_order::Chain,
             movement::{GetToFlatGround, Land},
         },
-        integration_tests::helpers::{TestRunner, TestScenario},
+        integration_tests::{TestRunner, TestScenario},
         strategy::Priority,
     };
     use common::prelude::*;

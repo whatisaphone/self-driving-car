@@ -143,7 +143,7 @@ fn should_air_roll_upside_down(ctx: &mut Context<'_>) -> bool {
 mod integration_tests {
     use crate::{
         behavior::{higher_order::Repeat, taunt::TurtleSpin},
-        integration_tests::helpers::{TestRunner, TestScenario},
+        integration_tests::{TestRunner, TestScenario},
     };
     use nalgebra::{Point3, Vector3};
 

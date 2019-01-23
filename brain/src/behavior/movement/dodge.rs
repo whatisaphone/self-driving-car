@@ -96,7 +96,7 @@ fn towards(car: &rlbot::ffi::PlayerInfo, target_loc: Point2<f32>) -> (f32, f32) 
 mod integration_tests {
     use crate::{
         behavior::{higher_order::Chain, movement::Dodge},
-        integration_tests::helpers::{TestRunner, TestScenario},
+        integration_tests::{TestRunner, TestScenario},
         strategy::Priority,
     };
     use common::prelude::*;

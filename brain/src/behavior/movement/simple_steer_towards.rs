@@ -15,7 +15,7 @@ pub fn simple_yaw_diff(car: &rlbot::ffi::Physics, target_loc: Point2<f32>) -> f3
 mod integration_tests {
     use crate::{
         behavior::movement::simple_steer_towards,
-        integration_tests::helpers::{TestRunner, TestScenario},
+        integration_tests::{TestRunner, TestScenario},
         strategy::{Action, Behavior, Context},
     };
     use common::prelude::*;

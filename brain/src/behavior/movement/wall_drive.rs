@@ -61,7 +61,7 @@ impl Behavior for WallDrive {
 mod integration_tests {
     use crate::{
         behavior::movement::wall_drive::WallDrive,
-        integration_tests::helpers::{TestRunner, TestScenario},
+        integration_tests::{TestRunner, TestScenario},
     };
     use common::rl;
     use nalgebra::Point3;

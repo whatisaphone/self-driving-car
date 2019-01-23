@@ -196,7 +196,7 @@ enum CommitAction {
 mod integration_tests {
     use crate::{
         behavior::Kickoff,
-        integration_tests::helpers::{TestRunner, TestScenario},
+        integration_tests::{TestRunner, TestScenario},
     };
     use brain_test_data::recordings;
     use common::{prelude::*, rl};

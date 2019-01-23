@@ -384,7 +384,7 @@ enum Do {
 mod integration_tests {
     use crate::{
         behavior::strike::{GroundedHit, GroundedHitTarget, GroundedHitTargetAdjust},
-        integration_tests::helpers::{TestRunner, TestScenario},
+        integration_tests::{TestRunner, TestScenario},
     };
     use common::{prelude::*, rl};
     use nalgebra::{Point2, Point3, Rotation3, Vector3};

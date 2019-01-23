@@ -209,7 +209,7 @@ impl TepidHit {
 
 #[cfg(test)]
 mod integration_tests {
-    use crate::{eeg::Event, integration_tests::helpers::TestRunner};
+    use crate::{eeg::Event, integration_tests::TestRunner};
     use brain_test_data::recordings;
     use common::{prelude::*, rl};
     use nalgebra::Point2;

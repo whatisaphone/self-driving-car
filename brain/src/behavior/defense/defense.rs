@@ -171,7 +171,7 @@ mod integration_tests {
     use crate::{
         behavior::defense::{Defense, HitToOwnCorner},
         eeg::Event,
-        integration_tests::helpers::{TestRunner, TestScenario},
+        integration_tests::{TestRunner, TestScenario},
         strategy::SOCCAR_GOAL_BLUE,
     };
     use brain_test_data::recordings;

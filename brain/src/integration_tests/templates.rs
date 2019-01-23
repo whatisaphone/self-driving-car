@@ -1,8 +1,8 @@
 // `from_recorded_row` and `preview_recording` are both marked as deprecated so
 // I don't accidentally copy/paste them and forget to commit the actual harness.
-#![allow(deprecated)]
+#![allow(deprecated, unused)]
 
-use crate::integration_tests::helpers::{TestRunner, TestScenario};
+use crate::integration_tests::{TestRunner, TestScenario};
 use nalgebra::Point3;
 
 #[test]
@@ -10,12 +10,12 @@ use nalgebra::Point3;
 fn scenario_template() {
     let _test = TestRunner::new()
         .scenario(TestScenario {
-            enemy_loc: Point3::new(6000.0, 6000.0, 0.0),
-            ..TestScenario::from_recorded_row("../logs/play.csv", 10.0)
+            //enemy_loc: Point3::new(6000.0, 6000.0, 0.0),
+            ..TestScenario::from_recorded_row("../logs/play.csv", 153.0)
         })
-        .starting_boost(25.0)
+        .starting_boost(0.0)
         .soccar()
-        .run_for_millis(7000);
+        .run_for_millis(5000);
     unimplemented!();
 }
 
@@ -23,8 +23,9 @@ fn scenario_template() {
 #[ignore]
 fn recording_template() {
     let _test = TestRunner::new()
-        .preview_recording("../logs/play.csv", 100.0, 0.5, 5.0)
-        .starting_boost(25.0)
+        .preview_recording("../logs/play.csv", 24.0, 0.2, 5.0)
+        .starting_boost(50.0)
+        .enemy_starting_boost(50.0)
         .soccar()
         .run_for_millis(7000);
     unimplemented!();

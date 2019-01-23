@@ -207,7 +207,7 @@ fn commanding_lead(ctx: &mut Context<'_>) -> bool {
 mod integration_tests {
     use crate::{
         eeg::Event,
-        integration_tests::helpers::{TestRunner, TestScenario},
+        integration_tests::{TestRunner, TestScenario},
     };
     use brain_test_data::recordings;
     use common::prelude::*;
