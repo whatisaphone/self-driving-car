@@ -5,7 +5,7 @@ use crate::{
         strike::BounceShot,
     },
     eeg::{Drawable, EEG},
-    predict::{intercept::NaiveIntercept, naive_ground_intercept},
+    plan::intercept::{naive_ground_intercept, NaiveIntercept},
     routing::recover::{IsSkidding, NotOnFlatGround},
     rules::SameBallTrajectory,
     strategy::{Action, Behavior, Context, Game, Priority, Scenario},

@@ -1,8 +1,7 @@
 use crate::{
     behavior::movement::{GetToFlatGround, QuickJumpAndDodge, Yielder},
     eeg::{color, Drawable, Event},
-    plan::hit_angle::feasible_angle_near,
-    predict::naive_ground_intercept_2,
+    plan::{hit_angle::feasible_angle_near, intercept::naive_ground_intercept_2},
     routing::models::CarState,
     sim::{SimGroundDrive, SimJump},
     strategy::{Action, Behavior, Context},

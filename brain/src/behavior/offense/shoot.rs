@@ -6,7 +6,7 @@ use crate::{
             GroundedHitTargetAdjust,
         },
     },
-    predict::{intercept::NaiveIntercept, naive_ground_intercept_2},
+    plan::intercept::{naive_ground_intercept_2, NaiveIntercept},
     routing::{behavior::FollowRoute, plan::GroundIntercept},
     strategy::{Action, Behavior, Context, Game, Priority, Scenario},
 };

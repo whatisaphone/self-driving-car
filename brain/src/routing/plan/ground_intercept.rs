@@ -1,7 +1,9 @@
 use crate::{
     behavior::strike::GroundedHit,
-    plan::ball::{BallFrame, BallTrajectory},
-    predict::{intercept::naive_intercept_penalty, naive_ground_intercept_2},
+    plan::{
+        ball::{BallFrame, BallTrajectory},
+        intercept::{naive_ground_intercept_2, naive_intercept_penalty},
+    },
     routing::{
         models::{
             CarState, PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner,

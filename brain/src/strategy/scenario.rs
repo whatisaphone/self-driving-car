@@ -1,6 +1,8 @@
 use crate::{
-    plan::ball::{BallFrame, BallPredictor, BallTrajectory},
-    predict::intercept::{naive_intercept_penalty, NaiveIntercept},
+    plan::{
+        ball::{BallFrame, BallPredictor, BallTrajectory},
+        intercept::{naive_intercept_penalty, NaiveIntercept},
+    },
     strategy::{game::Game, Goal},
     utils::{Wall, WallRayCalculator},
 };

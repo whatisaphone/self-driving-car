@@ -28,7 +28,6 @@ mod eeg;
 #[cfg(test)]
 mod integration_tests;
 mod plan;
-mod predict;
 mod routing;
 mod rules;
 mod sim;
