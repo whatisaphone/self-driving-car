@@ -4,7 +4,7 @@ use crate::{
         movement::{dodge::Dodge, drive_towards::drive_towards, land::Land, yielder::Yielder},
     },
     eeg::{color, Drawable},
-    plan::telepathy::predict_enemy_hit_direction,
+    helpers::telepathy::predict_enemy_hit_direction,
     strategy::{Action, Behavior, Context, Priority},
 };
 use common::{kinematics::kinematic_time, prelude::*, rl};

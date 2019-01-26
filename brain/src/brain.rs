@@ -2,7 +2,7 @@
 use crate::strategy::Behavior;
 use crate::{
     eeg::{color, Drawable, EEG},
-    plan::ball::{BallPredictor, ChipBallPrediction, FrameworkBallPrediction},
+    helpers::ball::{BallPredictor, ChipBallPrediction, FrameworkBallPrediction},
     strategy::{infer_game_mode, Context, Dropshot, Game, Runner, Scenario, Soccar},
     utils::FPSCounter,
 };

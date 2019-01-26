@@ -1,7 +1,7 @@
 use crate::{
     behavior::movement::{simple_steer_towards, BlitzToLocation, GetToFlatGround},
     eeg::{color, Drawable, Event},
-    plan::drive::rough_time_drive_to_loc,
+    helpers::drive::rough_time_drive_to_loc,
     rules::SameBallTrajectory,
     strategy::{Action, Behavior, Context},
     utils::geometry::ExtendF32,

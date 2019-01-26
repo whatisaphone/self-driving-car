@@ -1,4 +1,4 @@
-use crate::{plan::hit_angle::feasible_hit_angle_toward, strategy::Context};
+use crate::{helpers::hit_angle::feasible_hit_angle_toward, strategy::Context};
 use common::prelude::*;
 use nalgebra::{Unit, Vector2};
 use std::f32::consts::PI;

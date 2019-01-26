@@ -1,6 +1,6 @@
 use crate::{
     behavior::strike::WallHit,
-    plan::ball::BallFrame,
+    helpers::ball::BallFrame,
     routing::{
         models::{
             PlanningContext, PlanningDump, ProvisionalPlanExpansion, RoutePlan, RoutePlanError,

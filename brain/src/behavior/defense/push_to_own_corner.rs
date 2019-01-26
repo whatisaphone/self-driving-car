@@ -5,7 +5,7 @@ use crate::{
         strike::GroundedHit,
     },
     eeg::{color, Drawable},
-    plan::intercept::naive_ground_intercept_2,
+    helpers::intercept::naive_ground_intercept_2,
     strategy::{Action, Behavior, Context, Goal, Priority, Scenario},
     utils::geometry::ExtendF32,
 };

@@ -1,5 +1,5 @@
 use crate::{
-    plan::intercept::NaiveIntercept,
+    helpers::intercept::NaiveIntercept,
     strategy::Goal,
     utils::{geometry::ExtendF32, WallRayCalculator},
 };

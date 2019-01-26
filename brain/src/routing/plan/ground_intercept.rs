@@ -1,6 +1,6 @@
 use crate::{
     behavior::strike::GroundedHit,
-    plan::{
+    helpers::{
         ball::{BallFrame, BallTrajectory},
         intercept::{naive_ground_intercept_2, naive_intercept_penalty},
     },

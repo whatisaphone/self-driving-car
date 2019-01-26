@@ -1,5 +1,5 @@
 use crate::{
-    plan::ball::BallTrajectory,
+    helpers::ball::BallTrajectory,
     strategy::{Context, Context2, Game, Scenario},
     utils::geometry::flattener::Flattener,
 };

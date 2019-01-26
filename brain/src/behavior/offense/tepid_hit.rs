@@ -3,7 +3,7 @@ use crate::{
         GroundedHit, GroundedHitAimContext, GroundedHitTarget, GroundedHitTargetAdjust, WallHit,
     },
     eeg::{color, Drawable, Event, EEG},
-    plan::hit_angle::{feasible_hit_angle_away, feasible_hit_angle_toward},
+    helpers::hit_angle::{feasible_hit_angle_away, feasible_hit_angle_toward},
     routing::{
         behavior::FollowRoute,
         plan::{GetDollar, GroundIntercept, WallIntercept},

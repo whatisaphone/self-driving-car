@@ -4,7 +4,7 @@ use crate::{
         strike::grounded_hit::car_ball_contact_with_pitch,
     },
     eeg::{Event, EEG},
-    plan::ball::BallFrame,
+    helpers::ball::BallFrame,
     routing::models::CarState,
     strategy::{Action, Behavior, Context, Context2, Priority},
     utils::{

@@ -25,9 +25,9 @@ macro_rules! some_or_else {
 mod behavior;
 mod brain;
 mod eeg;
+mod helpers;
 #[cfg(test)]
 mod integration_tests;
-mod plan;
 mod routing;
 mod rules;
 mod sim;

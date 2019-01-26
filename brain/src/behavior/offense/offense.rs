@@ -1,7 +1,7 @@
 use crate::{
     behavior::offense::{ResetBehindBall, Shoot, TepidHit},
     eeg::Event,
-    plan::{ball::BallFrame, intercept::naive_ground_intercept_2, telepathy},
+    helpers::{ball::BallFrame, intercept::naive_ground_intercept_2, telepathy},
     routing::{behavior::FollowRoute, plan::GetDollar},
     strategy::{Action, Behavior, Context, Game, Scenario},
     utils::geometry::RayCoordinateSystem,
