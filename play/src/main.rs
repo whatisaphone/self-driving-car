@@ -159,7 +159,7 @@ fn bot_loop(rlbot: &rlbot::RLBot, player_index: i32, bot: &mut FormulaNone<'_>) 
         let (input, quick_chat) = bot.tick(rigid_body_tick, &packet);
         rlbot.update_player_input(input, player_index).unwrap();
         if let Some(chat) = quick_chat {
-            if let Err(_) = rlbot.quick_chat(chat, 0) {
+            if let Err(_) = rlbot.quick_chat(chat, player_index) {
                 log::warn!("could not quick chat {:?}", chat);
             }
         }
