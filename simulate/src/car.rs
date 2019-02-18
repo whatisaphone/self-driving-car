@@ -72,8 +72,8 @@ impl Car {
             .with_boost(self.boost);
         car1d.advance(dt, throttle, boost);
 
-        self.loc += self.forward().unwrap() * car1d.distance();
-        self.vel = self.forward().unwrap() * car1d.speed();
+        self.loc += self.forward().into_inner() * car1d.distance();
+        self.vel = self.forward().into_inner() * car1d.speed();
         self.boost = car1d.boost();
         Ok(())
     }

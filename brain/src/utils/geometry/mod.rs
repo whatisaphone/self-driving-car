@@ -72,7 +72,7 @@ impl Plane {
     }
 
     pub fn project_point(&self, point: &Point3<f32>) -> Point3<f32> {
-        point - self.normal.unwrap() * self.distance_to_point(point)
+        point - self.normal.into_inner() * self.distance_to_point(point)
     }
 
     pub fn project_rot(&self, quat: &UnitQuaternion<f32>) -> UnitQuaternion<f32> {
@@ -80,7 +80,7 @@ impl Plane {
     }
 
     pub fn project_vector(&self, vector: &Vector3<f32>) -> Vector3<f32> {
-        vector - self.normal.unwrap() * self.normal.dot(&vector)
+        vector - self.normal.into_inner() * self.normal.dot(&vector)
     }
 
     pub fn intersect(&self, other: &Self) -> Option<Line> {
@@ -106,7 +106,7 @@ impl Plane {
     }
 
     fn origin(&self) -> Point3<f32> {
-        Point3::origin() - self.offset * self.normal.unwrap()
+        Point3::origin() - self.offset * self.normal.into_inner()
     }
 
     pub fn transform(&self, m: Isometry3<f32>) -> Self {

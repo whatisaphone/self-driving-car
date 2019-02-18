@@ -203,7 +203,9 @@ impl SegmentRunner for SimpleArcRunner {
         ctx.eeg
             .draw(Drawable::ghost_car_ground(target_loc, me.Physics.rot()));
 
-        let angle = car_forward_axis.unwrap().angle_to(&(target_loc - car_loc));
+        let angle = car_forward_axis
+            .into_inner()
+            .angle_to(&(target_loc - car_loc));
         SegmentRunAction::Yield(rlbot::ffi::PlayerInput {
             Throttle: 1.0,
             Steer: angle.max(-1.0).min(1.0),

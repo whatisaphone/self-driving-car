@@ -30,7 +30,7 @@ impl SegmentPlan for ForwardDodge {
     fn end(&self) -> CarState {
         assert!((self.start.vel.norm() - self.dodge.start_speed).abs() < 1.0);
         assert!(self.dodge.end_speed >= self.dodge.start_speed);
-        let forward_axis = self.start.forward_axis_2d().unwrap();
+        let forward_axis = self.start.forward_axis_2d().into_inner();
         let vel =
             self.start.vel.to_2d() + forward_axis * (self.dodge.end_speed - self.dodge.start_speed);
         CarState2D {

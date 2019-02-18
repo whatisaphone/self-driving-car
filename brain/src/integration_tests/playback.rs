@@ -57,16 +57,16 @@ impl BallPlayback {
         let state = &self.scenario.states[index];
         let current_loc = packet.GameBall.Physics.loc();
         if (state.loc - current_loc).norm() >= RECORDING_DISTANCE_THRESHOLD {
-            let ball_state = rlbot::state::DesiredBallState::new().physics(
-                rlbot::state::DesiredPhysics::new()
+            let ball_state = rlbot::DesiredBallState::new().physics(
+                rlbot::DesiredPhysics::new()
                     .location(state.loc)
                     .rotation(rotator(state.rot))
                     .velocity(state.vel)
                     .angular_velocity(state.ang_vel),
             );
-            let game_state = rlbot::state::DesiredGameState::new().ball_state(ball_state);
+            let game_state = rlbot::DesiredGameState::new().ball_state(ball_state);
 
-            rlbot.set_game_state_struct(game_state).unwrap();
+            rlbot.set_game_state(&game_state).unwrap();
         }
     }
 }
@@ -134,7 +134,9 @@ impl CarPlayback {
         };
         let tick = &self.scenario.ticks[index];
 
+        #[allow(deprecated)]
         rlbot
+            .interface()
             .update_player_input(tick.input, self.player_index)
             .unwrap();
 
@@ -145,17 +147,17 @@ impl CarPlayback {
 
         let current_loc = packet.GameCars[self.player_index as usize].Physics.loc();
         if (tick.state.loc - current_loc).norm() >= RECORDING_DISTANCE_THRESHOLD {
-            let car_state = rlbot::state::DesiredCarState::new().physics(
-                rlbot::state::DesiredPhysics::new()
+            let car_state = rlbot::DesiredCarState::new().physics(
+                rlbot::DesiredPhysics::new()
                     .location(tick.state.loc)
                     .rotation(rotator(tick.state.rot))
                     .velocity(tick.state.vel)
                     .angular_velocity(tick.state.ang_vel),
             );
-            let game_state = rlbot::state::DesiredGameState::new()
-                .car_state(self.player_index as usize, car_state);
+            let game_state =
+                rlbot::DesiredGameState::new().car_state(self.player_index as usize, car_state);
 
-            rlbot.set_game_state_struct(game_state).unwrap();
+            rlbot.set_game_state(&game_state).unwrap();
         }
     }
 }

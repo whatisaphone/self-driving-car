@@ -8,6 +8,7 @@ use crate::{
     strategy::{Behavior, Team},
     Brain, EEG,
 };
+#[allow(deprecated)]
 use collect::{get_packet_and_inject_rigid_body_tick, RecordingRigidBodyState};
 use common::{prelude::*, ExtendRLBot};
 use lazy_static::lazy_static;
@@ -134,27 +135,14 @@ fn test_thread(
     let rlbot_guard = unlock_rlbot_singleton();
     let rlbot = rlbot_guard.as_ref().unwrap();
 
-    let mut match_settings = rlbot::ffi::MatchSettings {
-        NumPlayers: 2,
-        MutatorSettings: rlbot::ffi::MutatorSettings {
-            MatchLength: rlbot::ffi::MatchLength::Unlimited,
-            RespawnTimeOptions: rlbot::ffi::RespawnTimeOption::Disable_Goal_Reset,
-            ..Default::default()
-        },
-        SkipReplays: true,
-        ..Default::default()
-    };
-
-    match_settings.PlayerConfiguration[0].Bot = true;
-    match_settings.PlayerConfiguration[0].RLBotControlled = true;
-    match_settings.PlayerConfiguration[0].set_name("Subject");
-
-    match_settings.PlayerConfiguration[1].Bot = true;
-    match_settings.PlayerConfiguration[1].RLBotControlled = true;
-    match_settings.PlayerConfiguration[1].set_name("Mushroom");
-    match_settings.PlayerConfiguration[1].Team = 1;
-
-    rlbot.start_match(match_settings).unwrap();
+    let match_settings = rlbot::MatchSettings::rlbot_vs_rlbot("Subject", "Mushroom")
+        .skip_replays(true)
+        .mutator_settings(
+            rlbot::MutatorSettings::new()
+                .match_length(rlbot::MatchLength::Unlimited)
+                .respawn_time_option(rlbot::RespawnTimeOption::Disable_Goal_Reset),
+        );
+    rlbot.start_match(&match_settings).unwrap();
 
     let mut eeg = EEG::new();
     eeg.log_to_stdout();
@@ -168,13 +156,18 @@ fn test_thread(
     let mut physicist = rlbot.physicist();
 
     // Wait for things to stabilize.
-    while !packets.next().unwrap().GameInfo.RoundActive {}
-    while packets.next().unwrap().GameCars[0].Demolished {}
+    while !packets.next().unwrap().game_info.is_round_active {}
+    while packets.next().unwrap().players[0].is_demolished {}
 
-    for i in 0..match_settings.NumPlayers {
-        rlbot.update_player_input(Default::default(), i).unwrap();
+    for i in 0..match_settings.player_configurations.len() {
+        #[allow(deprecated)]
+        rlbot
+            .interface()
+            .update_player_input(Default::default(), i as i32)
+            .unwrap();
     }
 
+    #[allow(deprecated)]
     let field_info = rlbot.get_field_info().unwrap();
 
     setup_scenario(
@@ -187,6 +180,7 @@ fn test_thread(
     );
 
     let rigid_body_tick = physicist.next_flat().unwrap();
+    #[allow(deprecated)]
     let first_packet = get_packet_and_inject_rigid_body_tick(rlbot, rigid_body_tick).unwrap();
 
     brain.set_behavior(Fuse::new(behavior(&first_packet)), &mut eeg);
@@ -197,6 +191,7 @@ fn test_thread(
 
     'tick_loop: loop {
         let rigid_body_tick = physicist.next_flat().unwrap();
+        #[allow(deprecated)]
         let packet = get_packet_and_inject_rigid_body_tick(rlbot, rigid_body_tick).unwrap();
 
         ball.tick(rlbot, &packet);
@@ -235,7 +230,8 @@ fn test_thread(
 
         eeg.begin(&packet);
         let input = brain.tick(&field_info, &packet, &mut eeg);
-        rlbot.update_player_input(input, 0).unwrap();
+        #[allow(deprecated)]
+        rlbot.interface().update_player_input(input, 0).unwrap();
         eeg.show(&packet);
         if let Some(chat) = eeg.quick_chat {
             if let Err(_) = rlbot.quick_chat(chat, 0) {
@@ -245,8 +241,12 @@ fn test_thread(
     }
 
     // For tidiness, make the cars stop moving when the test is finished.
-    for i in 0..match_settings.NumPlayers {
-        rlbot.update_player_input(Default::default(), i).unwrap();
+    for i in 0..match_settings.player_configurations.len() {
+        #[allow(deprecated)]
+        rlbot
+            .interface()
+            .update_player_input(Default::default(), i as i32)
+            .unwrap();
     }
 }
 
@@ -262,6 +262,7 @@ fn setup_scenario(
     enemy: &RecordingRigidBodyState,
     enemy_boost: f32,
 ) {
+    #[allow(deprecated)]
     let num_boosts = rlbot.get_field_info().unwrap().NumBoosts;
 
     set_state(rlbot, ball, car, car_boost, enemy, enemy_boost, num_boosts);
@@ -284,16 +285,16 @@ fn set_state(
     enemy_boost: f32,
     num_boosts: i32,
 ) {
-    let ball_state = rlbot::state::DesiredBallState::new().physics(
-        rlbot::state::DesiredPhysics::new()
+    let ball_state = rlbot::DesiredBallState::new().physics(
+        rlbot::DesiredPhysics::new()
             .location(ball.loc)
             .rotation(rotator(ball.rot))
             .velocity(ball.vel)
             .angular_velocity(ball.ang_vel),
     );
-    let car_state = rlbot::state::DesiredCarState::new()
+    let car_state = rlbot::DesiredCarState::new()
         .physics(
-            rlbot::state::DesiredPhysics::new()
+            rlbot::DesiredPhysics::new()
                 .location(car.loc)
                 .rotation(rotator(car.rot))
                 .velocity(car.vel)
@@ -302,16 +303,16 @@ fn set_state(
         .jumped(false)
         .double_jumped(false)
         .boost_amount(car_boost);
-    let enemy_state = rlbot::state::DesiredCarState::new()
+    let enemy_state = rlbot::DesiredCarState::new()
         .physics(
-            rlbot::state::DesiredPhysics::new()
+            rlbot::DesiredPhysics::new()
                 .location(enemy.loc)
                 .rotation(rotator(enemy.rot))
                 .velocity(enemy.vel)
                 .angular_velocity(enemy.ang_vel),
         )
         .boost_amount(enemy_boost);
-    let mut game_state = rlbot::state::DesiredGameState::new()
+    let mut game_state = rlbot::DesiredGameState::new()
         .ball_state(ball_state)
         .car_state(0, car_state)
         .car_state(1, enemy_state);
@@ -319,9 +320,9 @@ fn set_state(
     for boost_index in 0..num_boosts as usize {
         game_state = game_state.boost_state(
             boost_index,
-            rlbot::state::DesiredBoostState::new().respawn_time(0.0),
+            rlbot::DesiredBoostState::new().respawn_time(0.0),
         );
     }
 
-    rlbot.set_game_state_struct(game_state).unwrap();
+    rlbot.set_game_state(&game_state).unwrap();
 }

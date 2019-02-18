@@ -2,6 +2,7 @@
 #![cfg_attr(feature = "strict", deny(warnings))]
 #![warn(clippy::all)]
 
+#[allow(deprecated)]
 pub use crate::{
     collector::Collector,
     data::{RecordingPlayerTick, RecordingRigidBodyState, RecordingTick},

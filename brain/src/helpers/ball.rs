@@ -159,7 +159,11 @@ impl BallPredictor for FrameworkBallPrediction {
         const DT: f32 = 1.0 / 60.0;
 
         let mut packet: rlbot::ffi::BallPredictionPacket = unsafe { mem::uninitialized() };
-        self.rlbot.get_ball_prediction_struct(&mut packet).unwrap();
+        #[allow(deprecated)]
+        self.rlbot
+            .interface()
+            .get_ball_prediction_struct(&mut packet)
+            .unwrap();
         let start_time = packet.Slice[0].GameSeconds;
         let frames = packet
             .Slice

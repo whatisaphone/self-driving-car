@@ -14,8 +14,8 @@ impl SimJump {
         // Phase 1: Include the initial jump impulse, and the extra force from holding
         // the jump button down for the maximum 0.2 seconds.
         let force_time = time.min(rl::CAR_JUMP_FORCE_TIME);
-        let v_0 = start.vel + start.roof_axis().unwrap() * rl::CAR_JUMP_IMPULSE_SPEED;
-        let a = start.roof_axis().unwrap() + Vector3::z() * rl::GRAVITY;
+        let v_0 = start.vel + start.roof_axis().into_inner() * rl::CAR_JUMP_IMPULSE_SPEED;
+        let a = start.roof_axis().into_inner() + Vector3::z() * rl::GRAVITY;
         let (d, vel) = kinematic(v_0, a, force_time);
         let loc = start.loc + d;
 

@@ -4,6 +4,7 @@
 
 use brain::{Brain, EEG};
 use chrono::Local;
+#[allow(deprecated)]
 use collect::{get_packet_and_inject_rigid_body_tick, Collector};
 use common::ext::ExtendRLBot;
 use std::{error::Error, fs, panic, path::PathBuf, thread::sleep, time::Duration};
@@ -92,14 +93,11 @@ struct StartArgs {
 }
 
 fn start_match(rlbot: &rlbot::RLBot) -> Result<(), Box<dyn Error>> {
-    let match_settings = rlbot::ffi::MatchSettings {
-        MutatorSettings: rlbot::ffi::MutatorSettings {
-            MatchLength: rlbot::ffi::MatchLength::Unlimited,
-            ..Default::default()
-        },
-        ..rlbot::ffi::MatchSettings::rlbot_vs_allstar("Formula None", "All-Star")
-    };
-    rlbot.start_match(match_settings)?;
+    let match_settings = rlbot::MatchSettings::rlbot_vs_allstar("Formula None", "All-Star")
+        .mutator_settings(
+            rlbot::MutatorSettings::new().match_length(rlbot::MatchLength::Unlimited),
+        );
+    rlbot.start_match(&match_settings)?;
     rlbot.wait_for_match_start()
 }
 
@@ -125,6 +123,7 @@ fn run_bot(
     log_to_stdout: bool,
     show_window: bool,
 ) {
+    #[allow(deprecated)]
     let field_info = rlbot.get_field_info().unwrap();
     let brain = match Brain::infer_game_mode(&field_info) {
         rlbot::ffi::GameMode::Soccer => Brain::soccar(),
@@ -155,9 +154,14 @@ fn bot_loop(rlbot: &rlbot::RLBot, player_index: i32, bot: &mut FormulaNone<'_>) 
 
     loop {
         let rigid_body_tick = physics.next_flat().unwrap();
+        #[allow(deprecated)]
         let packet = get_packet_and_inject_rigid_body_tick(&rlbot, rigid_body_tick).unwrap();
         let (input, quick_chat) = bot.tick(rigid_body_tick, &packet);
-        rlbot.update_player_input(input, player_index).unwrap();
+        #[allow(deprecated)]
+        rlbot
+            .interface()
+            .update_player_input(input, player_index)
+            .unwrap();
         if let Some(chat) = quick_chat {
             if let Err(_) = rlbot.quick_chat(chat, player_index) {
                 log::warn!("could not quick chat {:?}", chat);

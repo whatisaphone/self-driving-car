@@ -38,7 +38,7 @@ impl Mul<Unit<Vector3<f32>>> for Flattener {
     type Output = Unit<Vector2<f32>>;
 
     fn mul(self, rhs: Unit<Vector3<f32>>) -> Self::Output {
-        Unit::new_normalize((self.transform * rhs.unwrap()).xy())
+        Unit::new_normalize((self.transform * rhs.into_inner()).xy())
     }
 }
 

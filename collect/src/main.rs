@@ -2,6 +2,7 @@
 #![cfg_attr(feature = "strict", deny(warnings))]
 #![warn(clippy::all)]
 
+#[allow(deprecated)]
 use crate::{
     collector::Collector,
     rlbot_ext::get_packet_and_inject_rigid_body_tick,
@@ -17,7 +18,7 @@ pub fn main() -> Result<(), Box<dyn Error>> {
     let rlbot = rlbot::init()?;
 
     // Zero out our input, just to be safe
-    rlbot.update_player_input(Default::default(), 0)?;
+    rlbot.update_player_input(0, &Default::default())?;
 
     start_match(&rlbot)?;
 
@@ -27,18 +28,19 @@ pub fn main() -> Result<(), Box<dyn Error>> {
 }
 
 fn run_scenario(rlbot: &rlbot::RLBot, mut scenario: impl Scenario) -> Result<(), Box<dyn Error>> {
-    stabilize_scenario(&rlbot, scenario.initial_state());
+    stabilize_scenario(&rlbot, &scenario.initial_state());
 
     let f = File::create(format!("oven/data/{}.csv", scenario.name()))?;
     let mut collector = Collector::new(f);
 
     let mut packets = rlbot.packeteer();
-    let start = packets.next()?.GameInfo.TimeSeconds;
+    let start = packets.next()?.game_info.seconds_elapsed;
 
     let mut physics = rlbot.physicist();
 
     loop {
         let tick = physics.next_flat().unwrap();
+        #[allow(deprecated)]
         let packet = get_packet_and_inject_rigid_body_tick(&rlbot, tick)?;
 
         let time = packet.GameInfo.TimeSeconds - start;
@@ -50,33 +52,28 @@ fn run_scenario(rlbot: &rlbot::RLBot, mut scenario: impl Scenario) -> Result<(),
     }
 
     // Stop the car before exiting (this is good safety advice IRL as well)
-    rlbot.update_player_input(Default::default(), 0)?;
+    rlbot.update_player_input(0, &Default::default())?;
 
     Ok(())
 }
 
 fn start_match(rlbot: &rlbot::RLBot) -> Result<(), Box<dyn Error>> {
-    let mut match_settings = rlbot::ffi::MatchSettings {
-        NumPlayers: 1,
-        MutatorSettings: rlbot::ffi::MutatorSettings {
-            MatchLength: rlbot::ffi::MatchLength::Unlimited,
-            ..Default::default()
-        },
-        ..Default::default()
-    };
-
-    match_settings.PlayerConfiguration[0].Bot = true;
-    match_settings.PlayerConfiguration[0].RLBotControlled = true;
-    match_settings.PlayerConfiguration[0].set_name("Chell");
-
-    rlbot.start_match(match_settings)?;
+    rlbot.start_match(
+        &rlbot::MatchSettings::new()
+            .player_configurations(vec![rlbot::PlayerConfiguration::new(
+                rlbot::PlayerClass::RLBotPlayer,
+                "Chell",
+                1,
+            )])
+            .mutator_settings(
+                rlbot::MutatorSettings::new().match_length(rlbot::MatchLength::Unlimited),
+            ),
+    )?;
     rlbot.wait_for_match_start()
 }
 
-fn stabilize_scenario(rlbot: &rlbot::RLBot, desired_game_state: rlbot::state::DesiredGameState) {
-    rlbot
-        .set_game_state_struct(desired_game_state.clone())
-        .unwrap();
+fn stabilize_scenario(rlbot: &rlbot::RLBot, desired_game_state: &rlbot::DesiredGameState) {
+    rlbot.set_game_state(desired_game_state).unwrap();
     sleep(Duration::from_millis(2000));
-    rlbot.set_game_state_struct(desired_game_state).unwrap();
+    rlbot.set_game_state(desired_game_state).unwrap();
 }

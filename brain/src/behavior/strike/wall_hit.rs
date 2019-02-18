@@ -366,9 +366,9 @@ impl SimDrive {
             .with_boost(start.boost);
         car.advance(time, throttle, boost);
 
-        let flat_end_loc = flat_start_loc + flat_dir.unwrap() * car.distance();
+        let flat_end_loc = flat_start_loc + flat_dir.into_inner() * car.distance();
         let flat_end_rot = CAR_LOCAL_FORWARD_AXIS_2D.rotation_to(&flat_dir);
-        let flat_end_vel = flat_dir.unwrap() * car.speed();
+        let flat_end_vel = flat_dir.into_inner() * car.speed();
 
         CarState {
             loc: self.flat_to_target * flat_end_loc.to_3d(rl::OCTANE_NEUTRAL_Z),
@@ -384,8 +384,8 @@ struct SimJump;
 impl SimJump {
     fn simulate(&self, start: &CarState, time: f32, target_rot: &UnitQuaternion<f32>) -> CarState {
         let force_time = time.min(rl::CAR_JUMP_FORCE_TIME);
-        let v_0 = start.vel + start.roof_axis().unwrap() * rl::CAR_JUMP_IMPULSE_SPEED;
-        let a = start.roof_axis().unwrap() + Vector3::z() * rl::GRAVITY;
+        let v_0 = start.vel + start.roof_axis().into_inner() * rl::CAR_JUMP_IMPULSE_SPEED;
+        let a = start.roof_axis().into_inner() + Vector3::z() * rl::GRAVITY;
         let (d, vel) = kinematic(v_0, a, force_time);
         let loc = start.loc + d;
 

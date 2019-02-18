@@ -30,7 +30,9 @@ mod tests {
 
     pub fn convert_pyr_to_quat((p, y, r): (f32, f32, f32)) -> UnitQuaternion<f32> {
         let mat = chip::euler_rotation(&Vector3::new(p, y, r));
-        let coords = UnitQuaternion::from_rotation_matrix(&mat).unwrap().coords;
+        let coords = UnitQuaternion::from_rotation_matrix(&mat)
+            .into_inner()
+            .coords;
         UnitQuaternion::xyzw(-coords.x, -coords.y, -coords.z, coords.w)
     }
 

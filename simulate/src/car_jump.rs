@@ -29,7 +29,7 @@ pub fn jump_duration(rot: &UnitQuaternion<f32>, target_dist: f32) -> Option<f32>
     //
     //     (a)t^2 + (2 * v0)t + (2 * d0 - 2 * d)
 
-    let axis = car_roof_axis(*rot).unwrap();
+    let axis = car_roof_axis(*rot).into_inner();
 
     let v_0 = axis * rl::CAR_JUMP_IMPULSE_SPEED;
     let a = axis * rl::CAR_JUMP_ACCEL + Vector3::z() * rl::GRAVITY;

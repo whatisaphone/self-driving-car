@@ -34,7 +34,7 @@ impl SegmentPlan for JumpAndDodge {
         assert!(!self.start.vel.norm().is_nan());
         assert!(!self.direction.angle().is_nan());
 
-        let impulse = self.direction * self.start.forward_axis_2d().unwrap() * DODGE_IMPULSE;
+        let impulse = self.direction * self.start.forward_axis_2d().into_inner() * DODGE_IMPULSE;
         let dodge_vel = self.start.vel.to_2d() + impulse;
         let loc = self.start.loc.to_2d()
             + (JUMP_TIME + WAIT_TIME) * self.start.vel.to_2d()

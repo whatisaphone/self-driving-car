@@ -2,6 +2,7 @@
 //! generate the data used for simulation.
 
 #![allow(dead_code)]
+#![allow(deprecated)] // TODO: switch to Flatbuffer
 
 use common::{prelude::*, rl};
 use nalgebra::{Point3, Vector3};
@@ -10,7 +11,7 @@ use std::{error::Error, f32::consts::PI, fmt};
 pub trait Scenario {
     fn name(&self) -> String;
 
-    fn initial_state(&self) -> rlbot::state::DesiredGameState {
+    fn initial_state(&self) -> rlbot::DesiredGameState {
         game_state_default()
     }
 
@@ -31,7 +32,7 @@ pub enum ScenarioStepResult {
 pub trait SimpleScenario {
     fn name(&self) -> String;
 
-    fn initial_state(&self) -> rlbot::state::DesiredGameState {
+    fn initial_state(&self) -> rlbot::DesiredGameState {
         game_state_default()
     }
 
@@ -49,7 +50,7 @@ impl<S: SimpleScenario> Scenario for S {
         self.name()
     }
 
-    fn initial_state(&self) -> rlbot::state::DesiredGameState {
+    fn initial_state(&self) -> rlbot::DesiredGameState {
         self.initial_state()
     }
 
@@ -61,11 +62,11 @@ impl<S: SimpleScenario> Scenario for S {
     ) -> Result<ScenarioStepResult, Box<dyn Error>> {
         match self.step(time, packet) {
             SimpleScenarioStepResult::Ignore(i) => {
-                rlbot.update_player_input(i, 0)?;
+                rlbot.interface().update_player_input(i, 0)?;
                 Ok(ScenarioStepResult::Ignore)
             }
             SimpleScenarioStepResult::Write(i) => {
-                rlbot.update_player_input(i, 0)?;
+                rlbot.interface().update_player_input(i, 0)?;
                 Ok(ScenarioStepResult::Write)
             }
             SimpleScenarioStepResult::Finish => Ok(ScenarioStepResult::Finish),
@@ -73,30 +74,25 @@ impl<S: SimpleScenario> Scenario for S {
     }
 }
 
-fn game_state_default() -> rlbot::state::DesiredGameState {
-    rlbot::state::DesiredGameState::new()
+fn game_state_default() -> rlbot::DesiredGameState {
+    rlbot::DesiredGameState::new()
         .ball_state(
-            rlbot::state::DesiredBallState::new().physics(
-                rlbot::state::DesiredPhysics::new()
+            rlbot::DesiredBallState::new().physics(
+                rlbot::DesiredPhysics::new()
                     .location(Point3::new(2000.0, 0.0, 0.0))
-                    .rotation(
-                        rlbot::state::RotatorPartial::new()
-                            .pitch(0.0)
-                            .yaw(0.0)
-                            .roll(0.0),
-                    )
+                    .rotation(rlbot::RotatorPartial::new().pitch(0.0).yaw(0.0).roll(0.0))
                     .velocity(Vector3::new(0.0, 0.0, 0.0))
                     .angular_velocity(Vector3::new(0.0, 0.0, 0.0)),
             ),
         )
         .car_state(
             0,
-            rlbot::state::DesiredCarState::new()
+            rlbot::DesiredCarState::new()
                 .physics(
-                    rlbot::state::DesiredPhysics::new()
+                    rlbot::DesiredPhysics::new()
                         .location(Point3::new(0.0, 0.0, 17.01))
                         .rotation(
-                            rlbot::state::RotatorPartial::new()
+                            rlbot::RotatorPartial::new()
                                 .pitch(0.0)
                                 .yaw(PI / 2.0)
                                 .roll(0.0),
@@ -159,7 +155,7 @@ impl SimpleScenario for Coast {
         "coast".to_string()
     }
 
-    fn initial_state(&self) -> rlbot::state::DesiredGameState {
+    fn initial_state(&self) -> rlbot::DesiredGameState {
         let mut state = game_state_default();
         state.car_states[0]
             .as_mut()
@@ -167,12 +163,7 @@ impl SimpleScenario for Coast {
             .physics
             .as_mut()
             .unwrap()
-            .location = Some(
-            rlbot::state::Vector3Partial::new()
-                .x(0.0)
-                .y(-5000.0)
-                .z(17.01),
-        );
+            .location = Some(rlbot::Vector3Partial::new().x(0.0).y(-5000.0).z(17.01));
         state
     }
 
@@ -237,7 +228,7 @@ impl Scenario for Turn {
                     Boost: boost,
                     ..Default::default()
                 };
-                rlbot.update_player_input(input, 0)?;
+                rlbot.interface().update_player_input(input, 0)?;
                 Ok(ScenarioStepResult::Ignore)
             }
             Some(start_time) if time < start_time + 3.0 => {
@@ -247,7 +238,7 @@ impl Scenario for Turn {
                     Boost: boost,
                     ..Default::default()
                 };
-                rlbot.update_player_input(input, 0)?;
+                rlbot.interface().update_player_input(input, 0)?;
                 Ok(ScenarioStepResult::Write)
             }
             _ => Ok(ScenarioStepResult::Finish),
@@ -279,7 +270,7 @@ impl Scenario for PowerslideTurn {
         )
     }
 
-    fn initial_state(&self) -> rlbot::state::DesiredGameState {
+    fn initial_state(&self) -> rlbot::DesiredGameState {
         let mut state = game_state_default();
         state.car_states[0]
             .as_mut()
@@ -287,12 +278,7 @@ impl Scenario for PowerslideTurn {
             .physics
             .as_mut()
             .unwrap()
-            .location = Some(
-            rlbot::state::Vector3Partial::new()
-                .x(0.0)
-                .y(-5000.0)
-                .z(17.01),
-        );
+            .location = Some(rlbot::Vector3Partial::new().x(0.0).y(-5000.0).z(17.01));
         state
     }
 
@@ -316,7 +302,7 @@ impl Scenario for PowerslideTurn {
                     Boost: self.start_speed >= rl::CAR_NORMAL_SPEED,
                     ..Default::default()
                 };
-                rlbot.update_player_input(input, 0)?;
+                rlbot.interface().update_player_input(input, 0)?;
                 Ok(ScenarioStepResult::Ignore)
             }
             Some(start_time) => {
@@ -326,7 +312,7 @@ impl Scenario for PowerslideTurn {
                     Handbrake: true,
                     ..Default::default()
                 };
-                rlbot.update_player_input(input, 0)?;
+                rlbot.interface().update_player_input(input, 0)?;
 
                 if time < start_time + 3.0 {
                     Ok(ScenarioStepResult::Write)
@@ -420,7 +406,7 @@ impl Scenario for Dodge {
                     Boost: self.start_speed > rl::CAR_MAX_SPEED,
                     ..Default::default()
                 };
-                rlbot.update_player_input(input, 0)?;
+                rlbot.interface().update_player_input(input, 0)?;
                 Ok(ScenarioStepResult::Write)
             }
             DodgePhase::Jump(start) => {
@@ -433,7 +419,7 @@ impl Scenario for Dodge {
                     Jump: true,
                     ..Default::default()
                 };
-                rlbot.update_player_input(input, 0)?;
+                rlbot.interface().update_player_input(input, 0)?;
                 Ok(ScenarioStepResult::Write)
             }
             DodgePhase::Wait(start) => {
@@ -443,7 +429,7 @@ impl Scenario for Dodge {
                 }
 
                 let input = Default::default();
-                rlbot.update_player_input(input, 0)?;
+                rlbot.interface().update_player_input(input, 0)?;
                 Ok(ScenarioStepResult::Write)
             }
             DodgePhase::Dodge(start) => {
@@ -457,7 +443,7 @@ impl Scenario for Dodge {
                     Jump: true,
                     ..Default::default()
                 };
-                rlbot.update_player_input(input, 0)?;
+                rlbot.interface().update_player_input(input, 0)?;
                 Ok(ScenarioStepResult::Write)
             }
             DodgePhase::Land(start) => {
@@ -466,7 +452,7 @@ impl Scenario for Dodge {
                 }
 
                 let input = Default::default();
-                rlbot.update_player_input(input, 0)?;
+                rlbot.interface().update_player_input(input, 0)?;
                 Ok(ScenarioStepResult::Write)
             }
         }
@@ -504,7 +490,7 @@ impl fmt::Display for AirAxis {
     }
 }
 
-fn game_state_default_air() -> rlbot::state::DesiredGameState {
+fn game_state_default_air() -> rlbot::DesiredGameState {
     let mut state = game_state_default();
     state.car_states[0]
         .as_mut()
@@ -512,19 +498,14 @@ fn game_state_default_air() -> rlbot::state::DesiredGameState {
         .physics
         .as_mut()
         .unwrap()
-        .location = Some(rlbot::state::Vector3Partial::new().x(0.0).y(0.0).z(1000.0));
+        .location = Some(rlbot::Vector3Partial::new().x(0.0).y(0.0).z(1000.0));
     state.car_states[0]
         .as_mut()
         .unwrap()
         .physics
         .as_mut()
         .unwrap()
-        .rotation = Some(
-        rlbot::state::RotatorPartial::new()
-            .pitch(0.0)
-            .yaw(0.0)
-            .roll(0.0),
-    );
+        .rotation = Some(rlbot::RotatorPartial::new().pitch(0.0).yaw(0.0).roll(0.0));
     state
 }
 
@@ -547,7 +528,7 @@ impl Scenario for AirRotateAccel {
         format!("air_rotate_{}_accel", self.axis)
     }
 
-    fn initial_state(&self) -> rlbot::state::DesiredGameState {
+    fn initial_state(&self) -> rlbot::DesiredGameState {
         game_state_default_air()
     }
 
@@ -565,7 +546,7 @@ impl Scenario for AirRotateAccel {
             Some(start_time) if time < start_time + 1.0 => {
                 let mut input = rlbot::ffi::PlayerInput::default();
                 *self.axis.get_input_axis_mut(&mut input) = 1.0;
-                rlbot.update_player_input(input, 0)?;
+                rlbot.interface().update_player_input(input, 0)?;
                 Ok(ScenarioStepResult::Write)
             }
             _ => Ok(ScenarioStepResult::Finish),
@@ -592,7 +573,7 @@ impl Scenario for AirRotateCoast {
         format!("air_rotate_{}_coast", self.axis)
     }
 
-    fn initial_state(&self) -> rlbot::state::DesiredGameState {
+    fn initial_state(&self) -> rlbot::DesiredGameState {
         game_state_default_air()
     }
 
@@ -610,12 +591,12 @@ impl Scenario for AirRotateCoast {
             Some(start_time) if time < start_time + 1.0 => {
                 let mut input = rlbot::ffi::PlayerInput::default();
                 *self.axis.get_input_axis_mut(&mut input) = 1.0;
-                rlbot.update_player_input(input, 0)?;
+                rlbot.interface().update_player_input(input, 0)?;
                 Ok(ScenarioStepResult::Ignore)
             }
             Some(start_time) if time < start_time + 3.0 => {
                 let input = rlbot::ffi::PlayerInput::default();
-                rlbot.update_player_input(input, 0)?;
+                rlbot.interface().update_player_input(input, 0)?;
                 Ok(ScenarioStepResult::Write)
             }
             _ => Ok(ScenarioStepResult::Finish),
@@ -642,7 +623,7 @@ impl Scenario for AirRotateCounter {
         format!("air_rotate_{}_counter", self.axis)
     }
 
-    fn initial_state(&self) -> rlbot::state::DesiredGameState {
+    fn initial_state(&self) -> rlbot::DesiredGameState {
         game_state_default_air()
     }
 
@@ -660,13 +641,13 @@ impl Scenario for AirRotateCounter {
             Some(start_time) if time < start_time + 1.0 => {
                 let mut input = rlbot::ffi::PlayerInput::default();
                 *self.axis.get_input_axis_mut(&mut input) = 1.0;
-                rlbot.update_player_input(input, 0)?;
+                rlbot.interface().update_player_input(input, 0)?;
                 Ok(ScenarioStepResult::Ignore)
             }
             Some(start_time) if time < start_time + 2.0 => {
                 let mut input = rlbot::ffi::PlayerInput::default();
                 *self.axis.get_input_axis_mut(&mut input) = -1.0;
-                rlbot.update_player_input(input, 0)?;
+                rlbot.interface().update_player_input(input, 0)?;
                 Ok(ScenarioStepResult::Write)
             }
             _ => Ok(ScenarioStepResult::Finish),

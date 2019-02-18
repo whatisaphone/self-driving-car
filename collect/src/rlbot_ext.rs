@@ -4,12 +4,14 @@ use std::error::Error;
 
 const PHYSICS_TPS: f32 = 120.0;
 
+#[deprecated(note = "use flatbuffer method instead")]
+#[allow(deprecated)]
 pub fn get_packet_and_inject_rigid_body_tick(
     rlbot: &rlbot::RLBot,
     rigid_body_tick: rlbot::flat::RigidBodyTick<'_>,
 ) -> Result<rlbot::ffi::LiveDataPacket, Box<dyn Error>> {
     let mut packet = unsafe { ::std::mem::uninitialized() };
-    rlbot.update_live_data_packet(&mut packet)?;
+    rlbot.interface().update_live_data_packet(&mut packet)?;
     physicsify(&mut packet, rigid_body_tick);
     Ok(packet)
 }

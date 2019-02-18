@@ -267,6 +267,7 @@ impl<N: Real> ExtendUnitVector2<N> for Unit<Vector2<N>> {
 }
 
 pub trait ExtendRLBot {
+    #[deprecated(note = "use flatbuffer method instead")]
     fn get_field_info(&self) -> Result<rlbot::ffi::FieldInfo, Box<dyn Error>>;
     fn quick_chat(
         &self,
@@ -276,9 +277,10 @@ pub trait ExtendRLBot {
 }
 
 impl ExtendRLBot for rlbot::RLBot {
+    #[allow(deprecated)]
     fn get_field_info(&self) -> Result<rlbot::ffi::FieldInfo, Box<dyn Error>> {
         let mut field_info = unsafe { mem::uninitialized() };
-        self.update_field_info(&mut field_info)?;
+        self.interface().update_field_info(&mut field_info)?;
         Ok(field_info)
     }
 
@@ -287,7 +289,8 @@ impl ExtendRLBot for rlbot::RLBot {
         selection: rlbot::flat::QuickChatSelection,
         player_index: i32,
     ) -> Result<(), ()> {
-        self.send_quick_chat(build_quick_chat(selection, player_index).finished_data())
+        self.interface()
+            .send_quick_chat(build_quick_chat(selection, player_index).finished_data())
             .map_err(|_| ())
     }
 }

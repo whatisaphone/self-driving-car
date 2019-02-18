@@ -217,7 +217,7 @@ fn get_boost(ctx: &mut Context<'_>) -> Option<Box<dyn Behavior>> {
         let future_loc = ctx.scenario.ball_prediction().at_time_or_last(3.0).loc;
         let behind_ball = Vector2::new(0.0, ctx.game.own_goal().center_2d.y.signum() * 2500.0);
         let opponent_hit = telepathy::predict_enemy_hit_direction(ctx)
-            .map(|dir| dir.unwrap() * 2500.0)
+            .map(|dir| dir.into_inner() * 2500.0)
             .unwrap_or_else(Vector2::zeros);
         let hint = future_loc.to_2d() + behind_ball + opponent_hit;
         ctx.eeg
