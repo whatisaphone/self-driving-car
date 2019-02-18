@@ -146,7 +146,7 @@ impl SegmentRunner for Turner {
             return SegmentRunAction::Success;
         }
 
-        SegmentRunAction::Yield(rlbot::ffi::PlayerInput {
+        SegmentRunAction::Yield(common::halfway_house::PlayerInput {
             Throttle: 1.0,
             Steer: yaw_diff.signum(),
             ..Default::default()

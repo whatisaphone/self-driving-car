@@ -4,9 +4,8 @@
 
 use brain::{Brain, EEG};
 use chrono::Local;
-#[allow(deprecated)]
 use collect::{get_packet_and_inject_rigid_body_tick, Collector};
-use common::ext::ExtendRLBot;
+use common::{ext::ExtendRLBot, halfway_house::translate_player_input};
 use std::{error::Error, fs, panic, path::PathBuf, thread::sleep, time::Duration};
 
 mod logging;
@@ -123,12 +122,11 @@ fn run_bot(
     log_to_stdout: bool,
     show_window: bool,
 ) {
-    #[allow(deprecated)]
-    let field_info = rlbot.get_field_info().unwrap();
-    let brain = match Brain::infer_game_mode(&field_info) {
-        rlbot::ffi::GameMode::Soccer => Brain::soccar(),
-        rlbot::ffi::GameMode::Dropshot => Brain::dropshot(rlbot),
-        rlbot::ffi::GameMode::Hoops => Brain::hoops(rlbot),
+    let field_info = rlbot.interface().update_field_info_flatbuffer().unwrap();
+    let brain = match Brain::infer_game_mode(field_info) {
+        rlbot::GameMode::Soccer => Brain::soccar(),
+        rlbot::GameMode::Dropshot => Brain::dropshot(rlbot),
+        rlbot::GameMode::Hoops => Brain::hoops(rlbot),
         mode => panic!("unexpected game mode {:?}", mode),
     };
 
@@ -144,7 +142,7 @@ fn run_bot(
     if show_window {
         eeg.show_window();
     }
-    let mut bot = FormulaNone::new(&field_info, collector, eeg, brain);
+    let mut bot = FormulaNone::new(field_info, collector, eeg, brain);
     bot.set_player_index(player_index);
     bot_loop(&rlbot, player_index, &mut bot);
 }
@@ -154,13 +152,10 @@ fn bot_loop(rlbot: &rlbot::RLBot, player_index: i32, bot: &mut FormulaNone<'_>) 
 
     loop {
         let rigid_body_tick = physics.next_flat().unwrap();
-        #[allow(deprecated)]
         let packet = get_packet_and_inject_rigid_body_tick(&rlbot, rigid_body_tick).unwrap();
         let (input, quick_chat) = bot.tick(rigid_body_tick, &packet);
-        #[allow(deprecated)]
         rlbot
-            .interface()
-            .update_player_input(input, player_index)
+            .update_player_input(player_index, &translate_player_input(&input))
             .unwrap();
         if let Some(chat) = quick_chat {
             if let Err(_) = rlbot.quick_chat(chat, player_index) {
@@ -188,7 +183,7 @@ fn create_collector() -> Collector {
 }
 
 struct FormulaNone<'a> {
-    field_info: &'a rlbot::ffi::FieldInfo,
+    field_info: rlbot::flat::FieldInfo<'a>,
     collector: Option<collect::Collector>,
     eeg: EEG,
     brain: Brain,
@@ -196,7 +191,7 @@ struct FormulaNone<'a> {
 
 impl<'a> FormulaNone<'a> {
     fn new(
-        field_info: &'a rlbot::ffi::FieldInfo,
+        field_info: rlbot::flat::FieldInfo<'a>,
         collector: Option<collect::Collector>,
         eeg: brain::EEG,
         brain: brain::Brain,
@@ -216,9 +211,9 @@ impl<'a> FormulaNone<'a> {
     fn tick(
         &mut self,
         rigid_body_tick: rlbot::flat::RigidBodyTick<'_>,
-        packet: &rlbot::ffi::LiveDataPacket,
+        packet: &common::halfway_house::LiveDataPacket,
     ) -> (
-        rlbot::ffi::PlayerInput,
+        common::halfway_house::PlayerInput,
         Option<rlbot::flat::QuickChatSelection>,
     ) {
         if !packet.GameInfo.RoundActive {

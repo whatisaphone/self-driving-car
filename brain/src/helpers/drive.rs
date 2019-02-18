@@ -3,7 +3,10 @@ use common::prelude::*;
 use nalgebra::Point2;
 use simulate::Car1D;
 
-pub fn rough_time_drive_to_loc(car: &rlbot::ffi::PlayerInfo, target_loc: Point2<f32>) -> f32 {
+pub fn rough_time_drive_to_loc(
+    car: &common::halfway_house::PlayerInfo,
+    target_loc: Point2<f32>,
+) -> f32 {
     let target_dist = (car.Physics.loc_2d() - target_loc).norm();
 
     let base_time = 2.0 / 120.0 + steer_penalty(car, simple_yaw_diff(&car.Physics, target_loc));
@@ -17,7 +20,7 @@ pub fn rough_time_drive_to_loc(car: &rlbot::ffi::PlayerInfo, target_loc: Point2<
 }
 
 // Very very rough
-fn steer_penalty(car: &rlbot::ffi::PlayerInfo, desired_aim: f32) -> f32 {
+fn steer_penalty(car: &common::halfway_house::PlayerInfo, desired_aim: f32) -> f32 {
     let turn = (car.Physics.rot().yaw() - desired_aim)
         .normalize_angle()
         .abs();

@@ -55,8 +55,8 @@ impl CarState {
     }
 }
 
-impl<'a> From<&'a rlbot::ffi::PlayerInfo> for CarState {
-    fn from(info: &'a rlbot::ffi::PlayerInfo) -> Self {
+impl<'a> From<&'a common::halfway_house::PlayerInfo> for CarState {
+    fn from(info: &'a common::halfway_house::PlayerInfo) -> Self {
         Self {
             loc: info.Physics.loc(),
             rot: info.Physics.quat(),
@@ -384,7 +384,7 @@ pub trait SegmentRunner: Send {
 }
 
 pub enum SegmentRunAction {
-    Yield(rlbot::ffi::PlayerInput),
+    Yield(common::halfway_house::PlayerInput),
     Success,
     Failure,
 }

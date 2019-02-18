@@ -1,9 +1,9 @@
 use chip::Ball;
-use common::{math::fractionality, prelude::*, rl};
+use common::{math::fractionality, prelude::*, rl, vector_iter};
 use derive_new::new;
 use nalgebra::{Point3, Vector3};
 use ordered_float::OrderedFloat;
-use std::{iter::Cloned, mem, slice::Iter};
+use std::{iter::Cloned, slice::Iter};
 
 const PREDICT_DURATION: f32 = 7.0;
 
@@ -106,14 +106,14 @@ impl<'a> IntoIterator for &'a BallTrajectory {
 }
 
 pub trait BallPredictor {
-    fn predict(&self, packet: &rlbot::ffi::LiveDataPacket) -> BallTrajectory;
+    fn predict(&self, packet: &common::halfway_house::LiveDataPacket) -> BallTrajectory;
 }
 
 #[derive(new)]
 pub struct ChipBallPrediction;
 
 impl BallPredictor for ChipBallPrediction {
-    fn predict(&self, packet: &rlbot::ffi::LiveDataPacket) -> BallTrajectory {
+    fn predict(&self, packet: &common::halfway_house::LiveDataPacket) -> BallTrajectory {
         const DT: f32 = rl::PHYSICS_DT;
 
         let mut ball = Ball::new();
@@ -155,35 +155,27 @@ pub struct FrameworkBallPrediction {
 }
 
 impl BallPredictor for FrameworkBallPrediction {
-    fn predict(&self, _packet: &rlbot::ffi::LiveDataPacket) -> BallTrajectory {
+    fn predict(&self, _packet: &common::halfway_house::LiveDataPacket) -> BallTrajectory {
         const DT: f32 = 1.0 / 60.0;
 
-        let mut packet: rlbot::ffi::BallPredictionPacket = unsafe { mem::uninitialized() };
-        #[allow(deprecated)]
-        self.rlbot
-            .interface()
-            .get_ball_prediction_struct(&mut packet)
-            .unwrap();
-        let start_time = packet.Slice[0].GameSeconds;
-        let frames = packet
-            .Slice
-            .iter()
-            .take(packet.NumSlices as usize)
+        let packet = self.rlbot.interface().get_ball_prediction().unwrap();
+        let start_time = packet.slices().unwrap().get(0).gameSeconds();
+        let frames = vector_iter(packet.slices().unwrap())
             .map(|slice| BallFrame {
-                t: slice.GameSeconds - start_time,
+                t: slice.gameSeconds() - start_time,
                 dt: DT,
-                loc: point3(slice.Physics.Location),
-                vel: vector3(slice.Physics.Velocity),
+                loc: point3(slice.physics().unwrap().location().unwrap()),
+                vel: vector3(slice.physics().unwrap().velocity().unwrap()),
             })
             .collect();
         BallTrajectory::new(frames)
     }
 }
 
-fn point3(v: rlbot::ffi::Vector3) -> Point3<f32> {
-    Point3::new(v.X, v.Y, v.Z)
+fn point3(v: &rlbot::flat::Vector3) -> Point3<f32> {
+    Point3::new(v.x(), v.y(), v.z())
 }
 
-fn vector3(v: rlbot::ffi::Vector3) -> Vector3<f32> {
-    Vector3::new(v.X, v.Y, v.Z)
+fn vector3(v: &rlbot::flat::Vector3) -> Vector3<f32> {
+    Vector3::new(v.x(), v.y(), v.z())
 }

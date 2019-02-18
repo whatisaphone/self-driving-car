@@ -144,7 +144,7 @@ impl SegmentRunner for WallTurnRunner {
         ctx.eeg.print_angle("swept", swept);
         ctx.eeg.print_angle("plan_sweep", self.plan.sweep);
 
-        SegmentRunAction::Yield(rlbot::ffi::PlayerInput {
+        SegmentRunAction::Yield(common::halfway_house::PlayerInput {
             Throttle: 1.0,
             Steer: self.plan.sweep.signum(),
             ..Default::default()

@@ -69,7 +69,7 @@ impl Behavior for Dodge {
         Action::tail_call(Chain::new(self.priority(), vec_box![
             // Dodge
             Yielder::new(
-                rlbot::ffi::PlayerInput {
+                common::halfway_house::PlayerInput {
                     Pitch: pitch,
                     Yaw: yaw,
                     Jump: true,
@@ -78,12 +78,12 @@ impl Behavior for Dodge {
                 0.05,
             ),
             // Follow-through
-            Yielder::new(rlbot::ffi::PlayerInput::default(), self.follow_through_time),
+            Yielder::new(Default::default(), self.follow_through_time),
         ]))
     }
 }
 
-fn towards(car: &rlbot::ffi::PlayerInfo, target_loc: Point2<f32>) -> (f32, f32) {
+fn towards(car: &common::halfway_house::PlayerInfo, target_loc: Point2<f32>) -> (f32, f32) {
     let car_loc = car.Physics.loc_2d();
     let car_forward_axis = car.Physics.forward_axis();
 

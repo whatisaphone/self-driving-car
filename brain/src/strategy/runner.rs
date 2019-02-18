@@ -25,7 +25,7 @@ impl Runner {
         }
     }
 
-    pub fn execute_old(&mut self, ctx: &mut Context<'_>) -> rlbot::ffi::PlayerInput {
+    pub fn execute_old(&mut self, ctx: &mut Context<'_>) -> common::halfway_house::PlayerInput {
         self.exec(0, ctx)
     }
 }
@@ -41,7 +41,7 @@ impl Behavior for Runner {
 }
 
 impl Runner {
-    fn exec(&mut self, depth: u32, ctx: &mut Context<'_>) -> rlbot::ffi::PlayerInput {
+    fn exec(&mut self, depth: u32, ctx: &mut Context<'_>) -> common::halfway_house::PlayerInput {
         if depth > 5 {
             ctx.eeg.log(self.name(), "infinite loop?");
             return Default::default();

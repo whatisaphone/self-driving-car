@@ -99,7 +99,7 @@ impl SegmentRunner for PowerslideTurnRunner {
             return SegmentRunAction::Failure;
         }
 
-        SegmentRunAction::Yield(rlbot::ffi::PlayerInput {
+        SegmentRunAction::Yield(common::halfway_house::PlayerInput {
             Throttle: self.plan.blueprint.throttle,
             Steer: self.plan.blueprint.steer,
             Handbrake: true,

@@ -15,6 +15,6 @@ impl Behavior for NullBehavior {
     }
 
     fn execute_old(&mut self, _ctx: &mut Context<'_>) -> Action {
-        Action::Yield(rlbot::ffi::PlayerInput::default())
+        Action::Yield(common::halfway_house::PlayerInput::default())
     }
 }

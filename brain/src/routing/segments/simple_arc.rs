@@ -206,7 +206,7 @@ impl SegmentRunner for SimpleArcRunner {
         let angle = car_forward_axis
             .into_inner()
             .angle_to(&(target_loc - car_loc));
-        SegmentRunAction::Yield(rlbot::ffi::PlayerInput {
+        SegmentRunAction::Yield(common::halfway_house::PlayerInput {
             Throttle: 1.0,
             Steer: angle.max(-1.0).min(1.0),
             ..Default::default()

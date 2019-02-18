@@ -3,7 +3,6 @@ use nalgebra::{
     Point2, Point3, Quaternion, Real, Rotation3, Unit, UnitComplex, UnitQuaternion, Vector2,
     Vector3,
 };
-use std::{error::Error, mem};
 
 pub trait ExtendVector2<N: Real> {
     /// Creates a unit vector in the direction of the given `angle`.
@@ -158,7 +157,7 @@ pub trait ExtendPhysics {
     fn roof_axis(&self) -> Unit<Vector3<f32>>;
 }
 
-impl ExtendPhysics for rlbot::ffi::Physics {
+impl ExtendPhysics for crate::halfway_house::Physics {
     fn loc(&self) -> Point3<f32> {
         Point3::new(self.Location.X, self.Location.Y, self.Location.Z)
     }
@@ -267,8 +266,6 @@ impl<N: Real> ExtendUnitVector2<N> for Unit<Vector2<N>> {
 }
 
 pub trait ExtendRLBot {
-    #[deprecated(note = "use flatbuffer method instead")]
-    fn get_field_info(&self) -> Result<rlbot::ffi::FieldInfo, Box<dyn Error>>;
     fn quick_chat(
         &self,
         selection: rlbot::flat::QuickChatSelection,
@@ -277,13 +274,6 @@ pub trait ExtendRLBot {
 }
 
 impl ExtendRLBot for rlbot::RLBot {
-    #[allow(deprecated)]
-    fn get_field_info(&self) -> Result<rlbot::ffi::FieldInfo, Box<dyn Error>> {
-        let mut field_info = unsafe { mem::uninitialized() };
-        self.interface().update_field_info(&mut field_info)?;
-        Ok(field_info)
-    }
-
     fn quick_chat(
         &self,
         selection: rlbot::flat::QuickChatSelection,

@@ -1,6 +1,6 @@
 use crate::integration_tests::utils::rotator;
 use collect::{RecordingPlayerTick, RecordingRigidBodyState};
-use common::prelude::*;
+use common::{halfway_house::translate_player_input, prelude::*};
 use ordered_float::NotNan;
 
 const RECORDING_DISTANCE_THRESHOLD: f32 = 25.0;
@@ -39,7 +39,7 @@ impl BallPlayback {
         }
     }
 
-    pub fn tick(&mut self, rlbot: &rlbot::RLBot, packet: &rlbot::ffi::LiveDataPacket) {
+    pub fn tick(&mut self, rlbot: &rlbot::RLBot, packet: &common::halfway_house::LiveDataPacket) {
         self.frames_since_state_set += 1;
         if self.frames_since_state_set < STATE_SET_DEBOUNCE {
             return;
@@ -123,7 +123,7 @@ impl CarPlayback {
         }
     }
 
-    pub fn tick(&mut self, rlbot: &rlbot::RLBot, packet: &rlbot::ffi::LiveDataPacket) {
+    pub fn tick(&mut self, rlbot: &rlbot::RLBot, packet: &common::halfway_house::LiveDataPacket) {
         let elapsed = packet.GameInfo.TimeSeconds - self.start_time;
         let data_time = self.scenario.times[0] + elapsed;
         let index = match self.scenario.times.binary_search(&data_time) {
@@ -134,10 +134,8 @@ impl CarPlayback {
         };
         let tick = &self.scenario.ticks[index];
 
-        #[allow(deprecated)]
         rlbot
-            .interface()
-            .update_player_input(tick.input, self.player_index)
+            .update_player_input(self.player_index, &translate_player_input(&tick.input))
             .unwrap();
 
         self.frames_since_state_set += 1;

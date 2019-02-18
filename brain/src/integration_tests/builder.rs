@@ -8,7 +8,7 @@ use crate::{
     strategy::{Behavior, Runner, Soccar},
 };
 use brain_test_data::OneVOneScenario;
-use collect::{RecordingPlayerTick, RecordingRigidBodyState, RecordingTick};
+use collect::{RecordingPlayerInput, RecordingPlayerTick, RecordingRigidBodyState, RecordingTick};
 use std::{
     fs::File,
     panic,
@@ -17,7 +17,8 @@ use std::{
 };
 
 pub struct TestRunner {
-    behavior: Option<Box<dyn FnMut(&rlbot::ffi::LiveDataPacket) -> Box<dyn Behavior> + Send>>,
+    behavior:
+        Option<Box<dyn FnMut(&common::halfway_house::LiveDataPacket) -> Box<dyn Behavior> + Send>>,
     ball_recording: Option<(Vec<f32>, Vec<RecordingRigidBodyState>)>,
     car_inital_state: Option<(RecordingRigidBodyState, f32)>,
     enemy_recording: Option<(Vec<f32>, Vec<RecordingPlayerTick>)>,
@@ -73,7 +74,7 @@ impl TestRunner {
     fn enemy(
         mut self,
         times: impl Into<Vec<f32>>,
-        inputs: impl Into<Vec<rlbot::ffi::PlayerInput>>,
+        inputs: impl Into<Vec<RecordingPlayerInput>>,
         states: impl Into<Vec<RecordingRigidBodyState>>,
     ) -> Self {
         let ticks = inputs

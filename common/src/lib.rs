@@ -4,11 +4,14 @@
 
 pub use crate::{
     ext::ExtendRLBot,
+    flatbuffers::vector_iter,
     polyfill::ExtendDuration,
     pretty::{Angle, AngularVelocity, ControllerInput, Coordinate, Distance, PrettyPrint, Time},
 };
 
 pub mod ext;
+mod flatbuffers;
+pub mod halfway_house;
 pub mod kinematics;
 pub mod math;
 pub mod physics;

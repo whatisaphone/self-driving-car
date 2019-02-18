@@ -197,9 +197,8 @@ impl Predicate for ScoringVerySoon {
 
 fn commanding_lead(ctx: &mut Context<'_>) -> bool {
     let minutes_remaining = (ctx.packet.GameInfo.GameTimeRemaining / 60.0) as i32;
-    let scores = ctx.packet.match_score();
-    let us = scores[ctx.game.team.to_ffi() as usize];
-    let them = scores[ctx.game.enemy_team.to_ffi() as usize];
+    let us = ctx.packet.Teams[ctx.game.team.to_ffi() as usize].Score;
+    let them = ctx.packet.Teams[ctx.game.enemy_team.to_ffi() as usize].Score;
     us - them >= minutes_remaining
 }
 

@@ -166,7 +166,7 @@ impl SegmentRunner for StraightRunner {
         ctx.eeg
             .draw(Drawable::ghost_car_ground(target_loc, me.Physics.rot()));
 
-        SegmentRunAction::Yield(rlbot::ffi::PlayerInput {
+        SegmentRunAction::Yield(common::halfway_house::PlayerInput {
             Throttle: 1.0,
             Steer: simple_steer_towards(&me.Physics, target_loc),
             Boost: me.Physics.vel().norm() < rl::CAR_ALMOST_MAX_SPEED && me.Boost > 0,

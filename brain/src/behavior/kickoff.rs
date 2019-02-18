@@ -24,7 +24,7 @@ impl Kickoff {
         Self
     }
 
-    pub fn is_kickoff(ball: &rlbot::ffi::BallInfo) -> bool {
+    pub fn is_kickoff(ball: &common::halfway_house::BallInfo) -> bool {
         (ball.Physics.loc_2d() - Point2::origin()).norm() < 1.0 && ball.Physics.vel().norm() < 1.0
     }
 }
@@ -126,7 +126,7 @@ impl Behavior for KickoffStrike {
 impl KickoffStrike {
     fn drive(&self, ctx: &mut Context<'_>) -> Action {
         let target_loc = Point2::new(40.0 * ctx.me().Physics.loc().x.signum(), 0.0);
-        Action::Yield(rlbot::ffi::PlayerInput {
+        Action::Yield(common::halfway_house::PlayerInput {
             Boost: true,
             ..drive_towards(ctx, target_loc)
         })
@@ -253,7 +253,10 @@ mod integration_tests {
         assert!(!Kickoff::is_kickoff(&packet.GameBall));
     }
 
-    fn extrapolate_ball(packet: &rlbot::ffi::LiveDataPacket, seconds: f32) -> Point3<f32> {
+    fn extrapolate_ball(
+        packet: &common::halfway_house::LiveDataPacket,
+        seconds: f32,
+    ) -> Point3<f32> {
         let ball_loc = packet.GameBall.Physics.loc();
         let ball_vel = packet.GameBall.Physics.vel();
         eprintln!("ball_loc = {:?}", ball_loc);

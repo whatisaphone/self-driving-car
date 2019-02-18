@@ -33,7 +33,7 @@ impl QuickJumpAndDodge {
         }
     }
 
-    pub fn begin(packet: &rlbot::ffi::LiveDataPacket) -> Self {
+    pub fn begin(packet: &common::halfway_house::LiveDataPacket) -> Self {
         Self {
             start_time: Some(packet.GameInfo.TimeSeconds),
             ..Self::new()
@@ -73,7 +73,7 @@ impl Behavior for QuickJumpAndDodge {
         ctx.eeg.print_time("dodge_time", self.dodge_time);
         ctx.eeg.print_time("elapsed", elapsed);
 
-        let mut result = rlbot::ffi::PlayerInput::default();
+        let mut result = common::halfway_house::PlayerInput::default();
 
         if self.phase == Phase::Jump || elapsed < self.dodge_time - Self::MIN_PHASE_TIME {
             if self.phase == Phase::Jump && !ctx.me().OnGround {

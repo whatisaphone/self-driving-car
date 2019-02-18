@@ -72,14 +72,9 @@ fn translate_csv(name: &str, csv: &mut csv::Reader<impl Read>, out: &mut impl Wr
             let i_boost = column_index!(concat!($column_prefix, "_boost"));
             let i_handbrake = column_index!(concat!($column_prefix, "_handbrake"));
 
-            writeln!(
-                out,
-                "    pub const {}: &[rlbot::ffi::PlayerInput] = &[",
-                $name,
-            )
-            .unwrap();
+            writeln!(out, "    pub const {}: &[RecordingPlayerInput] = &[", $name,).unwrap();
             for row in rows.iter() {
-                writeln!(out, "        rlbot::ffi::PlayerInput {{").unwrap();
+                writeln!(out, "        RecordingPlayerInput {{").unwrap();
                 writeln!(out, "            Throttle: {},", floatify(&row[i_throttle])).unwrap();
                 writeln!(out, "            Steer: {},", floatify(&row[i_steer])).unwrap();
                 writeln!(out, "            Pitch: {},", floatify(&row[i_pitch])).unwrap();
@@ -157,7 +152,11 @@ fn translate_csv(name: &str, csv: &mut csv::Reader<impl Read>, out: &mut impl Wr
     }
 
     writeln!(out, "mod {} {{", name).unwrap();
-    writeln!(out, "    use collect::RecordingRigidBodyState;").unwrap();
+    writeln!(
+        out,
+        "    use collect::{{RecordingPlayerInput, RecordingRigidBodyState}};"
+    )
+    .unwrap();
     writeln!(out, "    use lazy_static::lazy_static;").unwrap();
     writeln!(
         out,

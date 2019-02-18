@@ -45,7 +45,10 @@ impl GroundedHit<fn(&mut GroundedHitAimContext<'_, '_>) -> Result<GroundedHitTar
     pub const MAX_BALL_Z: f32 = 220.0 - Self::CONTACT_Z_OFFSET; // TODO: how high can I jump
 
     /// A preset for `Aim` that hits the ball straight ahead.
-    pub fn opposite_of_self(car: &rlbot::ffi::PlayerInfo, ball: Point3<f32>) -> Point2<f32> {
+    pub fn opposite_of_self(
+        car: &common::halfway_house::PlayerInfo,
+        ball: Point3<f32>,
+    ) -> Point2<f32> {
         ball.to_2d() + (ball.to_2d() - car.Physics.loc_2d())
     }
 }
@@ -267,7 +270,7 @@ where
     fn drive(&self, ctx: &mut Context<'_>, plan: &Plan, throttle: f32, boost: bool) -> Action {
         let me = ctx.me();
         let steer = simple_steer_towards(&me.Physics, plan.target_loc.to_2d());
-        Action::Yield(rlbot::ffi::PlayerInput {
+        Action::Yield(common::halfway_house::PlayerInput {
             Throttle: throttle,
             Steer: steer,
             Boost: boost && me.Physics.vel().norm() < rl::CAR_ALMOST_MAX_SPEED,
@@ -330,7 +333,7 @@ pub fn car_ball_contact_with_pitch(
 pub struct GroundedHitAimContext<'a, 'b> {
     pub game: &'a Game<'b>,
     pub scenario: &'a Scenario<'b>,
-    pub car: &'a rlbot::ffi::PlayerInfo,
+    pub car: &'a common::halfway_house::PlayerInfo,
     pub intercept_time: f32,
     pub intercept_ball_loc: Point3<f32>,
     pub eeg: &'a mut EEG,

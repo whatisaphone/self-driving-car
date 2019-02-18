@@ -29,7 +29,7 @@ impl Window {
         }
     }
 
-    pub fn draw(&self, packet: rlbot::ffi::LiveDataPacket, drawables: Vec<Drawable>) {
+    pub fn draw(&self, packet: common::halfway_house::LiveDataPacket, drawables: Vec<Drawable>) {
         self.tx
             .as_ref()
             .unwrap()
@@ -45,7 +45,7 @@ impl Drop for Window {
 }
 
 enum ThreadMessage {
-    Draw(rlbot::ffi::LiveDataPacket, Vec<Drawable>),
+    Draw(common::halfway_house::LiveDataPacket, Vec<Drawable>),
 }
 
 fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {

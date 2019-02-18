@@ -71,7 +71,7 @@ impl Behavior for PanicDefense {
             }
             Phase::Turn { aim_hint, .. } => {
                 ctx.eeg.draw(Drawable::print("Turn", color::GREEN));
-                Action::Yield(rlbot::ffi::PlayerInput {
+                Action::Yield(common::halfway_house::PlayerInput {
                     Throttle: 1.0,
                     Steer: simple_steer_towards(&me.Physics, aim_hint),
                     Handbrake: true,

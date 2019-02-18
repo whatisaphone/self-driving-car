@@ -2,7 +2,6 @@
 #![cfg_attr(feature = "strict", deny(warnings))]
 #![warn(clippy::all)]
 
-#[allow(deprecated)]
 use crate::{
     collector::Collector,
     rlbot_ext::get_packet_and_inject_rigid_body_tick,
@@ -40,7 +39,6 @@ fn run_scenario(rlbot: &rlbot::RLBot, mut scenario: impl Scenario) -> Result<(),
 
     loop {
         let tick = physics.next_flat().unwrap();
-        #[allow(deprecated)]
         let packet = get_packet_and_inject_rigid_body_tick(&rlbot, tick)?;
 
         let time = packet.GameInfo.TimeSeconds - start;

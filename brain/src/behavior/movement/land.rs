@@ -78,7 +78,7 @@ impl Behavior for Land {
             }
 
             let (pitch, yaw, roll) = dom::get_pitch_yaw_roll(me, forward, Vector3::z_axis());
-            Action::Yield(rlbot::ffi::PlayerInput {
+            Action::Yield(common::halfway_house::PlayerInput {
                 Throttle: 1.0,
                 Pitch: pitch,
                 Yaw: yaw,

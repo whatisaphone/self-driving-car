@@ -6,7 +6,7 @@ use nalgebra::{Unit, Vector3};
 /// Calculate (pitch, yaw, roll) inputs to align the car's rotation with the
 /// given `forward` and `up` vectors.
 pub fn get_pitch_yaw_roll(
-    car: &rlbot::ffi::PlayerInfo,
+    car: &common::halfway_house::PlayerInfo,
     forward: Unit<Vector3<f32>>,
     up: Unit<Vector3<f32>>,
 ) -> (f32, f32, f32) {

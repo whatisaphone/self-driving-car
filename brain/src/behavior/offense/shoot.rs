@@ -65,7 +65,7 @@ impl Shoot {
     fn aim_calc(
         game: &Game<'_>,
         scenario: &Scenario<'_>,
-        car: &rlbot::ffi::PlayerInfo,
+        car: &common::halfway_house::PlayerInfo,
     ) -> Option<NaiveIntercept<Shot>> {
         naive_ground_intercept_2(&car.into(), scenario.ball_prediction(), |ball| {
             Self::viable_shot(game, car.Physics.loc(), ball.loc)

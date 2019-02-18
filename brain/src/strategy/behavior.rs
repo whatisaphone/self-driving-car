@@ -27,7 +27,7 @@ pub enum Priority {
 }
 
 pub enum Action {
-    Yield(rlbot::ffi::PlayerInput),
+    Yield(common::halfway_house::PlayerInput),
     TailCall(Box<dyn Behavior>),
     Return,
     Abort,

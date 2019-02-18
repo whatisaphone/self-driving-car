@@ -28,7 +28,7 @@ impl Car {
         }
     }
 
-    pub fn from_player_info(player: &rlbot::ffi::PlayerInfo) -> Self {
+    pub fn from_player_info(player: &common::halfway_house::PlayerInfo) -> Self {
         Self {
             loc: player.Physics.loc(),
             rot: player.Physics.quat(),

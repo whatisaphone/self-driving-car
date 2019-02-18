@@ -2,9 +2,8 @@
 //! generate the data used for simulation.
 
 #![allow(dead_code)]
-#![allow(deprecated)] // TODO: switch to Flatbuffer
 
-use common::{prelude::*, rl};
+use common::{halfway_house::translate_player_input, prelude::*, rl};
 use nalgebra::{Point3, Vector3};
 use std::{error::Error, f32::consts::PI, fmt};
 
@@ -19,7 +18,7 @@ pub trait Scenario {
         &mut self,
         rlbot: &rlbot::RLBot,
         time: f32,
-        packet: &rlbot::ffi::LiveDataPacket,
+        packet: &common::halfway_house::LiveDataPacket,
     ) -> Result<ScenarioStepResult, Box<dyn Error>>;
 }
 
@@ -36,12 +35,16 @@ pub trait SimpleScenario {
         game_state_default()
     }
 
-    fn step(&mut self, time: f32, packet: &rlbot::ffi::LiveDataPacket) -> SimpleScenarioStepResult;
+    fn step(
+        &mut self,
+        time: f32,
+        packet: &common::halfway_house::LiveDataPacket,
+    ) -> SimpleScenarioStepResult;
 }
 
 pub enum SimpleScenarioStepResult {
-    Ignore(rlbot::ffi::PlayerInput),
-    Write(rlbot::ffi::PlayerInput),
+    Ignore(common::halfway_house::PlayerInput),
+    Write(common::halfway_house::PlayerInput),
     Finish,
 }
 
@@ -58,15 +61,15 @@ impl<S: SimpleScenario> Scenario for S {
         &mut self,
         rlbot: &rlbot::RLBot,
         time: f32,
-        packet: &rlbot::ffi::LiveDataPacket,
+        packet: &common::halfway_house::LiveDataPacket,
     ) -> Result<ScenarioStepResult, Box<dyn Error>> {
         match self.step(time, packet) {
             SimpleScenarioStepResult::Ignore(i) => {
-                rlbot.interface().update_player_input(i, 0)?;
+                rlbot.update_player_input(0, &translate_player_input(&i))?;
                 Ok(ScenarioStepResult::Ignore)
             }
             SimpleScenarioStepResult::Write(i) => {
-                rlbot.interface().update_player_input(i, 0)?;
+                rlbot.update_player_input(0, &translate_player_input(&i))?;
                 Ok(ScenarioStepResult::Write)
             }
             SimpleScenarioStepResult::Finish => Ok(ScenarioStepResult::Finish),
@@ -126,12 +129,12 @@ impl SimpleScenario for Throttle {
     fn step(
         &mut self,
         time: f32,
-        _packet: &rlbot::ffi::LiveDataPacket,
+        _packet: &common::halfway_house::LiveDataPacket,
     ) -> SimpleScenarioStepResult {
         if time < 2.0 {
             SimpleScenarioStepResult::Ignore(Default::default())
         } else if time < 5.0 {
-            SimpleScenarioStepResult::Write(rlbot::ffi::PlayerInput {
+            SimpleScenarioStepResult::Write(common::halfway_house::PlayerInput {
                 Throttle: 1.0,
                 Boost: self.boost,
                 ..Default::default()
@@ -170,10 +173,10 @@ impl SimpleScenario for Coast {
     fn step(
         &mut self,
         time: f32,
-        _packet: &rlbot::ffi::LiveDataPacket,
+        _packet: &common::halfway_house::LiveDataPacket,
     ) -> SimpleScenarioStepResult {
         if time < 1.5 {
-            SimpleScenarioStepResult::Ignore(rlbot::ffi::PlayerInput {
+            SimpleScenarioStepResult::Ignore(common::halfway_house::PlayerInput {
                 Throttle: 1.0,
                 Boost: true,
                 ..Default::default()
@@ -209,7 +212,7 @@ impl Scenario for Turn {
         &mut self,
         rlbot: &rlbot::RLBot,
         time: f32,
-        packet: &rlbot::ffi::LiveDataPacket,
+        packet: &common::halfway_house::LiveDataPacket,
     ) -> Result<ScenarioStepResult, Box<dyn Error>> {
         if self.start_time.is_none() {
             let speed = packet.GameCars[0].Physics.vel().norm();
@@ -223,22 +226,22 @@ impl Scenario for Turn {
 
         match self.start_time {
             None => {
-                let input = rlbot::ffi::PlayerInput {
+                let input = common::halfway_house::PlayerInput {
                     Throttle: throttle,
                     Boost: boost,
                     ..Default::default()
                 };
-                rlbot.interface().update_player_input(input, 0)?;
+                rlbot.update_player_input(0, &translate_player_input(&input))?;
                 Ok(ScenarioStepResult::Ignore)
             }
             Some(start_time) if time < start_time + 3.0 => {
-                let input = rlbot::ffi::PlayerInput {
+                let input = common::halfway_house::PlayerInput {
                     Throttle: throttle,
                     Steer: 1.0,
                     Boost: boost,
                     ..Default::default()
                 };
-                rlbot.interface().update_player_input(input, 0)?;
+                rlbot.update_player_input(0, &translate_player_input(&input))?;
                 Ok(ScenarioStepResult::Write)
             }
             _ => Ok(ScenarioStepResult::Finish),
@@ -286,7 +289,7 @@ impl Scenario for PowerslideTurn {
         &mut self,
         rlbot: &rlbot::RLBot,
         time: f32,
-        packet: &rlbot::ffi::LiveDataPacket,
+        packet: &common::halfway_house::LiveDataPacket,
     ) -> Result<ScenarioStepResult, Box<dyn Error>> {
         if self.start_time.is_none() {
             let speed = packet.GameCars[0].Physics.vel().norm();
@@ -297,22 +300,22 @@ impl Scenario for PowerslideTurn {
 
         match self.start_time {
             None => {
-                let input = rlbot::ffi::PlayerInput {
+                let input = common::halfway_house::PlayerInput {
                     Throttle: (self.start_speed / 1000.0).min(1.0),
                     Boost: self.start_speed >= rl::CAR_NORMAL_SPEED,
                     ..Default::default()
                 };
-                rlbot.interface().update_player_input(input, 0)?;
+                rlbot.update_player_input(0, &translate_player_input(&input))?;
                 Ok(ScenarioStepResult::Ignore)
             }
             Some(start_time) => {
-                let input = rlbot::ffi::PlayerInput {
+                let input = common::halfway_house::PlayerInput {
                     Throttle: self.handbrake_throttle,
                     Steer: 1.0,
                     Handbrake: true,
                     ..Default::default()
                 };
-                rlbot.interface().update_player_input(input, 0)?;
+                rlbot.update_player_input(0, &translate_player_input(&input))?;
 
                 if time < start_time + 3.0 {
                     Ok(ScenarioStepResult::Write)
@@ -340,12 +343,12 @@ impl SimpleScenario for Jump {
     fn step(
         &mut self,
         time: f32,
-        _packet: &rlbot::ffi::LiveDataPacket,
+        _packet: &common::halfway_house::LiveDataPacket,
     ) -> SimpleScenarioStepResult {
         if time < 1.0 {
             SimpleScenarioStepResult::Ignore(Default::default())
         } else if time < 3.5 {
-            SimpleScenarioStepResult::Write(rlbot::ffi::PlayerInput {
+            SimpleScenarioStepResult::Write(common::halfway_house::PlayerInput {
                 Jump: true,
                 ..Default::default()
             })
@@ -392,7 +395,7 @@ impl Scenario for Dodge {
         &mut self,
         rlbot: &rlbot::RLBot,
         time: f32,
-        packet: &rlbot::ffi::LiveDataPacket,
+        packet: &common::halfway_house::LiveDataPacket,
     ) -> Result<ScenarioStepResult, Box<dyn Error>> {
         match self.phase {
             DodgePhase::Accelerate => {
@@ -401,12 +404,12 @@ impl Scenario for Dodge {
                     return self.step(rlbot, time, packet);
                 }
 
-                let input = rlbot::ffi::PlayerInput {
+                let input = common::halfway_house::PlayerInput {
                     Throttle: (self.start_speed / 1000.0).min(1.0),
                     Boost: self.start_speed > rl::CAR_MAX_SPEED,
                     ..Default::default()
                 };
-                rlbot.interface().update_player_input(input, 0)?;
+                rlbot.update_player_input(0, &translate_player_input(&input))?;
                 Ok(ScenarioStepResult::Write)
             }
             DodgePhase::Jump(start) => {
@@ -415,11 +418,11 @@ impl Scenario for Dodge {
                     return self.step(rlbot, time, packet);
                 }
 
-                let input = rlbot::ffi::PlayerInput {
+                let input = common::halfway_house::PlayerInput {
                     Jump: true,
                     ..Default::default()
                 };
-                rlbot.interface().update_player_input(input, 0)?;
+                rlbot.update_player_input(0, &translate_player_input(&input))?;
                 Ok(ScenarioStepResult::Write)
             }
             DodgePhase::Wait(start) => {
@@ -429,7 +432,7 @@ impl Scenario for Dodge {
                 }
 
                 let input = Default::default();
-                rlbot.interface().update_player_input(input, 0)?;
+                rlbot.update_player_input(0, &translate_player_input(&input))?;
                 Ok(ScenarioStepResult::Write)
             }
             DodgePhase::Dodge(start) => {
@@ -438,12 +441,12 @@ impl Scenario for Dodge {
                     return self.step(rlbot, time, packet);
                 }
 
-                let input = rlbot::ffi::PlayerInput {
+                let input = common::halfway_house::PlayerInput {
                     Pitch: -1.0,
                     Jump: true,
                     ..Default::default()
                 };
-                rlbot.interface().update_player_input(input, 0)?;
+                rlbot.update_player_input(0, &translate_player_input(&input))?;
                 Ok(ScenarioStepResult::Write)
             }
             DodgePhase::Land(start) => {
@@ -452,7 +455,7 @@ impl Scenario for Dodge {
                 }
 
                 let input = Default::default();
-                rlbot.interface().update_player_input(input, 0)?;
+                rlbot.update_player_input(0, &translate_player_input(&input))?;
                 Ok(ScenarioStepResult::Write)
             }
         }
@@ -471,7 +474,10 @@ impl AirAxis {
         vec![AirAxis::Pitch, AirAxis::Yaw, AirAxis::Roll].into_iter()
     }
 
-    fn get_input_axis_mut<'a>(&self, input: &'a mut rlbot::ffi::PlayerInput) -> &'a mut f32 {
+    fn get_input_axis_mut<'a>(
+        &self,
+        input: &'a mut common::halfway_house::PlayerInput,
+    ) -> &'a mut f32 {
         match *self {
             AirAxis::Pitch => &mut input.Pitch,
             AirAxis::Yaw => &mut input.Yaw,
@@ -536,7 +542,7 @@ impl Scenario for AirRotateAccel {
         &mut self,
         rlbot: &rlbot::RLBot,
         time: f32,
-        _packet: &rlbot::ffi::LiveDataPacket,
+        _packet: &common::halfway_house::LiveDataPacket,
     ) -> Result<ScenarioStepResult, Box<dyn Error>> {
         if self.start_time.is_none() {
             self.start_time = Some(time);
@@ -544,9 +550,9 @@ impl Scenario for AirRotateAccel {
 
         match self.start_time {
             Some(start_time) if time < start_time + 1.0 => {
-                let mut input = rlbot::ffi::PlayerInput::default();
+                let mut input = common::halfway_house::PlayerInput::default();
                 *self.axis.get_input_axis_mut(&mut input) = 1.0;
-                rlbot.interface().update_player_input(input, 0)?;
+                rlbot.update_player_input(0, &translate_player_input(&input))?;
                 Ok(ScenarioStepResult::Write)
             }
             _ => Ok(ScenarioStepResult::Finish),
@@ -581,7 +587,7 @@ impl Scenario for AirRotateCoast {
         &mut self,
         rlbot: &rlbot::RLBot,
         time: f32,
-        _packet: &rlbot::ffi::LiveDataPacket,
+        _packet: &common::halfway_house::LiveDataPacket,
     ) -> Result<ScenarioStepResult, Box<dyn Error>> {
         if self.start_time.is_none() {
             self.start_time = Some(time);
@@ -589,14 +595,14 @@ impl Scenario for AirRotateCoast {
 
         match self.start_time {
             Some(start_time) if time < start_time + 1.0 => {
-                let mut input = rlbot::ffi::PlayerInput::default();
+                let mut input = common::halfway_house::PlayerInput::default();
                 *self.axis.get_input_axis_mut(&mut input) = 1.0;
-                rlbot.interface().update_player_input(input, 0)?;
+                rlbot.update_player_input(0, &translate_player_input(&input))?;
                 Ok(ScenarioStepResult::Ignore)
             }
             Some(start_time) if time < start_time + 3.0 => {
-                let input = rlbot::ffi::PlayerInput::default();
-                rlbot.interface().update_player_input(input, 0)?;
+                let input = common::halfway_house::PlayerInput::default();
+                rlbot.update_player_input(0, &translate_player_input(&input))?;
                 Ok(ScenarioStepResult::Write)
             }
             _ => Ok(ScenarioStepResult::Finish),
@@ -631,7 +637,7 @@ impl Scenario for AirRotateCounter {
         &mut self,
         rlbot: &rlbot::RLBot,
         time: f32,
-        _packet: &rlbot::ffi::LiveDataPacket,
+        _packet: &common::halfway_house::LiveDataPacket,
     ) -> Result<ScenarioStepResult, Box<dyn Error>> {
         if self.start_time.is_none() {
             self.start_time = Some(time);
@@ -639,15 +645,15 @@ impl Scenario for AirRotateCounter {
 
         match self.start_time {
             Some(start_time) if time < start_time + 1.0 => {
-                let mut input = rlbot::ffi::PlayerInput::default();
+                let mut input = common::halfway_house::PlayerInput::default();
                 *self.axis.get_input_axis_mut(&mut input) = 1.0;
-                rlbot.interface().update_player_input(input, 0)?;
+                rlbot.update_player_input(0, &translate_player_input(&input))?;
                 Ok(ScenarioStepResult::Ignore)
             }
             Some(start_time) if time < start_time + 2.0 => {
-                let mut input = rlbot::ffi::PlayerInput::default();
+                let mut input = common::halfway_house::PlayerInput::default();
                 *self.axis.get_input_axis_mut(&mut input) = -1.0;
-                rlbot.interface().update_player_input(input, 0)?;
+                rlbot.update_player_input(0, &translate_player_input(&input))?;
                 Ok(ScenarioStepResult::Write)
             }
             _ => Ok(ScenarioStepResult::Finish),

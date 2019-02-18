@@ -304,10 +304,15 @@ enum Step {
     Jump,
 }
 
-fn drive(me: &rlbot::ffi::PlayerInfo, path: &Path, throttle: f32, boost: bool) -> Action {
+fn drive(
+    me: &common::halfway_house::PlayerInfo,
+    path: &Path,
+    throttle: f32,
+    boost: bool,
+) -> Action {
     let flat_forward_axis = car_forward_axis_2d(path.flat_start_rot);
     let steer = flat_forward_axis.angle_to(&(path.flat_target_loc - path.flat_start_loc).to_axis());
-    Action::Yield(rlbot::ffi::PlayerInput {
+    Action::Yield(common::halfway_house::PlayerInput {
         Throttle: throttle,
         Steer: (steer * 2.0).max(-1.0).min(1.0),
         Boost: boost && me.Physics.vel().norm() < rl::CAR_ALMOST_MAX_SPEED,
@@ -326,7 +331,7 @@ fn jump(eeg: &mut EEG, path: &Path) -> Action {
         // skipping the time where we assumed we would be jumping). Follow
         // through for maximum power.
         return Action::tail_call(Yielder::new(
-            rlbot::ffi::PlayerInput {
+            common::halfway_house::PlayerInput {
                 Throttle: 1.0,
                 ..Default::default()
             },

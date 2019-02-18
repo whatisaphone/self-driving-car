@@ -217,7 +217,7 @@ impl RetreatingSave {
         let start_loc = ctx.me().Physics.loc_2d();
         let start_forward_axis = ctx.me().Physics.forward_axis_2d();
         let theta = start_forward_axis.angle_to(&(plan.target_steer_loc - start_loc));
-        Action::Yield(rlbot::ffi::PlayerInput {
+        Action::Yield(common::halfway_house::PlayerInput {
             Throttle: throttle,
             Steer: (theta * 2.0).max(-1.0).min(1.0),
             Boost: boost && ctx.me().Boost > 0,
@@ -247,7 +247,7 @@ impl RetreatingSave {
         if ball_loc.z < Self::BALL_Z_FOR_DODGE && ctx.packet.GameBall.Physics.vel().norm() >= 2000.0
         {
             return Action::tail_call(Yielder::new(
-                rlbot::ffi::PlayerInput {
+                common::halfway_house::PlayerInput {
                     Throttle: 0.1,
                     ..Default::default()
                 },

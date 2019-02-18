@@ -8,11 +8,9 @@ use crate::{
     strategy::{Behavior, Team},
     Brain, EEG,
 };
-#[allow(deprecated)]
 use collect::{get_packet_and_inject_rigid_body_tick, RecordingRigidBodyState};
-use common::{prelude::*, ExtendRLBot};
+use common::{halfway_house::translate_player_input, ExtendRLBot};
 use lazy_static::lazy_static;
-use nalgebra::Point2;
 use std::{
     collections::HashSet,
     panic,
@@ -46,7 +44,7 @@ impl RunningTest {
         self.messages.send(Message::SetBehavior(Box::new(behavior)));
     }
 
-    pub fn sniff_packet(&self) -> rlbot::ffi::LiveDataPacket {
+    pub fn sniff_packet(&self) -> common::halfway_house::LiveDataPacket {
         let (tx, rx) = crossbeam_channel::bounded(1);
         self.messages.send(Message::SniffPacket(tx));
         rx.recv().unwrap()
@@ -84,7 +82,9 @@ impl RunningTest {
         ball_scenario: BallRecording,
         car_scenario: CarRecording,
         enemy_scenario: CarRecording,
-        behavior: impl FnOnce(&rlbot::ffi::LiveDataPacket) -> Box<dyn Behavior> + Send + 'static,
+        behavior: impl FnOnce(&common::halfway_house::LiveDataPacket) -> Box<dyn Behavior>
+            + Send
+            + 'static,
         ready_wait: Arc<Barrier>,
         messages: crossbeam_channel::Receiver<Message>,
     ) -> thread::JoinHandle<()> {
@@ -102,7 +102,7 @@ impl RunningTest {
 }
 
 pub enum Message {
-    SniffPacket(crossbeam_channel::Sender<rlbot::ffi::LiveDataPacket>),
+    SniffPacket(crossbeam_channel::Sender<common::halfway_house::LiveDataPacket>),
     SetBehavior(Box<dyn Behavior + Send>),
     HasScored(crossbeam_channel::Sender<bool>),
     EnemyHasScored(crossbeam_channel::Sender<bool>),
@@ -128,7 +128,7 @@ fn test_thread(
     ball_scenario: BallRecording,
     car_scenario: CarRecording,
     enemy_scenario: CarRecording,
-    behavior: impl FnOnce(&rlbot::ffi::LiveDataPacket) -> Box<dyn Behavior>,
+    behavior: impl FnOnce(&common::halfway_house::LiveDataPacket) -> Box<dyn Behavior>,
     ready_wait: Arc<Barrier>,
     messages: crossbeam_channel::Receiver<Message>,
 ) {
@@ -160,15 +160,12 @@ fn test_thread(
     while packets.next().unwrap().players[0].is_demolished {}
 
     for i in 0..match_settings.player_configurations.len() {
-        #[allow(deprecated)]
         rlbot
-            .interface()
-            .update_player_input(Default::default(), i as i32)
+            .update_player_input(i as i32, &Default::default())
             .unwrap();
     }
 
-    #[allow(deprecated)]
-    let field_info = rlbot.get_field_info().unwrap();
+    let field_info = rlbot.interface().update_field_info_flatbuffer().unwrap();
 
     setup_scenario(
         rlbot,
@@ -180,7 +177,6 @@ fn test_thread(
     );
 
     let rigid_body_tick = physicist.next_flat().unwrap();
-    #[allow(deprecated)]
     let first_packet = get_packet_and_inject_rigid_body_tick(rlbot, rigid_body_tick).unwrap();
 
     brain.set_behavior(Fuse::new(behavior(&first_packet)), &mut eeg);
@@ -191,7 +187,6 @@ fn test_thread(
 
     'tick_loop: loop {
         let rigid_body_tick = physicist.next_flat().unwrap();
-        #[allow(deprecated)]
         let packet = get_packet_and_inject_rigid_body_tick(rlbot, rigid_body_tick).unwrap();
 
         ball.tick(rlbot, &packet);
@@ -200,24 +195,20 @@ fn test_thread(
         while let Some(message) = messages.try_recv() {
             match message {
                 Message::SniffPacket(tx) => {
-                    tx.send(packet);
+                    tx.send(packet.clone());
                 }
                 Message::SetBehavior(behavior) => {
                     brain.set_behavior(Fuse::new(behavior), &mut eeg);
                 }
                 Message::HasScored(tx) => {
-                    let first_score = first_packet.match_score();
-                    let current_score = packet.match_score();
-                    let team = Team::Blue.to_ffi() as usize;
-                    tx.send(current_score[team] > first_score[team]);
+                    let first_score = first_packet.Teams[Team::Blue.to_ffi() as usize].Score;
+                    let current_score = packet.Teams[Team::Blue.to_ffi() as usize].Score;
+                    tx.send(current_score > first_score);
                 }
                 Message::EnemyHasScored(tx) => {
-                    let first_score = first_packet.match_score();
-                    let current_score = packet.match_score();
-                    let team = Team::Orange.to_ffi() as usize;
-                    // This doesn't detect own goals, because of RLBot framework limitations. If
-                    // there was a goal reset, conservatively assume that the enemy scored.
-                    tx.send(current_score[team] > first_score[team] || is_kickoff(&packet));
+                    let first_score = first_packet.Teams[Team::Orange.to_ffi() as usize].Score;
+                    let current_score = packet.Teams[Team::Orange.to_ffi() as usize].Score;
+                    tx.send(current_score > first_score);
                 }
                 Message::ExamineEEG(f) => {
                     f(&eeg);
@@ -229,9 +220,10 @@ fn test_thread(
         }
 
         eeg.begin(&packet);
-        let input = brain.tick(&field_info, &packet, &mut eeg);
-        #[allow(deprecated)]
-        rlbot.interface().update_player_input(input, 0).unwrap();
+        let input = brain.tick(field_info, &packet, &mut eeg);
+        rlbot
+            .update_player_input(0, &translate_player_input(&input))
+            .unwrap();
         eeg.show(&packet);
         if let Some(chat) = eeg.quick_chat {
             if let Err(_) = rlbot.quick_chat(chat, 0) {
@@ -242,16 +234,10 @@ fn test_thread(
 
     // For tidiness, make the cars stop moving when the test is finished.
     for i in 0..match_settings.player_configurations.len() {
-        #[allow(deprecated)]
         rlbot
-            .interface()
-            .update_player_input(Default::default(), i as i32)
+            .update_player_input(i as i32, &Default::default())
             .unwrap();
     }
-}
-
-fn is_kickoff(packet: &rlbot::ffi::LiveDataPacket) -> bool {
-    (packet.GameBall.Physics.loc_2d() - Point2::origin()).norm() < 1.0
 }
 
 fn setup_scenario(
@@ -262,8 +248,8 @@ fn setup_scenario(
     enemy: &RecordingRigidBodyState,
     enemy_boost: f32,
 ) {
-    #[allow(deprecated)]
-    let num_boosts = rlbot.get_field_info().unwrap().NumBoosts;
+    let field_info = rlbot.interface().update_field_info_flatbuffer().unwrap();
+    let num_boosts = field_info.boostPads().unwrap().len() as i32;
 
     set_state(rlbot, ball, car, car_boost, enemy, enemy_boost, num_boosts);
     // Wait for car suspension to settle to neutral, then set it again.

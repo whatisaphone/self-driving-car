@@ -55,7 +55,7 @@ impl Behavior for JumpAndTurn {
             physics::car_roof_axis(self.target_rot),
         );
 
-        Action::Yield(rlbot::ffi::PlayerInput {
+        Action::Yield(common::halfway_house::PlayerInput {
             Pitch: pitch,
             Yaw: yaw,
             Roll: roll,

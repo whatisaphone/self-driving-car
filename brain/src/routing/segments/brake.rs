@@ -86,7 +86,7 @@ impl SegmentRunner for Braker {
             return SegmentRunAction::Success;
         }
 
-        SegmentRunAction::Yield(rlbot::ffi::PlayerInput {
+        SegmentRunAction::Yield(common::halfway_house::PlayerInput {
             Throttle: -1.0,
             ..Default::default()
         })

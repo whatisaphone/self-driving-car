@@ -10,7 +10,7 @@ pub struct RecordingTick {
 #[derive(Clone)]
 pub struct RecordingPlayerTick {
     pub state: RecordingRigidBodyState,
-    pub input: rlbot::ffi::PlayerInput,
+    pub input: RecordingPlayerInput,
 }
 
 #[derive(Clone)]
@@ -20,6 +20,8 @@ pub struct RecordingRigidBodyState {
     pub vel: Vector3<f32>,
     pub ang_vel: Vector3<f32>,
 }
+
+pub type RecordingPlayerInput = common::halfway_house::PlayerInput;
 
 impl RecordingTick {
     pub fn parse(r: impl Read) -> impl Iterator<Item = RecordingTick> {
@@ -62,8 +64,8 @@ impl RecordingRigidBodyState {
     }
 }
 
-fn csv_input<'a>(it: &mut impl Iterator<Item = &'a str>) -> Result<rlbot::ffi::PlayerInput, ()> {
-    Ok(rlbot::ffi::PlayerInput {
+fn csv_input<'a>(it: &mut impl Iterator<Item = &'a str>) -> Result<RecordingPlayerInput, ()> {
+    Ok(RecordingPlayerInput {
         Throttle: csv_f32(it)?,
         Steer: csv_f32(it)?,
         Pitch: csv_f32(it)?,

@@ -2,7 +2,7 @@
 
 use common::prelude::*;
 
-pub fn draw_ball_prediction(rlbot: &rlbot::RLBot, packet: &rlbot::ffi::LiveDataPacket) {
+pub fn draw_ball_prediction(rlbot: &rlbot::RLBot, packet: &common::halfway_house::LiveDataPacket) {
     use chip::Ball;
     let mut ball = Ball::new();
     ball.set_pos(packet.GameBall.Physics.loc());

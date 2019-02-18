@@ -2,11 +2,11 @@ use crate::utils::geometry::ExtendF32;
 use common::prelude::*;
 use nalgebra::Point2;
 
-pub fn simple_steer_towards(car: &rlbot::ffi::Physics, target_loc: Point2<f32>) -> f32 {
+pub fn simple_steer_towards(car: &common::halfway_house::Physics, target_loc: Point2<f32>) -> f32 {
     simple_yaw_diff(car, target_loc).max(-1.0).min(1.0) * 2.0
 }
 
-pub fn simple_yaw_diff(car: &rlbot::ffi::Physics, target_loc: Point2<f32>) -> f32 {
+pub fn simple_yaw_diff(car: &common::halfway_house::Physics, target_loc: Point2<f32>) -> f32 {
     let target_yaw = car.loc_2d().negated_difference_and_angle_to(target_loc);
     (target_yaw - car.rot().yaw()).normalize_angle()
 }
@@ -32,7 +32,7 @@ mod integration_tests {
         fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
             let me = ctx.me();
             let ball = ctx.packet.GameBall;
-            Action::Yield(rlbot::ffi::PlayerInput {
+            Action::Yield(common::halfway_house::PlayerInput {
                 Throttle: 1.0,
                 Steer: simple_steer_towards(&me.Physics, ball.Physics.loc_2d()),
                 ..Default::default()

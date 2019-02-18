@@ -48,7 +48,7 @@ impl Behavior for BlitzToLocation {
             && (speed < 1500.0 || (2000.0 <= speed && speed < rl::CAR_ALMOST_MAX_SPEED))
             && me.Boost > 0
         {
-            return Action::Yield(rlbot::ffi::PlayerInput {
+            return Action::Yield(common::halfway_house::PlayerInput {
                 Throttle: 1.0,
                 Steer: steer,
                 Boost: true,
@@ -72,7 +72,7 @@ impl Behavior for BlitzToLocation {
             }
         }
 
-        Action::Yield(rlbot::ffi::PlayerInput {
+        Action::Yield(common::halfway_house::PlayerInput {
             Throttle: 1.0,
             Steer: steer,
             ..Default::default()

@@ -1,12 +1,12 @@
 use crate::strategy::pitch::{Pitch, DFH_STADIUM};
-use common::{prelude::*, rl};
+use common::{prelude::*, rl, vector_iter};
 use lazy_static::lazy_static;
 use nalgebra::{Point2, Point3, Unit, Vector2, Vector3};
 use std::ops::RangeTo;
 
 pub struct Game<'a> {
-    packet: &'a rlbot::ffi::LiveDataPacket,
-    mode: rlbot::ffi::GameMode,
+    packet: &'a common::halfway_house::LiveDataPacket,
+    mode: rlbot::GameMode,
     pitch: &'a Pitch,
     player_index: usize,
     pub team: Team,
@@ -17,8 +17,8 @@ pub struct Game<'a> {
 
 impl<'a> Game<'a> {
     pub fn new(
-        field_info: &'a rlbot::ffi::FieldInfo,
-        packet: &'a rlbot::ffi::LiveDataPacket,
+        field_info: rlbot::flat::FieldInfo<'_>,
+        packet: &'a common::halfway_house::LiveDataPacket,
         player_index: usize,
     ) -> Self {
         let team = Team::from_ffi(packet.GameCars[player_index].Team);
@@ -29,13 +29,10 @@ impl<'a> Game<'a> {
             player_index,
             team,
             enemy_team: team.opposing(),
-            boost_dollars: field_info
-                .BoostPads
-                .iter()
-                .take(field_info.NumBoosts as usize)
-                .filter(|info| info.FullBoost)
+            boost_dollars: vector_iter(field_info.boostPads().unwrap())
+                .filter(|info| info.isFullBoost())
                 .map(|info| BoostPickup {
-                    loc: point3(info.Location).to_2d(),
+                    loc: point3(info.location().unwrap()).to_2d(),
                 })
                 .collect::<Vec<_>>()
                 .into_boxed_slice(),
@@ -49,18 +46,18 @@ impl<'a> Game<'a> {
 
     pub fn field_max_x(&self) -> f32 {
         match self.mode {
-            rlbot::ffi::GameMode::Soccer => rl::FIELD_MAX_X,
-            rlbot::ffi::GameMode::Dropshot => 5026.0,
-            rlbot::ffi::GameMode::Hoops => 2966.67,
+            rlbot::GameMode::Soccer => rl::FIELD_MAX_X,
+            rlbot::GameMode::Dropshot => 5026.0,
+            rlbot::GameMode::Hoops => 2966.67,
             mode => panic!("unexpected game mode {:?}", mode),
         }
     }
 
     pub fn field_max_y(&self) -> f32 {
         match self.mode {
-            rlbot::ffi::GameMode::Soccer => rl::FIELD_MAX_Y,
-            rlbot::ffi::GameMode::Dropshot => 4555.0,
-            rlbot::ffi::GameMode::Hoops => 3586.0,
+            rlbot::GameMode::Soccer => rl::FIELD_MAX_Y,
+            rlbot::GameMode::Dropshot => 4555.0,
+            rlbot::GameMode::Hoops => 3586.0,
             mode => panic!("unexpected game mode {:?}", mode),
         }
     }
@@ -69,7 +66,7 @@ impl<'a> Game<'a> {
         p.x.abs() < self.field_max_x() && p.y.abs() < self.field_max_y()
     }
 
-    pub fn me(&self) -> &rlbot::ffi::PlayerInfo {
+    pub fn me(&self) -> &common::halfway_house::PlayerInfo {
         &self.packet.GameCars[self.player_index]
     }
 
@@ -77,7 +74,7 @@ impl<'a> Game<'a> {
         &self.me_vehicle
     }
 
-    pub fn cars(&self, team: Team) -> impl Iterator<Item = &rlbot::ffi::PlayerInfo> {
+    pub fn cars(&self, team: Team) -> impl Iterator<Item = &common::halfway_house::PlayerInfo> {
         self.packet
             .cars()
             .filter(move |p| Team::from_ffi(p.Team) == team)
@@ -85,16 +82,16 @@ impl<'a> Game<'a> {
 
     pub fn own_goal(&self) -> &Goal {
         match self.mode {
-            rlbot::ffi::GameMode::Soccer => Goal::soccar(self.team),
-            rlbot::ffi::GameMode::Hoops => Goal::hoops(self.team),
+            rlbot::GameMode::Soccer => Goal::soccar(self.team),
+            rlbot::GameMode::Hoops => Goal::hoops(self.team),
             _ => panic!("unexpected game mode"),
         }
     }
 
     pub fn enemy_goal(&self) -> &Goal {
         match self.mode {
-            rlbot::ffi::GameMode::Soccer => Goal::soccar(self.enemy_team),
-            rlbot::ffi::GameMode::Hoops => Goal::hoops(self.enemy_team),
+            rlbot::GameMode::Soccer => Goal::soccar(self.enemy_team),
+            rlbot::GameMode::Hoops => Goal::hoops(self.enemy_team),
             _ => panic!("unexpected game mode"),
         }
     }
@@ -120,17 +117,17 @@ impl<'a> Game<'a> {
     }
 }
 
-pub fn infer_game_mode(field_info: &rlbot::ffi::FieldInfo) -> rlbot::ffi::GameMode {
-    match field_info.NumBoosts {
-        0 => rlbot::ffi::GameMode::Dropshot,
-        20 => rlbot::ffi::GameMode::Hoops,
-        34 => rlbot::ffi::GameMode::Soccer,
+pub fn infer_game_mode(field_info: rlbot::flat::FieldInfo<'_>) -> rlbot::GameMode {
+    match field_info.boostPads().unwrap().len() {
+        0 => rlbot::GameMode::Dropshot,
+        20 => rlbot::GameMode::Hoops,
+        34 => rlbot::GameMode::Soccer,
         _ => panic!("unknown game mode"),
     }
 }
 
-fn point3(v: rlbot::ffi::Vector3) -> Point3<f32> {
-    Point3::new(v.X, v.Y, v.Z)
+fn point3(v: &rlbot::flat::Vector3) -> Point3<f32> {
+    Point3::new(v.x(), v.y(), v.z())
 }
 
 #[derive(Copy, Clone, Eq, PartialEq)]

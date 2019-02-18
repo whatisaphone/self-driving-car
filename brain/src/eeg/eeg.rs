@@ -60,14 +60,14 @@ impl EEG {
 
 impl EEG {
     /// Call this at the start of each frame.
-    pub fn begin(&mut self, packet: &rlbot::ffi::LiveDataPacket) {
+    pub fn begin(&mut self, packet: &common::halfway_house::LiveDataPacket) {
         self.current_packet_time = packet.GameInfo.TimeSeconds;
         assert!(self.draw_list.drawables.is_empty());
         self.quick_chat = None;
     }
 
     /// Call this at the end of each frame.
-    pub fn show(&mut self, packet: &rlbot::ffi::LiveDataPacket) {
+    pub fn show(&mut self, packet: &common::halfway_house::LiveDataPacket) {
         let drawables = mem::replace(&mut self.draw_list.drawables, Vec::new());
         if let Some(window) = &self.window {
             window.draw(packet.clone(), drawables);

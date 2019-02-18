@@ -5,7 +5,7 @@ use crate::{
 use common::prelude::*;
 
 pub struct Context<'a> {
-    pub packet: &'a rlbot::ffi::LiveDataPacket,
+    pub packet: &'a common::halfway_house::LiveDataPacket,
     pub game: &'a Game<'a>,
     pub scenario: &'a Scenario<'a>,
     pub eeg: &'a mut EEG,
@@ -14,7 +14,7 @@ pub struct Context<'a> {
 impl<'a> Context<'a> {
     pub fn new(
         game: &'a Game<'_>,
-        packet: &'a rlbot::ffi::LiveDataPacket,
+        packet: &'a common::halfway_house::LiveDataPacket,
         scenario: &'a Scenario<'a>,
         eeg: &'a mut EEG,
     ) -> Self {
@@ -27,15 +27,15 @@ impl<'a> Context<'a> {
     }
 
     /// Return the player we are controlling.
-    pub fn me(&self) -> &'a rlbot::ffi::PlayerInfo {
+    pub fn me(&self) -> &'a common::halfway_house::PlayerInfo {
         self.game.me()
     }
 
-    pub fn cars(&self, team: Team) -> impl Iterator<Item = &rlbot::ffi::PlayerInfo> {
+    pub fn cars(&self, team: Team) -> impl Iterator<Item = &common::halfway_house::PlayerInfo> {
         self.game.cars(team)
     }
 
-    pub fn enemy_cars(&self) -> impl Iterator<Item = &rlbot::ffi::PlayerInfo> {
+    pub fn enemy_cars(&self) -> impl Iterator<Item = &common::halfway_house::PlayerInfo> {
         self.game.cars(self.game.enemy_team)
     }
 
@@ -62,14 +62,14 @@ impl<'a> Context<'a> {
 }
 
 pub struct Context2<'c, 's> {
-    pub packet: &'c rlbot::ffi::LiveDataPacket,
+    pub packet: &'c common::halfway_house::LiveDataPacket,
     pub game: &'c Game<'c>,
     pub scenario: &'s Scenario<'c>,
 }
 
 impl<'c, 's> Context2<'c, 's> {
     /// Return the player we are controlling.
-    pub fn me(&self) -> &rlbot::ffi::PlayerInfo {
+    pub fn me(&self) -> &common::halfway_house::PlayerInfo {
         self.game.me()
     }
 }

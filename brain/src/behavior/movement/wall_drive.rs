@@ -49,7 +49,7 @@ impl Behavior for WallDrive {
         let rotation = me_forward.rotation_to(&(steer_target_loc - me.Physics.loc()).to_axis());
         let steer = rotation.project_2d(&me.Physics.roof_axis());
 
-        Action::Yield(rlbot::ffi::PlayerInput {
+        Action::Yield(common::halfway_house::PlayerInput {
             Throttle: 1.0,
             Steer: steer.angle(),
             ..Default::default()

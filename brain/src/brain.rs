@@ -29,7 +29,7 @@ impl Brain {
     }
 
     // This is just here so it's exported from the crate since I'm lazy
-    pub fn infer_game_mode(field_info: &rlbot::ffi::FieldInfo) -> rlbot::ffi::GameMode {
+    pub fn infer_game_mode(field_info: rlbot::flat::FieldInfo<'_>) -> rlbot::GameMode {
         infer_game_mode(field_info)
     }
 
@@ -68,10 +68,10 @@ impl Brain {
 
     pub fn tick(
         &mut self,
-        field_info: &rlbot::ffi::FieldInfo,
-        packet: &rlbot::ffi::LiveDataPacket,
+        field_info: rlbot::flat::FieldInfo<'_>,
+        packet: &common::halfway_house::LiveDataPacket,
         eeg: &mut EEG,
-    ) -> rlbot::ffi::PlayerInput {
+    ) -> common::halfway_house::PlayerInput {
         self.fps_counter.tick(packet.GameInfo.TimeSeconds);
 
         eeg.print_time("game_time", packet.GameInfo.TimeSeconds);
@@ -104,10 +104,10 @@ impl Brain {
 
     fn determine_controls(
         &mut self,
-        field_info: &rlbot::ffi::FieldInfo,
-        packet: &rlbot::ffi::LiveDataPacket,
+        field_info: rlbot::flat::FieldInfo<'_>,
+        packet: &common::halfway_house::LiveDataPacket,
         eeg: &mut EEG,
-    ) -> rlbot::ffi::PlayerInput {
+    ) -> common::halfway_house::PlayerInput {
         let start = Instant::now();
 
         let game = Game::new(field_info, packet, self.player_index.unwrap() as usize);

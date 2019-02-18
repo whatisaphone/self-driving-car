@@ -49,7 +49,7 @@ impl Behavior for SkidRecover {
         ctx.eeg.print_value("ang_vel", AngularVelocity(me_ang_vel));
         ctx.eeg.print_angle("future_rot", future_rot.angle());
 
-        Action::Yield(rlbot::ffi::PlayerInput {
+        Action::Yield(common::halfway_house::PlayerInput {
             Throttle: 1.0,
             Steer: steer,
             ..Default::default()

@@ -4,7 +4,7 @@ use nameof::name_of_type;
 
 #[derive(new)]
 pub struct Yielder {
-    input: rlbot::ffi::PlayerInput,
+    input: common::halfway_house::PlayerInput,
     duration: f32,
     #[new(value = "Priority::Idle")]
     priority: Priority,

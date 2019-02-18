@@ -70,7 +70,7 @@ impl Behavior for TurtleSpin {
         if ctx.me().OnGround {
             return Action::tail_call(
                 Yielder::new(
-                    rlbot::ffi::PlayerInput {
+                    common::halfway_house::PlayerInput {
                         Roll: 1.0,
                         Jump: true,
                         Boost: ctx.me().Boost > 0,
@@ -90,13 +90,13 @@ impl Behavior for TurtleSpin {
         }
 
         if !ctx.me().DoubleJumped {
-            return Action::Yield(rlbot::ffi::PlayerInput {
+            return Action::Yield(common::halfway_house::PlayerInput {
                 Jump: true,
                 ..Default::default()
             });
         }
 
-        Action::Yield(rlbot::ffi::PlayerInput {
+        Action::Yield(common::halfway_house::PlayerInput {
             Yaw: 1.0,
             Jump: !ctx.me().DoubleJumped,
             ..Default::default()
@@ -115,7 +115,7 @@ impl TurtleSpin {
 
         if should_air_roll_upside_down(ctx) {
             let (pitch, yaw, _roll) = get_pitch_yaw_roll(ctx.me(), me_forward, -Vector3::z_axis());
-            return Some(Action::Yield(rlbot::ffi::PlayerInput {
+            return Some(Action::Yield(common::halfway_house::PlayerInput {
                 Pitch: pitch,
                 Yaw: yaw,
                 Roll: 1.0,

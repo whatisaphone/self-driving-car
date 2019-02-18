@@ -14,12 +14,12 @@ use simulate::{linear_interpolate, Car1D};
 use std::f32::{self, consts::PI};
 
 pub struct Scenario<'a> {
-    packet: &'a rlbot::ffi::LiveDataPacket,
+    packet: &'a common::halfway_house::LiveDataPacket,
     pub game: &'a Game<'a>,
     ball_predictor: &'a dyn BallPredictor,
     ball_prediction: LazyCell<BallTrajectory>,
     me_intercept: LazyCell<Option<NaiveIntercept>>,
-    enemy_intercept: LazyCell<Option<(&'a rlbot::ffi::PlayerInfo, NaiveIntercept)>>,
+    enemy_intercept: LazyCell<Option<(&'a common::halfway_house::PlayerInfo, NaiveIntercept)>>,
     possession: LazyCell<f32>,
     push_wall: LazyCell<Wall>,
     impending_score_conservative: LazyCell<Option<BallFrame>>,
@@ -36,7 +36,7 @@ impl<'a> Scenario<'a> {
     pub fn new(
         game: &'a Game<'_>,
         ball_predictor: &'a dyn BallPredictor,
-        packet: &'a rlbot::ffi::LiveDataPacket,
+        packet: &'a common::halfway_house::LiveDataPacket,
     ) -> Scenario<'a> {
         Scenario {
             packet,
@@ -67,14 +67,16 @@ impl<'a> Scenario<'a> {
         self.me_intercept.borrow().unwrap().as_ref()
     }
 
-    pub fn enemy_intercept(&self) -> Option<&(&'a rlbot::ffi::PlayerInfo, NaiveIntercept)> {
+    pub fn enemy_intercept(
+        &self,
+    ) -> Option<&(&'a common::halfway_house::PlayerInfo, NaiveIntercept)> {
         if !self.me_intercept.filled() {
             self.race();
         }
         self.enemy_intercept.borrow().unwrap().as_ref()
     }
 
-    pub fn primary_enemy(&self) -> Option<&'a rlbot::ffi::PlayerInfo> {
+    pub fn primary_enemy(&self) -> Option<&'a common::halfway_house::PlayerInfo> {
         self.enemy_intercept().map(|&(enemy, ref _intercept)| enemy)
     }
 
@@ -241,7 +243,7 @@ impl<'a> Scenario<'a> {
     }
 }
 
-fn blitz_start(car: &rlbot::ffi::PlayerInfo, ball_prediction: &BallTrajectory) -> Car1D {
+fn blitz_start(car: &common::halfway_house::PlayerInfo, ball_prediction: &BallTrajectory) -> Car1D {
     let ball_loc = ball_prediction.start().loc.to_2d();
     let ball_vel = ball_prediction.start().vel.to_2d();
     let car_vel = car.Physics.vel_2d();
@@ -257,7 +259,7 @@ fn blitz_start(car: &rlbot::ffi::PlayerInfo, ball_prediction: &BallTrajectory) -
 // first possible intercept might be.
 fn simulate_ball_blitz(
     ball_prediction: &BallTrajectory,
-    car: &rlbot::ffi::PlayerInfo,
+    car: &common::halfway_house::PlayerInfo,
 ) -> Option<NaiveIntercept> {
     let mut sim = blitz_start(car, ball_prediction);
     let mut naive_result = None;

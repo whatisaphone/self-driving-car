@@ -9,7 +9,10 @@ use nameof::{name_of, name_of_type};
 use simulate::linear_interpolate;
 use std::f32::consts::PI;
 
-pub fn drive_towards(ctx: &mut Context<'_>, target_loc: Point2<f32>) -> rlbot::ffi::PlayerInput {
+pub fn drive_towards(
+    ctx: &mut Context<'_>,
+    target_loc: Point2<f32>,
+) -> common::halfway_house::PlayerInput {
     let me = ctx.me();
 
     let yaw_diff = simple_yaw_diff(&me.Physics, target_loc);
@@ -26,7 +29,7 @@ pub fn drive_towards(ctx: &mut Context<'_>, target_loc: Point2<f32>) -> rlbot::f
         me.Physics.vel().norm(),
     );
 
-    rlbot::ffi::PlayerInput {
+    common::halfway_house::PlayerInput {
         Throttle: 1.0,
         Steer: steer,
         Handbrake: yaw_diff.abs() >= handbrake_cutoff,
