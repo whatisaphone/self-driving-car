@@ -146,13 +146,14 @@ impl RetreatingSave {
         let target_loc = feasible_angle_near(intercept_ball_loc, car_loc, danger, PI / 6.0);
         // If the convenient angle is not blocking enough of the danger point, force a
         // less convenient angle.
+        let block_loc = if (intercept_ball_loc - own_goal.center_2d).norm() >= 1000.0 {
+            own_goal.center_2d
+        } else {
+            danger
+        };
         let clamp_angle = linear_interpolate(&[500.0, 2000.0], &[0.0, PI / 3.0], car_vel.norm());
-        let target_loc = feasible_angle_near(
-            intercept_ball_loc,
-            own_goal.center_2d,
-            target_loc,
-            clamp_angle,
-        );
+        let target_loc =
+            feasible_angle_near(intercept_ball_loc, block_loc, target_loc, clamp_angle);
         // Target a fixed distance away from the ball.
         let target_loc = intercept_ball_loc + (target_loc - intercept_ball_loc).normalize() * 200.0;
 
@@ -577,6 +578,26 @@ mod integration_tests {
     fn turn_for_bouncing_ball() {
         let test = TestRunner::new()
             .one_v_one(&*recordings::TURN_FOR_BOUNCING_BALL, 30.0)
+            .starting_boost(70.0)
+            .soccar()
+            .run_for_millis(4000);
+
+        assert!(!test.enemy_has_scored());
+
+        let packet = test.sniff_packet();
+        let ball_loc = packet.GameBall.Physics.loc();
+        println!("ball_loc = {:?}", ball_loc);
+        assert!((ball_loc.to_2d() - SOCCAR_GOAL_BLUE.center_2d).norm() >= 2000.0);
+
+        test.examine_events(|events| {
+            assert!(events.contains(&Event::RetreatingSave));
+        });
+    }
+
+    #[test]
+    fn waiting_awkward_close_to_goal() {
+        let test = TestRunner::new()
+            .one_v_one(&*recordings::WAITING_AWKWARD_CLOSE_TO_GOAL, 372.0)
             .starting_boost(70.0)
             .soccar()
             .run_for_millis(4000);
