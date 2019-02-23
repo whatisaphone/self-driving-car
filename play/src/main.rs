@@ -122,7 +122,7 @@ fn run_bot(
     log_to_stdout: bool,
     show_window: bool,
 ) {
-    let field_info = rlbot.interface().update_field_info_flatbuffer().unwrap();
+    let field_info = wait_for_field_info(rlbot);
     let brain = match Brain::infer_game_mode(field_info) {
         rlbot::GameMode::Soccer => Brain::soccar(),
         rlbot::GameMode::Dropshot => Brain::dropshot(rlbot),
@@ -145,6 +145,17 @@ fn run_bot(
     let mut bot = FormulaNone::new(field_info, collector, eeg, brain);
     bot.set_player_index(player_index);
     bot_loop(&rlbot, player_index, &mut bot);
+}
+
+fn wait_for_field_info(rlbot: &rlbot::RLBot) -> rlbot::flat::FieldInfo<'_> {
+    let mut packeteer = rlbot.packeteer();
+    loop {
+        packeteer.next().unwrap();
+        let field_info = rlbot.interface().update_field_info_flatbuffer().unwrap();
+        if field_info.boostPads().is_some() {
+            break field_info;
+        }
+    }
 }
 
 fn bot_loop(rlbot: &rlbot::RLBot, player_index: i32, bot: &mut FormulaNone<'_>) {
