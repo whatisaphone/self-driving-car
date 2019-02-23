@@ -65,7 +65,7 @@ impl TestScenario {
             ..Default::default()
         };
         println!("{}", result.to_source());
-        return result;
+        result
     }
 
     pub fn ball(&self) -> RecordingRigidBodyState {

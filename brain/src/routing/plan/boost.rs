@@ -184,12 +184,11 @@ impl GetDollar {
         );
 
         // Midfield boost pads
-        if pickup.loc.y < 1.0 {
-            if approach.angle_to(&-Vector2::y_axis()).abs() < threshold
-                || approach.angle_to(&Vector2::y_axis()).abs() < threshold
-            {
-                return Point2::new(pickup.loc.x, -ctx.start.loc.y.signum() * 1000.0);
-            }
+        if pickup.loc.y < 1.0
+            && (approach.angle_to(&-Vector2::y_axis()).abs() < threshold
+                || approach.angle_to(&Vector2::y_axis()).abs() < threshold)
+        {
+            return Point2::new(pickup.loc.x, -ctx.start.loc.y.signum() * 1000.0);
         }
 
         // Corner boost pads

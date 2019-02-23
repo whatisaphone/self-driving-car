@@ -75,10 +75,7 @@ fn ground(ctx: &Context2<'_, '_>, eeg: &mut EEG) -> Option<(f32, HitType)> {
         GroundIntercept::calc_intercept(&ctx.me().into(), ctx.scenario.ball_prediction())?;
 
     if TepidHit::dangerous_back_wall_with_little_boost(ctx, intercept.loc) {
-        eeg.log(
-            name_of_type!(TepidHit),
-            format!("too dangerous with no boost"),
-        );
+        eeg.log(name_of_type!(TepidHit), "too dangerous with no boost");
         return None;
     }
     Some((intercept.t, HitType::Ground))

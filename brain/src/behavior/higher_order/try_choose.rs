@@ -89,7 +89,7 @@ impl TryChoose {
                     self.name(),
                     format!("choosing index {}: {}", index, self.choices[index].blurb()),
                 );
-                return Some(Action::Yield(input));
+                Some(Action::Yield(input))
             }
             Action::TailCall(behavior) => {
                 self.choices[index] = behavior;
@@ -101,7 +101,7 @@ impl TryChoose {
                         self.choices[index].blurb(),
                     ),
                 );
-                return self.try_index(ctx, index);
+                self.try_index(ctx, index)
             }
             Action::RootCall(_) => None,
             Action::Return => None,
