@@ -1,9 +1,14 @@
 use crate::{
     routing::{
-        models::{PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner},
-        plan::{ground_drive::GroundDrive, ground_powerslide::GroundPowerslideTurn},
+        models::{
+            CarState2D, PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner,
+        },
+        plan::{
+            ground_drive::GroundDrive, ground_jump_and_dodge::GroundJumpAndDodge,
+            ground_powerslide::GroundPowerslideTurn, higher_order::StaticPlanner, ChainedPlanner,
+        },
         recover::{IsSkidding, NotOnFlatGround},
-        segments::JumpAndDodge,
+        segments::Brake,
     },
     strategy::{BoostPickup, Goal},
 };
@@ -70,12 +75,9 @@ impl GetDollar {
     /// routing is not good enough to do anything smarter.
     fn quick_flip(
         ctx: &PlanningContext<'_, '_>,
-        _dump: &mut PlanningDump<'_>,
+        dump: &mut PlanningDump<'_>,
         pickup: &BoostPickup,
     ) -> Option<RoutePlan> {
-        if ctx.start.vel.norm() >= 500.0 {
-            return None;
-        }
         let dist = (ctx.start.loc.to_2d() - pickup.loc).norm();
         if dist >= 750.0 {
             return None;
@@ -85,11 +87,31 @@ impl GetDollar {
             .start
             .forward_axis_2d()
             .rotation_to(&(pickup.loc - ctx.start.loc.to_2d()).to_axis());
+        if direction.angle().abs() < PI / 2.0 && ctx.start.vel_2d().norm() >= 500.0 {
+            return None;
+        }
 
-        Some(RoutePlan {
-            segment: Box::new(JumpAndDodge::new(ctx.start.clone(), direction)),
+        let mut planners = Vec::<Box<dyn RoutePlanner>>::new();
+
+        // Brake first. This prevents the case where we are trying to get a boost that
+        // isn't up yet, and we pass it and try to get it again with a wide, awkward
+        // turn. Ideally we would not do this, but sadly we do. Without this, we always
+        // end up driving up the wall. The next best thing is to brake and flop in place
+        // until it spawns, and this makes that happen.
+        let state = CarState2D {
+            loc: ctx.start.loc.to_2d(),
+            rot: ctx.start.rot.to_2d(),
+            vel: ctx.start.vel.to_2d(),
+            boost: ctx.start.boost,
+        };
+        planners.push(Box::new(StaticPlanner::new(RoutePlan {
+            segment: Box::new(Brake::new(state, 250.0)),
             next: None,
-        })
+        })));
+
+        planners.push(Box::new(GroundJumpAndDodge::new(pickup.loc)));
+
+        ChainedPlanner::chain(planners).plan(ctx, dump).ok()
     }
 
     fn powerslide_turn(

@@ -15,6 +15,7 @@ macro_rules! guard {
 mod boost;
 mod ground_drive;
 mod ground_intercept;
+mod ground_jump_and_dodge;
 mod ground_powerslide;
 mod ground_straight;
 mod ground_turn;

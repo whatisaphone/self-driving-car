@@ -1,6 +1,6 @@
 use crate::physics;
-use nalgebra::{Point2, Point3, Rotation3, Unit, UnitQuaternion, Vector2, Vector3};
-use std::fmt::{self, Formatter};
+use nalgebra::{Point2, Point3, Rotation3, Unit, UnitComplex, UnitQuaternion, Vector2, Vector3};
+use std::fmt;
 
 pub trait PrettyPrint {
     type PrettyPrinter: fmt::Display;
@@ -36,7 +36,7 @@ macro_rules! inherent {
         pub struct $printer($type);
 
         impl fmt::Display for $printer {
-            fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), fmt::Error> {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
                 let $x = self.0;
                 write!(f, $fmt, $($map),+)
             }
@@ -66,7 +66,7 @@ macro_rules! wrap {
         }
 
         impl fmt::Display for $name {
-            fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), fmt::Error> {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
                 let $x = self.0;
                 let s = $map;
                 write!(f, $fmt, s)
@@ -90,6 +90,9 @@ inherent!(UV2PP, Unit<Vector2<f32>>, "({:.2}, {:.2})", |v| (v.x, v.y));
 inherent!(UV3PP, Unit<Vector3<f32>>, "({:.2}, {:.2}, {:.2})", |v| (
     v.x, v.y, v.z,
 ));
+inherent!(UCPP, UnitComplex<f32>, "@{}", |x| {
+    physics::car_forward_axis_2d(x).pretty()
+});
 inherent!(UQPP, UnitQuaternion<f32>, "@{}", |x| {
     physics::car_forward_axis(x).pretty()
 });
