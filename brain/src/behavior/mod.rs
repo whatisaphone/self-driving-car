@@ -1,4 +1,4 @@
-pub use self::kickoff::Kickoff;
+pub use self::kickoff::PreKickoff;
 
 pub mod defense;
 #[macro_use]

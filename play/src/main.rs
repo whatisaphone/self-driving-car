@@ -216,10 +216,6 @@ impl<'a> FormulaNone<'a> {
         common::halfway_house::PlayerInput,
         Option<rlbot::flat::QuickChatSelection>,
     ) {
-        if !packet.GameInfo.RoundActive {
-            return Default::default();
-        }
-
         logging::STATE.lock().unwrap().game_time = Some(packet.GameInfo.TimeSeconds);
 
         self.eeg.begin(&packet);

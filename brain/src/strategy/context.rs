@@ -59,6 +59,12 @@ impl<'a> Context<'a> {
             self.eeg.quick_chat(choice);
         }
     }
+
+    /// Use this to get a "deterministic" "random" number during kickoffs, when
+    /// the cars' locations are fixed.
+    pub fn time_based_random(&self) -> f32 {
+        self.packet.GameInfo.TimeSeconds.fract()
+    }
 }
 
 pub struct Context2<'c, 's> {

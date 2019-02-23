@@ -44,7 +44,7 @@ where
     fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
         if !self.predicate.evaluate(ctx) {
             ctx.eeg.log(self.name(), "terminating");
-            return Action::Abort;
+            return Action::Return;
         }
 
         ctx.eeg

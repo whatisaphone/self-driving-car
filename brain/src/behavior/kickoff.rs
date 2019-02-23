@@ -1,12 +1,13 @@
 use crate::{
     behavior::{
-        higher_order::Chain,
-        movement::{drive_towards, QuickJumpAndDodge},
+        higher_order::{Chain, While},
+        movement::{drive_towards, QuickJumpAndDodge, Yielder},
     },
     routing::{
         behavior::FollowRoute,
         models::RoutePlanner,
         plan::{ChainedPlanner, GroundIntercept, GroundStraightPlanner, TurnPlanner},
+        recover::RoundIsNotActive,
         StraightMode,
     },
     strategy::{Action, Behavior, Context, Priority},
@@ -16,10 +17,11 @@ use derive_new::new;
 use nalgebra::Point2;
 use nameof::name_of_type;
 use std::f32::consts::PI;
+use vec_box::vec_box;
 
-pub struct Kickoff;
+pub struct PreKickoff;
 
-impl Kickoff {
+impl PreKickoff {
     pub fn new() -> Self {
         Self
     }
@@ -29,13 +31,59 @@ impl Kickoff {
     }
 }
 
+impl Behavior for PreKickoff {
+    fn name(&self) -> &str {
+        name_of_type!(PreKickoff)
+    }
+
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
+        let quick_chat = if ctx.time_based_random() < 0.1 {
+            // I'm so funny
+            rlbot::flat::QuickChatSelection::Information_AllYours
+        } else {
+            rlbot::flat::QuickChatSelection::Information_IGotIt
+        };
+        ctx.quick_chat(1.0, &[quick_chat]);
+
+        Action::tail_call(Chain::new(Priority::Idle, vec_box![
+            wait_for_round_to_begin(),
+            Kickoff::new(),
+        ]))
+    }
+}
+
+/// For some reason the game thinks we're skidding the first few frames of a
+/// kickoff countdown, so we end up doing the whole SkidRecover shebang. To
+/// avoid that, explicitly wait for the round to begin.
+fn wait_for_round_to_begin() -> impl Behavior {
+    While::new(
+        RoundIsNotActive,
+        Yielder::new(
+            common::halfway_house::PlayerInput {
+                Boost: true,
+                ..Default::default()
+            },
+            9999.0,
+        ),
+    )
+}
+
+pub struct Kickoff;
+
+impl Kickoff {
+    // This shouldn't be used without `PreKickoff` coming first, so make it private.
+    fn new() -> Self {
+        Self
+    }
+}
+
 impl Behavior for Kickoff {
     fn name(&self) -> &str {
         name_of_type!(Kickoff)
     }
 
     fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
-        if !Self::is_kickoff(&ctx.packet.GameBall) {
+        if !PreKickoff::is_kickoff(&ctx.packet.GameBall) {
             ctx.eeg.log(self.name(), "not a kickoff");
             return Action::Abort;
         }
@@ -65,8 +113,6 @@ impl Behavior for Kickoff {
             // This is basically a nop since the segment runs with `StraightMode::Fake`.
             Box::new(GroundIntercept::new().allow_dodging(false))
         };
-
-        ctx.quick_chat(1.0, &[rlbot::flat::QuickChatSelection::Information_IGotIt]);
 
         Action::tail_call(Chain::new(Priority::Idle, vec![
             Box::new(FollowRoute::new_boxed(approach)),
@@ -98,7 +144,7 @@ impl Behavior for KickoffStrike {
     }
 
     fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
-        if !Kickoff::is_kickoff(&ctx.packet.GameBall) {
+        if !PreKickoff::is_kickoff(&ctx.packet.GameBall) {
             ctx.eeg.log(self.name(), "not a kickoff");
             return Action::Abort;
         }
@@ -178,7 +224,7 @@ impl Behavior for RoughAngledChip {
     }
 
     fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
-        if !Kickoff::is_kickoff(&ctx.packet.GameBall) {
+        if !PreKickoff::is_kickoff(&ctx.packet.GameBall) {
             return Action::Return;
         }
 
@@ -195,7 +241,7 @@ enum CommitAction {
 #[cfg(test)]
 mod integration_tests {
     use crate::{
-        behavior::Kickoff,
+        behavior::PreKickoff,
         integration_tests::{TestRunner, TestScenario},
     };
     use brain_test_data::recordings;
@@ -250,7 +296,7 @@ mod integration_tests {
         // assert!(is_scored(ball));
         // This works in game, but not in tests? Just test that we touched the ball
         // until I figure out what's going on.
-        assert!(!Kickoff::is_kickoff(&packet.GameBall));
+        assert!(!PreKickoff::is_kickoff(&packet.GameBall));
     }
 
     fn extrapolate_ball(

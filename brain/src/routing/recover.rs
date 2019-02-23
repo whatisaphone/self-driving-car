@@ -161,3 +161,15 @@ impl Predicate for WeDontWinTheRace {
         ctx.scenario.possession() < Scenario::POSSESSION_CONTESTABLE
     }
 }
+
+pub struct RoundIsNotActive;
+
+impl Predicate for RoundIsNotActive {
+    fn name(&self) -> &str {
+        name_of_type!(RoundIsNotActive)
+    }
+
+    fn evaluate(&mut self, ctx: &mut Context<'_>) -> bool {
+        !ctx.packet.GameInfo.RoundActive
+    }
+}
