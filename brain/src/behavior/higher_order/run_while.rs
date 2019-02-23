@@ -48,6 +48,8 @@ where
         }
 
         ctx.eeg
+            .draw(Drawable::print(self.predicate.name(), color::GREEN));
+        ctx.eeg
             .draw(Drawable::print(self.child.blurb(), color::YELLOW));
 
         self.child.execute_old(ctx)
