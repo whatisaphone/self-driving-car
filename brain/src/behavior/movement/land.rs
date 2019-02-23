@@ -57,7 +57,7 @@ impl Behavior for Land {
                     rl::GRAVITY,
                 )
                 .unwrap();
-                let down = time_to_ground >= 0.75;
+                let down = time_to_ground >= 0.6;
                 forward = if down {
                     facing.rotation_to(&-Vector3::z_axis()).powf(0.8) * facing
                 } else {
