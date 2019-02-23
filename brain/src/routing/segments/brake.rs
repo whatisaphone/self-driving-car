@@ -1,4 +1,5 @@
 use crate::{
+    behavior::movement::GetToFlatGround,
     eeg::{color, Drawable},
     routing::models::{CarState, CarState2D, SegmentPlan, SegmentRunAction, SegmentRunner},
     strategy::Context,
@@ -81,9 +82,15 @@ impl SegmentRunner for Braker {
     }
 
     fn execute_old(&mut self, ctx: &mut Context<'_>) -> SegmentRunAction {
-        let speed = ctx.me().Physics.vel_2d().norm();
+        let me_vel = ctx.me().Physics.vel_2d();
+        let speed = me_vel.dot(&ctx.me().Physics.forward_axis_2d());
         if speed < self.plan.target_speed {
             return SegmentRunAction::Success;
+        }
+
+        if !GetToFlatGround::on_flat_ground(ctx.me()) {
+            ctx.eeg.log(self.name(), "not on flat ground");
+            return SegmentRunAction::Failure;
         }
 
         SegmentRunAction::Yield(common::halfway_house::PlayerInput {
