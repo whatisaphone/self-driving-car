@@ -189,11 +189,18 @@ where
         target: &GroundedHitTarget,
     ) -> (Point3<f32>, UnitQuaternion<f32>) {
         // Pitch the nose higher if the target is further away.
-        let pitch = linear_interpolate(
+        let pitch_from_distance = linear_interpolate(
             &[1000.0, 5000.0],
             &[PI / 15.0, PI / 4.0],
             (target.aim_loc - intercept.ball_loc.to_2d()).norm(),
         );
+        // Also pitch the nose higher if the ball wlil be falling quickly when we make
+        // contact.
+        let pitch_from_ball_vel =
+            linear_interpolate(&[-1200.0, 0.0], &[PI / 4.0, 0.0], intercept.ball_vel.z);
+        // Take the more extreme of the two.
+        let pitch = pitch_from_distance.max(pitch_from_ball_vel);
+
         // Just do something hacky for now
         let (naive_target_loc, target_rot) = car_ball_contact_with_pitch(
             ctx.game,
