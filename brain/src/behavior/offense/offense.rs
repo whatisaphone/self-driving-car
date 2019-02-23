@@ -203,6 +203,15 @@ fn get_boost(ctx: &mut Context<'_>) -> Option<Box<dyn Behavior>> {
             .log(name_of_type!(Offense), "get_boost: already have enough");
         return None;
     }
+
+    if (ctx.me().Physics.loc_2d() - ctx.game.own_goal().center_2d).norm() < 1200.0 {
+        ctx.eeg.log(
+            name_of_type!(Offense),
+            "get_boost: refusing to leave defensive position",
+        );
+        return None;
+    }
+
     if ctx.scenario.possession() < -Scenario::POSSESSION_CONTESTABLE
         && ctx.scenario.enemy_shoot_score_seconds() >= 7.0
     {
