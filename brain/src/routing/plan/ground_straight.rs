@@ -26,6 +26,7 @@ pub struct GroundStraightPlanner {
     end_chop: f32,
     mode: StraightMode,
     allow_dodging: bool,
+    allow_boost: bool,
 }
 
 impl GroundStraightPlanner {
@@ -36,6 +37,7 @@ impl GroundStraightPlanner {
             end_chop: 0.0,
             mode,
             allow_dodging: true,
+            allow_boost: true,
         }
     }
 
@@ -52,6 +54,11 @@ impl GroundStraightPlanner {
 
     pub fn allow_dodging(mut self, allow_dodging: bool) -> Self {
         self.allow_dodging = allow_dodging;
+        self
+    }
+
+    pub fn allow_boost(mut self, allow_boost: bool) -> Self {
+        self.allow_boost = allow_boost;
         self
     }
 }
@@ -80,8 +87,13 @@ impl RoutePlanner for GroundStraightPlanner {
         });
 
         let mut planners = ArrayVec::<[&dyn RoutePlanner; 4]>::new();
-        let straight =
-            StraightSimple::new(self.target_loc, self.target_time, self.end_chop, self.mode);
+        let straight = StraightSimple::new(
+            self.target_loc,
+            self.target_time,
+            self.end_chop,
+            self.mode,
+            self.allow_boost,
+        );
         planners.push(&straight);
 
         let with_dodge;
@@ -128,6 +140,7 @@ struct StraightSimple {
     /// shoot, position itself, etc.
     end_chop: f32,
     mode: StraightMode,
+    allow_boost: bool,
 }
 
 impl RoutePlanner for StraightSimple {
@@ -179,6 +192,7 @@ impl RoutePlanner for StraightSimple {
             self.target_loc,
             self.end_chop,
             self.mode,
+            self.allow_boost,
         );
         Ok(RoutePlan {
             segment: Box::new(segment),
@@ -261,6 +275,7 @@ impl RoutePlanner for StraightWithDodge {
                 + (self.target_loc - ctx.start.loc.to_2d()).normalize() * dodge.approach_distance,
             0.0,
             StraightMode::Asap,
+            true,
         );
 
         let dodge = ForwardDodge::new(before.end(), dodge.dodge);

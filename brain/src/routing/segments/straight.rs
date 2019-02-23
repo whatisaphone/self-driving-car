@@ -17,6 +17,7 @@ pub struct Straight {
     end_boost: f32,
     duration: f32,
     mode: StraightMode,
+    allow_boost: bool,
 }
 
 /// This is a workaround for the lack of "arrive-at-time" behavior.
@@ -33,7 +34,13 @@ pub enum StraightMode {
 }
 
 impl Straight {
-    pub fn new(start: CarState2D, end_loc: Point2<f32>, end_chop: f32, mode: StraightMode) -> Self {
+    pub fn new(
+        start: CarState2D,
+        end_loc: Point2<f32>,
+        end_chop: f32,
+        mode: StraightMode,
+        allow_boost: bool,
+    ) -> Self {
         let start_to_end_dist = (end_loc - start.loc).norm();
         if start_to_end_dist < 0.1 {
             return Self::zero(start);
@@ -42,7 +49,7 @@ impl Straight {
         let mut sim = Car1D::new()
             .with_speed(start.vel.norm())
             .with_boost(start.boost);
-        sim.advance_by_distance(start_to_end_dist, 1.0, true);
+        sim.advance_by_distance(start_to_end_dist, 1.0, allow_boost);
 
         // end_chop is the caller requesting we end the segment before reaching the
         // target.
@@ -51,7 +58,7 @@ impl Straight {
             sim = Car1D::new()
                 .with_speed(start.vel.norm())
                 .with_boost(start.boost);
-            sim.advance(duration, 1.0, true);
+            sim.advance(duration, 1.0, allow_boost);
         }
 
         let sim_end_loc = sim.distance();
@@ -71,6 +78,7 @@ impl Straight {
             end_boost: sim_end_boost,
             duration: sim.time(),
             mode,
+            allow_boost,
         }
     }
 
@@ -82,6 +90,7 @@ impl Straight {
             end_boost: start.boost,
             duration: 0.0,
             mode: StraightMode::Fake,
+            allow_boost: true,
         }
     }
 }
@@ -169,7 +178,9 @@ impl SegmentRunner for StraightRunner {
         SegmentRunAction::Yield(common::halfway_house::PlayerInput {
             Throttle: 1.0,
             Steer: simple_steer_towards(&me.Physics, target_loc),
-            Boost: me.Physics.vel().norm() < rl::CAR_ALMOST_MAX_SPEED && me.Boost > 0,
+            Boost: self.plan.allow_boost
+                && me.Physics.vel().norm() < rl::CAR_ALMOST_MAX_SPEED
+                && me.Boost > 0,
             ..Default::default()
         })
     }

@@ -18,7 +18,14 @@ pub fn avoid_plowing_into_goal_wall(
     let waypoint = avoid_goal_wall_waypoint(start, target_loc)?;
     Some(Box::new(ChainedPlanner::chain(vec![
         Box::new(PathingUnawareTurnPlanner::new(waypoint, None)),
-        Box::new(GroundStraightPlanner::new(waypoint, StraightMode::Asap)),
+        Box::new(GroundStraightPlanner::new(waypoint, StraightMode::Asap)
+            // The idea is – turning is harder when you're going faster, and the
+            // turn around the post is an important one, so let's make the turn
+            // as easy as we can.
+            //
+            // I'd much rather have said something like `.max_speed(1000)` or
+            // something, but this was easier.
+            .allow_boost(false)),
     ])))
 }
 
