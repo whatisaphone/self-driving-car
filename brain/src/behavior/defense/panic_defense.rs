@@ -3,11 +3,11 @@ use crate::{
     eeg::{color, Drawable, Event},
     helpers::drive::rough_time_drive_to_loc,
     rules::SameBallTrajectory,
-    strategy::{Action, Behavior, Context},
+    strategy::{Action, Behavior, Context, Goal},
     utils::geometry::ExtendF32,
 };
-use common::{prelude::*, Distance};
-use nalgebra::Point2;
+use common::prelude::*;
+use nalgebra::{Point2, Vector2};
 use nameof::name_of_type;
 use std::f32::consts::PI;
 
@@ -87,12 +87,12 @@ impl PanicDefense {
     fn blitz_loc(ctx: &mut Context<'_>, aim_loc: Point2<f32>) -> Point2<f32> {
         let goal = ctx.game.own_goal();
         let me_loc = ctx.me().Physics.loc_2d();
+        let me_vel = ctx.me().Physics.vel_2d();
         let me_forward_axis = ctx.me().Physics.forward_axis_2d();
 
         // If we're already very close, we don't have enough time to steer.
         let future_loc = me_loc + ctx.me().Physics.vel_2d() * 1.0;
-        let y_cutoff = Self::rush_y_cutoff(ctx);
-        let already_close = goal.is_y_within_range(future_loc.y, ..y_cutoff);
+        let already_close = Self::finished_panicking(goal, future_loc, me_vel);
 
         let approach_angle = me_forward_axis.angle_to(&-goal.normal_2d);
         let wide_angle = approach_angle.abs() >= PI / 3.0;
@@ -113,8 +113,11 @@ impl PanicDefense {
         }
     }
 
-    pub fn rush_y_cutoff(ctx: &mut Context<'_>) -> f32 {
-        ctx.me().Physics.vel().y.abs() * 0.75
+    pub fn finished_panicking(goal: &Goal, loc: Point2<f32>, vel: Vector2<f32>) -> bool {
+        let y_cutoff = vel.y.abs() * 0.75;
+        let close_y = goal.is_y_within_range(loc.y, ..y_cutoff);
+        let close_x = (goal.center_2d.x - loc.x).abs() < 1000.0;
+        close_x && close_y
     }
 
     fn next_phase(&mut self, ctx: &mut Context<'_>) -> Option<Phase> {
@@ -177,14 +180,12 @@ impl PanicDefense {
         }
 
         if let Phase::Rush { aim_hint, .. } = self.phase {
-            let cutoff = Self::rush_y_cutoff(ctx);
-            ctx.eeg
-                .print_value("cutoff_distance", Distance(me.Physics.loc().y - cutoff));
-            if ctx
-                .game
-                .own_goal()
-                .is_y_within_range(me.Physics.loc().y, ..cutoff)
-            {
+            let arrived = Self::finished_panicking(
+                ctx.game.own_goal(),
+                me.Physics.loc_2d(),
+                me.Physics.vel_2d(),
+            );
+            if arrived {
                 let target_yaw = ctx
                     .game
                     .own_goal()

@@ -26,14 +26,15 @@ impl Defense {
         let goal = ctx.game.own_goal();
         let goal_loc = goal.center_2d;
         let me_loc = ctx.me().Physics.loc_2d();
+        let me_vel = ctx.me().Physics.vel_2d();
         let me_forward_axis = ctx.me().Physics.forward_axis_2d();
         let ball_loc = match ctx.scenario.me_intercept() {
             Some(i) => i.ball_loc.to_2d(),
             None => ctx.scenario.ball_prediction().last().loc.to_2d(),
         };
 
-        let panic_cutoff = PanicDefense::rush_y_cutoff(ctx).max(500.0);
-        if goal.is_y_within_range(me_loc.y, ..panic_cutoff) {
+        if PanicDefense::finished_panicking(goal, me_loc, me_vel) {
+            // Avoid an infinite loop.
             return true;
         }
 
@@ -69,7 +70,7 @@ impl Defense {
             // If we're in net, chances are our angle of defense is fine already. e.g. we
             // might be opposite the desired angle, which would be 180° away according to
             // the math, but is a perfectly fine place to be.
-            if (me_loc.y - goal_loc.y).abs() >= 500.0 {
+            if (me_loc - goal_loc).norm() >= 1200.0 {
                 return false;
             }
         }
