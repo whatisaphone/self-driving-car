@@ -2,13 +2,13 @@ use crate::{
     behavior::{
         defense::Defense,
         higher_order::{Chain, Predicate, TryChoose, While},
-        movement::{GetToFlatGround, Land},
+        movement::{GetToFlatGround, Land, Yielder},
         offense::Offense,
         strike::{FiftyFifty, WallHit},
         taunt::TurtleSpin,
         PreKickoff,
     },
-    routing::{behavior::FollowRoute, plan::WallIntercept},
+    routing::{behavior::FollowRoute, plan::WallIntercept, recover::RoundIsNotActive},
     strategy::{scenario::Scenario, strategy::Strategy, Behavior, Context, Priority},
     utils::{geometry::ExtendF32, Wall},
 };
@@ -129,6 +129,16 @@ impl Strategy for Soccar {
             // Maybe do some wacky twists and stuff that might look cool.
             let spin = TurtleSpin::new();
             return Some(Box::new(While::new(ScoringVerySoon, spin)));
+        }
+        if current.priority() < Priority::Taunt && !ctx.packet.GameInfo.RoundActive {
+            // We're not in a tauntable scenario, so just shut up and try to retain our last
+            // shred of dignity. (This also serves the purpose of conserving CPU and
+            // avoiding out-of-place quick chats during a goal replay.)
+            let do_nothing_forever = Yielder::new(Default::default(), 9999.0);
+            return Some(Box::new(While::new(
+                RoundIsNotActive,
+                Chain::new(Priority::Taunt, vec_box![do_nothing_forever]),
+            )));
         }
 
         None
