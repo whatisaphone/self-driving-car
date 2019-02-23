@@ -26,7 +26,7 @@ impl InterceptMemory {
                 }
                 InterceptMemoryResult::Stable(loc)
             }
-            InterceptMemoryAction::Watch => {
+            InterceptMemoryAction::Watch(time, loc) => {
                 eeg.log(name_of_type!(InterceptMemory), "watching for change");
                 self.watch = Some((time, loc));
                 InterceptMemoryResult::Stable(self.current.unwrap())
@@ -52,15 +52,15 @@ impl InterceptMemory {
             return InterceptMemoryAction::Trust;
         }
         let (watch_time, watch_loc) = some_or_else!(self.watch, {
-            return InterceptMemoryAction::Watch;
+            return InterceptMemoryAction::Watch(time, loc);
         });
+        if time - watch_time >= Self::TIME_THRESHOLD {
+            return InterceptMemoryAction::Replace;
+        }
         if (loc - watch_loc).norm() >= Self::LOC_THRESHOLD {
-            return InterceptMemoryAction::Watch;
+            return InterceptMemoryAction::Watch(watch_time, loc);
         }
-        if time - watch_time < Self::TIME_THRESHOLD {
-            return InterceptMemoryAction::Wait;
-        }
-        InterceptMemoryAction::Replace
+        InterceptMemoryAction::Wait
     }
 }
 
@@ -71,7 +71,7 @@ pub enum InterceptMemoryResult {
 
 enum InterceptMemoryAction {
     Trust,
-    Watch,
+    Watch(f32, Point3<f32>),
     Wait,
     Replace,
 }
