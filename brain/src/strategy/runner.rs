@@ -58,6 +58,11 @@ impl Runner {
                 self.current = Some(b);
                 self.exec(depth + 1, ctx)
             }
+            Action::RootCall(b) => {
+                ctx.eeg.log(self.name(), format!("! {}", b.name()));
+                self.current = Some(b);
+                self.exec(depth + 1, ctx)
+            }
             Action::Return | Action::Abort => {
                 ctx.eeg.log(
                     self.name(),

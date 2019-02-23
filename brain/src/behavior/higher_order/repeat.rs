@@ -39,6 +39,7 @@ where
         match self.current.execute_old(ctx) {
             Action::Yield(i) => Action::Yield(i),
             Action::TailCall(b) => Action::TailCall(b),
+            Action::RootCall(i) => Action::RootCall(i),
             Action::Return | Action::Abort => {
                 ctx.eeg.log(self.name(), "repeating");
                 self.current = (self.factory)();

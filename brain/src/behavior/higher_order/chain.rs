@@ -80,6 +80,7 @@ impl Behavior for Chain {
                 );
                 self.execute_old(ctx)
             }
+            Action::RootCall(x) => Action::RootCall(x),
             Action::Return => {
                 let front = self.children.pop_front().unwrap();
                 self.blurb = Self::blurb(self.children.iter());

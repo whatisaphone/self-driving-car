@@ -103,6 +103,7 @@ impl TryChoose {
                 );
                 return self.try_index(ctx, index);
             }
+            Action::RootCall(_) => None,
             Action::Return => None,
             Action::Abort => None,
         }

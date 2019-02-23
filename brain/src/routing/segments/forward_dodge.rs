@@ -104,6 +104,7 @@ impl SegmentRunner for ForwardDodgeRunner {
         match self.behavior.execute_old(ctx) {
             Action::Yield(i) => SegmentRunAction::Yield(i),
             Action::TailCall(_) => panic!("TailCall not yet supported in SegmentRunner"),
+            Action::RootCall(_) => SegmentRunAction::Failure,
             Action::Return => SegmentRunAction::Success,
             Action::Abort => SegmentRunAction::Failure,
         }

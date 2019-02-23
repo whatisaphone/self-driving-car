@@ -29,6 +29,7 @@ pub enum Priority {
 pub enum Action {
     Yield(common::halfway_house::PlayerInput),
     TailCall(Box<dyn Behavior>),
+    RootCall(Box<dyn Behavior>),
     Return,
     Abort,
 }

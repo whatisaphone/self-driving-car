@@ -129,7 +129,7 @@ impl FollowRoute {
                     Action::Abort
                 } else {
                     ctx.eeg.log(self.name(), "recoverable!");
-                    Action::TailCall(b)
+                    Action::RootCall(b)
                 }
             }
             None => {
