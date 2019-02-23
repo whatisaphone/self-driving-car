@@ -96,7 +96,7 @@ impl PathingUnawareTurnPlanner {
             .angle_to(&(self.target_face - munged_start_loc).to_axis());
         let angle_cutoff = linear_interpolate(
             &[0.0, rl::CAR_NORMAL_SPEED],
-            &[PI * 0.25, PI * 0.50],
+            &[PI / 4.0, PI / 3.0],
             start.vel.to_2d().norm(),
         );
         turn.abs() > angle_cutoff
