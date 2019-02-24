@@ -34,4 +34,7 @@ cp psyonix/psyonix.cfg "$dest"/psyonix
 cp psyonix/appearance.cfg "$dest"/psyonix
 
 # Include an RLBot config for quick testing.
-cp rlbot.cfg "$dest"/rlbot.cfg
+cp rlbot.cfg "$dest"
+
+# Readme
+cp README.txt "$dest"
