@@ -30,7 +30,7 @@ impl Behavior for Offense {
 
         if can_we_shoot(ctx) {
             ctx.eeg.log(self.name(), "taking the shot!");
-            ctx.quick_chat(0.1, &[
+            ctx.quick_chat(0.05, &[
                 rlbot::flat::QuickChatSelection::Information_Incoming,
             ]);
             return Action::tail_call(Shoot::new());
@@ -48,7 +48,7 @@ impl Behavior for Offense {
         }
 
         if let Some(b) = get_boost(ctx) {
-            ctx.quick_chat(0.1, &[
+            ctx.quick_chat(0.05, &[
                 rlbot::flat::QuickChatSelection::Information_NeedBoost,
             ]);
             return Action::TailCall(b);
