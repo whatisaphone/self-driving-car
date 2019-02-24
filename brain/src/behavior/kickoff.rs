@@ -37,19 +37,27 @@ impl Behavior for PreKickoff {
     }
 
     fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
-        let quick_chat = if ctx.time_based_random() < 0.1 {
-            // I'm so funny
-            rlbot::flat::QuickChatSelection::Information_AllYours
-        } else {
-            rlbot::flat::QuickChatSelection::Information_IGotIt
-        };
-        ctx.quick_chat(1.0, &[quick_chat]);
+        // Disable quick chat for now since sometimes it chats before the round
+        // countdown starts, and it seems out of place.
+        if false {
+            kickoff_quick_chat(ctx);
+        }
 
         Action::tail_call(Chain::new(Priority::Idle, vec_box![
             wait_for_round_to_begin(),
             Kickoff::new(),
         ]))
     }
+}
+
+fn kickoff_quick_chat(ctx: &mut Context<'_>) {
+    let quick_chat = if ctx.time_based_random() < 0.1 {
+        // I'm so funny
+        rlbot::flat::QuickChatSelection::Information_AllYours
+    } else {
+        rlbot::flat::QuickChatSelection::Information_IGotIt
+    };
+    ctx.quick_chat(1.0, &[quick_chat]);
 }
 
 /// For some reason the game thinks we're skidding the first few frames of a
