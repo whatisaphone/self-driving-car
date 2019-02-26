@@ -1,10 +1,18 @@
 use crate::{
-    behavior::movement::{GetToFlatGround, QuickJumpAndDodge, Yielder},
+    behavior::{
+        defense::defensive_hit,
+        higher_order::Chain,
+        movement::{GetToFlatGround, QuickJumpAndDodge, Yielder},
+        strike::GroundedHit,
+    },
     eeg::{color, Drawable, Event},
-    helpers::{hit_angle::feasible_angle_near, intercept::naive_ground_intercept_2},
-    routing::models::CarState,
+    helpers::{
+        drive::rough_time_drive_to_loc, hit_angle::feasible_angle_near,
+        intercept::naive_ground_intercept_2,
+    },
+    routing::{behavior::FollowRoute, models::CarState, plan::GroundIntercept},
     sim::{SimGroundDrive, SimJump},
-    strategy::{Action, Behavior, Context},
+    strategy::{Action, Behavior, Context, Priority},
     utils::{Wall, WallRayCalculator},
 };
 use common::{prelude::*, Distance};
@@ -12,6 +20,7 @@ use nalgebra::{Point2, Point3};
 use nameof::name_of_type;
 use simulate::linear_interpolate;
 use std::f32::consts::PI;
+use vec_box::vec_box;
 
 pub struct RetreatingSave {
     chatted: bool,
@@ -85,6 +94,15 @@ impl Behavior for RetreatingSave {
             ctx.eeg.log(self.name(), "no intercept");
             return Action::Abort;
         });
+
+        if rough_time_drive_to_loc(ctx.me(), plan.target_loc) + 3.0 < plan.target_time {
+            ctx.eeg
+                .log(self.name(), "yeah, I'm not gonna sit around all day");
+            return Action::tail_call(Chain::new(Priority::Idle, vec_box![
+                FollowRoute::new(GroundIntercept::new()),
+                GroundedHit::hit_towards(defensive_hit),
+            ]));
+        }
 
         if !self.chatted {
             ctx.quick_chat(0.1, &[
