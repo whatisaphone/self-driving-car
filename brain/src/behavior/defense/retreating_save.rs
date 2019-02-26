@@ -87,7 +87,7 @@ impl Behavior for RetreatingSave {
         });
 
         if !self.chatted {
-            ctx.quick_chat(0.01, &[
+            ctx.quick_chat(0.1, &[
                 rlbot::flat::QuickChatSelection::Information_TakeTheShot,
                 rlbot::flat::QuickChatSelection::Information_Defending,
                 rlbot::flat::QuickChatSelection::Information_GoForIt,
