@@ -1,5 +1,5 @@
 use crate::{
-    behavior::movement::Yielder,
+    behavior::{higher_order::Chain, movement::Yielder},
     strategy::{Action, Behavior, Context, Priority},
 };
 use common::prelude::*;
@@ -7,6 +7,7 @@ use dom::get_pitch_yaw_roll;
 use nalgebra::Vector3;
 use nameof::name_of_type;
 use std::f32::consts::PI;
+use vec_box::vec_box;
 
 pub struct TurtleSpin {
     quick_chat_probability: f32,
@@ -68,7 +69,16 @@ impl Behavior for TurtleSpin {
         }
 
         if ctx.me().OnGround {
-            return Action::tail_call(
+            return Action::tail_call(Chain::new(self.priority(), vec_box![
+                // Do nothing briefly, to let the car's suspension stabilize before we jump.
+                Yielder::new(
+                    common::halfway_house::PlayerInput {
+                        Boost: ctx.me().Boost > 0,
+                        ..Default::default()
+                    },
+                    0.1,
+                ),
+                // Jump.
                 Yielder::new(
                     common::halfway_house::PlayerInput {
                         Roll: 1.0,
@@ -77,9 +87,10 @@ impl Behavior for TurtleSpin {
                         ..Default::default()
                     },
                     0.2,
-                )
-                .priority(self.priority()),
-            );
+                ),
+                // Then get back to what we came here to do today.
+                Self::new(),
+            ]));
         }
 
         if !self.has_oriented {
