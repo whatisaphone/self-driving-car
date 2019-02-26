@@ -9,6 +9,7 @@ use crate::{
 use common::prelude::*;
 use nalgebra::{Point2, Vector2};
 use nameof::name_of_type;
+use simulate::linear_interpolate;
 use std::f32::consts::PI;
 
 pub struct PanicDefense {
@@ -121,7 +122,20 @@ impl PanicDefense {
     }
 
     fn next_phase(&mut self, ctx: &mut Context<'_>) -> Option<Phase> {
+        let own_goal = ctx.game.own_goal();
         let me = ctx.me();
+        let me_loc = me.Physics.loc_2d();
+
+        let dist_me_to_goal = (me_loc - own_goal.center_2d).norm();
+        let future_ball = ctx.scenario.ball_prediction().at_time_or_last(2.0);
+        let dist_ball_to_goal = (future_ball.loc.to_2d() - own_goal.center_2d).norm();
+        let safe_distance = linear_interpolate(&[0.0, 50.0], &[4000.0, 2500.0], me.Boost as f32);
+        if dist_me_to_goal < dist_ball_to_goal - safe_distance {
+            // The ball is on the other side of the planet, we can stop pancking now.
+            ctx.eeg
+                .log(self.name(), "I can barely see the ball from here");
+            return Some(Phase::Finished);
+        }
 
         if let Phase::Start = self.phase {
             ctx.quick_chat(0.01, &[
@@ -222,6 +236,10 @@ mod integration_tests {
     use std::f32::consts::PI;
 
     #[test]
+    #[ignore(
+        note = "The behavior (rightly) refuses to abandon an unattended ball, \
+                but this test is worth keeping around in case I need to tweak."
+    )]
     fn panic_defense() {
         let test = TestRunner::new()
             .scenario(TestScenario {
