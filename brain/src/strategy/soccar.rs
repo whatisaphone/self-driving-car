@@ -11,7 +11,7 @@ use crate::{
     routing::{
         behavior::FollowRoute,
         plan::WallIntercept,
-        recover::{MatchIsEnded, RoundIsNotActive},
+        recover::{IsSkidding, MatchIsEnded, RoundIsNotActive},
     },
     strategy::{scenario::Scenario, strategy::Strategy, Behavior, Context, Priority},
     utils::{geometry::ExtendF32, Wall},
@@ -88,6 +88,7 @@ impl Strategy for Soccar {
         if current.priority() < Priority::Strike
             && enemy_can_shoot(ctx)
             && GetToFlatGround::on_flat_ground(ctx.me())
+            && !IsSkidding.evaluate(&ctx.me().into())
             && ctx.scenario.possession().abs() < Scenario::POSSESSION_CONTESTABLE
         {
             ctx.eeg.log(
@@ -105,6 +106,7 @@ impl Strategy for Soccar {
         if current.priority() < Priority::Defense
             && enemy_can_shoot(ctx)
             && GetToFlatGround::on_flat_ground(ctx.me())
+            && !IsSkidding.evaluate(&ctx.me().into())
             && ctx.scenario.possession() < -Scenario::POSSESSION_CONTESTABLE
         {
             ctx.eeg.log(
