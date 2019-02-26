@@ -144,7 +144,7 @@ impl Strategy for Soccar {
             // We're not in a tauntable scenario, so just shut up and try to retain our last
             // shred of dignity. (This also serves the purpose of conserving CPU and
             // avoiding out-of-place quick chats during a goal replay.)
-            let do_nothing_forever = Yielder::new(Default::default(), 9999.0);
+            let do_nothing_forever = Yielder::new(9999.0, Default::default());
             return Some(Box::new(While::new(
                 RoundIsNotActive,
                 Chain::new(Priority::Taunt, vec_box![do_nothing_forever]),

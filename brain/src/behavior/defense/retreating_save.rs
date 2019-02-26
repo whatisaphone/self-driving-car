@@ -266,11 +266,11 @@ impl RetreatingSave {
         if ball_loc.z < Self::BALL_Z_FOR_DODGE && ctx.packet.GameBall.Physics.vel().norm() >= 2000.0
         {
             return Action::tail_call(Yielder::new(
+                Self::JUMP_TIME,
                 common::halfway_house::PlayerInput {
                     Throttle: 0.1,
                     ..Default::default()
                 },
-                Self::JUMP_TIME,
             ));
         }
 

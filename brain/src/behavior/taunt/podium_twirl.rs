@@ -69,14 +69,11 @@ impl Behavior for PodiumTwirl {
 impl PodiumTwirl {
     fn jump_then_resume(&self) -> Action {
         Action::tail_call(chain!(self.priority(), [
-            Yielder::new(
-                common::halfway_house::PlayerInput {
-                    Pitch: 1.0,
-                    Jump: true,
-                    ..Default::default()
-                },
-                0.2
-            ),
+            Yielder::new(0.2, common::halfway_house::PlayerInput {
+                Pitch: 1.0,
+                Jump: true,
+                ..Default::default()
+            }),
             self.clone(),
         ]))
     }

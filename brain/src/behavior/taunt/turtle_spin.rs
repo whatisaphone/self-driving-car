@@ -71,23 +71,17 @@ impl Behavior for TurtleSpin {
         if ctx.me().OnGround {
             return Action::tail_call(Chain::new(self.priority(), vec_box![
                 // Do nothing briefly, to let the car's suspension stabilize before we jump.
-                Yielder::new(
-                    common::halfway_house::PlayerInput {
-                        Boost: ctx.me().Boost > 0,
-                        ..Default::default()
-                    },
-                    0.1,
-                ),
+                Yielder::new(0.1, common::halfway_house::PlayerInput {
+                    Boost: ctx.me().Boost > 0,
+                    ..Default::default()
+                }),
                 // Jump.
-                Yielder::new(
-                    common::halfway_house::PlayerInput {
-                        Roll: 1.0,
-                        Jump: true,
-                        Boost: ctx.me().Boost > 0,
-                        ..Default::default()
-                    },
-                    0.2,
-                ),
+                Yielder::new(0.2, common::halfway_house::PlayerInput {
+                    Roll: 1.0,
+                    Jump: true,
+                    Boost: ctx.me().Boost > 0,
+                    ..Default::default()
+                }),
                 // Then get back to what we came here to do today.
                 Self::new(),
             ]));

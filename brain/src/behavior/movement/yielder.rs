@@ -1,18 +1,23 @@
 use crate::strategy::{Action, Behavior, Context, Priority};
-use derive_new::new;
 use nameof::name_of_type;
 
-#[derive(new)]
 pub struct Yielder {
     input: common::halfway_house::PlayerInput,
     duration: f32,
-    #[new(value = "Priority::Idle")]
     priority: Priority,
-    #[new(value = "None")]
     start: Option<f32>,
 }
 
 impl Yielder {
+    pub fn new(duration: f32, input: common::halfway_house::PlayerInput) -> Self {
+        Self {
+            input,
+            duration,
+            priority: Priority::Idle,
+            start: None,
+        }
+    }
+
     #[allow(dead_code)]
     pub fn priority(mut self, priority: Priority) -> Self {
         self.priority = priority;

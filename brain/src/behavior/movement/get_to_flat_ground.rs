@@ -46,13 +46,10 @@ impl Behavior for GetToFlatGround {
         if me.Physics.roof_axis().angle(&-Vector3::z_axis()) < PI / 10.0 {
             // We're probably upside down under the ceiling of a goal
             ctx.eeg.log(self.name(), "jumping while upside-down");
-            return Action::tail_call(Yielder::new(
-                common::halfway_house::PlayerInput {
-                    Jump: true,
-                    ..Default::default()
-                },
-                0.1,
-            ));
+            return Action::tail_call(Yielder::new(0.1, common::halfway_house::PlayerInput {
+                Jump: true,
+                ..Default::default()
+            }));
         }
 
         let backup_cutoff = linear_interpolate(
@@ -104,29 +101,29 @@ fn jump_down_from_the_wall(ctx: &mut Context<'_>) -> Action {
         // frames, this lets the car's suspension stabilize a bit so we get the full
         // force coming off the wall.
         inputs.push(Box::new(Yielder::new(
+            0.1,
             common::halfway_house::PlayerInput {
                 Handbrake: true,
                 ..Default::default()
             },
-            0.1,
         )));
         // Press jump.
         inputs.push(Box::new(Yielder::new(
+            0.2,
             common::halfway_house::PlayerInput {
                 Pitch: 1.0,
                 Jump: true,
                 ..Default::default()
             },
-            0.2,
         )));
         // Release jump.
         inputs.push(Box::new(Yielder::new(
+            0.1,
             common::halfway_house::PlayerInput {
                 Pitch: 1.0,
                 Jump: false,
                 ..Default::default()
             },
-            0.1,
         )));
         // Maybe dodge.
         if let Some(target_loc) = dodge_target(ctx) {

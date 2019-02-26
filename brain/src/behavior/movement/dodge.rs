@@ -68,17 +68,14 @@ impl Behavior for Dodge {
 
         Action::tail_call(Chain::new(self.priority(), vec_box![
             // Dodge
-            Yielder::new(
-                common::halfway_house::PlayerInput {
-                    Pitch: pitch,
-                    Yaw: yaw,
-                    Jump: true,
-                    ..Default::default()
-                },
-                0.05,
-            ),
+            Yielder::new(0.05, common::halfway_house::PlayerInput {
+                Pitch: pitch,
+                Yaw: yaw,
+                Jump: true,
+                ..Default::default()
+            }),
             // Follow-through
-            Yielder::new(Default::default(), self.follow_through_time),
+            Yielder::new(self.follow_through_time, Default::default()),
         ]))
     }
 }

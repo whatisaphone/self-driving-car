@@ -66,13 +66,10 @@ fn kickoff_quick_chat(ctx: &mut Context<'_>) {
 fn wait_for_round_to_begin() -> impl Behavior {
     While::new(
         RoundIsNotActive,
-        Yielder::new(
-            common::halfway_house::PlayerInput {
-                Boost: true,
-                ..Default::default()
-            },
-            9999.0,
-        ),
+        Yielder::new(9999.0, common::halfway_house::PlayerInput {
+            Boost: true,
+            ..Default::default()
+        }),
     )
 }
 

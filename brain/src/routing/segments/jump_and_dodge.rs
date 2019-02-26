@@ -73,32 +73,32 @@ impl JumpAndDodgeRunner {
     pub fn new(plan: JumpAndDodge) -> Self {
         let behavior = Box::new(Chain::new(Priority::Idle, vec![
             Box::new(Yielder::new(
+                JUMP_TIME,
                 common::halfway_house::PlayerInput {
                     Jump: true,
                     ..Default::default()
                 },
-                JUMP_TIME,
             )),
             Box::new(Yielder::new(
+                WAIT_TIME,
                 common::halfway_house::PlayerInput {
                     ..Default::default()
                 },
-                WAIT_TIME,
             )),
             Box::new(Yielder::new(
+                6.0 / 120.0,
                 common::halfway_house::PlayerInput {
                     Pitch: -plan.direction.cos_angle(),
                     Yaw: plan.direction.sin_angle(),
                     Jump: true,
                     ..Default::default()
                 },
-                6.0 / 120.0,
             )),
             Box::new(Yielder::new(
+                FLOAT_TIME - 6.0 / 120.0,
                 common::halfway_house::PlayerInput {
                     ..Default::default()
                 },
-                FLOAT_TIME - 6.0 / 120.0,
             )),
         ]));
         Self { behavior }

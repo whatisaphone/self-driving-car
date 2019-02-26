@@ -331,11 +331,11 @@ fn jump(eeg: &mut EEG, path: &Path) -> Action {
         // skipping the time where we assumed we would be jumping). Follow
         // through for maximum power.
         return Action::tail_call(Yielder::new(
+            jump_time + 0.05,
             common::halfway_house::PlayerInput {
                 Throttle: 1.0,
                 ..Default::default()
             },
-            jump_time + 0.05,
         ));
     }
 

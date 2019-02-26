@@ -67,17 +67,17 @@ impl ForwardDodgeRunner {
     pub fn new(plan: ForwardDodge) -> Self {
         let behavior = Box::new(Chain::new(Priority::Idle, vec![
             Box::new(Yielder::new(
+                plan.dodge.jump_duration,
                 common::halfway_house::PlayerInput {
                     Jump: true,
                     ..Default::default()
                 },
-                plan.dodge.jump_duration,
             )),
             Box::new(Yielder::new(
+                plan.dodge.wait_duration,
                 common::halfway_house::PlayerInput {
                     ..Default::default()
                 },
-                plan.dodge.wait_duration,
             )),
             Box::new(
                 Dodge::new()
@@ -85,10 +85,10 @@ impl ForwardDodgeRunner {
                     .follow_through_time(0.0),
             ),
             Box::new(Yielder::new(
+                plan.dodge.dodge_duration - 6.0 / 120.0,
                 common::halfway_house::PlayerInput {
                     ..Default::default()
                 },
-                plan.dodge.dodge_duration - 6.0 / 120.0,
             )),
         ]));
         Self { behavior }
