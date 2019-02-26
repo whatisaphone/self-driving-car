@@ -5,6 +5,9 @@ use ordered_float::NotNan;
 
 const RECORDING_DISTANCE_THRESHOLD: f32 = 25.0;
 const STATE_SET_DEBOUNCE: i32 = 10;
+/// It takes a couple frames to set state, so set state to where the ball will
+/// be in the future – not where it should have been on the current frame.
+const LATENCY_COMPENSATION: f32 = 3.0 / 120.0;
 
 pub struct BallRecording {
     times: Vec<NotNan<f32>>,
@@ -46,7 +49,7 @@ impl BallPlayback {
         }
 
         let elapsed = packet.GameInfo.TimeSeconds - self.start_time;
-        let data_time = self.scenario.times[0] + elapsed;
+        let data_time = self.scenario.times[0] + elapsed + LATENCY_COMPENSATION;
         let index = match self.scenario.times.binary_search(&data_time) {
             Ok(i) => i,
             Err(0) => 0,
@@ -125,7 +128,7 @@ impl CarPlayback {
 
     pub fn tick(&mut self, rlbot: &rlbot::RLBot, packet: &common::halfway_house::LiveDataPacket) {
         let elapsed = packet.GameInfo.TimeSeconds - self.start_time;
-        let data_time = self.scenario.times[0] + elapsed;
+        let data_time = self.scenario.times[0] + elapsed + LATENCY_COMPENSATION;
         let index = match self.scenario.times.binary_search(&data_time) {
             Ok(i) => i,
             Err(0) => 0,
