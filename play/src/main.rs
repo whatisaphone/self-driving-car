@@ -12,7 +12,7 @@ mod logging;
 
 fn main() {
     println!("Self-Driving Car");
-    println!("Built 2019-02-23");
+    println!("Built 2019-02-24");
     println!("See http://www.rlbot.org/ for more info!");
 
     env_logger::Builder::new()
