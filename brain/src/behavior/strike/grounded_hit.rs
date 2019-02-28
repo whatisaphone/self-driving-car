@@ -318,7 +318,7 @@ where
     fn jump_duration(z: f32) -> f32 {
         // Avoid a panic in `time_to_z()` from trying to jump too high. Assert that the
         // error is small before we clamp the value.
-        let leeway = 20.0;
+        let leeway = 30.0;
         assert!(z < JUMP_MAX_Z + leeway, "{} {} {}", z, JUMP_MAX_Z, leeway);
         let clamped = z.min(JUMP_MAX_Z);
 
