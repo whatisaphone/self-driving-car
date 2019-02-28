@@ -142,20 +142,25 @@ impl GetDollar {
     ) -> Option<&'a BoostPickup> {
         Self::choose_pickup(
             ctx.game.boost_dollars().iter(),
-            ctx.start.loc.to_2d(),
+            &CarState2D {
+                loc: ctx.start.loc_2d(),
+                rot: ctx.start.rot_2d(),
+                vel: ctx.start.vel_2d(),
+                boost: ctx.start.boost,
+            },
             destination_hint,
             ctx.game.enemy_goal(),
         )
     }
 
-    pub fn choose_pickup<'a>(
+    fn choose_pickup<'a>(
         pickups: impl Iterator<Item = &'a BoostPickup>,
-        start_loc: Point2<f32>,
+        start: &CarState2D,
         destination_hint: Point2<f32>,
         enemy_goal: &Goal,
     ) -> Option<&'a BoostPickup> {
         // Draw a line segment, and try to find a pickup along that segment.
-        let line_start_loc = start_loc;
+        let line_start_loc = start.loc;
         let line_end_loc = destination_hint;
         let line_span = line_end_loc - line_start_loc;
 
@@ -176,7 +181,7 @@ impl GetDollar {
 
             let is_enemy_boost = (pickup.loc.y - enemy_goal.center_2d.y).abs() < 2000.0;
             let positioning_penalty = if is_enemy_boost {
-                let danger_distance = (pickup.loc - start_loc).dot(&-enemy_goal.normal_2d);
+                let danger_distance = (pickup.loc - start.loc).dot(&-enemy_goal.normal_2d);
                 let threshold = 3000.0;
                 // Cube the distance beyond the threshold. That is a VERY STIFF penalty,
                 // essentially a hard rejection.
@@ -184,8 +189,19 @@ impl GetDollar {
             } else {
                 0.0
             };
+            let flatfoot_enemy_corner_penalty = if is_enemy_boost {
+                // If we're in the enemy corner, facing the enemy back wall… it's just bad all
+                // around. Get out of there.
+                let defense_angle = start.forward_axis().angle_to(&enemy_goal.normal_2d).abs();
+                let facing_factor =
+                    linear_interpolate(&[PI * 0.5, PI * 0.75], &[0.0, 2500.0], defense_angle);
+                facing_factor.powi(3)
+            } else {
+                0.0
+            };
 
-            NotNan::new(convenience_penalty + positioning_penalty).unwrap()
+            let penalty = convenience_penalty + positioning_penalty + flatfoot_enemy_corner_penalty;
+            NotNan::new(penalty).unwrap()
         })
     }
 

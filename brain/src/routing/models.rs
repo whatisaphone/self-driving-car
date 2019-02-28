@@ -21,6 +21,10 @@ impl CarState {
         self.loc.to_2d()
     }
 
+    pub fn rot_2d(&self) -> UnitComplex<f32> {
+        self.rot.to_2d()
+    }
+
     pub fn vel_2d(&self) -> Vector2<f32> {
         self.vel.to_2d()
     }
