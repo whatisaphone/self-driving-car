@@ -65,10 +65,7 @@ impl Behavior for TepidHit {
                 FollowRoute::new(GroundIntercept::new()),
                 GroundedHit::hit_towards(time_wasting_hit),
             ])),
-            None => {
-                let future_ball = ctx.scenario.ball_prediction().at_time_or_last(3.0);
-                Action::tail_call(FollowRoute::new(GetDollar::new(future_ball.loc.to_2d())))
-            }
+            None => Action::tail_call(FollowRoute::new(GetDollar::smart(&ctx, eeg))),
         }
     }
 }

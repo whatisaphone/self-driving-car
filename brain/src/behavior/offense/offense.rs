@@ -1,13 +1,13 @@
 use crate::{
     behavior::offense::{ResetBehindBall, Shoot, TepidHit},
     eeg::Event,
-    helpers::{ball::BallFrame, intercept::naive_ground_intercept_2, telepathy},
+    helpers::{ball::BallFrame, intercept::naive_ground_intercept_2},
     routing::{behavior::FollowRoute, plan::GetDollar},
     strategy::{Action, Behavior, Context, Game, Scenario},
     utils::geometry::RayCoordinateSystem,
 };
 use common::{prelude::*, Angle, Distance};
-use nalgebra::{Point2, Vector2};
+use nalgebra::Point2;
 use nameof::name_of_type;
 use simulate::linear_interpolate;
 use std::f32::consts::PI;
@@ -230,17 +230,8 @@ fn get_boost(ctx: &mut Context<'_>) -> Option<Box<dyn Behavior>> {
             ),
         );
 
-        let future_loc = ctx.scenario.ball_prediction().at_time_or_last(3.0).loc;
-        let behind_ball = Vector2::new(0.0, ctx.game.own_goal().center_2d.y.signum() * 2500.0);
-        let opponent_hit = telepathy::predict_enemy_hit_direction(ctx)
-            .map(|dir| dir.into_inner() * 2500.0)
-            .unwrap_or_else(Vector2::zeros);
-        let hint = future_loc.to_2d() + behind_ball + opponent_hit;
-        ctx.eeg
-            .log_pretty(name_of_type!(Offense), "opponent_hit", opponent_hit);
-        ctx.eeg.log_pretty(name_of_type!(Offense), "hint", hint);
-        let get_dollar = GetDollar::new(hint).target_face(future_loc.to_2d());
-        return Some(Box::new(FollowRoute::new(get_dollar)));
+        let (ctx, eeg) = ctx.split();
+        return Some(Box::new(FollowRoute::new(GetDollar::smart(&ctx, eeg))));
     }
     None
 }

@@ -1,4 +1,6 @@
 use crate::{
+    eeg::EEG,
+    helpers::telepathy,
     routing::{
         models::{
             CarState2D, PlanningContext, PlanningDump, RoutePlan, RoutePlanError, RoutePlanner,
@@ -10,7 +12,7 @@ use crate::{
         recover::{IsSkidding, NotOnFlatGround},
         segments::Brake,
     },
-    strategy::{BoostPickup, Goal},
+    strategy::{BoostPickup, Context2, Goal},
 };
 use common::prelude::*;
 use nalgebra::{Point2, Vector2};
@@ -36,6 +38,22 @@ impl GetDollar {
     pub fn target_face(mut self, target_face: Point2<f32>) -> Self {
         self.target_face = target_face;
         self
+    }
+
+    // If you could put scare quotes in function names, this is the first place they
+    // would go.
+    pub fn smart(ctx: &Context2<'_, '_>, eeg: &mut EEG) -> Self {
+        let future_loc = ctx.scenario.ball_prediction().at_time_or_last(3.0).loc;
+        let behind_ball = Vector2::new(0.0, ctx.game.own_goal().center_2d.y.signum() * 2500.0);
+        let opponent_hit = telepathy::predict_enemy_hit_direction_2(ctx)
+            .map(|dir| dir.into_inner() * 2500.0)
+            .unwrap_or_else(Vector2::zeros);
+        let hint = future_loc.to_2d() + behind_ball + opponent_hit;
+
+        eeg.log_pretty(name_of_type!(GetDollar), "opponent_hit", opponent_hit);
+        eeg.log_pretty(name_of_type!(GetDollar), "hint", hint);
+
+        Self::new(hint).target_face(future_loc.to_2d())
     }
 }
 

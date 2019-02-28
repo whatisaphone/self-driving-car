@@ -1,9 +1,17 @@
-use crate::{helpers::hit_angle::feasible_hit_angle_toward, strategy::Context};
+use crate::{
+    helpers::hit_angle::feasible_hit_angle_toward,
+    strategy::{Context, Context2},
+};
 use common::prelude::*;
 use nalgebra::{Unit, Vector2};
 use std::f32::consts::PI;
 
 pub fn predict_enemy_hit_direction(ctx: &mut Context<'_>) -> Option<Unit<Vector2<f32>>> {
+    let (ctx, _eeg) = ctx.split();
+    predict_enemy_hit_direction_2(&ctx)
+}
+
+pub fn predict_enemy_hit_direction_2(ctx: &Context2<'_, '_>) -> Option<Unit<Vector2<f32>>> {
     let (enemy, intercept) = ctx.scenario.enemy_intercept()?;
     let enemy_loc = enemy.Physics.loc_2d();
     let likely_aim = feasible_hit_angle_toward(
