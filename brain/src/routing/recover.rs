@@ -1,7 +1,7 @@
 use crate::{
     behavior::{
-        higher_order::{Predicate, TimeLimit, TryChoose},
-        movement::{DriveTowards, GetToFlatGround, QuickJumpAndDodge, SkidRecover},
+        higher_order::{Chain, Predicate, TimeLimit, TryChoose},
+        movement::{DriveTowards, GetToFlatGround, QuickJumpAndDodge, SkidRecover, Yielder},
         offense::ResetBehindBall,
     },
     routing::{
@@ -47,6 +47,8 @@ impl RoutePlanError {
                     )
                     .never_recover(true),
                     ResetBehindBall::behind_loc(ball_loc.to_2d(), 1500.0).never_recover(true),
+                    // What's going on? Last ditch effort, try to turn ReliefBot-style.
+                    confused_jump_to_reorient(),
                 ])))
             }
             RoutePlanError::MustBeFacingTarget => {
@@ -96,6 +98,18 @@ fn check_easy_flip_recover(ctx: &mut Context<'_>) -> Option<Box<dyn Behavior>> {
     }
 
     None
+}
+
+// Yeah, this isn't great, but it's better than getting caught in an infinite
+// loop.
+pub fn confused_jump_to_reorient() -> impl Behavior {
+    Chain::new(Priority::Idle, vec_box![Yielder::new(
+        0.1,
+        common::halfway_house::PlayerInput {
+            Jump: true,
+            ..Default::default()
+        }
+    )])
 }
 
 pub struct NotOnFlatGround;
