@@ -4,13 +4,12 @@ use crate::{
 };
 
 /// Run `child` while `predicate` holds true.
-pub struct While<P, B>
+pub struct While<P>
 where
     P: Predicate,
-    B: Behavior,
 {
     predicate: P,
-    child: B,
+    child: Box<dyn Behavior>,
 }
 
 pub trait Predicate: Send {
@@ -18,20 +17,21 @@ pub trait Predicate: Send {
     fn evaluate(&mut self, ctx: &mut Context<'_>) -> bool;
 }
 
-impl<P, B> While<P, B>
+impl<P> While<P>
 where
     P: Predicate,
-    B: Behavior,
 {
-    pub fn new(predicate: P, child: B) -> Self {
-        Self { predicate, child }
+    pub fn new(predicate: P, child: impl Behavior + 'static) -> Self {
+        Self {
+            predicate,
+            child: Box::new(child),
+        }
     }
 }
 
-impl<P, B> Behavior for While<P, B>
+impl<P> Behavior for While<P>
 where
     P: Predicate,
-    B: Behavior,
 {
     fn name(&self) -> &str {
         stringify!(While)
@@ -52,6 +52,16 @@ where
         ctx.eeg
             .draw(Drawable::print(self.child.blurb(), color::YELLOW));
 
-        self.child.execute_old(ctx)
+        match self.child.execute_old(ctx) {
+            Action::Yield(i) => Action::Yield(i),
+            Action::TailCall(b) => {
+                // The tail-called behavior should not escape the predicate.
+                self.child = b;
+                self.execute_old(ctx)
+            }
+            Action::RootCall(b) => Action::RootCall(b),
+            Action::Return => Action::Return,
+            Action::Abort => Action::Abort,
+        }
     }
 }
