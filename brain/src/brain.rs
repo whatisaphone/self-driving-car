@@ -76,7 +76,8 @@ impl Brain {
 
         eeg.print_time("game_time", packet.GameInfo.TimeSeconds);
         eeg.print_value("fps", format_fps(self.fps_counter.fps()));
-        eeg.print_value("ball", packet.GameBall.Physics.loc());
+        eeg.print_value("ball loc", packet.GameBall.Physics.loc());
+        eeg.print_value("ball vel", packet.GameBall.Physics.vel());
         eeg.print_value("p1 loc", packet.GameCars[0].Physics.loc());
         eeg.print_value("p1 vel", Point3::from(packet.GameCars[0].Physics.vel()));
         eeg.draw(Drawable::print("-----------------------", color::GREEN));
