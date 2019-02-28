@@ -183,6 +183,19 @@ impl RetreatingSave {
         })
     }
 
+    fn drive(&self, ctx: &mut Context<'_>, plan: &Plan) -> Action {
+        let (throttle, boost) = self.calc_drive(ctx, plan);
+        let start_loc = ctx.me().Physics.loc_2d();
+        let start_forward_axis = ctx.me().Physics.forward_axis_2d();
+        let theta = start_forward_axis.angle_to(&(plan.target_steer_loc - start_loc));
+        Action::Yield(common::halfway_house::PlayerInput {
+            Throttle: throttle,
+            Steer: (theta * 2.0).max(-1.0).min(1.0),
+            Boost: boost && ctx.me().Boost > 0,
+            ..Default::default()
+        })
+    }
+
     fn calc_drive(&self, ctx: &mut Context<'_>, plan: &Plan) -> (f32, bool) {
         let drive_time = plan.target_time - Self::JUMP_TIME;
         if drive_time < 0.0 {
@@ -229,19 +242,6 @@ impl RetreatingSave {
         ctx.eeg.print_value("boost_offset", Distance(boost_offset));
 
         (throttle, boost)
-    }
-
-    fn drive(&self, ctx: &mut Context<'_>, plan: &Plan) -> Action {
-        let (throttle, boost) = self.calc_drive(ctx, plan);
-        let start_loc = ctx.me().Physics.loc_2d();
-        let start_forward_axis = ctx.me().Physics.forward_axis_2d();
-        let theta = start_forward_axis.angle_to(&(plan.target_steer_loc - start_loc));
-        Action::Yield(common::halfway_house::PlayerInput {
-            Throttle: throttle,
-            Steer: (theta * 2.0).max(-1.0).min(1.0),
-            Boost: boost && ctx.me().Boost > 0,
-            ..Default::default()
-        })
     }
 
     fn simulate_jump(&self, ctx: &mut Context<'_>) -> (Point3<f32>, CarState) {
