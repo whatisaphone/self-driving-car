@@ -105,6 +105,9 @@ impl<Aim> GroundedHit<Aim>
 where
     Aim: Fn(&mut GroundedHitAimContext<'_, '_>) -> Result<GroundedHitTarget, ()> + Send,
 {
+    // Don't try to hit a ball moving upward after a huge bounce.
+    const MAX_BALL_VEL_Z: f32 = 600.0;
+
     fn intercept_loc(&mut self, ctx: &mut Context<'_>) -> Result<NaiveIntercept, ()> {
         let me = ctx.me();
 
@@ -114,7 +117,7 @@ where
             me.Physics.loc(),
             me.Physics.vel(),
             me.Boost as f32,
-            |ball| ball.loc.z < GroundedHit::MAX_BALL_Z,
+            |ball| ball.loc.z < GroundedHit::MAX_BALL_Z && ball.vel.z < Self::MAX_BALL_VEL_Z,
         );
         let intercept = some_or_else!(intercept, {
             ctx.eeg.log(self.name(), "can't find intercept");
@@ -140,7 +143,7 @@ where
             me.Physics.loc(),
             me.Physics.vel(),
             me.Boost as f32,
-            |ball| ball.loc.z < ball_max_z,
+            |ball| ball.loc.z < ball_max_z && ball.vel.z < Self::MAX_BALL_VEL_Z,
         );
         let intercept = some_or_else!(intercept, {
             ctx.eeg.log(self.name(), "can't find intercept");
