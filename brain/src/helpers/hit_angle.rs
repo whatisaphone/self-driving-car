@@ -1,3 +1,4 @@
+use crate::utils::geometry::ExtendF32;
 use common::prelude::*;
 use nalgebra::{Point2, UnitComplex};
 
@@ -34,4 +35,22 @@ pub fn feasible_angle_near(
     let turn = (mobile - center).angle_to(&(ideal - center));
     let adjust = UnitComplex::new(turn.max(-max_angle_diff).min(max_angle_diff));
     center + adjust * (mobile - center)
+}
+
+/// Calculate an angle from `ball_loc` to `car_loc`, trying to get between
+/// `ball_loc` and `block_loc`, but not adjusting the approach angle by more
+/// than `max_angle_diff`.
+pub fn blocking_angle(
+    ball_loc: Point2<f32>,
+    car_loc: Point2<f32>,
+    block_loc: Point2<f32>,
+    max_angle_diff: f32,
+) -> f32 {
+    let naive_angle = ball_loc.negated_difference_and_angle_to(car_loc);
+    let block_angle = ball_loc.negated_difference_and_angle_to(block_loc);
+    let adjust = (block_angle - naive_angle)
+        .normalize_angle()
+        .max(-max_angle_diff)
+        .min(max_angle_diff);
+    (naive_angle + adjust).normalize_angle()
 }

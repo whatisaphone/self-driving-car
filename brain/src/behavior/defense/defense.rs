@@ -5,11 +5,12 @@ use crate::{
         strike::{GroundedHitAimContext, GroundedHitTarget, GroundedHitTargetAdjust},
     },
     eeg::Event,
+    helpers::hit_angle::blocking_angle,
     strategy::{Action, Behavior, Context, Game, Scenario},
-    utils::{geometry::ExtendF32, WallRayCalculator},
+    utils::WallRayCalculator,
 };
 use common::prelude::*;
-use nalgebra::{Point2, Vector2};
+use nalgebra::Vector2;
 use nameof::name_of_type;
 use std::f32::consts::PI;
 
@@ -127,24 +128,6 @@ pub fn defensive_hit(ctx: &mut GroundedHitAimContext<'_, '_>) -> Result<Grounded
     let dodge = TepidHit::should_dodge(ctx, aim_wall);
 
     Ok(GroundedHitTarget::new(ctx.intercept_time, adjust, aim_loc).dodge(dodge))
-}
-
-/// Calculate an angle from `ball_loc` to `car_loc`, trying to get between
-/// `ball_loc` and `block_loc`, but not adjusting the approach angle by more
-/// than `max_angle_diff`.
-fn blocking_angle(
-    ball_loc: Point2<f32>,
-    car_loc: Point2<f32>,
-    block_loc: Point2<f32>,
-    max_angle_diff: f32,
-) -> f32 {
-    let naive_angle = ball_loc.negated_difference_and_angle_to(car_loc);
-    let block_angle = ball_loc.negated_difference_and_angle_to(block_loc);
-    let adjust = (block_angle - naive_angle)
-        .normalize_angle()
-        .max(-max_angle_diff)
-        .min(max_angle_diff);
-    (naive_angle + adjust).normalize_angle()
 }
 
 #[cfg(test)]
