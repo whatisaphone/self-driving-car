@@ -15,7 +15,7 @@ use crate::{
     strategy::{Action, Behavior, Context, Priority},
     utils::{Wall, WallRayCalculator},
 };
-use common::{prelude::*, Distance};
+use common::{prelude::*, Distance, Speed};
 use nalgebra::{Point2, Point3};
 use nameof::name_of_type;
 use simulate::linear_interpolate;
@@ -184,6 +184,18 @@ impl RetreatingSave {
     }
 
     fn drive(&self, ctx: &mut Context<'_>, plan: &Plan) -> Action {
+        if self.should_stop(ctx, plan) {
+            let throttle = if ctx.me().Physics.vel_2d().norm() >= 100.0 {
+                -1.0
+            } else {
+                0.0
+            };
+            return Action::Yield(common::halfway_house::PlayerInput {
+                Throttle: throttle,
+                ..Default::default()
+            });
+        }
+
         let (throttle, boost) = self.calc_drive(ctx, plan);
         let start_loc = ctx.me().Physics.loc_2d();
         let start_forward_axis = ctx.me().Physics.forward_axis_2d();
@@ -194,6 +206,29 @@ impl RetreatingSave {
             Boost: boost && ctx.me().Boost > 0,
             ..Default::default()
         })
+    }
+
+    /// If we're already sitting still and the ball is headed right for us,
+    /// avoid creeping forward slowly and losing territory.
+    fn should_stop(&self, ctx: &mut Context<'_>, plan: &Plan) -> bool {
+        let ball_loc = ctx.packet.GameBall.Physics.loc_2d();
+        let ball_vel = ctx.packet.GameBall.Physics.vel_2d();
+        let car_loc = ctx.me().Physics.loc_2d();
+        let car_vel = ctx.me().Physics.vel_2d();
+
+        let cross_speed = car_vel.dot(&ball_vel.ortho().to_axis()).abs();
+        let pass_proximity = (car_loc - ball_loc).dot(&ball_vel.ortho().to_axis()).abs();
+        let cur_angle = ball_vel.angle_to(&(car_loc - ball_loc)).abs();
+        let target_angle = ball_vel
+            .angle_to(&(plan.target_loc - plan.intercept_ball_loc.to_2d()))
+            .abs();
+
+        ctx.eeg.print_value("cross_speed", Speed(cross_speed));
+        ctx.eeg.print_distance("pass_proximity", pass_proximity);
+        ctx.eeg.print_angle("cur_angle", cur_angle);
+        ctx.eeg.print_angle("target_angle", target_angle);
+
+        cross_speed < 300.0 && pass_proximity < 50.0 && (cur_angle - target_angle).abs() < PI / 6.0
     }
 
     fn calc_drive(&self, ctx: &mut Context<'_>, plan: &Plan) -> (f32, bool) {
