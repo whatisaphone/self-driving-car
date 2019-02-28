@@ -50,6 +50,7 @@ pub struct GameInfo {
     pub TimeSeconds: f32,
     pub GameTimeRemaining: f32,
     pub RoundActive: bool,
+    pub MatchEnded: bool,
 }
 
 #[derive(Clone)]
@@ -121,6 +122,7 @@ fn deserialize_game_info(info: rlbot::flat::GameInfo<'_>) -> GameInfo {
         TimeSeconds: info.secondsElapsed(),
         GameTimeRemaining: info.gameTimeRemaining(),
         RoundActive: info.isRoundActive(),
+        MatchEnded: info.isMatchEnded(),
     }
 }
 

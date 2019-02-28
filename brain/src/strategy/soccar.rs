@@ -5,10 +5,14 @@ use crate::{
         movement::{GetToFlatGround, Land, Yielder},
         offense::Offense,
         strike::{FiftyFifty, WallHit},
-        taunt::TurtleSpin,
+        taunt::{PodiumTwirl, TurtleSpin},
         PreKickoff,
     },
-    routing::{behavior::FollowRoute, plan::WallIntercept, recover::RoundIsNotActive},
+    routing::{
+        behavior::FollowRoute,
+        plan::WallIntercept,
+        recover::{MatchIsEnded, RoundIsNotActive},
+    },
     strategy::{scenario::Scenario, strategy::Strategy, Behavior, Context, Priority},
     utils::{geometry::ExtendF32, Wall},
 };
@@ -67,6 +71,10 @@ impl Strategy for Soccar {
         ctx: &mut Context<'_>,
         current: &dyn Behavior,
     ) -> Option<Box<dyn Behavior>> {
+        if ctx.packet.GameInfo.MatchEnded && current.priority() < Priority::Taunt {
+            return Some(Box::new(While::new(MatchIsEnded, PodiumTwirl::new())));
+        }
+
         // Force kickoff behavior. We can't rely on the normal routing, because it
         // doesn't account for boost pads that you pick up on the way, so it dodges and
         // goes too slow.

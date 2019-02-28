@@ -173,3 +173,15 @@ impl Predicate for RoundIsNotActive {
         !ctx.packet.GameInfo.RoundActive
     }
 }
+
+pub struct MatchIsEnded;
+
+impl Predicate for MatchIsEnded {
+    fn name(&self) -> &str {
+        name_of_type!(MatchIsEnded)
+    }
+
+    fn evaluate(&mut self, ctx: &mut Context<'_>) -> bool {
+        ctx.packet.GameInfo.MatchEnded
+    }
+}
