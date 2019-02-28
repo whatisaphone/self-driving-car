@@ -45,6 +45,7 @@ impl GroundedHit<fn(&mut GroundedHitAimContext<'_, '_>) -> Result<GroundedHitTar
     pub const MAX_BALL_Z: f32 = 220.0 - Self::CONTACT_Z_OFFSET; // TODO: how high can I jump
 
     /// A preset for `Aim` that hits the ball straight ahead.
+    #[allow(dead_code)]
     pub fn opposite_of_self(
         car: &common::halfway_house::PlayerInfo,
         ball: Point3<f32>,

@@ -6,7 +6,7 @@ use crate::{
         },
     },
     eeg::{color, Drawable, Event, EEG},
-    helpers::hit_angle::{feasible_hit_angle_away, feasible_hit_angle_toward},
+    helpers::hit_angle::{blocking_angle, feasible_hit_angle_away, feasible_hit_angle_toward},
     routing::{
         behavior::FollowRoute,
         plan::{GetDollar, GroundIntercept, WallIntercept},
@@ -16,7 +16,7 @@ use crate::{
 };
 use arrayvec::ArrayVec;
 use common::{prelude::*, PrettyPrint, Time};
-use nalgebra::{Point2, Point3};
+use nalgebra::{Point2, Point3, Vector2};
 use nameof::name_of_type;
 use ordered_float::NotNan;
 use std::f32::consts::PI;
@@ -140,7 +140,13 @@ fn time_wasting_hit(ctx: &mut GroundedHitAimContext<'_, '_>) -> Result<GroundedH
         ctx.eeg.track(Event::TepidHitBlockAngleToGoal);
         ctx.eeg
             .draw(Drawable::print("blocking angle to goal", color::GREEN));
-        aim_loc = GroundedHit::opposite_of_self(ctx.car, ctx.intercept_ball_loc);
+        let target_angle = blocking_angle(
+            ctx.intercept_ball_loc.to_2d(),
+            me_loc,
+            defense_avoid,
+            PI / 12.0,
+        );
+        aim_loc = ball_loc - Vector2::unit(target_angle) * 4000.0;
         target_adjust = if Defense::is_between_ball_and_own_goal(ctx.game, ctx.car, ctx.scenario) {
             ctx.eeg.draw(Drawable::print("straight-on", color::GREEN));
             GroundedHitTargetAdjust::StraightOn
