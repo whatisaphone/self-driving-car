@@ -1,13 +1,11 @@
 use crate::{
     behavior::{
         defense::{retreat::Retreat, PanicDefense},
-        higher_order::Chain,
         offense::TepidHit,
-        strike::{GroundedHit, GroundedHitAimContext, GroundedHitTarget, GroundedHitTargetAdjust},
+        strike::{GroundedHitAimContext, GroundedHitTarget, GroundedHitTargetAdjust},
     },
     eeg::Event,
-    routing::{behavior::FollowRoute, plan::GroundIntercept},
-    strategy::{Action, Behavior, Context, Priority, Scenario},
+    strategy::{Action, Behavior, Context, Game, Scenario},
     utils::{geometry::ExtendF32, WallRayCalculator},
 };
 use common::prelude::*;
@@ -22,15 +20,19 @@ impl Defense {
         Self
     }
 
-    fn is_between_ball_and_own_goal(ctx: &mut Context<'_>) -> bool {
-        let goal = ctx.game.own_goal();
+    pub fn is_between_ball_and_own_goal(
+        game: &Game<'_>,
+        car: &common::halfway_house::PlayerInfo,
+        scenario: &Scenario<'_>,
+    ) -> bool {
+        let goal = game.own_goal();
         let goal_loc = goal.center_2d;
-        let me_loc = ctx.me().Physics.loc_2d();
-        let me_vel = ctx.me().Physics.vel_2d();
-        let me_forward_axis = ctx.me().Physics.forward_axis_2d();
-        let ball_loc = match ctx.scenario.me_intercept() {
+        let me_loc = car.Physics.loc_2d();
+        let me_vel = car.Physics.vel_2d();
+        let me_forward_axis = car.Physics.forward_axis_2d();
+        let ball_loc = match scenario.me_intercept() {
             Some(i) => i.ball_loc.to_2d(),
-            None => ctx.scenario.ball_prediction().last().loc.to_2d(),
+            None => scenario.ball_prediction().last().loc.to_2d(),
         };
 
         if PanicDefense::finished_panicking(goal, me_loc, me_vel) {
@@ -47,7 +49,7 @@ impl Defense {
         // possession, the danger of a shot is high and if we try to stop it we'll get
         // beat to the ball. Bias towards panicking rather than trying to intercept,
         // this way at least we're between the ball and our goal.
-        let panic_factor = if ctx.scenario.slightly_panicky_retreat() {
+        let panic_factor = if scenario.slightly_panicky_retreat() {
             2000.0
         } else {
             0.0
@@ -88,34 +90,12 @@ impl Behavior for Defense {
         ctx.eeg.track(Event::Defense);
 
         // If we're not between the ball and our goal, get there.
-        if !Self::is_between_ball_and_own_goal(ctx) {
+        if !Self::is_between_ball_and_own_goal(ctx.game, ctx.me(), ctx.scenario) {
             return Action::tail_call(Retreat::new());
         }
 
-        // If we're already in goal, try to take control of the ball somehow.
-        if ctx.scenario.possession() < Scenario::POSSESSION_CONTESTABLE {
-            ctx.eeg
-                .log(self.name(), "already in goal; going for a defensive hit");
-
-            let need_boost = match ctx.scenario.me_intercept() {
-                Some(i) => {
-                    let (ctx, _eeg) = &ctx.split();
-                    TepidHit::dangerous_back_wall_with_little_boost(ctx, i.ball_loc)
-                }
-                None => false,
-            };
-            if need_boost {
-                // TepidHit will grab boost.
-                return Action::tail_call(TepidHit::new());
-            }
-
-            Action::tail_call(Chain::new(Priority::Idle, vec![
-                Box::new(FollowRoute::new(GroundIntercept::new())),
-                Box::new(GroundedHit::hit_towards(defensive_hit)),
-            ]))
-        } else {
-            Action::tail_call(TepidHit::new())
-        }
+        // If we're already in goal, try to take control of the ball.
+        Action::tail_call(TepidHit::new())
     }
 }
 

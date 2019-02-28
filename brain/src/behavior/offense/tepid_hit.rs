@@ -1,6 +1,9 @@
 use crate::{
-    behavior::strike::{
-        GroundedHit, GroundedHitAimContext, GroundedHitTarget, GroundedHitTargetAdjust, WallHit,
+    behavior::{
+        defense::Defense,
+        strike::{
+            GroundedHit, GroundedHitAimContext, GroundedHitTarget, GroundedHitTargetAdjust, WallHit,
+        },
     },
     eeg::{color, Drawable, Event, EEG},
     helpers::hit_angle::{feasible_hit_angle_away, feasible_hit_angle_toward},
@@ -74,26 +77,24 @@ fn ground(ctx: &Context2<'_, '_>, eeg: &mut EEG) -> Option<(f32, HitType)> {
     let intercept =
         GroundIntercept::calc_intercept(&ctx.me().into(), ctx.scenario.ball_prediction())?;
 
-    if TepidHit::dangerous_back_wall_with_little_boost(ctx, intercept.loc) {
+    if dangerous_back_wall_with_little_boost(ctx, intercept.loc) {
         eeg.log(name_of_type!(TepidHit), "too dangerous with no boost");
         return None;
     }
     Some((intercept.t, HitType::Ground))
 }
 
-impl TepidHit {
-    pub fn dangerous_back_wall_with_little_boost(
-        ctx: &Context2<'_, '_>,
-        intercept_loc: Point3<f32>,
-    ) -> bool {
-        let own_goal = ctx.game.own_goal();
-        let enemy_goal = ctx.game.enemy_goal();
-        let near_back_wall = enemy_goal.is_y_within_range(intercept_loc.y, ..2500.0);
-        let approach_angle = own_goal
-            .normal_2d
-            .angle_to(&(intercept_loc.to_2d() - ctx.me().Physics.loc_2d()));
-        near_back_wall && approach_angle.abs() < PI / 3.0 && ctx.me().Boost < 50
-    }
+fn dangerous_back_wall_with_little_boost(
+    ctx: &Context2<'_, '_>,
+    intercept_loc: Point3<f32>,
+) -> bool {
+    let own_goal = ctx.game.own_goal();
+    let enemy_goal = ctx.game.enemy_goal();
+    let near_back_wall = enemy_goal.is_y_within_range(intercept_loc.y, ..2500.0);
+    let approach_angle = own_goal
+        .normal_2d
+        .angle_to(&(intercept_loc.to_2d() - ctx.me().Physics.loc_2d()));
+    near_back_wall && approach_angle.abs() < PI / 3.0 && ctx.me().Boost < 50
 }
 
 fn wall<'ball>(ctx: &Context2<'_, 'ball>, eeg: &mut EEG) -> Option<(f32, HitType)> {
@@ -134,21 +135,31 @@ fn time_wasting_hit(ctx: &mut GroundedHitAimContext<'_, '_>) -> Result<GroundedH
     let naive_offense = (ball_loc - me_loc).angle_to(&(offense_aim - me_loc));
     let naive_defense = (ball_loc - me_loc).angle_to(&(defense_avoid - me_loc));
 
-    let aim_loc = if naive_offense.abs() < naive_defense.abs() {
-        ctx.eeg.track(Event::TepidHitTowardEnemyGoal);
-        ctx.eeg
-            .draw(Drawable::print("toward enemy goal", color::GREEN));
-        feasible_hit_angle_toward(ball_loc, me_loc, offense_aim, PI / 6.0)
-    } else if (ball_loc - defense_avoid).norm() < 1000.0 {
+    let (aim_loc, target_adjust);
+    if (ball_loc.y - defense_avoid.y).abs() < 1500.0 {
         ctx.eeg.track(Event::TepidHitBlockAngleToGoal);
         ctx.eeg
             .draw(Drawable::print("blocking angle to goal", color::GREEN));
-        GroundedHit::opposite_of_self(ctx.car, ctx.intercept_ball_loc)
+        aim_loc = GroundedHit::opposite_of_self(ctx.car, ctx.intercept_ball_loc);
+        target_adjust = if Defense::is_between_ball_and_own_goal(ctx.game, ctx.car, ctx.scenario) {
+            ctx.eeg.draw(Drawable::print("straight-on", color::GREEN));
+            GroundedHitTargetAdjust::StraightOn
+        } else {
+            ctx.eeg.draw(Drawable::print("rough aim", color::GREEN));
+            GroundedHitTargetAdjust::RoughAim
+        };
+    } else if naive_offense.abs() < naive_defense.abs() {
+        ctx.eeg.track(Event::TepidHitTowardEnemyGoal);
+        ctx.eeg
+            .draw(Drawable::print("toward enemy goal", color::GREEN));
+        aim_loc = feasible_hit_angle_toward(ball_loc, me_loc, offense_aim, PI / 6.0);
+        target_adjust = GroundedHitTargetAdjust::RoughAim;
     } else {
         ctx.eeg.track(Event::TepidHitAwayFromOwnGoal);
         ctx.eeg
             .draw(Drawable::print("away from own goal", color::GREEN));
-        feasible_hit_angle_away(ball_loc, me_loc, defense_avoid, PI / 6.0)
+        aim_loc = feasible_hit_angle_away(ball_loc, me_loc, defense_avoid, PI / 6.0);
+        target_adjust = GroundedHitTargetAdjust::RoughAim;
     };
 
     let aim_loc = WallRayCalculator::calculate(ball_loc, aim_loc);
@@ -158,13 +169,11 @@ fn time_wasting_hit(ctx: &mut GroundedHitAimContext<'_, '_>) -> Result<GroundedH
         return Err(());
     }
 
-    Ok(GroundedHitTarget::new(
-        ctx.intercept_time,
-        GroundedHitTargetAdjust::RoughAim,
-        aim_loc,
+    Ok(
+        GroundedHitTarget::new(ctx.intercept_time, target_adjust, aim_loc)
+            .jump(!is_chippable(ctx, aim_loc))
+            .dodge(TepidHit::should_dodge(ctx, aim_wall)),
     )
-    .jump(!is_chippable(ctx, aim_loc))
-    .dodge(TepidHit::should_dodge(ctx, aim_wall)))
 }
 
 fn is_chippable(ctx: &mut GroundedHitAimContext<'_, '_>, aim_loc: Point2<f32>) -> bool {

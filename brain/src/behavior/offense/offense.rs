@@ -450,7 +450,7 @@ mod integration_tests {
             .run_for_millis(100);
 
         test.examine_events(|events| {
-            assert!(events.contains(&Event::TepidHitTowardEnemyGoal));
+            assert!(events.contains(&Event::TepidHitBlockAngleToGoal));
         });
     }
 
