@@ -2,6 +2,7 @@ use crate::{
     behavior::{
         defense::{retreating_save::RetreatingSave, PanicDefense, PushToOwnCorner},
         higher_order::TryChoose,
+        offense::TepidHit,
     },
     eeg::Event,
     strategy::{Action, Behavior, Context, Priority},
@@ -53,6 +54,8 @@ impl Behavior for Retreat {
             choices.push(Box::new(RetreatingSave::new()));
         }
         choices.push(Box::new(PanicDefense::new()));
+        // We should never get this far, but it's here as a fail-safe:
+        choices.push(Box::new(TepidHit::new()));
 
         Action::tail_call(TryChoose::new(Priority::Idle, choices))
     }
@@ -60,9 +63,13 @@ impl Behavior for Retreat {
 
 #[cfg(test)]
 mod integration_tests {
-    use crate::{eeg::Event, integration_tests::TestRunner};
+    use crate::{
+        eeg::Event,
+        integration_tests::{TestRunner, TestScenario},
+    };
     use brain_test_data::recordings;
     use common::prelude::*;
+    use nalgebra::{Point3, Rotation3, Vector3};
 
     #[test]
     fn retreating_hit_to_own_corner() {
@@ -96,5 +103,31 @@ mod integration_tests {
         let ball_loc = packet.GameBall.Physics.loc();
         println!("ball_loc = {:?}", ball_loc);
         assert!(ball_loc.x >= 2000.0);
+    }
+
+    #[test]
+    fn no_infinite_loop() {
+        let start_loc = Point3::new(517.51996, -3536.02, 17.01);
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(-1755.77, 447.0, 93.15),
+                ball_vel: Vector3::new(-271.521, -404.061, 0.0),
+                car_loc: start_loc,
+                car_rot: Rotation3::from_unreal_angles(-0.009636601, 0.49049014, -0.00009285019),
+                car_vel: Vector3::new(544.621, 296.531, 8.311),
+                enemy_loc: Point3::new(-955.0, 1372.2899, 17.01),
+                enemy_rot: Rotation3::from_unreal_angles(-0.009583307, -2.3083153, -0.00014091768),
+                enemy_vel: Vector3::new(-932.0109, -1015.0109, 8.301001),
+                ..Default::default()
+            })
+            .starting_boost(80.0)
+            .soccar()
+            .run_for_millis(2000);
+
+        let packet = test.sniff_packet();
+        let car_loc = packet.GameCars[0].Physics.loc();
+        let dist_moved = (car_loc.to_2d() - start_loc.to_2d()).norm();
+        println!("dist_moved = {:?}", dist_moved);
+        assert!(dist_moved >= 1000.0);
     }
 }
