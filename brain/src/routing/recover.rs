@@ -4,6 +4,7 @@ use crate::{
         movement::{DriveTowards, GetToFlatGround, QuickJumpAndDodge, SkidRecover, Yielder},
         offense::ResetBehindBall,
     },
+    helpers::ball::BallTrajectory,
     routing::{
         behavior::FollowRoute,
         models::{CarState, RoutePlanError},
@@ -39,17 +40,23 @@ impl RoutePlanError {
                 }
 
                 let ball_loc = ctx.scenario.ball_prediction().at_time_or_last(2.5).loc;
-                Some(Box::new(TryChoose::new(Priority::Idle, vec_box![
-                    FollowRoute::new(
-                        GroundDrive::new(ball_loc.to_2d())
-                            .end_chop(0.5)
-                            .straight_mode(StraightMode::Fake)
-                    )
-                    .never_recover(true),
+                let mut choices = Vec::<Box<dyn Behavior>>::new();
+                if !is_ball_directly_behind_car(ctx.scenario.ball_prediction(), &ctx.me().into()) {
+                    choices.push(Box::new(
+                        FollowRoute::new(
+                            GroundDrive::new(ball_loc.to_2d())
+                                .end_chop(0.5)
+                                .straight_mode(StraightMode::Fake),
+                        )
+                        .never_recover(true),
+                    ));
+                }
+                choices.push(Box::new(
                     ResetBehindBall::behind_loc(ball_loc.to_2d(), 1500.0).never_recover(true),
-                    // What's going on? Last ditch effort, try to turn ReliefBot-style.
-                    confused_jump_to_reorient(),
-                ])))
+                ));
+                // What's going on? Last ditch effort, try to turn with a ReliefBot-style hop.
+                choices.push(Box::new(confused_jump_to_reorient()));
+                Some(Box::new(TryChoose::new(Priority::Idle, choices)))
             }
             RoutePlanError::MustBeFacingTarget => {
                 if ctx.me().Physics.vel_2d().norm() < 400.0
@@ -98,6 +105,13 @@ fn check_easy_flip_recover(ctx: &mut Context<'_>) -> Option<Box<dyn Behavior>> {
     }
 
     None
+}
+
+pub fn is_ball_directly_behind_car(ball: &BallTrajectory, start: &CarState) -> bool {
+    let ball_loc = ball.at_time(0.0).unwrap().loc;
+    let car_to_ball = ball_loc.to_2d() - start.loc_2d();
+    start.forward_axis_2d().angle_to(&car_to_ball).abs() >= 150.0f32.to_radians()
+        && car_to_ball.norm() < 750.0
 }
 
 // Yeah, this isn't great, but it's better than getting caught in an infinite

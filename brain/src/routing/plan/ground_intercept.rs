@@ -12,7 +12,7 @@ use crate::{
             ground_straight::GroundStraightPlanner, ground_turn::TurnPlanner,
             higher_order::ChainedPlanner,
         },
-        recover::{IsSkidding, NotOnFlatGround},
+        recover::{is_ball_directly_behind_car, IsSkidding, NotOnFlatGround},
         segments::StraightMode,
     },
 };
@@ -61,6 +61,11 @@ impl RoutePlanner for GroundIntercept {
 
         dump.log_pretty(self, "guess ball time", Time(guess.t));
         dump.log_pretty(self, "guess ball loc", guess.loc.to_2d());
+
+        if is_ball_directly_behind_car(ctx.ball_prediction, &ctx.start) {
+            dump.log(self, "the ball is directly behind us; I can't even");
+            return Err(RoutePlanError::TurningRadiusTooTight);
+        }
 
         let turn = TurnPlanner::new(guess.loc.to_2d(), None).plan(ctx, dump)?;
 
