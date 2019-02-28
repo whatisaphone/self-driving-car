@@ -6,7 +6,9 @@ pub use crate::{
     ext::ExtendRLBot,
     flatbuffers::vector_iter,
     polyfill::ExtendDuration,
-    pretty::{Angle, AngularVelocity, ControllerInput, Coordinate, Distance, PrettyPrint, Time},
+    pretty::{
+        Angle, AngularVelocity, ControllerInput, Coordinate, Distance, PrettyPrint, Speed, Time,
+    },
 };
 
 pub mod ext;

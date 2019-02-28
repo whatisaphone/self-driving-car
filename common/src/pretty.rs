@@ -103,6 +103,7 @@ inherent!(R3PP, Rotation3<f32>, "{}", |x| {
 wrap!(Time, f32, "{:.2}");
 wrap!(Coordinate, f32, "{:.0}");
 wrap!(Distance, f32, "{:.0}");
+wrap!(Speed, f32, "{:.0}");
 wrap!(Angle, f32, "{:.0}°", |x| x.to_degrees());
 wrap!(AngularVelocity, f32, "{:.0}°/s", |x| x.to_degrees());
 wrap!(ControllerInput, f32, "{:.2}");

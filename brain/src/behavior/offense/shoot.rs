@@ -10,9 +10,10 @@ use crate::{
     routing::{behavior::FollowRoute, plan::GroundIntercept},
     strategy::{Action, Behavior, Context, Game, Priority, Scenario},
 };
-use common::prelude::*;
+use common::{prelude::*, Speed};
 use nalgebra::{Point2, Point3};
 use nameof::name_of_type;
+use simulate::linear_interpolate;
 use std::f32::consts::PI;
 
 pub struct Shoot;
@@ -57,9 +58,60 @@ impl Shoot {
                 i.time,
                 GroundedHitTargetAdjust::RoughAim,
                 i.data.aim_loc,
-            )),
+            )
+            .jump(!Self::is_chippable(ctx, &i))),
             None => Err(()),
         }
+    }
+
+    pub fn is_chippable(
+        ctx: &mut GroundedHitAimContext<'_, '_>,
+        intercept: &NaiveIntercept<Shot>,
+    ) -> bool {
+        // `ctx.intercept_ball_loc` is the soonest possible intercept.
+        // `intercept` is the possibly-later "strategic" intercept that we'll wait for
+        // before shooting.
+
+        let ball_loc = intercept.ball_loc.to_2d();
+        let ball_vel = intercept.ball_vel.to_2d();
+        let car_loc = intercept.car_loc.to_2d();
+        let car_forward_axis = (ball_loc - car_loc).to_axis();
+        let car_speed = intercept.car_speed;
+        let car_vel = (ball_loc - ctx.car.Physics.loc_2d()).normalize() * car_speed;
+
+        let shot_distance = (intercept.data.aim_loc - ball_loc).norm();
+        let car_speed_towards_ball = (car_vel - ball_vel).dot(&car_vel.to_axis());
+        let approach_angle = car_forward_axis
+            .angle_to(&(intercept.data.aim_loc - ball_loc))
+            .abs();
+        let shot_angle = (ball_loc - car_loc)
+            .angle_to(&(intercept.data.aim_loc - ball_loc))
+            .abs();
+
+        let min_distance_cutoff =
+            linear_interpolate(&[2000.0, 3000.0], &[2000.0, 750.0], car_speed_towards_ball);
+        let max_distance_cutoff =
+            linear_interpolate(&[1500.0, 3000.0], &[1800.0, 5000.0], car_speed_towards_ball);
+
+        ctx.eeg.print_value("car_speed", Speed(car_speed));
+        ctx.eeg
+            .print_value("rel_speed", Speed(car_speed_towards_ball));
+        ctx.eeg.print_angle("approach_angle", approach_angle);
+        ctx.eeg.print_angle("shot_angle", shot_angle);
+        ctx.eeg.print_distance("shot_distance", shot_distance);
+        ctx.eeg
+            .print_distance("min_distance_cutoff", min_distance_cutoff);
+        ctx.eeg
+            .print_distance("max_distance_cutoff", max_distance_cutoff);
+
+        // If the ball is rolling towards us, take the easy chip and hopefully get it
+        // over the opponent's head.
+        car_speed >= 1000.0
+            && car_speed_towards_ball * 0.85 >= car_speed
+            && (shot_distance < min_distance_cutoff || shot_distance >= max_distance_cutoff)
+            && ctx.intercept_ball_loc.z < 120.0
+            && approach_angle < PI / 6.0
+            && shot_angle < PI / 6.0
     }
 
     fn aim_calc(
@@ -293,6 +345,50 @@ mod integration_tests {
                 car_vel: Vector3::new(75.461, 606.49097, 17.271),
                 ..Default::default()
             })
+            .soccar()
+            .run_for_millis(4000);
+
+        assert!(test.has_scored());
+    }
+
+    #[test]
+    #[ignore(note = "saving this for later, watch your back tare")]
+    fn chip_it_over_reliefbots_head() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(-1504.64, 2860.74, 98.34),
+                ball_vel: Vector3::new(-310.841, -581.85095, -65.701),
+                car_loc: Point3::new(-1992.88, 1130.71, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.0095118955, 0.8456476, -0.0000147181245),
+                car_vel: Vector3::new(326.201, 386.471, 8.351),
+                enemy_loc: Point3::new(-340.63, 5980.25, 250.68999),
+                enemy_rot: Rotation3::from_unreal_angles(-0.7842756, -0.05550343, -1.5506147),
+                enemy_vel: Vector3::new(692.891, -26.440998, -638.691),
+                ..Default::default()
+            })
+            .starting_boost(80.0)
+            .soccar()
+            .run_for_millis(4000);
+
+        assert!(test.has_scored());
+    }
+
+    #[test]
+    #[ignore(note = "saving this for later, watch your back tare")]
+    fn chip_it_over_reliefbots_head_2() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(-2401.8298, 1984.36, 93.14),
+                ball_vel: Vector3::new(-431.231, -335.451, 0.0),
+                car_loc: Point3::new(-3290.5598, 1121.99, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.009506902, 1.3701476, 0.0000138256455),
+                car_vel: Vector3::new(133.77101, 602.08093, 8.351),
+                enemy_loc: Point3::new(-227.01999, 4650.29, 86.189995),
+                enemy_rot: Rotation3::from_unreal_angles(1.2419531, 0.794232, 3.0616176),
+                enemy_vel: Vector3::new(-1023.441, -1180.4409, -14.081),
+                ..Default::default()
+            })
+            .starting_boost(80.0)
             .soccar()
             .run_for_millis(4000);
 
