@@ -67,18 +67,3 @@ repos:
       files: '[.]rs$'
       entry: sh -c '( cd simulate && cargo check --all-targets --features strict )'
       pass_filenames: false
-
-    - id: clippy
-      name: clippy
-      language: system
-      files: '[.]rs$'
-      entry: cargo clippy --all-targets --features strict
-      pass_filenames: false
-
-    - id: test
-      name: test
-      language: system
-      files: '[.]rs$'
-      # Skip the tests which require Rocket League to be running.
-      entry: cargo test -- --skip integration
-      pass_filenames: false
