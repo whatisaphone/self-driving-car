@@ -1,7 +1,7 @@
 use crate::{
     behavior::{
         higher_order::Chain,
-        movement::{simple_steer_towards, Dodge, JumpAndTurn},
+        movement::{simple_steer_towards, Dodge, JumpAndTurn, Yielder},
         strike::BounceShot,
     },
     eeg::{Drawable, EEG},
@@ -314,6 +314,16 @@ where
         )));
         if plan.dodge {
             steps.push(Box::new(Dodge::new().towards_ball()));
+        } else {
+            // If we're not dodging, force pushing the nose down, since sometimes the air
+            // recovery does wonky things here.
+            steps.push(Box::new(Yielder::new(
+                0.1,
+                common::halfway_house::PlayerInput {
+                    Pitch: -1.0,
+                    ..Default::default()
+                },
+            )))
         }
 
         Action::tail_call(Chain::new(Priority::Strike, steps))
