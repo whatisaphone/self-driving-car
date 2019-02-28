@@ -1,5 +1,6 @@
 use crate::{
     behavior::{
+        defense::retreating_save::RetreatingSave,
         higher_order::Chain,
         movement::{GetToFlatGround, SkidRecover},
         strike::{GroundedHit, GroundedHitAimContext, GroundedHitTarget, GroundedHitTargetAdjust},
@@ -76,11 +77,26 @@ impl HitToOwnCorner {
                     .log(name_of_type!(HitToOwnCorner), "avoiding the own goal");
                 Err(())
             }
-            _ => Ok(GroundedHitTarget::new(
-                ctx.intercept_time,
-                GroundedHitTargetAdjust::RoughAim,
-                result,
-            )),
+            _ => {
+                let ball = ctx
+                    .scenario
+                    .ball_prediction()
+                    .at_time(ctx.intercept_time)
+                    .unwrap();
+                let dont_dodge = RetreatingSave::safer_not_to_dodge(
+                    ctx.game,
+                    ctx.scenario.ball_prediction().start(),
+                    &ctx.car.into(),
+                    ball,
+                );
+                Ok(GroundedHitTarget::new(
+                    ctx.intercept_time,
+                    GroundedHitTargetAdjust::RoughAim,
+                    result,
+                )
+                .jump(!dont_dodge)
+                .dodge(!dont_dodge))
+            }
         }
     }
 }

@@ -7,12 +7,12 @@ use crate::{
     },
     eeg::{color, Drawable, Event},
     helpers::{
-        drive::rough_time_drive_to_loc, hit_angle::feasible_angle_near,
+        ball::BallFrame, drive::rough_time_drive_to_loc, hit_angle::feasible_angle_near,
         intercept::naive_ground_intercept_2,
     },
     routing::{behavior::FollowRoute, models::CarState, plan::GroundIntercept},
     sim::{SimGroundDrive, SimJump},
-    strategy::{Action, Behavior, Context, Priority},
+    strategy::{Action, Behavior, Context, Game, Priority},
     utils::{Wall, WallRayCalculator},
 };
 use common::{prelude::*, Distance, Speed};
@@ -29,7 +29,6 @@ pub struct RetreatingSave {
 impl RetreatingSave {
     const MAX_BALL_Z: f32 = 150.0;
     const JUMP_TIME: f32 = 0.1;
-    const BALL_Z_FOR_DODGE: f32 = 120.0;
 
     pub fn new() -> Self {
         Self { chatted: false }
@@ -122,8 +121,8 @@ impl Behavior for RetreatingSave {
             ctx.me().Physics.rot(),
         ));
 
-        let (ball_loc, car) = self.simulate_jump(ctx);
-        if (ball_loc.to_2d() - car.loc_2d()).norm() < 250.0 {
+        let (ball, car) = self.simulate_jump(ctx);
+        if (ball.loc.to_2d() - car.loc_2d()).norm() < 250.0 {
             ctx.eeg.log(self.name(), "we are close enough");
             return self.dodge(ctx);
         }
@@ -279,30 +278,29 @@ impl RetreatingSave {
         (throttle, boost)
     }
 
-    fn simulate_jump(&self, ctx: &mut Context<'_>) -> (Point3<f32>, CarState) {
+    fn simulate_jump<'ctx>(&self, ctx: &mut Context<'ctx>) -> (&'ctx BallFrame, CarState) {
         // Simulate the ball motion.
-        let ball_loc = ctx.packet.GameBall.Physics.loc();
-        let ball_vel = ctx.packet.GameBall.Physics.vel();
-        let ball_loc = ball_loc + ball_vel * Self::JUMP_TIME;
+        let ball = ctx
+            .scenario
+            .ball_prediction()
+            .at_time(Self::JUMP_TIME)
+            .unwrap();
 
         // Simulate the car motion.
         let apex = SimJump.simulate(&ctx.me().into(), Self::JUMP_TIME, &ctx.me().Physics.quat());
 
-        (ball_loc, apex)
+        (ball, apex)
     }
 
     fn dodge(&self, ctx: &mut Context<'_>) -> Action {
-        let (ball_loc, apex) = self.simulate_jump(ctx);
+        let (ball, apex) = self.simulate_jump(ctx);
 
-        // This is a dangerous situation as it is. Skip the dodge if we can, because we
-        // want to:
-        // - Keep control of our car.
-        // - Not propel the ball any faster towards our net than we need to.
-        let car_vel = ctx.me().Physics.vel_2d();
-        if ball_loc.z < Self::BALL_Z_FOR_DODGE
-            && ctx.packet.GameBall.Physics.vel().norm() >= 2000.0
-            && car_vel.dot(&-ctx.game.own_goal().normal_2d) >= 1000.0
-        {
+        if Self::safer_not_to_dodge(
+            ctx.game,
+            ctx.scenario.ball_prediction().start(),
+            &ctx.me().into(),
+            ball,
+        ) {
             return Action::tail_call(Yielder::new(
                 Self::JUMP_TIME,
                 common::halfway_house::PlayerInput {
@@ -314,12 +312,33 @@ impl RetreatingSave {
 
         let theta = apex
             .forward_axis_2d()
-            .angle_to(&(ball_loc.to_2d() - apex.loc_2d()));
+            .angle_to(&(ball.loc.to_2d() - apex.loc_2d()));
         Action::tail_call(
             QuickJumpAndDodge::new()
                 .jump_time(Self::JUMP_TIME)
                 .angle(theta),
         )
+    }
+
+    /// In a fast-retreating situation, we might want to avoid dodging so we:
+    ///
+    ///   - Keep control of our car.
+    ///   - Don't propel the ball any faster towards our net than we need to.
+    pub fn safer_not_to_dodge(
+        game: &Game<'_>,
+        ball: &BallFrame,
+        car: &CarState,
+        contact_ball_frame: &BallFrame,
+    ) -> bool {
+        let blocking_angle = (game.own_goal().center_2d - ball.loc.to_2d())
+            .angle_to(&(car.loc.to_2d() - ball.loc.to_2d()))
+            .abs();
+
+        contact_ball_frame.loc.z < 120.0
+            && contact_ball_frame.vel.z < 300.0
+            && contact_ball_frame.vel.to_2d().norm() >= 1000.0
+            && car.vel_2d().dot(&-game.own_goal().normal_2d) >= 1000.0
+            && blocking_angle < PI * (4.0 / 8.0)
     }
 }
 
