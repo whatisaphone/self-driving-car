@@ -130,7 +130,8 @@ impl PanicDefense {
         let future_ball = ctx.scenario.ball_prediction().at_time_or_last(2.0);
         let dist_ball_to_goal = (future_ball.loc.to_2d() - own_goal.center_2d).norm();
         let safe_distance = linear_interpolate(&[0.0, 50.0], &[4000.0, 2500.0], me.Boost as f32);
-        if dist_me_to_goal < dist_ball_to_goal - safe_distance {
+        let basically_already_arrived = own_goal.is_y_within_range(me.Physics.loc().y, ..1500.0);
+        if dist_me_to_goal < dist_ball_to_goal - safe_distance && !basically_already_arrived {
             // The ball is on the other side of the planet, we can stop pancking now.
             ctx.eeg
                 .log(self.name(), "I can barely see the ball from here");

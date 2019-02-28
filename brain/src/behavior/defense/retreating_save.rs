@@ -155,7 +155,7 @@ impl RetreatingSave {
 
                 drive_angle.abs() < acceptable_drive_angle
                     && ball.loc.z < Self::MAX_BALL_Z
-                    && !own_goal.ball_is_scored(ball.loc)
+                    && !own_goal.ball_is_scored_conservative(ball.loc)
             })?;
 
         let intercept_ball_loc = intercept.ball_loc.to_2d();
@@ -298,7 +298,10 @@ impl RetreatingSave {
         // want to:
         // - Keep control of our car.
         // - Not propel the ball any faster towards our net than we need to.
-        if ball_loc.z < Self::BALL_Z_FOR_DODGE && ctx.packet.GameBall.Physics.vel().norm() >= 2000.0
+        let car_vel = ctx.me().Physics.vel_2d();
+        if ball_loc.z < Self::BALL_Z_FOR_DODGE
+            && ctx.packet.GameBall.Physics.vel().norm() >= 2000.0
+            && car_vel.dot(&-ctx.game.own_goal().normal_2d) >= 1000.0
         {
             return Action::tail_call(Yielder::new(
                 Self::JUMP_TIME,
