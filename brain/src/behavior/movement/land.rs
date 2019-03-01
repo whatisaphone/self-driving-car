@@ -47,7 +47,12 @@ impl Behavior for Land {
             // dodge. Just let it happen.
             ctx.eeg
                 .draw(Drawable::print("waiting until after flip", color::GREEN));
-            return Action::Yield(Default::default());
+            return Action::Yield(common::halfway_house::PlayerInput {
+                // Handbrake, in case we'll be landing on a wall and want to recover without losing
+                // speed. Don't handbrake near the ground, since it will mess up steering.
+                Handbrake: me.Physics.loc().z >= 50.0,
+                ..Default::default()
+            });
         }
 
         ctx.eeg.draw(Drawable::print("air rolling", color::GREEN));
@@ -105,6 +110,7 @@ impl Behavior for Land {
             Yaw: yaw,
             Roll: roll,
             Boost: boost,
+            Handbrake: will_be_skidding_on_landing(ctx, plane),
             ..Default::default()
         })
     }
@@ -174,7 +180,7 @@ fn find_landing_plane<'ctx>(ctx: &mut Context<'ctx>) -> &'ctx Plane {
         let plane = ctx.game.pitch().closest_plane(&loc);
         // This check assumes the field is fully convex (or concave I guess, since we're
         // inside it?)
-        if plane.distance_to_point(&loc) < rl::OCTANE_NEUTRAL_Z {
+        if plane.distance_to_point(&loc) < 50.0 {
             return plane;
         }
     }
@@ -206,6 +212,12 @@ fn panic_retreat_boost(ctx: &mut Context<'_>) -> bool {
         .angle_to(&(own_goal_loc - car_loc).to_3d(0.0).to_axis())
         .abs();
     opportune_boost_dir < PI / 4.0
+}
+
+fn will_be_skidding_on_landing(ctx: &mut Context<'_>, plane: &Plane) -> bool {
+    let nose = plane.project_vector(&ctx.me().Physics.forward_axis());
+    let momentum = plane.project_vector(&ctx.me().Physics.vel());
+    nose.normalize().dot(&momentum.normalize()) < 0.5
 }
 
 #[cfg(test)]
