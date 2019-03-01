@@ -67,8 +67,14 @@ impl Behavior for Land {
         // Point the nose of the car along the surface we're landing on.
         let forward = {
             let facing_2d = choose_facing_2d(ctx);
-            // Bias towards driving down the wall if we're landing on a wall.
-            let facing = (facing_2d.to_3d().into_inner() - Vector3::z()).to_axis();
+            let salvable_vel = plane.project_vector(&me.Physics.vel());
+            let facing = if salvable_vel.z < 0.0 && salvable_vel.norm() >= 800.0 {
+                // If there's momentum to conserve, do so.
+                salvable_vel
+            } else {
+                // Add additional bias towards driving down the wall.
+                facing_2d.to_3d().into_inner() - Vector3::z()
+            };
             plane.project_vector(&facing).to_axis()
         };
 
