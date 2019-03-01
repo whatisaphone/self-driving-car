@@ -41,6 +41,11 @@ impl Shoot {
             .intersect(Line2::from_points(car_loc.to_2d(), ball_loc.to_2d()))
             .unwrap_or(goal.center_2d);
         let aim_loc = goal.closest_point(aim_loc);
+        // Fix weirdness when the ball is halfway in the goal. If the aim location is
+        // directly on the surface of the goal plane, it's in "front" of the ball, and
+        // since we can't hit the ball backwards (naturally), we would abort. Prevent
+        // that weirdness and take the easy goal.
+        let aim_loc = aim_loc + (aim_loc - car_loc.to_2d()).normalize() * 500.0;
 
         let ball_to_goal = aim_loc - ball_loc.to_2d();
         let car_to_ball = ball_loc.to_2d() - car_loc.to_2d();
