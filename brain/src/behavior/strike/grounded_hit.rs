@@ -5,7 +5,10 @@ use crate::{
         strike::BounceShot,
     },
     eeg::{Drawable, EEG},
-    helpers::intercept::{naive_ground_intercept, NaiveIntercept},
+    helpers::{
+        ball::BallFrame,
+        intercept::{naive_ground_intercept, NaiveIntercept},
+    },
     routing::recover::{IsSkidding, NotOnFlatGround},
     rules::SameBallTrajectory,
     strategy::{Action, Behavior, Context, Game, Priority, Scenario},
@@ -106,9 +109,6 @@ impl<Aim> GroundedHit<Aim>
 where
     Aim: Fn(&mut GroundedHitAimContext<'_, '_>) -> Result<GroundedHitTarget, ()> + Send,
 {
-    // Don't try to hit a ball moving upward after a huge bounce.
-    const MAX_BALL_VEL_Z: f32 = 600.0;
-
     fn intercept_loc(&mut self, ctx: &mut Context<'_>) -> Result<NaiveIntercept, ()> {
         let me = ctx.me();
 
@@ -118,7 +118,7 @@ where
             me.Physics.loc(),
             me.Physics.vel(),
             me.Boost as f32,
-            |ball| ball.loc.z < GroundedHit::MAX_BALL_Z && ball.vel.z < Self::MAX_BALL_VEL_Z,
+            |ball| Self::ball_reachable(ball, GroundedHit::MAX_BALL_Z),
         );
         let intercept = some_or_else!(intercept, {
             ctx.eeg.log(self.name(), "can't find intercept");
@@ -144,7 +144,7 @@ where
             me.Physics.loc(),
             me.Physics.vel(),
             me.Boost as f32,
-            |ball| ball.loc.z < ball_max_z && ball.vel.z < Self::MAX_BALL_VEL_Z,
+            |ball| Self::ball_reachable(ball, ball_max_z),
         );
         let intercept = some_or_else!(intercept, {
             ctx.eeg.log(self.name(), "can't find intercept");
@@ -152,6 +152,18 @@ where
         });
 
         Ok(intercept)
+    }
+
+    /// Don't try to hit a ball moving upward after a huge bounce if we have to
+    /// jump for it, because we'll just whiff.
+    fn ball_reachable(ball: &BallFrame, naive_limit: f32) -> bool {
+        let pessimistic_limit = rl::OCTANE_NEUTRAL_Z + (naive_limit - rl::OCTANE_NEUTRAL_Z) * 0.5;
+        let z_limit = linear_interpolate(
+            &[400.0, 800.0],
+            &[naive_limit, pessimistic_limit],
+            ball.vel.z,
+        );
+        ball.loc.z < z_limit
     }
 
     fn plan(&mut self, ctx: &mut Context<'_>, intercept: &NaiveIntercept) -> Result<Plan, ()> {
