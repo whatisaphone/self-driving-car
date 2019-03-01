@@ -2,8 +2,13 @@ use crate::{
     eeg::{color, Drawable},
     routing::{models::CarState, plan::avoid_goal_wall_waypoint},
     strategy::{Action, Behavior, Context},
+    utils::geometry::Plane,
 };
-use common::{kinematics::kinematic_time, prelude::*, rl};
+use common::{
+    kinematics::{kinematic, kinematic_time},
+    prelude::*,
+    rl,
+};
 use derive_new::new;
 use nalgebra::{Unit, Vector2, Vector3};
 use nameof::name_of_type;
@@ -36,7 +41,7 @@ impl Behavior for Land {
             self.chatted = true;
         }
 
-        if me.Physics.ang_vel().norm() >= 5.25 {
+        if me.Physics.ang_vel().norm() >= 5.4 {
             // This is a minor hack for statelessness. A car's max angular velocity is 5.5
             // rad/sec, so if we're near that limit, we're probably in the middle of a
             // dodge. Just let it happen.
@@ -68,7 +73,7 @@ impl Behavior for Land {
                 boost = down && nose_down_angle < PI / 3.0;
 
                 ctx.eeg.print_time("time_to_ground", time_to_ground);
-                ctx.eeg.print_value("down", format!("{}", down));
+                ctx.eeg.print_value("down", down);
                 ctx.eeg.print_angle("nose_down_angle", nose_down_angle);
             } else {
                 forward = facing;
@@ -77,7 +82,16 @@ impl Behavior for Land {
                 ctx.eeg.draw(Drawable::print("no boost", color::GREEN));
             }
 
-            let (pitch, yaw, roll) = dom::get_pitch_yaw_roll(me, forward, Vector3::z_axis());
+            let plane = find_landing_plane(ctx);
+            ctx.eeg.print_value("plane", plane.normal);
+            let face = *forward - Vector3::z();
+            let eps = 1e-4;
+            let forward = Unit::try_new(plane.project_vector(&face), eps).unwrap_or_else(|| {
+                ctx.eeg
+                    .log(name_of_type!(Land), "can't find sane landing orientation");
+                forward
+            });
+            let (pitch, yaw, roll) = dom::get_pitch_yaw_roll(me, forward, plane.normal);
             Action::Yield(common::halfway_house::PlayerInput {
                 Throttle: 1.0,
                 Pitch: pitch,
@@ -141,4 +155,49 @@ fn face_the_ball(ctx: &mut Context<'_>) -> Vector2<f32> {
         .to_2d();
     let target_loc = avoid_goal_wall_waypoint(&start, ball_loc).unwrap_or(ball_loc);
     target_loc - me.Physics.loc_2d()
+}
+
+/// Simulate car freefall for increasing time intervals and try to find the
+/// first wall we will penetrate.
+fn find_landing_plane<'ctx>(ctx: &mut Context<'ctx>) -> &'ctx Plane {
+    let start_loc = ctx.me().Physics.loc();
+    let start_vel = ctx.me().Physics.vel();
+
+    for time in (0..40).into_iter().map(|x| x as f32 / 20.0) {
+        let (loc, _vel) = kinematic(start_vel, Vector3::z() * rl::GRAVITY, time);
+        let loc = start_loc + loc;
+        let plane = ctx.game.pitch().closest_plane(&loc);
+        // This check assumes the field is fully convex (or concave I guess, since we're
+        // inside it?)
+        if plane.distance_to_point(&loc) < rl::OCTANE_NEUTRAL_Z {
+            return plane;
+        }
+    }
+
+    // Fallback
+    ctx.game.pitch().ground()
+}
+
+#[cfg(test)]
+mod demo {
+    use crate::{
+        behavior::movement::Land,
+        integration_tests::{TestRunner, TestScenario},
+    };
+    use common::prelude::*;
+    use nalgebra::{Point3, Rotation3, Vector3};
+
+    #[test]
+    #[ignore(note = "not a test; just a demo")]
+    fn land_demo() {
+        TestRunner::new()
+            .scenario(TestScenario {
+                car_loc: Point3::new(2500.0, 0.0, 1000.0),
+                car_vel: Vector3::new(1000.0, 0.0, 500.0),
+                car_rot: Rotation3::from_unreal_angles(0.0, 0.0, 0.0),
+                ..Default::default()
+            })
+            .behavior(Land::new())
+            .run_for_millis(3000);
+    }
 }
