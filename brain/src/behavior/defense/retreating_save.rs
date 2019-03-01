@@ -149,7 +149,7 @@ impl RetreatingSave {
                 let me_to_ball = car_loc - ball.loc.to_2d();
                 let drive_angle = car_forward_axis.angle_to(&(ball.loc.to_2d() - car_loc));
                 let acceptable_drive_angle =
-                    linear_interpolate(&[500.0, 2000.0], &[PI / 6.0, PI / 3.0], me_to_ball.norm());
+                    linear_interpolate(&[500.0, 2000.0], &[PI / 6.0, PI / 4.0], me_to_ball.norm());
 
                 drive_angle.abs() < acceptable_drive_angle
                     && ball.loc.z < Self::MAX_BALL_Z
