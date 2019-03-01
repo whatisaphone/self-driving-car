@@ -47,56 +47,57 @@ impl Behavior for Land {
             // dodge. Just let it happen.
             ctx.eeg
                 .draw(Drawable::print("waiting until after flip", color::GREEN));
-            Action::Yield(Default::default())
-        } else {
-            ctx.eeg.draw(Drawable::print("air rolling", color::GREEN));
-
-            let plane = find_landing_plane(ctx);
-            ctx.eeg.print_value("plane", plane.normal);
-
-            // Boost towards the ground if we're floating helplessly
-            let time_to_ground = kinematic_time(
-                -me.Physics.loc().z + rl::OCTANE_NEUTRAL_Z,
-                me.Physics.vel().z,
-                rl::GRAVITY,
-            )
-            .unwrap();
-            let want_to_boost_down = me.Boost > 0 && time_to_ground >= 0.6;
-
-            let forward = {
-                let facing_2d = choose_facing_2d(ctx);
-                // Bias towards driving down the wall if we're landing on a wall.
-                let facing = (facing_2d.to_3d().into_inner() - Vector3::z()).to_axis();
-                plane.project_vector(&facing).to_axis()
-            };
-
-            let (target_forward, boost);
-            if want_to_boost_down {
-                target_forward = forward.rotation_to(&-Vector3::z_axis()).powf(0.8) * forward;
-
-                let nose_down_angle = me.Physics.forward_axis().angle_to(&-Vector3::z_axis());
-                boost = nose_down_angle < PI / 3.0;
-
-                ctx.eeg.draw(Drawable::print("boosting down", color::GREEN));
-                ctx.eeg.print_time("time_to_ground", time_to_ground);
-                ctx.eeg.print_angle("nose_down_angle", nose_down_angle);
-            } else {
-                target_forward = forward;
-                boost = false;
-
-                ctx.eeg.draw(Drawable::print("just floating", color::GREEN));
-            }
-
-            let (pitch, yaw, roll) = dom::get_pitch_yaw_roll(me, target_forward, plane.normal);
-            Action::Yield(common::halfway_house::PlayerInput {
-                Throttle: 1.0,
-                Pitch: pitch,
-                Yaw: yaw,
-                Roll: roll,
-                Boost: boost,
-                ..Default::default()
-            })
+            return Action::Yield(Default::default());
         }
+
+        ctx.eeg.draw(Drawable::print("air rolling", color::GREEN));
+
+        let plane = find_landing_plane(ctx);
+        ctx.eeg.print_value("plane", plane.normal);
+
+        // Boost towards the ground if we're floating helplessly
+        let time_to_ground = kinematic_time(
+            -me.Physics.loc().z + rl::OCTANE_NEUTRAL_Z,
+            me.Physics.vel().z,
+            rl::GRAVITY,
+        )
+        .unwrap();
+        let want_to_boost_down = me.Boost > 0 && time_to_ground >= 0.6;
+
+        // Point the nose of the car along the surface we're landing on.
+        let forward = {
+            let facing_2d = choose_facing_2d(ctx);
+            // Bias towards driving down the wall if we're landing on a wall.
+            let facing = (facing_2d.to_3d().into_inner() - Vector3::z()).to_axis();
+            plane.project_vector(&facing).to_axis()
+        };
+
+        let (target_forward, boost);
+        if want_to_boost_down {
+            target_forward = forward.rotation_to(&-Vector3::z_axis()).powf(0.8) * forward;
+
+            let nose_down_angle = me.Physics.forward_axis().angle_to(&-Vector3::z_axis());
+            boost = nose_down_angle < PI / 3.0;
+
+            ctx.eeg.draw(Drawable::print("boosting down", color::GREEN));
+            ctx.eeg.print_time("time_to_ground", time_to_ground);
+            ctx.eeg.print_angle("nose_down_angle", nose_down_angle);
+        } else {
+            target_forward = forward;
+            boost = false;
+
+            ctx.eeg.draw(Drawable::print("just floating", color::GREEN));
+        }
+
+        let (pitch, yaw, roll) = dom::get_pitch_yaw_roll(me, target_forward, plane.normal);
+        Action::Yield(common::halfway_house::PlayerInput {
+            Throttle: 1.0,
+            Pitch: pitch,
+            Yaw: yaw,
+            Roll: roll,
+            Boost: boost,
+            ..Default::default()
+        })
     }
 }
 
