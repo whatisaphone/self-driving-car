@@ -51,47 +51,43 @@ impl Behavior for Land {
         } else {
             ctx.eeg.draw(Drawable::print("air rolling", color::GREEN));
 
-            let facing = choose_facing(ctx);
-
-            // Boost towards the ground if we're floating helplessly
-            let (forward, boost);
-            if me.Boost > 0 {
-                let time_to_ground = kinematic_time(
-                    -me.Physics.loc().z + rl::OCTANE_NEUTRAL_Z,
-                    me.Physics.vel().z,
-                    rl::GRAVITY,
-                )
-                .unwrap();
-                let down = time_to_ground >= 0.6;
-                forward = if down {
-                    facing.rotation_to(&-Vector3::z_axis()).powf(0.8) * facing
-                } else {
-                    facing
-                };
-
-                let nose_down_angle = me.Physics.forward_axis().angle_to(&-Vector3::z_axis());
-                boost = down && nose_down_angle < PI / 3.0;
-
-                ctx.eeg.print_time("time_to_ground", time_to_ground);
-                ctx.eeg.print_value("down", down);
-                ctx.eeg.print_angle("nose_down_angle", nose_down_angle);
-            } else {
-                forward = facing;
-                boost = false;
-
-                ctx.eeg.draw(Drawable::print("no boost", color::GREEN));
-            }
-
             let plane = find_landing_plane(ctx);
             ctx.eeg.print_value("plane", plane.normal);
-            let face = *forward - Vector3::z();
-            let eps = 1e-4;
-            let forward = Unit::try_new(plane.project_vector(&face), eps).unwrap_or_else(|| {
-                ctx.eeg
-                    .log(name_of_type!(Land), "can't find sane landing orientation");
-                forward
-            });
-            let (pitch, yaw, roll) = dom::get_pitch_yaw_roll(me, forward, plane.normal);
+
+            // Boost towards the ground if we're floating helplessly
+            let time_to_ground = kinematic_time(
+                -me.Physics.loc().z + rl::OCTANE_NEUTRAL_Z,
+                me.Physics.vel().z,
+                rl::GRAVITY,
+            )
+            .unwrap();
+            let want_to_boost_down = me.Boost > 0 && time_to_ground >= 0.6;
+
+            let forward = {
+                let facing_2d = choose_facing_2d(ctx);
+                // Bias towards driving down the wall if we're landing on a wall.
+                let facing = (facing_2d.to_3d().into_inner() - Vector3::z()).to_axis();
+                plane.project_vector(&facing).to_axis()
+            };
+
+            let (target_forward, boost);
+            if want_to_boost_down {
+                target_forward = forward.rotation_to(&-Vector3::z_axis()).powf(0.8) * forward;
+
+                let nose_down_angle = me.Physics.forward_axis().angle_to(&-Vector3::z_axis());
+                boost = nose_down_angle < PI / 3.0;
+
+                ctx.eeg.draw(Drawable::print("boosting down", color::GREEN));
+                ctx.eeg.print_time("time_to_ground", time_to_ground);
+                ctx.eeg.print_angle("nose_down_angle", nose_down_angle);
+            } else {
+                target_forward = forward;
+                boost = false;
+
+                ctx.eeg.draw(Drawable::print("just floating", color::GREEN));
+            }
+
+            let (pitch, yaw, roll) = dom::get_pitch_yaw_roll(me, target_forward, plane.normal);
             Action::Yield(common::halfway_house::PlayerInput {
                 Throttle: 1.0,
                 Pitch: pitch,
@@ -114,7 +110,7 @@ impl Land {
     }
 }
 
-fn choose_facing(ctx: &mut Context<'_>) -> Unit<Vector3<f32>> {
+fn choose_facing_2d(ctx: &mut Context<'_>) -> Unit<Vector2<f32>> {
     let me = ctx.me();
 
     if me.Physics.loc().y.abs() >= ctx.game.field_max_y() {
@@ -139,7 +135,6 @@ fn choose_facing(ctx: &mut Context<'_>) -> Unit<Vector3<f32>> {
             .draw(Drawable::print("conserving momentum", color::GREEN));
         me.Physics.vel_2d()
     }
-    .to_3d(0.0)
     .to_axis()
 }
 
