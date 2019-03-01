@@ -101,11 +101,23 @@ impl Behavior for TurtleSpin {
             });
         }
 
-        Action::Yield(common::halfway_house::PlayerInput {
-            Yaw: 1.0,
-            Jump: !ctx.me().DoubleJumped,
-            ..Default::default()
-        })
+        let car_loc = ctx.me().Physics.loc();
+        let car_roof = ctx.me().Physics.roof_axis();
+        let turtle = car_roof.angle_to(&Vector3::z_axis()).abs() >= PI / 2.0 && car_loc.z < 75.0;
+        if turtle {
+            Action::Yield(common::halfway_house::PlayerInput {
+                Yaw: 1.0,
+                Jump: !ctx.me().DoubleJumped,
+                ..Default::default()
+            })
+        } else {
+            Action::Yield(common::halfway_house::PlayerInput {
+                Pitch: 1.0,
+                Roll: -1.0,
+                Boost: true,
+                ..Default::default()
+            })
+        }
     }
 }
 
@@ -113,7 +125,7 @@ impl TurtleSpin {
     fn rotate_self(&self, ctx: &mut Context<'_>) -> Option<Action> {
         let me_forward = ctx.me().Physics.forward_axis();
 
-        if me_forward.angle_to(&Vector3::z_axis()).abs() < PI / 4.0 && ctx.me().Boost > 50 {
+        if me_forward.angle_to(&Vector3::z_axis()).abs() < PI / 4.0 && ctx.me().Boost > 25 {
             // I believe I can fly
             return None;
         }
