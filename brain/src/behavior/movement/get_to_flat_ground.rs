@@ -52,15 +52,7 @@ impl Behavior for GetToFlatGround {
             }));
         }
 
-        let backup_cutoff = linear_interpolate(
-            &[0.0, 2000.0],
-            &[PI / 4.0, 0.0],
-            me.Physics.vel().dot(&me.Physics.forward_axis()),
-        );
-        if me.Physics.forward_axis().angle(&Vector3::z_axis()) < backup_cutoff {
-            // Our nose is pointed towards the sky. It's quicker to jump down than to drive.
-            ctx.eeg
-                .draw(Drawable::print("nose pointed upwards", color::GREEN));
+        if should_jump_down_from_the_wall(ctx) {
             return jump_down_from_the_wall(ctx);
         }
 
@@ -72,6 +64,34 @@ impl Behavior for GetToFlatGround {
             .draw(Drawable::ghost_car_ground(target_loc, me.Physics.rot()));
         Action::Yield(drive_towards(ctx, target_loc))
     }
+}
+
+fn should_jump_down_from_the_wall(ctx: &mut Context<'_>) -> bool {
+    let me = ctx.me();
+
+    // Check if our nose is pointed towards the sky.
+    let backup_cutoff = linear_interpolate(
+        &[0.0, 2000.0],
+        &[PI / 4.0, 0.0],
+        me.Physics.vel().dot(&me.Physics.forward_axis()),
+    );
+    if me.Physics.forward_axis().angle(&Vector3::z_axis()) < backup_cutoff {
+        ctx.eeg
+            .draw(Drawable::print("nose pointed upwards", color::GREEN));
+        return true;
+    }
+
+    // Check if we're moving fast and skidding. If so, try to conserve momentum.
+    if me.Physics.loc().z < 500.0
+        && me.Physics.vel().norm() >= 500.0
+        && me.Physics.vel().normalize().dot(&me.Physics.forward_axis()) < 0.5
+    {
+        ctx.eeg.draw(Drawable::print("skidding", color::GREEN));
+        return true;
+    }
+
+    // Otherwise, don't jump.
+    false
 }
 
 fn jump_down_from_the_wall(ctx: &mut Context<'_>) -> Action {
