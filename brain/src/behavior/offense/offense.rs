@@ -94,16 +94,11 @@ fn can_we_shoot(ctx: &mut Context<'_>) -> bool {
         return false;
     });
 
-    let naive_intercept = naive_intercept.time.min(shoot_intercept.time);
-
-    let acceptable_delay = if ctx.scenario.possession() >= 2.0 {
-        2.0
-    } else {
-        0.5
-    };
-
     // Don't just sit there for days waiting for the ball to roll. The more
     // possession we have, the longer we're willing to wait.
+    let naive_intercept = naive_intercept.time.min(shoot_intercept.time);
+    let acceptable_delay = ctx.scenario.possession().max(0.5).min(2.0);
+
     if shoot_intercept.time >= naive_intercept + acceptable_delay {
         ctx.eeg.log(
             name_of_type!(Offense),
