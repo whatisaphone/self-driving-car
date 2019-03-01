@@ -216,12 +216,12 @@ where
             GroundedHitTargetAdjust::RoughAim => {
                 let rough_loc = BounceShot::rough_shooting_spot(intercept, target.aim_loc)
                     .to_3d(naive_target_loc.z);
-                // Pre-tournament hack – hug the ball closer if it's falling faster, so we're
-                // less likely to whiff.
+                // Pre-tournament hack – hug the ball closer if we need to jump
+                // for it, so we're less likely to whiff.
                 let (hug_loc, _hug_rot) =
                     car_ball_contact_with_pitch(ctx.game, intercept.ball_loc, rough_loc, pitch);
                 let hug_factor =
-                    linear_interpolate(&[-1500.0, -500.0], &[1.0, 0.0], intercept.ball_vel.z);
+                    linear_interpolate(&[300.0, 450.0], &[0.0, 0.5], intercept.ball_loc.z);
                 ctx.eeg
                     .print_value("hug_factor", format!("{:.2}", hug_factor));
                 rough_loc + (hug_loc - rough_loc) * hug_factor
