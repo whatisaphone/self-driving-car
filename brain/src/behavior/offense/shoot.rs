@@ -9,6 +9,7 @@ use crate::{
     helpers::intercept::{naive_ground_intercept_2, NaiveIntercept},
     routing::{behavior::FollowRoute, plan::GroundIntercept},
     strategy::{Action, Behavior, Context, Game, Priority, Scenario},
+    utils::geometry::Line2,
 };
 use common::{prelude::*, Speed};
 use nalgebra::{Point2, Point3};
@@ -33,11 +34,16 @@ impl Shoot {
             return None;
         }
 
+        // Get a "naive" location for initial checks, directly across from the car.
         let goal = game.enemy_goal();
-        let aim_loc = BounceShot::aim_loc(goal, car_loc.to_2d(), ball_loc.to_2d());
+        let goalline = Line2::from_origin_dir(goal.center_2d, goal.normal_2d.ortho().to_axis());
+        let aim_loc = goalline
+            .intersect(Line2::from_points(car_loc.to_2d(), ball_loc.to_2d()))
+            .unwrap_or(goal.center_2d);
+        let aim_loc = goal.closest_point(aim_loc);
 
-        let car_to_ball = ball_loc.to_2d() - car_loc.to_2d();
         let ball_to_goal = aim_loc - ball_loc.to_2d();
+        let car_to_ball = ball_loc.to_2d() - car_loc.to_2d();
         if car_to_ball.angle_to(&ball_to_goal).abs() >= PI / 6.0 {
             return None;
         }
@@ -48,6 +54,10 @@ impl Shoot {
         if goal_angle.abs() >= PI * (5.0 / 12.0) {
             return None;
         }
+
+        // If all preconditions succeeded, return the actual spot we should aim at. This
+        // will probably end up a lot closer to the center of the goal.
+        let aim_loc = BounceShot::aim_loc(goal, car_loc.to_2d(), ball_loc.to_2d());
 
         Some(Shot { aim_loc })
     }
@@ -392,6 +402,27 @@ mod integration_tests {
             .starting_boost(80.0)
             .soccar()
             .run_for_millis(4000);
+
+        assert!(test.has_scored());
+    }
+
+    #[test]
+    fn dont_abandon_shot() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(1672.57, 2171.4, 342.32),
+                ball_rot: Rotation3::from_unreal_angles(-0.29669636, 1.6920353, -2.7599716),
+                ball_vel: Vector3::new(-465.701, 715.52094, -324.421),
+                ball_ang_vel: Vector3::new(2.9818099, -2.45061, 4.59381),
+                car_loc: Point3::new(3026.48, 580.35, 64.7),
+                car_rot: Rotation3::from_unreal_angles(0.058283806, -0.6299437, -0.018410105),
+                car_vel: Vector3::new(626.96094, -536.03094, -458.631),
+                car_ang_vel: Vector3::new(-0.43221, 0.49051, -0.59671),
+                ..Default::default()
+            })
+            .starting_boost(21.0)
+            .soccar()
+            .run_for_millis(5000);
 
         assert!(test.has_scored());
     }

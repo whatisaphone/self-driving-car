@@ -35,6 +35,42 @@ impl ExtendF32 for f32 {
 }
 
 #[derive(Copy, Clone)]
+pub struct Line2 {
+    p: Point2<f32>,
+    q: Point2<f32>,
+}
+
+impl Line2 {
+    pub fn from_points(p: Point2<f32>, q: Point2<f32>) -> Self {
+        Self { p, q }
+    }
+
+    pub fn from_origin_dir(origin: Point2<f32>, dir: Unit<Vector2<f32>>) -> Self {
+        Self {
+            p: origin,
+            q: origin + dir.as_ref(),
+        }
+    }
+
+    pub fn intersect(&self, other: Self) -> Option<Point2<f32>> {
+        // http://www.ambrsoft.com/MathCalc/Line/TwoLinesIntersection/TwoLinesIntersection.htm
+
+        let (x1, y1) = (self.p.x, self.p.y);
+        let (x2, y2) = (self.q.x, self.q.y);
+        let (x3, y3) = (other.p.x, other.p.y);
+        let (x4, y4) = (other.q.x, other.q.y);
+
+        let d = (x2 - x1) * (y4 - y3) - (x4 - x3) * (y2 - y1);
+        if d == 0.0 {
+            return None;
+        }
+        let x = ((x2 * y1 - x1 * y2) * (x4 - x3) - (x4 * y3 - x3 * y4) * (x2 - x1)) / d;
+        let y = ((x2 * y1 - x1 * y2) * (y4 - y3) - (x4 * y3 - x3 * y4) * (y2 - y1)) / d;
+        Some(Point2::new(x, y))
+    }
+}
+
+#[derive(Copy, Clone)]
 pub struct Line {
     pub origin: Point3<f32>,
     pub dir: Unit<Vector3<f32>>,
