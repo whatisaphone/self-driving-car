@@ -22,7 +22,7 @@ impl BounceShot {
         // can't shoot at `closest_point` due to the post being in the way.
         let goal_angle = (ball_loc - goal.closest_point(ball_loc)).angle_to(&goal.normal_2d);
         let shoot_across_the_goal =
-            linear_interpolate(&[PI / 4.0, PI / 3.0], &[0.0, 0.6666667], goal_angle.abs());
+            linear_interpolate(&[PI / 4.0, PI / 3.0], &[0.0, 1.0], goal_angle.abs());
         let ideal_aim_loc = Point2::new(
             shoot_across_the_goal * goal.max_x * -ball_loc.x.signum(),
             goal.center_2d.y,
