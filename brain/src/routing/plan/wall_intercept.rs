@@ -122,7 +122,7 @@ impl WallIntercept {
             return Err((Skip::No, None));
         }
 
-        match self.check_conditions(ctx.game, ball.loc, ctx.start.loc) {
+        match self.check_conditions(ctx.game, ctx.start.loc, ball.loc) {
             Ok(()) => {}
             Err(reason) => return Err((Skip::No, Some(reason))),
         }
@@ -172,15 +172,13 @@ impl WallIntercept {
     fn check_conditions(
         &self,
         game: &Game<'_>,
-        intercept_loc: Point3<f32>,
         car_loc: Point3<f32>,
+        intercept_loc: Point3<f32>,
     ) -> Result<(), &'static str> {
-        if self.must_be_vanilla_safe_offensive {
-            let push_angle = (intercept_loc.to_2d() - car_loc.to_2d())
-                .angle_to(&(game.enemy_goal().center_2d - game.own_goal().center_2d));
-            if push_angle.abs() >= 75.0_f32.to_radians() {
-                return Err("push_angle is not good enough");
-            }
+        if self.must_be_vanilla_safe_offensive
+            && !Self::is_vanilla_safe_conservative(game, car_loc, intercept_loc)
+        {
+            return Err("push_angle is not good enough");
         }
 
         // If the ball is in the corner on the wall, there's a big risk of missing due
@@ -196,6 +194,17 @@ impl WallIntercept {
         }
 
         Ok(())
+    }
+
+    fn is_vanilla_safe_conservative(
+        game: &Game<'_>,
+        car_loc: Point3<f32>,
+        intercept_loc: Point3<f32>,
+    ) -> bool {
+        let push_angle = (intercept_loc.to_2d() - car_loc.to_2d())
+            .angle_to(&(game.enemy_goal().center_2d - game.own_goal().center_2d))
+            .abs();
+        push_angle.abs() < 75.0_f32.to_radians()
     }
 }
 
