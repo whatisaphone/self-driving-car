@@ -91,7 +91,7 @@ fn dangerous_back_wall_with_little_boost(
     let approach_angle = own_goal
         .normal_2d
         .angle_to(&(intercept_loc.to_2d() - ctx.me().Physics.loc_2d()));
-    near_back_wall && approach_angle.abs() < PI / 3.0 && ctx.me().Boost < 50
+    near_back_wall && approach_angle.abs() < PI / 3.0 && ctx.me().Boost < 34
 }
 
 fn wall<'ball>(ctx: &Context2<'_, 'ball>, eeg: &mut EEG) -> Option<(f32, HitType)> {
