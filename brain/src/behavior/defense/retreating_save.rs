@@ -121,9 +121,8 @@ impl Behavior for RetreatingSave {
             ctx.me().Physics.rot(),
         ));
 
-        let (ball, car) = self.simulate_jump(ctx);
-        if (ball.loc.to_2d() - car.loc_2d()).norm() < 250.0 {
-            ctx.eeg.log(self.name(), "we are close enough");
+        if self.time_to_jump(ctx) {
+            ctx.eeg.log(self.name(), "the time is now");
             return self.dodge(ctx);
         }
 
@@ -276,6 +275,21 @@ impl RetreatingSave {
         ctx.eeg.print_value("boost_offset", Distance(boost_offset));
 
         (throttle, boost)
+    }
+
+    fn time_to_jump(&self, ctx: &mut Context<'_>) -> bool {
+        let (ball, car) = self.simulate_jump(ctx);
+
+        if (ball.loc.to_2d() - car.loc_2d()).norm() >= 300.0 {
+            return false;
+        }
+        // Also wait for the ball to be close enough to the ground, otherwise we'll flip
+        // underneath it. We're guaranteed the ball will be there soon because the
+        // intercept checker also checks this.
+        if ball.loc.z >= Self::MAX_BALL_Z {
+            return false;
+        }
+        return true;
     }
 
     fn simulate_jump<'ctx>(&self, ctx: &mut Context<'ctx>) -> (&'ctx BallFrame, CarState) {
