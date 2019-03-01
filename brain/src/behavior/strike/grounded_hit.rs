@@ -324,6 +324,7 @@ where
             jump_time,
             plan.target_rot,
         )));
+        steps.push(Box::new(AbortIfNotNearBall::new()));
         if plan.dodge {
             steps.push(Box::new(Dodge::new().towards_ball()));
         } else {
@@ -370,6 +371,28 @@ pub fn car_ball_contact_with_pitch(
     let car_loc = ball_loc + up * flat_ball_to_car.to_3d(0.0);
 
     (car_loc, car_rot)
+}
+
+/// This lets us notice if someone swats the ball away while we're jumping. In
+/// that case, we abort (and skip the dodge) so we can recover faster.
+#[derive(new)]
+struct AbortIfNotNearBall;
+
+impl Behavior for AbortIfNotNearBall {
+    fn name(&self) -> &str {
+        stringify!(AbortIfNotNearBall)
+    }
+
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
+        let ball_loc = ctx.packet.GameBall.Physics.loc();
+        let car_loc = ctx.me().Physics.loc();
+        let distance = (ball_loc - car_loc).norm();
+        if distance < 500.0 {
+            Action::Return
+        } else {
+            Action::Abort
+        }
+    }
 }
 
 pub struct GroundedHitAimContext<'a, 'b> {
