@@ -115,7 +115,7 @@ impl PanicDefense {
     }
 
     pub fn finished_panicking(goal: &Goal, loc: Point2<f32>, vel: Vector2<f32>) -> bool {
-        let y_cutoff = vel.y.abs() * 0.7;
+        let y_cutoff = (vel.y.abs() * 0.7).max(500.0);
         let close_y = goal.is_y_within_range(loc.y, ..y_cutoff);
         let close_x = (goal.center_2d.x - loc.x).abs() < 1000.0;
         close_x && close_y
