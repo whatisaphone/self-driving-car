@@ -198,7 +198,7 @@ impl Predicate for RoundIsNotActive {
     }
 
     fn evaluate(&mut self, ctx: &mut Context<'_>) -> bool {
-        !ctx.packet.GameInfo.RoundActive
+        !ctx.packet.GameInfo.RoundActive && !ctx.packet.GameInfo.MatchEnded
     }
 }
 
