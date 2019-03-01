@@ -89,6 +89,9 @@ impl Behavior for Land {
             ctx.eeg.draw(Drawable::print("just floating", color::GREEN));
         }
 
+        // If we're way out of position, boost back towards net.
+        let boost = boost || panic_retreat_boost(ctx);
+
         let (pitch, yaw, roll) = dom::get_pitch_yaw_roll(me, target_forward, plane.normal);
         Action::Yield(common::halfway_house::PlayerInput {
             Throttle: 1.0,
@@ -172,6 +175,31 @@ fn find_landing_plane<'ctx>(ctx: &mut Context<'ctx>) -> &'ctx Plane {
 
     // Fallback
     ctx.game.pitch().ground()
+}
+
+fn panic_retreat_boost(ctx: &mut Context<'_>) -> bool {
+    let own_goal_loc = ctx.game.own_goal().center_2d;
+    let ball = ctx.scenario.ball_prediction().at_time_or_last(2.0);
+    let ball_loc = ball.loc.to_2d();
+    let car_loc = ctx.me().Physics.loc_2d();
+    let car_forward_axis = ctx.me().Physics.forward_axis();
+
+    if !ctx.game.enemy_goal().is_y_within_range(car_loc.y, ..3000.0) {
+        return false;
+    }
+
+    let dist_goal_to_ball = (ball_loc - own_goal_loc).norm();
+    let dist_goal_to_car = (car_loc - own_goal_loc).norm();
+    let wildly_out_of_position = dist_goal_to_ball + 2000.0 < dist_goal_to_car;
+    if !wildly_out_of_position {
+        return false;
+    }
+
+    // Only boost if the tailpipe is facing the right way.
+    let opportune_boost_dir = car_forward_axis
+        .angle_to(&(own_goal_loc - car_loc).to_3d(0.0).to_axis())
+        .abs();
+    opportune_boost_dir < PI / 4.0
 }
 
 #[cfg(test)]
