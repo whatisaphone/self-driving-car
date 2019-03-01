@@ -2,7 +2,7 @@ use common::rl;
 
 const JUMP_TIME: f32 = 6.0 / 120.0;
 const WAIT_TIME: f32 = 6.0 / 120.0;
-const LANDING_TIME: f32 = 1.333333;
+const LANDING_TIME: f32 = 1.2;
 const DODGE_IMPULSE: f32 = 500.0;
 
 pub struct CarForwardDodge;
