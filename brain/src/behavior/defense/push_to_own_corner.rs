@@ -13,6 +13,7 @@ use common::{prelude::*, Time};
 use nalgebra::{Point2, Point3};
 use nameof::name_of_type;
 use ordered_float::NotNan;
+use simulate::linear_interpolate;
 use std::f32::consts::PI;
 
 /// Push the ball to our own corner if it makes sense given the situation;
@@ -61,14 +62,27 @@ impl Behavior for PushToOwnCorner {
                 ball.loc.z < Self::MAX_BALL_Z
             });
 
+        // If the ball is moving quickly towards our half, assume the enemy can't change
+        // its angle that much.
+        let own_goal = ctx.game.own_goal();
+        let danger_angle = linear_interpolate(
+            &[1000.0, 1500.0],
+            &[PI / 2.0, PI / 4.0],
+            ctx.packet
+                .GameBall
+                .Physics
+                .vel_2d()
+                .dot(&-own_goal.normal_2d),
+        );
+
         let enemy_shootable_intercept = ctx
             .enemy_cars()
             .filter_map(|enemy| {
                 naive_ground_intercept_2(&enemy.into(), ctx.scenario.ball_prediction(), |ball| {
-                    let own_goal = ctx.game.own_goal().center_2d;
                     ball.loc.z < GroundedHit::MAX_BALL_Z
-                        && Self::shot_angle(ball.loc, enemy.Physics.loc(), own_goal) < PI / 2.0
-                        && Self::goal_angle(ball.loc, ctx.game.own_goal()) < PI / 3.0
+                        && Self::shot_angle(ball.loc, enemy.Physics.loc(), own_goal.center_2d)
+                            < danger_angle
+                        && Self::goal_angle(ball.loc, own_goal) < PI / 3.0
                 })
             })
             .min_by_key(|i| NotNan::new(i.time).unwrap());
@@ -155,4 +169,32 @@ fn hit_to_safety(ctx: &mut Context<'_>) -> impl Behavior {
         choices.push(Box::new(HitToOwnCorner::new()));
     }
     TryChoose::new(Priority::Idle, choices)
+}
+
+#[cfg(test)]
+mod integration_tests {
+    use crate::{eeg::Event, integration_tests::TestRunner};
+    use brain_test_data::recordings;
+    use common::{prelude::*, rl};
+    use nalgebra::Point2;
+
+    #[test]
+    fn let_the_ball_enter_our_corner() {
+        let test = TestRunner::new()
+            .one_v_one(&*recordings::LET_THE_BALL_ENTER_OUR_CORNER, 133.0)
+            .soccar()
+            .run_for_millis(6000);
+
+        assert!(!test.enemy_has_scored());
+
+        let packet = test.sniff_packet();
+        let own_goal = Point2::new(0.0, -rl::FIELD_MAX_Y);
+        let goal_to_ball_dist = (packet.GameBall.Physics.loc_2d() - own_goal).norm();
+        assert!(goal_to_ball_dist >= 2000.0);
+
+        test.examine_events(|events| {
+            assert!(events.contains(&Event::PanicDefense));
+            assert!(!events.contains(&Event::HitToOwnCorner));
+        });
+    }
 }
