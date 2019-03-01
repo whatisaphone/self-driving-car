@@ -39,6 +39,13 @@ impl SegmentPlan for Brake {
     }
 
     fn end(&self) -> CarState {
+        assert!(self.target_speed <= self.start.vel.norm());
+
+        // Prevent NaN
+        if self.start.vel.norm() < 1.0 {
+            return self.start.to_3d();
+        }
+
         // This is a pretty rough estimate. I'm lazy so hopefully it doesn't make too
         // much of a difference.
         let mean_speed = 1.0 / ((1.0 / self.start.vel.norm() + 1.0 / self.target_speed) / 2.0);
