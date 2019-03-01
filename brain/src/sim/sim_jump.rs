@@ -20,7 +20,7 @@ impl SimJump {
         let loc = start.loc + d;
 
         // Phase 2: simple freefall.
-        let coast_time = (force_time - rl::CAR_JUMP_FORCE_TIME).max(0.0);
+        let coast_time = time - force_time;
         let a = Vector3::z() * rl::GRAVITY;
         let (d, vel) = kinematic(vel, a, coast_time);
         let loc = loc + d;
