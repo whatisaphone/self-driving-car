@@ -147,6 +147,9 @@ fn slow_play(ctx: &mut Context<'_>) -> Option<Action> {
         return None;
     }
 
+    let ball = ctx.scenario.ball_prediction().at_time_or_last(2.5);
+    let ball_loc = ball.loc.to_2d();
+
     if ctx.me().Boost < 50 {
         ctx.eeg.log(
             name_of_type!(Offense),
