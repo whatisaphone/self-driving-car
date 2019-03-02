@@ -103,11 +103,32 @@ impl Shoot {
             .angle_to(&(intercept.data.aim_loc - ball_loc))
             .abs();
 
-        let min_car_speed = linear_interpolate(&[2500.0, 5000.0], &[1000.0, 2000.0], shot_distance);
+        // A very poor estimate of the portion of the shot's trajectory (a parabola)
+        // that will be above the crossbar (meaning we would miss the shot).
         let min_distance_cutoff =
             linear_interpolate(&[2000.0, 3000.0], &[2000.0, 750.0], car_speed_towards_ball);
         let max_distance_cutoff =
             linear_interpolate(&[1500.0, 3000.0], &[1800.0, 5000.0], car_speed_towards_ball);
+
+        // Check if the enemy is directly in the way of the shot.
+        let mut enemy_blocking_dist = 9999.0;
+        let mut enemy_blocking_ortho_dist = 9999.0;
+        if let Some(enemy) = ctx.scenario.primary_enemy() {
+            let ball_loc = intercept.ball_loc.to_2d();
+            let ball_to_goal = (ctx.game.enemy_goal().center_2d - ball_loc).to_axis();
+            let ball_to_enemy = enemy.Physics.loc_2d() - ball_loc;
+            enemy_blocking_dist = ball_to_enemy.dot(&ball_to_goal);
+            enemy_blocking_ortho_dist = ball_to_enemy.dot(&ball_to_goal.ortho()).abs();
+        };
+        // The enemy is blocking if they are far enough away that this isn't a 50/50,
+        // and close to the line from the ball to the goal.
+        let enemy_blocking = enemy_blocking_dist >= 750.0 && enemy_blocking_ortho_dist < 500.0;
+
+        let min_car_speed = linear_interpolate(
+            &[2500.0, 5000.0],
+            &[1000.0, if enemy_blocking { 1000.0 } else { 2000.0 }],
+            shot_distance,
+        );
 
         ctx.eeg.print_value("car_speed", Speed(car_speed));
         ctx.eeg.print_value("min_car_speed", Speed(min_car_speed));
@@ -120,6 +141,9 @@ impl Shoot {
             .print_distance("min_distance_cutoff", min_distance_cutoff);
         ctx.eeg
             .print_distance("max_distance_cutoff", max_distance_cutoff);
+        ctx.eeg.print_distance("blocking", enemy_blocking_dist);
+        ctx.eeg
+            .print_distance("blocking ortho", enemy_blocking_ortho_dist);
 
         // If the ball is rolling towards us, take the easy chip and hopefully get it
         // over the opponent's head.
@@ -370,7 +394,6 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "saving this for later, watch your back tare")]
     fn chip_it_over_reliefbots_head() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -392,7 +415,6 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "saving this for later, watch your back tare")]
     fn chip_it_over_reliefbots_head_2() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -407,6 +429,27 @@ mod integration_tests {
                 ..Default::default()
             })
             .starting_boost(80.0)
+            .soccar()
+            .run_for_millis(4000);
+
+        assert!(test.has_scored());
+    }
+
+    #[test]
+    fn chip_it_over_reliefbots_head_3() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(141.26, 1363.0499, 93.15),
+                ball_vel: Vector3::new(-55.510998, -381.841, 0.0),
+                car_loc: Point3::new(522.79, -383.08, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.009561182, 1.9124924, -0.00004696782),
+                car_vel: Vector3::new(-472.451, 1328.481, 8.301001),
+                enemy_loc: Point3::new(279.72998, 4084.7, 17.01),
+                enemy_rot: Rotation3::from_unreal_angles(-0.009587543, -1.7256882, 0.00020834092),
+                enemy_vel: Vector3::new(-271.901, -1410.4209, 8.311),
+                ..Default::default()
+            })
+            .starting_boost(0.0)
             .soccar()
             .run_for_millis(4000);
 
