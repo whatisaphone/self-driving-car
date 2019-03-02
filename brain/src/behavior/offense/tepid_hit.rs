@@ -11,7 +11,7 @@ use crate::{
         behavior::FollowRoute,
         plan::{GetDollar, GroundIntercept, WallIntercept},
     },
-    strategy::{Action, Behavior, Context, Context2, Priority},
+    strategy::{Action, Behavior, Context, Context2, Priority, Scenario},
     utils::{Wall, WallRayCalculator},
 };
 use arrayvec::ArrayVec;
@@ -133,7 +133,9 @@ fn time_wasting_hit(ctx: &mut GroundedHitAimContext<'_, '_>) -> Result<GroundedH
     let naive_defense = (ball_loc - me_loc).angle_to(&(defense_avoid - me_loc));
 
     let (aim_loc, target_adjust);
-    if (ball_loc.y - defense_avoid.y).abs() < 1500.0 {
+    if (ball_loc.y - defense_avoid.y).abs() < 1500.0
+        && ctx.scenario.possession() < Scenario::POSSESSION_CONTESTABLE
+    {
         ctx.eeg.track(Event::TepidHitBlockAngleToGoal);
         ctx.eeg
             .draw(Drawable::print("blocking angle to goal", color::GREEN));
