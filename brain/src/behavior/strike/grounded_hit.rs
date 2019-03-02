@@ -7,8 +7,8 @@ use crate::{
     eeg::{color, Drawable, EEG},
     helpers::intercept::{naive_ground_intercept, NaiveIntercept},
     routing::recover::{IsSkidding, NotOnFlatGround},
-    rules::SameBallTrajectory,
     strategy::{Action, Behavior, Context, Game, Priority, Scenario},
+    utils::intercept_memory::{InterceptMemory, InterceptMemoryResult},
 };
 use common::{physics, prelude::*, rl, Coordinate, Distance};
 use derive_new::new;
@@ -25,7 +25,7 @@ where
     Aim: Fn(&mut GroundedHitAimContext<'_, '_>) -> Result<GroundedHitTarget, ()> + Send,
 {
     aim: Aim,
-    same_ball_trajectory: SameBallTrajectory,
+    intercept: InterceptMemory,
 }
 
 impl<Aim> GroundedHit<Aim>
@@ -35,7 +35,7 @@ where
     pub fn hit_towards(aim: Aim) -> Self {
         Self {
             aim,
-            same_ball_trajectory: SameBallTrajectory::new(),
+            intercept: InterceptMemory::new(),
         }
     }
 }
@@ -73,11 +73,20 @@ where
             ctx.eeg.log(self.name(), name_of_type!(NotOnFlatGround));
             return Action::Abort;
         }
-        return_some!(self.same_ball_trajectory.execute_old(ctx));
 
-        let intercept = match self.intercept_loc(ctx) {
+        let mut intercept = match self.intercept_loc(ctx) {
             Ok(i) => i,
             Err(()) => return Action::Abort,
+        };
+
+        // Don't give up when there's a momentary blip in ball prediction
+        let now = ctx.packet.GameInfo.TimeSeconds;
+        intercept.ball_loc = match self.intercept.update(now, intercept.ball_loc, ctx.eeg) {
+            InterceptMemoryResult::Stable(loc) => loc,
+            InterceptMemoryResult::Unstable(_) => {
+                ctx.eeg.log(self.name(), "unstable intercept");
+                return Action::Abort;
+            }
         };
 
         let plan = match self.plan(ctx, &intercept) {

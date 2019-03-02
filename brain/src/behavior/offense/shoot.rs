@@ -494,4 +494,22 @@ mod integration_tests {
 
         assert!(test.has_scored());
     }
+
+    #[test]
+    fn dont_give_up_when_ball_prediction_has_a_blip() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(-2550.02, 2887.8499, 1467.25),
+                ball_vel: Vector3::new(863.03094, 1751.7009, 172.091),
+                car_loc: Point3::new(-3703.5498, 2287.02, 16.52),
+                car_rot: Rotation3::from_unreal_angles(-0.0016736704, 0.44723073, 0.013854827),
+                car_vel: Vector3::new(1167.011, 648.27094, 18.271),
+                ..Default::default()
+            })
+            .starting_boost(50.0)
+            .soccar()
+            .run_for_millis(3500);
+
+        assert!(test.has_scored());
+    }
 }
