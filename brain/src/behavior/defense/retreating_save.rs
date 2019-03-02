@@ -38,10 +38,18 @@ impl RetreatingSave {
         if !Self::goalside(ctx) {
             return Err("not goalside");
         }
-        if ctx.scenario.impending_concede().map(|b| b.t < 5.0) == Some(true) {
+
+        let impending_concede = ctx
+            .scenario
+            .impending_concede()
+            .or_else(|| Self::impending_dangerous_ball(ctx))
+            .map(|b| b.t < 5.0)
+            .unwrap_or_default();
+        if impending_concede {
             ctx.eeg.draw(Drawable::print("concede", color::GREEN));
             return Ok(());
         }
+
         let ball_extrap = WallRayCalculator::calc_from_motion(
             ctx.packet.GameBall.Physics.loc_2d(),
             ctx.packet.GameBall.Physics.vel_2d(),
@@ -53,7 +61,16 @@ impl RetreatingSave {
             }
             _ => {}
         }
+
         Err("no impending doom")
+    }
+
+    /// If the ball will end up rolling in front of our goal, treat it as being
+    /// just as dangerous as inside the goal.
+    pub fn impending_dangerous_ball<'ctx>(ctx: &mut Context<'ctx>) -> Option<&'ctx BallFrame> {
+        ctx.scenario.ball_prediction().iter().find(|ball| {
+            ctx.game.own_goal().is_y_within_range(ball.loc.y, ..250.0) && ball.loc.x.abs() < 1500.0
+        })
     }
 
     /// Returns `true` if we're between the ball and our goal.

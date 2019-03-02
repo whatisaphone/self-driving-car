@@ -5,7 +5,7 @@ use crate::{
         strike::GroundedHit,
     },
     eeg::{color, Drawable},
-    helpers::{ball::BallFrame, intercept::naive_ground_intercept_2},
+    helpers::intercept::naive_ground_intercept_2,
     strategy::{Action, Behavior, Context, Goal, Priority, Scenario},
     utils::geometry::ExtendF32,
 };
@@ -50,7 +50,7 @@ impl Behavior for PushToOwnCorner {
         let impending_concede_soon = ctx
             .scenario
             .impending_concede()
-            .or_else(|| impending_dangerous_ball(ctx))
+            .or_else(|| RetreatingSave::impending_dangerous_ball(ctx))
             .map(|f| f.t < 5.0)
             .unwrap_or_default();
 
@@ -151,15 +151,6 @@ impl Behavior for PushToOwnCorner {
             }
         }
     }
-}
-
-/// If the ball will end up rolling in front of our goal, treat it as being just
-/// as dangerous as inside the goal.
-fn impending_dangerous_ball<'ctx>(ctx: &mut Context<'ctx>) -> Option<&'ctx BallFrame> {
-    ctx.scenario.ball_prediction().iter().find(|ball| {
-        ctx.game.own_goal().is_y_within_range(ball.loc.y, ..250.0)
-            && ball.loc.x.abs() < ctx.game.own_goal().max_x
-    })
 }
 
 fn hit_to_safety(ctx: &mut Context<'_>) -> impl Behavior {
