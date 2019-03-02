@@ -60,17 +60,14 @@ impl Behavior for WallHit {
         });
 
         let intercept_time = intercept.t;
-        let intercept_ball_loc =
-            match self
-                .intercept
-                .update(ctx.packet.GameInfo.TimeSeconds, intercept.loc, eeg)
-            {
-                InterceptMemoryResult::Stable(loc) => loc,
-                InterceptMemoryResult::Unstable(loc) => {
-                    eeg.log(self.name(), "trying unstable intercept");
-                    loc
-                }
-            };
+        let now = ctx.packet.GameInfo.TimeSeconds;
+        let intercept_ball_loc = match self.intercept.update(now, intercept.loc, eeg) {
+            InterceptMemoryResult::Stable(loc) => loc,
+            InterceptMemoryResult::Unstable(loc) => {
+                eeg.log(self.name(), "trying unstable intercept");
+                loc
+            }
+        };
 
         let path = match flat_target(ctx, eeg, &intercept_ball_loc) {
             Ok(x) => x,
