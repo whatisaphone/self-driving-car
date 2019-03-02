@@ -1,4 +1,7 @@
-use crate::strategy::pitch::{Pitch, DFH_STADIUM};
+use crate::{
+    strategy::pitch::{Pitch, DFH_STADIUM},
+    utils::geometry::Line2,
+};
 use common::{prelude::*, rl, vector_iter};
 use lazy_static::lazy_static;
 use nalgebra::{Point2, Point3, Unit, Vector2, Vector3};
@@ -182,6 +185,10 @@ impl Goal {
             Team::Blue => &HOOPS_GOAL_BLUE,
             Team::Orange => &HOOPS_GOAL_ORANGE,
         }
+    }
+
+    pub fn goalline(&self) -> Line2 {
+        Line2::from_origin_dir(self.center_2d, self.normal_2d.ortho().to_axis())
     }
 
     /// Returns the point on the surface of the goal which is closest to the

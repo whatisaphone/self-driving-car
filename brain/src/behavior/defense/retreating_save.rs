@@ -13,7 +13,7 @@ use crate::{
     routing::{behavior::FollowRoute, models::CarState, plan::GroundIntercept},
     sim::{SimGroundDrive, SimJump},
     strategy::{Action, Behavior, Context, Game, Priority},
-    utils::{Wall, WallRayCalculator},
+    utils::{geometry::Line2, Wall, WallRayCalculator},
 };
 use common::{prelude::*, Distance, Speed};
 use nalgebra::{Point2, Point3};
@@ -344,6 +344,15 @@ impl RetreatingSave {
         car: &CarState,
         contact_ball_frame: &BallFrame,
     ) -> bool {
+        // Always dodge if the ball is close to net; in this case there's no control to
+        // be preserved, and we want to change the ball's direction as much as possible.
+        let ball_vel_dir = Line2::from_origin_dir(ball.loc.to_2d(), ball.vel.to_2d().to_axis());
+        let concede_loc = game.own_goal().goalline().intersect(ball_vel_dir).unwrap();
+        let concede_time = (concede_loc - ball.loc.to_2d()).norm() / ball.vel.to_2d().norm();
+        if concede_time < 2.0 {
+            return false;
+        }
+
         let blocking_angle = (game.own_goal().center_2d - ball.loc.to_2d())
             .angle_to(&(car.loc.to_2d() - ball.loc.to_2d()))
             .abs();
