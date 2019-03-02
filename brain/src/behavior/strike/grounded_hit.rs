@@ -315,7 +315,12 @@ where
         let jump_time = Self::jump_duration(plan.target_loc.z);
 
         if !plan.jump {
-            return Action::Return;
+            // Don't jump, but at least follow-through on the hit so we don't prematurely
+            // turn around.
+            return Action::tail_call(Yielder::new(0.25, common::halfway_house::PlayerInput {
+                Throttle: 1.0,
+                ..Default::default()
+            }));
         }
 
         let mut steps = Vec::<Box<dyn Behavior>>::new();
