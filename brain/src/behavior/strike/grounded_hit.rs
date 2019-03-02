@@ -4,11 +4,8 @@ use crate::{
         movement::{simple_steer_towards, Dodge, JumpAndTurn, Yielder},
         strike::BounceShot,
     },
-    eeg::{Drawable, EEG},
-    helpers::{
-        ball::BallFrame,
-        intercept::{naive_ground_intercept, NaiveIntercept},
-    },
+    eeg::{color, Drawable, EEG},
+    helpers::intercept::{naive_ground_intercept, NaiveIntercept},
     routing::recover::{IsSkidding, NotOnFlatGround},
     rules::SameBallTrajectory,
     strategy::{Action, Behavior, Context, Game, Priority, Scenario},
@@ -118,12 +115,32 @@ where
             me.Physics.loc(),
             me.Physics.vel(),
             me.Boost as f32,
-            |ball| Self::ball_reachable(ball, GroundedHit::MAX_BALL_Z),
+            |ball| ball.loc.z < GroundedHit::MAX_BALL_Z,
         );
         let intercept = some_or_else!(intercept, {
             ctx.eeg.log(self.name(), "can't find intercept");
             return Err(());
         });
+
+        self.intercept_phase_2(ctx, intercept)
+    }
+
+    // Phase 2: Get a more accurate intercept based on how high we need to jump.
+    fn intercept_phase_2(
+        &self,
+        ctx: &mut Context<'_>,
+        intercept: NaiveIntercept,
+    ) -> Result<NaiveIntercept, ()> {
+        // This second phase is good and I want to do it more often, but sometimes it's
+        // not good and I don't want to do it. I can't figure out the criteria. For now,
+        // just do it when we're moving slowly, that seems safe and will at least help
+        // in defense.
+        let do_it = intercept.car_speed < 1000.0;
+        if !do_it {
+            return Ok(intercept);
+        }
+
+        let me = ctx.me();
 
         let mut aim_context = GroundedHitAimContext {
             game: ctx.game,
@@ -138,32 +155,19 @@ where
         let (target_loc, _target_rot) = Self::preliminary_target(ctx, &intercept, &target);
         let ball_max_z = JUMP_MAX_Z + (intercept.ball_loc.z - target_loc.z);
 
-        // Second pass: Get a more accurate intercept based on how high we need to jump.
         let intercept = naive_ground_intercept(
             ctx.scenario.ball_prediction().iter(),
             me.Physics.loc(),
             me.Physics.vel(),
             me.Boost as f32,
-            |ball| Self::ball_reachable(ball, ball_max_z),
+            |ball| ball.loc.z < ball_max_z,
         );
         let intercept = some_or_else!(intercept, {
-            ctx.eeg.log(self.name(), "can't find intercept");
+            ctx.eeg.log(self.name(), "can't find phase-two intercept");
             return Err(());
         });
-
+        ctx.eeg.draw(Drawable::print("two-phase", color::GREEN));
         Ok(intercept)
-    }
-
-    /// Don't try to hit a ball moving upward after a huge bounce if we have to
-    /// jump for it, because we'll just whiff.
-    fn ball_reachable(ball: &BallFrame, naive_limit: f32) -> bool {
-        let pessimistic_limit = rl::OCTANE_NEUTRAL_Z + (naive_limit - rl::OCTANE_NEUTRAL_Z) * 0.5;
-        let z_limit = linear_interpolate(
-            &[400.0, 800.0],
-            &[naive_limit, pessimistic_limit],
-            ball.vel.z,
-        );
-        ball.loc.z < z_limit
     }
 
     fn plan(&mut self, ctx: &mut Context<'_>, intercept: &NaiveIntercept) -> Result<Plan, ()> {
@@ -226,17 +230,8 @@ where
         );
         let target_loc = match target.adjust {
             GroundedHitTargetAdjust::RoughAim => {
-                let rough_loc = BounceShot::rough_shooting_spot(intercept, target.aim_loc)
-                    .to_3d(naive_target_loc.z);
-                // Pre-tournament hack – hug the ball closer if we need to jump
-                // for it, so we're less likely to whiff.
-                let (hug_loc, _hug_rot) =
-                    car_ball_contact_with_pitch(ctx.game, intercept.ball_loc, rough_loc, pitch);
-                let hug_factor =
-                    linear_interpolate(&[300.0, 450.0], &[0.0, 0.5], intercept.ball_loc.z);
-                ctx.eeg
-                    .print_value("hug_factor", format!("{:.2}", hug_factor));
-                rough_loc + (hug_loc - rough_loc) * hug_factor
+                let rough = BounceShot::rough_shooting_spot(intercept, target.aim_loc);
+                rough.to_3d(naive_target_loc.z)
             }
             GroundedHitTargetAdjust::StraightOn => naive_target_loc,
         };
