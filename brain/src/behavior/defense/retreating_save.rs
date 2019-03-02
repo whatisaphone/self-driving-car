@@ -27,7 +27,7 @@ pub struct RetreatingSave {
 }
 
 impl RetreatingSave {
-    const MAX_BALL_Z: f32 = 150.0;
+    const MAX_BALL_Z: f32 = 200.0;
     const JUMP_TIME: f32 = 0.1;
 
     pub fn new() -> Self {
@@ -698,6 +698,40 @@ mod integration_tests {
         let ball_loc = packet.GameBall.Physics.loc();
         println!("ball_loc = {:?}", ball_loc);
         assert!((ball_loc.to_2d() - SOCCAR_GOAL_BLUE.center_2d).norm() >= 2000.0);
+
+        test.examine_events(|events| {
+            assert!(events.contains(&Event::RetreatingSave));
+        });
+    }
+
+    #[test]
+    fn save_falling_ball() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(2795.05, 401.83, 1006.6),
+                ball_rot: Rotation3::from_unreal_angles(-0.7367065, -0.9589971, -1.6798002),
+                ball_vel: Vector3::new(-191.47101, -628.41095, -200.411),
+                ball_ang_vel: Vector3::new(5.69761, -1.73751, 0.71920997),
+                car_loc: Point3::new(2131.5, 4.71, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.009682266, -1.1720884, -0.0000025035126),
+                car_vel: Vector3::new(292.951, -699.36096, 8.311),
+                car_ang_vel: Vector3::new(-0.00030999997, 0.00010999999, 0.26981002),
+                enemy_loc: Point3::new(2864.0698, 537.70996, 949.43),
+                enemy_rot: Rotation3::from_unreal_angles(-0.07544123, -2.1849675, -2.0632482),
+                enemy_vel: Vector3::new(-482.441, -1338.9609, 337.441),
+                enemy_ang_vel: Vector3::new(0.28061, -1.52221, 2.8947098),
+                ..Default::default()
+            })
+            .starting_boost(60.0)
+            .soccar()
+            .run_for_millis(2000);
+
+        assert!(!test.enemy_has_scored());
+
+        let packet = test.sniff_packet();
+        let ball_loc = packet.GameBall.Physics.loc();
+        println!("ball_loc = {:?}", ball_loc);
+        assert!(ball_loc.x >= 2000.0);
 
         test.examine_events(|events| {
             assert!(events.contains(&Event::RetreatingSave));
