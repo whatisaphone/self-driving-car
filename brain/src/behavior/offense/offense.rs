@@ -359,7 +359,7 @@ mod integration_tests {
                 ball_vel: Vector3::new(277.659, -238.58536, 992.14404),
                 car_loc: Point3::new(-2913.0967, -3791.6895, 17.01),
                 car_rot: Rotation3::from_unreal_angles(-0.00958738, 1.9806569, -0.0000958738),
-                car_vel: Vector3::new(-352.9971, 833.215, 8.34),
+                car_vel: Vector3::new(-300.0, 700.0, 8.34),
                 ..Default::default()
             })
             .soccar()
