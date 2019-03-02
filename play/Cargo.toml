@@ -17,5 +17,8 @@ brain = { path = "../brain" }
 collect = { path = "../collect" }
 common = { path = "../common" }
 
+[build-dependencies]
+chrono = "0.4.6"
+
 [features]
 strict = []

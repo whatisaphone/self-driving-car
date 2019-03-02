@@ -2,17 +2,20 @@
 #![cfg_attr(feature = "strict", deny(warnings))]
 #![warn(clippy::all)]
 
+use crate::banner::Banner;
 use brain::{Brain, EEG};
 use chrono::Local;
 use collect::{get_packet_and_inject_rigid_body_tick, Collector};
 use common::{ext::ExtendRLBot, halfway_house::translate_player_input};
 use std::{error::Error, fs, panic, path::PathBuf, thread::sleep, time::Duration};
 
+mod banner;
+mod built;
 mod logging;
 
 fn main() {
     println!("Self-Driving Car");
-    println!("Built 2019-02-24");
+    println!("Built {}", built::BUILD_DATE);
     println!("See http://www.rlbot.org/ for more info!");
 
     env_logger::Builder::new()
@@ -142,7 +145,7 @@ fn run_bot(
     if show_window {
         eeg.show_window();
     }
-    let mut bot = FormulaNone::new(field_info, collector, eeg, brain);
+    let mut bot = FormulaNone::new(rlbot, field_info, collector, eeg, brain);
     bot.set_player_index(player_index);
     bot_loop(&rlbot, player_index, &mut bot);
 }
@@ -194,24 +197,29 @@ fn create_collector() -> Collector {
 }
 
 struct FormulaNone<'a> {
+    rlbot: &'static rlbot::RLBot,
     field_info: rlbot::flat::FieldInfo<'a>,
     collector: Option<collect::Collector>,
     eeg: EEG,
     brain: Brain,
+    banner: Banner,
 }
 
 impl<'a> FormulaNone<'a> {
     fn new(
+        rlbot: &'static rlbot::RLBot,
         field_info: rlbot::flat::FieldInfo<'a>,
         collector: Option<collect::Collector>,
         eeg: brain::EEG,
         brain: brain::Brain,
     ) -> Self {
         Self {
+            rlbot,
             field_info,
             collector,
             eeg,
             brain,
+            banner: Banner::new(),
         }
     }
 
@@ -228,7 +236,7 @@ impl<'a> FormulaNone<'a> {
         Option<rlbot::flat::QuickChatSelection>,
     ) {
         logging::STATE.lock().unwrap().game_time = Some(packet.GameInfo.TimeSeconds);
-
+        self.banner.run(self.rlbot, packet);
         self.eeg.begin(&packet);
 
         let input = self.brain.tick(self.field_info, packet, &mut self.eeg);
