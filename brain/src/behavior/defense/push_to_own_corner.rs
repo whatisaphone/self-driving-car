@@ -5,7 +5,7 @@ use crate::{
         strike::GroundedHit,
     },
     eeg::{color, Drawable},
-    helpers::intercept::naive_ground_intercept_2,
+    helpers::{ball::BallFrame, intercept::naive_ground_intercept_2},
     strategy::{Action, Behavior, Context, Goal, Priority, Scenario},
     utils::geometry::ExtendF32,
 };
@@ -50,6 +50,7 @@ impl Behavior for PushToOwnCorner {
         let impending_concede_soon = ctx
             .scenario
             .impending_concede()
+            .or_else(|| impending_dangerous_ball(ctx))
             .map(|f| f.t < 5.0)
             .unwrap_or_default();
 
@@ -152,6 +153,15 @@ impl Behavior for PushToOwnCorner {
     }
 }
 
+/// If the ball will end up rolling in front of our goal, treat it as being just
+/// as dangerous as inside the goal.
+fn impending_dangerous_ball<'ctx>(ctx: &mut Context<'ctx>) -> Option<&'ctx BallFrame> {
+    ctx.scenario.ball_prediction().iter().find(|ball| {
+        ctx.game.own_goal().is_y_within_range(ball.loc.y, ..250.0)
+            && ball.loc.x.abs() < ctx.game.own_goal().max_x
+    })
+}
+
 fn hit_to_safety(ctx: &mut Context<'_>) -> impl Behavior {
     let goal_loc = ctx.game.own_goal().center_2d;
     let ball_loc = ctx.packet.GameBall.Physics.loc_2d();
@@ -195,6 +205,26 @@ mod integration_tests {
         test.examine_events(|events| {
             assert!(events.contains(&Event::PanicDefense));
             assert!(!events.contains(&Event::HitToOwnCorner));
+        });
+    }
+
+    #[test]
+    fn save_ball_rolling_towards_box() {
+        let test = TestRunner::new()
+            .one_v_one(&*recordings::SAVE_BALL_ROLLING_TOWARDS_BOX, 160.0)
+            .soccar()
+            .run_for_millis(3000);
+
+        assert!(!test.enemy_has_scored());
+
+        let packet = test.sniff_packet();
+        let own_goal = Point2::new(0.0, -rl::FIELD_MAX_Y);
+        let goal_to_ball_dist = (packet.GameBall.Physics.loc_2d() - own_goal).norm();
+        assert!(goal_to_ball_dist >= 2000.0);
+
+        test.examine_events(|events| {
+            assert!(events.contains(&Event::HitToOwnCorner));
+            assert!(!events.contains(&Event::PanicDefense));
         });
     }
 }
