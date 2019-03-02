@@ -103,12 +103,14 @@ impl Shoot {
             .angle_to(&(intercept.data.aim_loc - ball_loc))
             .abs();
 
+        let min_car_speed = linear_interpolate(&[2500.0, 5000.0], &[1000.0, 2000.0], shot_distance);
         let min_distance_cutoff =
             linear_interpolate(&[2000.0, 3000.0], &[2000.0, 750.0], car_speed_towards_ball);
         let max_distance_cutoff =
             linear_interpolate(&[1500.0, 3000.0], &[1800.0, 5000.0], car_speed_towards_ball);
 
         ctx.eeg.print_value("car_speed", Speed(car_speed));
+        ctx.eeg.print_value("min_car_speed", Speed(min_car_speed));
         ctx.eeg
             .print_value("rel_speed", Speed(car_speed_towards_ball));
         ctx.eeg.print_angle("approach_angle", approach_angle);
@@ -121,7 +123,7 @@ impl Shoot {
 
         // If the ball is rolling towards us, take the easy chip and hopefully get it
         // over the opponent's head.
-        car_speed >= 1000.0
+        car_speed >= min_car_speed
             && car_speed_towards_ball * 0.85 >= car_speed
             && (shot_distance < min_distance_cutoff || shot_distance >= max_distance_cutoff)
             && ctx.intercept_ball_loc.z < 120.0
