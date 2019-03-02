@@ -27,6 +27,7 @@ pub struct GroundStraightPlanner {
     mode: StraightMode,
     allow_dodging: bool,
     allow_boost: bool,
+    always_prefer_dodge: bool,
 }
 
 impl GroundStraightPlanner {
@@ -38,6 +39,7 @@ impl GroundStraightPlanner {
             mode,
             allow_dodging: true,
             allow_boost: true,
+            always_prefer_dodge: true,
         }
     }
 
@@ -59,6 +61,11 @@ impl GroundStraightPlanner {
 
     pub fn allow_boost(mut self, allow_boost: bool) -> Self {
         self.allow_boost = allow_boost;
+        self
+    }
+
+    pub fn always_prefer_dodge(mut self, always_prefer_dodge: bool) -> Self {
+        self.always_prefer_dodge = always_prefer_dodge;
         self
     }
 }
@@ -86,7 +93,6 @@ impl RoutePlanner for GroundStraightPlanner {
             recover_target_loc: self.target_loc,
         });
 
-        let mut planners = ArrayVec::<[&dyn RoutePlanner; 4]>::new();
         let straight = StraightSimple::new(
             self.target_loc,
             self.target_time,
@@ -94,22 +100,34 @@ impl RoutePlanner for GroundStraightPlanner {
             self.mode,
             self.allow_boost,
         );
-        planners.push(&straight);
+        let straight = straight.plan(ctx, dump);
 
-        let with_dodge;
-        if self.allow_dodging {
-            with_dodge =
+        let dodge = if self.allow_dodging {
+            let planner =
                 StraightWithDodge::new(self.target_loc, self.target_time, self.end_chop, self.mode);
-            planners.push(&with_dodge);
+            Some(planner.plan(ctx, dump))
+        } else {
+            None
+        };
+
+        // If we're prioritizing dodges and we have a dodge, return early.
+        if self.always_prefer_dodge {
+            if let Some(Ok(plan)) = dodge {
+                return Ok(plan);
+            }
         }
 
-        let plans = planners.into_iter().map(|p| p.plan(ctx, dump));
-        let plans = at_least_one_ok(plans)?;
-        Ok(fastest(plans.into_iter()))
+        // Return the fastest plan.
+        let mut plans = ArrayVec::<[_; 4]>::new();
+        plans.push(straight);
+        if let Some(dodge) = dodge {
+            plans.push(dodge);
+        }
+        Ok(fastest(at_least_one_ok(plans)?))
     }
 }
 
-fn at_least_one_ok<T, E>(results: impl Iterator<Item = Result<T, E>>) -> Result<Vec<T>, E> {
+fn at_least_one_ok<T, E>(results: impl IntoIterator<Item = Result<T, E>>) -> Result<Vec<T>, E> {
     let mut oks: Vec<T> = Vec::new();
     let mut error = None;
     for result in results {
@@ -125,8 +143,9 @@ fn at_least_one_ok<T, E>(results: impl Iterator<Item = Result<T, E>>) -> Result<
     }
 }
 
-fn fastest(steps: impl Iterator<Item = RoutePlan>) -> RoutePlan {
+fn fastest(steps: impl IntoIterator<Item = RoutePlan>) -> RoutePlan {
     steps
+        .into_iter()
         .min_by_key(|s| NotNan::new(s.segment.duration()).unwrap())
         .unwrap()
 }

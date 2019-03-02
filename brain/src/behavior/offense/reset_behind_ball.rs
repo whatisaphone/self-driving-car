@@ -34,7 +34,7 @@ impl Behavior for ResetBehindBall {
 
     fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
         let target_loc = self.get_sane_drive_loc(ctx);
-        let straight = GroundDrive::new(target_loc).end_chop(0.5);
+        let straight = GroundDrive::new(target_loc).always_prefer_dodge(true);
         Action::tail_call(FollowRoute::new(straight).never_recover(self.never_recover))
     }
 }

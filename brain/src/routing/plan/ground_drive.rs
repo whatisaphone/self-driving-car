@@ -15,6 +15,7 @@ pub struct GroundDrive {
     target_loc: Point2<f32>,
     end_chop: f32,
     straight_mode: StraightMode,
+    always_prefer_dodge: bool,
 }
 
 impl GroundDrive {
@@ -23,6 +24,7 @@ impl GroundDrive {
             target_loc,
             end_chop: 0.0,
             straight_mode: StraightMode::Asap,
+            always_prefer_dodge: false,
         }
     }
 
@@ -33,6 +35,11 @@ impl GroundDrive {
 
     pub fn straight_mode(mut self, straight_mode: StraightMode) -> Self {
         self.straight_mode = straight_mode;
+        self
+    }
+
+    pub fn always_prefer_dodge(mut self, always_prefer_dodge: bool) -> Self {
+        self.always_prefer_dodge = always_prefer_dodge;
         self
     }
 }
@@ -60,8 +67,9 @@ impl RoutePlanner for GroundDrive {
         });
 
         let turn = TurnPlanner::new(self.target_loc, None).plan(ctx, dump)?;
-        let straight =
-            GroundStraightPlanner::new(self.target_loc, self.straight_mode).end_chop(self.end_chop);
+        let straight = GroundStraightPlanner::new(self.target_loc, self.straight_mode)
+            .always_prefer_dodge(self.always_prefer_dodge)
+            .end_chop(self.end_chop);
         Ok(ChainedPlanner::join_planner(turn, Some(Box::new(straight))))
     }
 }
