@@ -65,6 +65,17 @@ impl<'a> Context<'a> {
     pub fn time_based_random(&self) -> f32 {
         self.packet.GameInfo.TimeSeconds.fract()
     }
+
+    /// Use this to get two "deterministic" "random" numbers during kickoffs,
+    /// when the cars' locations are fixed.
+    pub fn time_based_randoms(&self) -> [f32; 4] {
+        [
+            (self.packet.GameInfo.TimeSeconds / 5.0).fract(),
+            self.packet.GameInfo.TimeSeconds.fract(),
+            (self.packet.GameInfo.TimeSeconds * 5.0).fract(),
+            (self.packet.GameInfo.TimeSeconds * 25.0).fract(),
+        ]
+    }
 }
 
 pub struct Context2<'c, 's> {

@@ -93,14 +93,25 @@ impl Behavior for Kickoff {
             return Action::Abort;
         }
 
+        // Add a "random" component to kickoffs, to keep things unpredictable.
+        let [rand1, rand2, rand3, rand4] = ctx.time_based_randoms();
+        // Scale these to between -1 and 1.
+        let rand1 = rand1 * 2.0 - 1.0;
+        let rand2 = rand2 * 2.0 - 1.0;
+        let rand3 = rand3 * 2.0 - 1.0;
+        let rand4 = rand4 * 2.0 - 1.0;
+
+        let x_signum = ctx.me().Physics.loc().x.signum();
+        let y_signum = ctx.me().Physics.loc().y.signum();
+
         let approach: Box<dyn RoutePlanner> = if is_diagonal_kickoff(ctx) {
             let straight_loc = Point2::new(
-                500.0 * ctx.me().Physics.loc().x.signum(),
-                950.0 * ctx.me().Physics.loc().y.signum(),
+                (500.0 + rand1 * 25.0) * x_signum,
+                (950.0 + rand2 * 25.0) * y_signum,
             );
             let straight =
                 GroundStraightPlanner::new(straight_loc, StraightMode::Asap).allow_dodging(false);
-            let turn_loc = Point2::new(100.0 * ctx.me().Physics.loc().x.signum(), 0.0);
+            let turn_loc = Point2::new((100.0 + rand3 * 25.0) * x_signum, 0.0);
             let turn = TurnPlanner::new(turn_loc, None);
             Box::new(ChainedPlanner::chain(vec![
                 Box::new(straight),
@@ -108,8 +119,8 @@ impl Behavior for Kickoff {
             ]))
         } else if is_off_center_kickoff(ctx) {
             let target_loc = Point2::new(
-                100.0 * ctx.me().Physics.loc().x.signum(),
-                2500.0 * ctx.me().Physics.loc().y.signum(),
+                (100.0 + rand1 * 25.0) * x_signum,
+                (2500.0 + rand2 * 25.0) * y_signum,
             );
             Box::new(
                 GroundStraightPlanner::new(target_loc, StraightMode::Asap).allow_dodging(false),
@@ -121,7 +132,7 @@ impl Behavior for Kickoff {
 
         Action::tail_call(Chain::new(Priority::Idle, vec![
             Box::new(FollowRoute::new_boxed(approach)),
-            Box::new(KickoffStrike::new()),
+            Box::new(KickoffStrike::new(rand4 * 25.0)),
         ]))
     }
 }
@@ -136,11 +147,20 @@ fn is_diagonal_kickoff(ctx: &mut Context<'_>) -> bool {
     car_x.abs() >= 1000.0
 }
 
-#[derive(new)]
-struct KickoffStrike;
+struct KickoffStrike {
+    commit_offset: f32,
+}
 
 impl KickoffStrike {
     const JUMP_TIME: f32 = 0.1;
+
+    /// `slop` is a random component added to the dodge distance, to keep things
+    /// unpredictable.
+    pub fn new(slop: f32) -> Self {
+        Self {
+            commit_offset: slop,
+        }
+    }
 }
 
 impl Behavior for KickoffStrike {
@@ -164,7 +184,7 @@ impl Behavior for KickoffStrike {
         let jump_flip_time = Self::JUMP_TIME + RPS * 0.2;
         let fifty_distance = ctx.me().Physics.vel_2d().norm() * jump_flip_time;
         let fifty_offset = fifty_distance - me_to_ball.norm();
-        if fifty_offset >= -130.0 {
+        if fifty_offset >= -130.0 + self.commit_offset {
             // This frame is the "ideal" time to dodge, so now is when we need to make the
             // decision whether to dodge or not.
             return self.commit(ctx);
