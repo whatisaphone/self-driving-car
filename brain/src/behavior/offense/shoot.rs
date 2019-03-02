@@ -433,4 +433,22 @@ mod integration_tests {
 
         assert!(test.has_scored());
     }
+
+    #[test]
+    fn dont_miss_a_slightly_bouncing_ball() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(2244.3599, 2427.03, 220.15),
+                ball_vel: Vector3::new(-174.58101, -757.79095, 104.071),
+                car_loc: Point3::new(3708.49, 437.12, 16.98),
+                car_rot: Rotation3::from_unreal_angles(-0.00921865, 2.6721888, -0.00048598694),
+                car_vel: Vector3::new(-679.941, 371.951, 8.831),
+                ..Default::default()
+            })
+            .starting_boost(99.0)
+            .soccar()
+            .run_for_millis(3000);
+
+        assert!(test.has_scored());
+    }
 }
