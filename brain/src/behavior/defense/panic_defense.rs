@@ -94,11 +94,16 @@ impl PanicDefense {
         // If we're already very close, we don't have enough time to steer.
         let future_loc = me_loc + ctx.me().Physics.vel_2d() * 1.0;
         let already_close = Self::finished_panicking(goal, future_loc, me_vel);
+        let shallow = Self::shallow_angle_approach(ctx);
 
-        let approach_angle = me_forward_axis.angle_to(&-goal.normal_2d);
-        let wide_angle = approach_angle.abs() >= PI / 3.0;
-
-        if already_close && !wide_angle {
+        if shallow {
+            // If the approach is shallow, just drive to the near post and we're already
+            // covering the entire goal.
+            Point2::new(
+                800.0 * me_loc.x.signum(),
+                goal.center_2d.y - 50.0 * goal.center_2d.y.signum(),
+            )
+        } else if already_close {
             // We don't have time to steer, just pick the closest corner.
             let left_post = Point2::new(-800.0, goal.center_2d.y);
             let right_post = Point2::new(800.0, goal.center_2d.y);
@@ -112,6 +117,13 @@ impl PanicDefense {
         } else {
             Point2::new(800.0 * -aim_loc.x.signum(), goal.center_2d.y)
         }
+    }
+
+    fn shallow_angle_approach(ctx: &mut Context<'_>) -> bool {
+        let goal = ctx.game.own_goal();
+        let me_forward_axis = ctx.me().Physics.forward_axis_2d();
+        let approach_angle = me_forward_axis.angle_to(&-goal.normal_2d);
+        approach_angle.abs() >= PI / 3.0
     }
 
     pub fn finished_panicking(goal: &Goal, loc: Point2<f32>, vel: Vector2<f32>) -> bool {
@@ -201,6 +213,12 @@ impl PanicDefense {
                 me.Physics.vel_2d(),
             );
             if arrived {
+                // If the approach is shallow, we're already covering the goal and we don't need
+                // to turn.
+                if Self::shallow_angle_approach(ctx) {
+                    return Some(Phase::Finished);
+                }
+
                 let target_yaw = ctx
                     .game
                     .own_goal()
