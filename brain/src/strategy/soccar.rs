@@ -5,7 +5,7 @@ use crate::{
         movement::{GetToFlatGround, Land, Yielder},
         offense::Offense,
         strike::{FiftyFifty, WallHit},
-        taunt::{PodiumTwirl, TurtleSpin},
+        taunt::{PodiumBlastoff, PodiumSpew, PodiumStare, SaltWhileDemolished, TurtleSpin},
         PreKickoff,
     },
     routing::{
@@ -71,8 +71,19 @@ impl Strategy for Soccar {
         ctx: &mut Context<'_>,
         current: &dyn Behavior,
     ) -> Option<Box<dyn Behavior>> {
-        if ctx.packet.GameInfo.MatchEnded && current.priority() < Priority::Taunt {
-            return Some(Box::new(While::new(MatchIsEnded, PodiumTwirl::new())));
+        if ctx.packet.GameInfo.MatchEnded {
+            if current.priority() < Priority::Taunt {
+                let rand = ctx.time_based_random();
+                let celebrate = if rand < 0.3333333 {
+                    While::new(MatchIsEnded, PodiumBlastoff::new())
+                } else if rand < 0.6666667 {
+                    While::new(MatchIsEnded, PodiumStare::new())
+                } else {
+                    While::new(MatchIsEnded, PodiumSpew::new())
+                };
+                return Some(Box::new(celebrate));
+            }
+            return None;
         }
 
         // Force kickoff behavior. We can't rely on the normal routing, because it
@@ -128,6 +139,9 @@ impl Strategy for Soccar {
             )])));
         }
 
+        if current.priority() < Priority::Taunt && ctx.me().Demolished {
+            return Some(Box::new(SaltWhileDemolished::new()));
+        }
         if current.priority() < Priority::Taunt
             && UnstoppableScore.evaluate(ctx)
             && commanding_lead(ctx)
@@ -141,15 +155,15 @@ impl Strategy for Soccar {
             return Some(Box::new(While::new(ScoringVerySoon, spin)));
         }
         if current.priority() < Priority::Taunt && !ctx.packet.GameInfo.RoundActive {
-            let behavior: Box<dyn Behavior> = if commanding_lead(ctx) {
-                Box::new(TurtleSpin::new())
+            let behavior = if commanding_lead(ctx) && ball_in_enemy_half(ctx) {
+                While::new(RoundIsNotActive, TurtleSpin::new())
             } else {
-                Box::new(Yielder::new(9999.0, Default::default()))
+                While::new(
+                    RoundIsNotActive,
+                    Yielder::new(9999.0, Default::default()).priority(Priority::Taunt),
+                )
             };
-            return Some(Box::new(While::new(
-                RoundIsNotActive,
-                Chain::new(Priority::Taunt, vec![behavior]),
-            )));
+            return Some(Box::new(behavior));
         }
 
         None
@@ -180,6 +194,11 @@ fn enemy_can_shoot(ctx: &mut Context<'_>) -> bool {
     })
 }
 
+fn ball_in_enemy_half(ctx: &mut Context<'_>) -> bool {
+    (ctx.packet.GameBall.Physics.loc_2d() - ctx.game.enemy_goal().center_2d).norm()
+        < (ctx.packet.GameBall.Physics.loc_2d() - ctx.game.own_goal().center_2d).norm()
+}
+
 struct UnstoppableScore;
 
 impl Predicate for UnstoppableScore {
@@ -194,7 +213,7 @@ impl Predicate for UnstoppableScore {
         let (_enemy, enemy_intercept) = some_or_else!(ctx.scenario.enemy_intercept(), {
             return true;
         });
-        enemy_intercept.time >= impending_score.t + 1.5
+        enemy_intercept.time >= impending_score.t + 1.0
     }
 }
 

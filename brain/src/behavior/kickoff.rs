@@ -1,6 +1,6 @@
 use crate::{
     behavior::{
-        higher_order::{Chain, While},
+        higher_order::{Chain, TimeLimit, While},
         movement::{drive_towards, QuickJumpAndDodge, Yielder},
     },
     routing::{
@@ -216,7 +216,7 @@ impl KickoffStrike {
                         .angle(PI / 8.0 * angle.signum()),
                 )
             }
-            CommitAction::Chip => Action::tail_call(RoughAngledChip::new()),
+            CommitAction::Chip => Action::tail_call(TimeLimit::new(1.0, RoughAngledChip::new())),
         }
     }
 

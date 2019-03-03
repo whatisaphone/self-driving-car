@@ -16,6 +16,9 @@ pub struct Brain {
     ball_predictor: Box<dyn BallPredictor>,
     player_index: Option<i32>,
     fps_counter: FPSCounter,
+    /// This is not automated or enforced in any way, it's just a convenient
+    /// memory slot for optional use in behaviors.
+    last_quick_chat: f32,
 }
 
 impl Brain {
@@ -25,6 +28,7 @@ impl Brain {
             ball_predictor: Box::new(ball_predictor),
             player_index: None,
             fps_counter: FPSCounter::new(),
+            last_quick_chat: 0.0,
         }
     }
 
@@ -113,7 +117,7 @@ impl Brain {
 
         let game = Game::new(field_info, packet, self.player_index.unwrap() as usize);
         let scenario = Scenario::new(&game, &*self.ball_predictor, packet);
-        let mut ctx = Context::new(&game, packet, &scenario, eeg);
+        let mut ctx = Context::new(&game, packet, &scenario, eeg, &mut self.last_quick_chat);
 
         ctx.eeg.print_time("possession", ctx.scenario.possession());
 

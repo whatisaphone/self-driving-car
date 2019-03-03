@@ -9,6 +9,7 @@ pub struct Context<'a> {
     pub game: &'a Game<'a>,
     pub scenario: &'a Scenario<'a>,
     pub eeg: &'a mut EEG,
+    pub last_quick_chat: &'a mut f32,
 }
 
 impl<'a> Context<'a> {
@@ -17,12 +18,14 @@ impl<'a> Context<'a> {
         packet: &'a common::halfway_house::LiveDataPacket,
         scenario: &'a Scenario<'a>,
         eeg: &'a mut EEG,
+        last_quick_chat: &'a mut f32,
     ) -> Self {
         Self {
             packet,
             game,
             scenario,
             eeg,
+            last_quick_chat,
         }
     }
 

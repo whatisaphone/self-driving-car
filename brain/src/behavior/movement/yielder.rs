@@ -18,7 +18,6 @@ impl Yielder {
         }
     }
 
-    #[allow(dead_code)]
     pub fn priority(mut self, priority: Priority) -> Self {
         self.priority = priority;
         self

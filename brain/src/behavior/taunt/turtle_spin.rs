@@ -2,7 +2,7 @@ use crate::{
     behavior::{higher_order::Chain, movement::Yielder},
     strategy::{Action, Behavior, Context, Priority},
 };
-use common::prelude::*;
+use common::{kinematics::kinematic_time, prelude::*, rl};
 use dom::get_pitch_yaw_roll;
 use nalgebra::Vector3;
 use nameof::name_of_type;
@@ -40,33 +40,7 @@ impl Behavior for TurtleSpin {
     }
 
     fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
-        if !self.has_chatted {
-            ctx.quick_chat(self.quick_chat_probability, &[
-                rlbot::flat::QuickChatSelection::Compliments_WhatAPlay,
-                rlbot::flat::QuickChatSelection::Reactions_OMG,
-                rlbot::flat::QuickChatSelection::Reactions_Wow,
-                rlbot::flat::QuickChatSelection::Reactions_CloseOne,
-                rlbot::flat::QuickChatSelection::Reactions_NoWay,
-                rlbot::flat::QuickChatSelection::Reactions_HolyCow,
-                rlbot::flat::QuickChatSelection::Reactions_Whew,
-                rlbot::flat::QuickChatSelection::Reactions_Siiiick,
-                rlbot::flat::QuickChatSelection::Reactions_Savage,
-                rlbot::flat::QuickChatSelection::Apologies_NoProblem,
-                rlbot::flat::QuickChatSelection::Apologies_Sorry,
-                rlbot::flat::QuickChatSelection::Apologies_MyBad,
-                rlbot::flat::QuickChatSelection::Apologies_Oops,
-                rlbot::flat::QuickChatSelection::Apologies_MyFault,
-                rlbot::flat::QuickChatSelection::PostGame_Gg,
-                rlbot::flat::QuickChatSelection::PostGame_WellPlayed,
-                rlbot::flat::QuickChatSelection::PostGame_ThatWasFun,
-                rlbot::flat::QuickChatSelection::PostGame_Rematch,
-                rlbot::flat::QuickChatSelection::PostGame_WhatAGame,
-                rlbot::flat::QuickChatSelection::PostGame_NiceMoves,
-                rlbot::flat::QuickChatSelection::PostGame_EverybodyDance,
-                rlbot::flat::QuickChatSelection::Custom_Useful_Faking,
-            ]);
-            self.has_chatted = true;
-        }
+        self.quick_chat(ctx);
 
         if ctx.me().OnGround {
             return Action::tail_call(Chain::new(self.priority(), vec_box![
@@ -87,6 +61,27 @@ impl Behavior for TurtleSpin {
             ]));
         }
 
+        let car_loc = ctx.me().Physics.loc();
+        let car_vel = ctx.me().Physics.vel();
+        let time_to_ground =
+            kinematic_time(-car_loc.z + rl::OCTANE_NEUTRAL_Z, car_vel.z, rl::GRAVITY)
+                .unwrap_or(0.0);
+        let dist_to_plane = ctx
+            .game
+            .pitch()
+            .closest_plane(&car_loc)
+            .distance_to_point(&car_loc);
+        let turtle = dist_to_plane < 400.0 && time_to_ground < 2.0;
+
+        if !turtle {
+            return Action::Yield(common::halfway_house::PlayerInput {
+                Pitch: 1.0,
+                Roll: -1.0,
+                Boost: true,
+                ..Default::default()
+            });
+        }
+
         if !self.has_oriented {
             match self.rotate_self(ctx) {
                 Some(action) => return action,
@@ -101,27 +96,52 @@ impl Behavior for TurtleSpin {
             });
         }
 
-        let car_loc = ctx.me().Physics.loc();
-        let car_roof = ctx.me().Physics.roof_axis();
-        let turtle = car_roof.angle_to(&Vector3::z_axis()).abs() >= PI / 2.0 && car_loc.z < 75.0;
-        if turtle {
-            Action::Yield(common::halfway_house::PlayerInput {
-                Yaw: 1.0,
-                Jump: !ctx.me().DoubleJumped,
-                ..Default::default()
-            })
-        } else {
-            Action::Yield(common::halfway_house::PlayerInput {
-                Pitch: 1.0,
-                Roll: -1.0,
-                Boost: true,
-                ..Default::default()
-            })
-        }
+        Action::Yield(common::halfway_house::PlayerInput {
+            Yaw: 1.0,
+            Jump: !ctx.me().DoubleJumped,
+            ..Default::default()
+        })
     }
 }
 
 impl TurtleSpin {
+    fn quick_chat(&mut self, ctx: &mut Context<'_>) {
+        if self.has_chatted {
+            return;
+        }
+        self.has_chatted = true;
+
+        if ctx.packet.GameInfo.TimeSeconds - *ctx.last_quick_chat < 1.0 {
+            return;
+        }
+        *ctx.last_quick_chat = ctx.packet.GameInfo.TimeSeconds;
+
+        ctx.quick_chat(self.quick_chat_probability, &[
+            rlbot::flat::QuickChatSelection::Compliments_WhatAPlay,
+            rlbot::flat::QuickChatSelection::Reactions_OMG,
+            rlbot::flat::QuickChatSelection::Reactions_Wow,
+            rlbot::flat::QuickChatSelection::Reactions_CloseOne,
+            rlbot::flat::QuickChatSelection::Reactions_NoWay,
+            rlbot::flat::QuickChatSelection::Reactions_HolyCow,
+            rlbot::flat::QuickChatSelection::Reactions_Whew,
+            rlbot::flat::QuickChatSelection::Reactions_Siiiick,
+            rlbot::flat::QuickChatSelection::Reactions_Savage,
+            rlbot::flat::QuickChatSelection::Apologies_NoProblem,
+            rlbot::flat::QuickChatSelection::Apologies_Sorry,
+            rlbot::flat::QuickChatSelection::Apologies_MyBad,
+            rlbot::flat::QuickChatSelection::Apologies_Oops,
+            rlbot::flat::QuickChatSelection::Apologies_MyFault,
+            rlbot::flat::QuickChatSelection::PostGame_Gg,
+            rlbot::flat::QuickChatSelection::PostGame_WellPlayed,
+            rlbot::flat::QuickChatSelection::PostGame_ThatWasFun,
+            rlbot::flat::QuickChatSelection::PostGame_Rematch,
+            rlbot::flat::QuickChatSelection::PostGame_WhatAGame,
+            rlbot::flat::QuickChatSelection::PostGame_NiceMoves,
+            rlbot::flat::QuickChatSelection::PostGame_EverybodyDance,
+            rlbot::flat::QuickChatSelection::Custom_Useful_Faking,
+        ]);
+    }
+
     fn rotate_self(&self, ctx: &mut Context<'_>) -> Option<Action> {
         let me_forward = ctx.me().Physics.forward_axis();
 

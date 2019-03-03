@@ -2,15 +2,16 @@
 #![cfg_attr(feature = "strict", deny(warnings))]
 #![warn(clippy::all)]
 
-use crate::banner::Banner;
+use crate::{banner::Banner, hacketeer::Hacketeer};
 use brain::{Brain, EEG};
 use chrono::Local;
-use collect::{get_packet_and_inject_rigid_body_tick, Collector};
+use collect::Collector;
 use common::{ext::ExtendRLBot, halfway_house::translate_player_input};
 use std::{error::Error, fs, panic, path::PathBuf, thread::sleep, time::Duration};
 
 mod banner;
 mod built;
+mod hacketeer;
 mod logging;
 
 fn main() {
@@ -19,7 +20,7 @@ fn main() {
     println!("See http://www.rlbot.org/ for more info!");
 
     env_logger::Builder::new()
-        .parse("brain") // Only log the brain crate
+        .parse("brain,play") // Only log these crates
         .format(logging::format)
         .init();
 
@@ -154,19 +155,18 @@ fn wait_for_field_info(rlbot: &rlbot::RLBot) -> rlbot::flat::FieldInfo<'_> {
     let mut packeteer = rlbot.packeteer();
     loop {
         packeteer.next().unwrap();
-        let field_info = rlbot.interface().update_field_info_flatbuffer().unwrap();
-        if field_info.boostPads().is_some() {
-            break field_info;
+        if let Some(field_info) = rlbot.interface().update_field_info_flatbuffer() {
+            if field_info.boostPads().is_some() {
+                break field_info;
+            }
         }
     }
 }
 
 fn bot_loop(rlbot: &rlbot::RLBot, player_index: i32, bot: &mut FormulaNone<'_>) {
-    let mut physics = rlbot.physicist();
-
+    let mut packeteer = Hacketeer::new(rlbot);
     loop {
-        let rigid_body_tick = physics.next_flat().unwrap();
-        let packet = get_packet_and_inject_rigid_body_tick(&rlbot, rigid_body_tick).unwrap();
+        let (packet, rigid_body_tick) = packeteer.next().unwrap();
         let (input, quick_chat) = bot.tick(rigid_body_tick, &packet);
         rlbot
             .update_player_input(player_index, &translate_player_input(&input))
@@ -229,7 +229,7 @@ impl<'a> FormulaNone<'a> {
 
     fn tick(
         &mut self,
-        rigid_body_tick: rlbot::flat::RigidBodyTick<'_>,
+        rigid_body_tick: Option<rlbot::flat::RigidBodyTick<'_>>,
         packet: &common::halfway_house::LiveDataPacket,
     ) -> (
         common::halfway_house::PlayerInput,
@@ -242,7 +242,9 @@ impl<'a> FormulaNone<'a> {
         let input = self.brain.tick(self.field_info, packet, &mut self.eeg);
 
         if let Some(collector) = &mut self.collector {
-            collector.write(rigid_body_tick).unwrap();
+            if let Some(rigid_body_tick) = rigid_body_tick {
+                collector.write(rigid_body_tick).unwrap();
+            }
         }
         self.eeg.show(&packet);
 

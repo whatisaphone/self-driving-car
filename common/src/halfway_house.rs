@@ -28,6 +28,7 @@ pub struct Physics {
 #[derive(Debug, Default, Copy, Clone)]
 pub struct PlayerInfo {
     pub Physics: Physics,
+    pub Demolished: bool,
     pub OnGround: bool,
     pub DoubleJumped: bool,
     pub Team: ::std::os::raw::c_uchar,
@@ -104,6 +105,7 @@ pub fn deserialize_game_tick_packet(packet: rlbot::flat::GameTickPacket<'_>) -> 
 fn deserialize_player_info(info: rlbot::flat::PlayerInfo<'_>) -> PlayerInfo {
     PlayerInfo {
         Physics: info.physics().map(deserialize_physics).unwrap_or_default(),
+        Demolished: info.isDemolished(),
         OnGround: info.hasWheelContact(),
         DoubleJumped: info.doubleJumped(),
         Team: info.team() as u8,
