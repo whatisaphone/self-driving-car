@@ -45,8 +45,12 @@ impl ResetBehindBall {
         let ball_vel_towards_my_half = ball_vel.dot(&-ctx.game.own_goal().normal_2d);
         let offensive_stance = ball_vel_towards_my_half < 1000.0;
         let direction = if offensive_stance {
+            ctx.eeg
+                .log(name_of_type!(ResetBehindBall), "offensive stance");
             self.loc - ctx.game.enemy_goal().center_2d
         } else {
+            ctx.eeg
+                .log(name_of_type!(ResetBehindBall), "defensive stance");
             ctx.game.own_goal().center_2d - self.loc
         };
         let mut target_loc = self.loc + direction.normalize() * self.distance;
