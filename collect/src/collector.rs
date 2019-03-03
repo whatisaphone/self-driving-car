@@ -15,6 +15,12 @@ impl Collector {
     }
 
     pub fn write(&mut self, tick: rlbot::flat::RigidBodyTick<'_>) -> csv::Result<()> {
+        // Don't crash if there's no ball (this happens after a goal, and during the
+        // post-game celebration)
+        if tick.ball().is_none() {
+            return Ok(());
+        }
+
         if !self.wrote_header {
             self.wrote_header = true;
             self.w.write_record(
