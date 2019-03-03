@@ -104,6 +104,17 @@ where
             return Action::Abort;
         }
 
+        let angle_to_ball =
+            me_forward.angle_to(&(intercept.ball_loc.to_2d() - me.Physics.loc_2d()));
+        if ctx.me().Physics.vel_2d().norm() < 500.0
+            && plan.intercept_time < 0.25
+            && angle_to_ball.abs() >= PI / 3.0
+        {
+            ctx.eeg
+                .log(self.name(), "likely stuck out of position; jumping early");
+            return self.jump(&plan);
+        }
+
         match self.estimate_approach(ctx, &plan) {
             Do::Drive(throttle, boost) => self.drive(ctx, &plan, throttle, boost),
             Do::Jump => self.jump(&plan),
