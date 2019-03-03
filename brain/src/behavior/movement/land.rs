@@ -171,15 +171,23 @@ fn face_the_ball(ctx: &mut Context<'_>) -> Vector2<f32> {
 /// Simulate car freefall for increasing time intervals and try to find the
 /// first wall we will penetrate.
 fn find_landing_plane<'ctx>(ctx: &mut Context<'ctx>) -> &'ctx Plane {
+    // This routine assumes the field is fully convex (or concave I guess, since
+    // we're inside it?)
+
     let start_loc = ctx.me().Physics.loc();
     let start_vel = ctx.me().Physics.vel();
+
+    // If we're outside the field, we're probably inside a goal. The goals are not
+    // convex(/convace?) so the below check won't work. Just orient to the ground
+    // instead since that seems to produce the best results.
+    if !ctx.game.is_inside_field(start_loc.to_2d()) {
+        return ctx.game.pitch().ground();
+    }
 
     for time in (0..40).into_iter().map(|x| x as f32 / 20.0) {
         let (loc, _vel) = kinematic(start_vel, Vector3::z() * rl::GRAVITY, time);
         let loc = start_loc + loc;
         let plane = ctx.game.pitch().closest_plane(&loc);
-        // This check assumes the field is fully convex (or concave I guess, since we're
-        // inside it?)
         if plane.distance_to_point(&loc) < 50.0 {
             return plane;
         }
