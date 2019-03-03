@@ -1,7 +1,7 @@
 use crate::{
     behavior::{
         higher_order::Chain,
-        movement::{dodge::Dodge, drive_towards::drive_towards, land::Land, yielder::Yielder},
+        movement::{dodge::Dodge, drive_towards::drive_towards, land::Land},
     },
     eeg::{color, Drawable},
     helpers::telepathy::predict_enemy_hit_direction,
@@ -46,10 +46,13 @@ impl Behavior for GetToFlatGround {
         if me.Physics.roof_axis().angle(&-Vector3::z_axis()) < PI / 10.0 {
             // We're probably upside down under the ceiling of a goal
             ctx.eeg.log(self.name(), "jumping while upside-down");
-            return Action::tail_call(Yielder::new(0.1, common::halfway_house::PlayerInput {
-                Jump: true,
-                ..Default::default()
-            }));
+            return Action::tail_call(YieldAndMaybePanicBoost::new(
+                0.1,
+                common::halfway_house::PlayerInput {
+                    Jump: true,
+                    ..Default::default()
+                },
+            ));
         }
 
         if should_jump_down_from_the_wall(ctx) {
@@ -120,7 +123,7 @@ fn jump_down_from_the_wall(ctx: &mut Context<'_>) -> Action {
         // Do nothing briefly. In case we've just landed on the wall in the past few
         // frames, this lets the car's suspension stabilize a bit so we get the full
         // force coming off the wall.
-        inputs.push(Box::new(Yielder::new(
+        inputs.push(Box::new(YieldAndMaybePanicBoost::new(
             0.1,
             common::halfway_house::PlayerInput {
                 Handbrake: true,
@@ -128,7 +131,7 @@ fn jump_down_from_the_wall(ctx: &mut Context<'_>) -> Action {
             },
         )));
         // Press jump.
-        inputs.push(Box::new(Yielder::new(
+        inputs.push(Box::new(YieldAndMaybePanicBoost::new(
             0.2,
             common::halfway_house::PlayerInput {
                 Pitch: 1.0,
@@ -137,7 +140,7 @@ fn jump_down_from_the_wall(ctx: &mut Context<'_>) -> Action {
             },
         )));
         // Release jump.
-        inputs.push(Box::new(Yielder::new(
+        inputs.push(Box::new(YieldAndMaybePanicBoost::new(
             0.1,
             common::halfway_house::PlayerInput {
                 Pitch: 1.0,
@@ -185,6 +188,42 @@ fn dodge_target(ctx: &mut Context<'_>) -> Option<Point2<f32>> {
         .log(name_of_type!(GetToFlatGround), "assuming offense");
     let goal_point = ctx.game.enemy_goal().closest_point(ball.loc.to_2d());
     Some(ball.loc.to_2d() + (ball.loc.to_2d() - goal_point).normalize() * 1000.0)
+}
+
+struct YieldAndMaybePanicBoost {
+    duration: f32,
+    input: common::halfway_house::PlayerInput,
+    start: Option<f32>,
+}
+
+impl YieldAndMaybePanicBoost {
+    pub fn new(duration: f32, input: common::halfway_house::PlayerInput) -> Self {
+        Self {
+            duration,
+            input,
+            start: None,
+        }
+    }
+}
+
+impl Behavior for YieldAndMaybePanicBoost {
+    fn name(&self) -> &str {
+        name_of_type!(GetToFlatGround)
+    }
+
+    fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
+        let now = ctx.packet.GameInfo.TimeSeconds;
+        let start = *self.start.get_or_insert(now);
+        let elapsed = now - start;
+        if elapsed < self.duration {
+            Action::Yield(common::halfway_house::PlayerInput {
+                Boost: Land::panic_retreat_boost(ctx),
+                ..self.input
+            })
+        } else {
+            Action::Return
+        }
+    }
 }
 
 #[cfg(test)]

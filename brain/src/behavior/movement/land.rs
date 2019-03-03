@@ -41,6 +41,9 @@ impl Behavior for Land {
             self.chatted = true;
         }
 
+        // If we're way out of position, boost back towards net.
+        let panic_boost = Self::panic_retreat_boost(ctx);
+
         if me.Physics.ang_vel().norm() >= 5.4 {
             // This is a minor hack for statelessness. A car's max angular velocity is 5.5
             // rad/sec, so if we're near that limit, we're probably in the middle of a
@@ -51,6 +54,7 @@ impl Behavior for Land {
                 // Handbrake, in case we'll be landing on a wall and want to recover without losing
                 // speed. Don't handbrake near the ground, since it will mess up steering.
                 Handbrake: me.Physics.loc().z >= 50.0,
+                Boost: panic_boost,
                 ..Default::default()
             });
         }
@@ -67,7 +71,7 @@ impl Behavior for Land {
             rl::GRAVITY,
         )
         .unwrap();
-        let want_to_boost_down = me.Boost > 0 && time_to_ground >= 0.6;
+        let want_to_boost_down = me.Boost > 0 && time_to_ground >= 0.6 && !panic_boost;
 
         // Point the nose of the car along the surface we're landing on.
         let forward = {
@@ -83,25 +87,22 @@ impl Behavior for Land {
             plane.project_vector(&facing).to_axis()
         };
 
-        let (target_forward, boost);
+        let (target_forward, boost_down);
         if want_to_boost_down {
             target_forward = forward.rotation_to(&-Vector3::z_axis()).powf(0.8) * forward;
 
             let nose_down_angle = me.Physics.forward_axis().angle_to(&-Vector3::z_axis());
-            boost = nose_down_angle < PI / 3.0;
+            boost_down = nose_down_angle < PI / 3.0;
 
             ctx.eeg.draw(Drawable::print("boosting down", color::GREEN));
             ctx.eeg.print_time("time_to_ground", time_to_ground);
             ctx.eeg.print_angle("nose_down_angle", nose_down_angle);
         } else {
             target_forward = forward;
-            boost = false;
+            boost_down = false;
 
             ctx.eeg.draw(Drawable::print("just floating", color::GREEN));
         }
-
-        // If we're way out of position, boost back towards net.
-        let boost = boost || panic_retreat_boost(ctx);
 
         let (pitch, yaw, roll) = dom::get_pitch_yaw_roll(me, target_forward, plane.normal);
         Action::Yield(common::halfway_house::PlayerInput {
@@ -109,7 +110,8 @@ impl Behavior for Land {
             Pitch: pitch,
             Yaw: yaw,
             Roll: roll,
-            Boost: boost,
+            Boost: (boost_down || panic_boost)
+                && me.Physics.vel().norm() < rl::CAR_ALMOST_MAX_SPEED,
             Handbrake: will_be_skidding_on_landing(ctx, plane),
             ..Default::default()
         })
@@ -197,29 +199,31 @@ fn find_landing_plane<'ctx>(ctx: &mut Context<'ctx>) -> &'ctx Plane {
     ctx.game.pitch().ground()
 }
 
-fn panic_retreat_boost(ctx: &mut Context<'_>) -> bool {
-    let own_goal_loc = ctx.game.own_goal().center_2d;
-    let ball = ctx.scenario.ball_prediction().at_time_or_last(2.0);
-    let ball_loc = ball.loc.to_2d();
-    let car_loc = ctx.me().Physics.loc_2d();
-    let car_forward_axis = ctx.me().Physics.forward_axis();
+impl Land {
+    pub fn panic_retreat_boost(ctx: &mut Context<'_>) -> bool {
+        let own_goal_loc = ctx.game.own_goal().center_2d;
+        let ball = ctx.scenario.ball_prediction().at_time_or_last(2.0);
+        let ball_loc = ball.loc.to_2d();
+        let car_loc = ctx.me().Physics.loc_2d();
+        let car_forward_axis = ctx.me().Physics.forward_axis();
 
-    if !ctx.game.enemy_goal().is_y_within_range(car_loc.y, ..3000.0) {
-        return false;
+        if !ctx.game.enemy_goal().is_y_within_range(car_loc.y, ..3000.0) {
+            return false;
+        }
+
+        let dist_goal_to_ball = (ball_loc - own_goal_loc).norm();
+        let dist_goal_to_car = (car_loc - own_goal_loc).norm();
+        let wildly_out_of_position = dist_goal_to_ball + 2000.0 < dist_goal_to_car;
+        if !wildly_out_of_position {
+            return false;
+        }
+
+        // Only boost if the tailpipe is facing the right way.
+        let opportune_boost_dir = car_forward_axis
+            .angle_to(&(own_goal_loc - car_loc).to_3d(0.0).to_axis())
+            .abs();
+        opportune_boost_dir < PI / 4.0
     }
-
-    let dist_goal_to_ball = (ball_loc - own_goal_loc).norm();
-    let dist_goal_to_car = (car_loc - own_goal_loc).norm();
-    let wildly_out_of_position = dist_goal_to_ball + 2000.0 < dist_goal_to_car;
-    if !wildly_out_of_position {
-        return false;
-    }
-
-    // Only boost if the tailpipe is facing the right way.
-    let opportune_boost_dir = car_forward_axis
-        .angle_to(&(own_goal_loc - car_loc).to_3d(0.0).to_axis())
-        .abs();
-    opportune_boost_dir < PI / 4.0
 }
 
 fn will_be_skidding_on_landing(ctx: &mut Context<'_>, plane: &Plane) -> bool {
