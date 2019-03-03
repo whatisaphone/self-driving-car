@@ -4,11 +4,7 @@ use crate::{
     strategy::{Action, Behavior, Context},
     utils::geometry::Plane,
 };
-use common::{
-    kinematics::{kinematic, kinematic_time},
-    prelude::*,
-    rl,
-};
+use common::{kinematics::kinematic, prelude::*, rl};
 use derive_new::new;
 use nalgebra::{Unit, Vector2, Vector3};
 use nameof::name_of_type;
@@ -61,17 +57,9 @@ impl Behavior for Land {
 
         ctx.eeg.draw(Drawable::print("air rolling", color::GREEN));
 
-        let plane = find_landing_plane(ctx);
+        let (plane, landing_time) = find_landing_plane(ctx);
         ctx.eeg.print_value("plane", plane.normal);
-
-        // Boost towards the ground if we're floating helplessly
-        let time_to_ground = kinematic_time(
-            -me.Physics.loc().z + rl::OCTANE_NEUTRAL_Z,
-            me.Physics.vel().z,
-            rl::GRAVITY,
-        )
-        .unwrap();
-        let want_to_boost_down = me.Boost > 0 && time_to_ground >= 0.6 && !panic_boost;
+        let want_to_boost_down = me.Boost > 0 && landing_time >= 0.6 && !panic_boost;
 
         // Point the nose of the car along the surface we're landing on.
         let forward = {
@@ -95,7 +83,7 @@ impl Behavior for Land {
             boost_down = nose_down_angle < PI / 3.0;
 
             ctx.eeg.draw(Drawable::print("boosting down", color::GREEN));
-            ctx.eeg.print_time("time_to_ground", time_to_ground);
+            ctx.eeg.print_time("landing_time", landing_time);
             ctx.eeg.print_angle("nose_down_angle", nose_down_angle);
         } else {
             target_forward = forward;
@@ -172,7 +160,7 @@ fn face_the_ball(ctx: &mut Context<'_>) -> Vector2<f32> {
 
 /// Simulate car freefall for increasing time intervals and try to find the
 /// first wall we will penetrate.
-fn find_landing_plane<'ctx>(ctx: &mut Context<'ctx>) -> &'ctx Plane {
+fn find_landing_plane<'ctx>(ctx: &mut Context<'ctx>) -> (&'ctx Plane, f32) {
     // This routine assumes the field is fully convex (or concave I guess, since
     // we're inside it?)
 
@@ -183,7 +171,7 @@ fn find_landing_plane<'ctx>(ctx: &mut Context<'ctx>) -> &'ctx Plane {
     // convex(/convace?) so the below check won't work. Just orient to the ground
     // instead since that seems to produce the best results.
     if !ctx.game.is_inside_field(start_loc.to_2d()) {
-        return ctx.game.pitch().ground();
+        return (ctx.game.pitch().ground(), 0.0);
     }
 
     for time in (0..40).into_iter().map(|x| x as f32 / 20.0) {
@@ -191,12 +179,12 @@ fn find_landing_plane<'ctx>(ctx: &mut Context<'ctx>) -> &'ctx Plane {
         let loc = start_loc + loc;
         let plane = ctx.game.pitch().closest_plane(&loc);
         if plane.distance_to_point(&loc) < 50.0 {
-            return plane;
+            return (plane, time);
         }
     }
 
     // Fallback
-    ctx.game.pitch().ground()
+    (ctx.game.pitch().ground(), 2.0)
 }
 
 impl Land {
