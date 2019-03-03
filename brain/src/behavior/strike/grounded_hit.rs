@@ -399,9 +399,13 @@ impl Behavior for AbortIfNotNearBall {
         let ball_loc = ctx.packet.GameBall.Physics.loc();
         let car_loc = ctx.me().Physics.loc();
         let distance = (ball_loc - car_loc).norm();
-        if distance < 500.0 {
+        if distance < 600.0 {
             Action::Return
         } else {
+            ctx.eeg.log(
+                name_of_type!(AbortIfNotNearBall),
+                format!("distance is {:.0}", distance),
+            );
             Action::Abort
         }
     }
