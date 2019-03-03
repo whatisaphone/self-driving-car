@@ -22,13 +22,24 @@ use nameof::name_of_type;
 
 #[derive(Clone, new)]
 pub struct GroundIntercept {
-    #[new(value = "false")]
-    allow_dodging: bool,
+    #[new(value = "GroundInterceptAllowDodging::OnlyIfSlow")]
+    allow_dodging: GroundInterceptAllowDodging,
+}
+
+#[derive(Copy, Clone)]
+pub enum GroundInterceptAllowDodging {
+    Yes,
+    No,
+    OnlyIfSlow,
 }
 
 impl GroundIntercept {
     pub fn allow_dodging(mut self, allow_dodging: bool) -> Self {
-        self.allow_dodging = allow_dodging;
+        self.allow_dodging = if allow_dodging {
+            GroundInterceptAllowDodging::Yes
+        } else {
+            GroundInterceptAllowDodging::No
+        };
         self
     }
 }
@@ -77,10 +88,17 @@ impl RoutePlanner for GroundIntercept {
             );
             straight_time = 0.0;
         }
+        let allow_dodging = match self.allow_dodging {
+            GroundInterceptAllowDodging::Yes => true,
+            GroundInterceptAllowDodging::No => false,
+            GroundInterceptAllowDodging::OnlyIfSlow => {
+                straight_time >= 3.0 && ctx.start.boost < 50.0
+            }
+        };
         let straight = GroundStraightPlanner::new(guess.loc.to_2d(), StraightMode::Fake)
             .target_time(straight_time)
             .end_chop(0.5)
-            .allow_dodging(self.allow_dodging);
+            .allow_dodging(allow_dodging);
 
         Ok(ChainedPlanner::join_planner(turn, Some(Box::new(straight))))
     }
