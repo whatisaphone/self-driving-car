@@ -169,7 +169,7 @@ fn dodge_target(ctx: &mut Context<'_>) -> Option<Point2<f32>> {
     }
 
     let ball = ctx.scenario.ball_prediction().at_time_or_last(2.0);
-    if (ball.loc.to_2d() - ctx.me().Physics.loc_2d()).norm() < 2000.0 {
+    if (ball.loc.to_2d() - ctx.me().Physics.loc_2d()).norm() < 3000.0 {
         ctx.eeg
             .log(name_of_type!(GetToFlatGround), "the ball will be close");
         return None;
