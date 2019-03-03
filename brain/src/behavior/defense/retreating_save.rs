@@ -243,7 +243,7 @@ impl RetreatingSave {
         ctx.eeg.print_angle("cur_angle", cur_angle);
         ctx.eeg.print_angle("target_angle", target_angle);
 
-        cross_speed < 300.0 && pass_proximity < 50.0 && (cur_angle - target_angle).abs() < PI / 6.0
+        cross_speed < 300.0 && pass_proximity < 80.0 && (cur_angle - target_angle).abs() < PI / 6.0
     }
 
     fn calc_drive(&self, ctx: &mut Context<'_>, plan: &Plan) -> (f32, bool) {
