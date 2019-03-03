@@ -107,8 +107,11 @@ impl Shoot {
         // that will be above the crossbar (meaning we would miss the shot).
         let min_distance_cutoff =
             linear_interpolate(&[2000.0, 3000.0], &[2000.0, 750.0], car_speed_towards_ball);
-        let max_distance_cutoff =
-            linear_interpolate(&[1500.0, 3000.0], &[1800.0, 5000.0], car_speed_towards_ball);
+        let max_distance_cutoff = linear_interpolate(
+            &[1500.0, 2000.0, 2500.0],
+            &[1800.0, 2800.0, 5000.0],
+            car_speed_towards_ball,
+        );
 
         // Check if the enemy is directly in the way of the shot.
         let mut enemy_blocking_dist = 9999.0;
