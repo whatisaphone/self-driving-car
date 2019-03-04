@@ -118,14 +118,14 @@ impl Shoot {
         let mut enemy_blocking_ortho_dist = 9999.0;
         if let Some(enemy) = ctx.scenario.primary_enemy() {
             let ball_loc = intercept.ball_loc.to_2d();
-            let ball_to_goal = (ctx.game.enemy_goal().center_2d - ball_loc).to_axis();
+            let ball_to_goal = (intercept.data.aim_loc - ball_loc).to_axis();
             let ball_to_enemy = enemy.Physics.loc_2d() - ball_loc;
             enemy_blocking_dist = ball_to_enemy.dot(&ball_to_goal);
             enemy_blocking_ortho_dist = ball_to_enemy.dot(&ball_to_goal.ortho()).abs();
         };
         // The enemy is blocking if they are far enough away that this isn't a 50/50,
         // and close to the line from the ball to the goal.
-        let enemy_blocking = enemy_blocking_dist >= 750.0 && enemy_blocking_ortho_dist < 500.0;
+        let enemy_blocking = enemy_blocking_dist >= 750.0 && enemy_blocking_ortho_dist < 1000.0;
 
         let min_car_speed = linear_interpolate(
             &[2500.0, 5000.0],
