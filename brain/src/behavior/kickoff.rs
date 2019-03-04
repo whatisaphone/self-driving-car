@@ -119,7 +119,7 @@ impl Behavior for Kickoff {
             ]))
         } else if is_off_center_kickoff(ctx) {
             let target_loc = Point2::new(
-                (100.0 + rand1 * 25.0) * x_signum,
+                (100.0 + rand1 * 10.0) * x_signum,
                 (2500.0 + rand2 * 25.0) * y_signum,
             );
             Box::new(
