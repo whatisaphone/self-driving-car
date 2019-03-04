@@ -48,8 +48,10 @@ impl Behavior for Land {
                 .draw(Drawable::print("waiting until after flip", color::GREEN));
             return Action::Yield(common::halfway_house::PlayerInput {
                 // Handbrake, in case we'll be landing on a wall and want to recover without losing
-                // speed. Don't handbrake near the ground, since it will mess up steering.
-                Handbrake: me.Physics.loc().z >= 50.0,
+                // speed. Don't handbrake near the ground, since it will mess up steering. Don't
+                // handbrake in a goal, since it's not useful to conserve momentum there.
+                Handbrake: me.Physics.loc().z >= 50.0
+                    && ctx.game.is_inside_field(me.Physics.loc_2d()),
                 Boost: panic_boost,
                 ..Default::default()
             });

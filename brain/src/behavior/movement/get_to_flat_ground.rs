@@ -126,7 +126,7 @@ fn jump_down_from_the_wall(ctx: &mut Context<'_>) -> Action {
         inputs.push(Box::new(YieldAndMaybePanicBoost::new(
             0.1,
             common::halfway_house::PlayerInput {
-                Handbrake: true,
+                Handbrake: ctx.game.is_inside_field(me.Physics.loc_2d()),
                 ..Default::default()
             },
         )));
