@@ -433,6 +433,8 @@ mod integration_tests {
                 car_loc: Point3::new(286.2713, -5031.399, 16.99),
                 car_rot: Rotation3::from_unreal_angles(-0.00958738, 0.59949887, 0.0),
                 car_vel: Vector3::new(1251.7024, 854.6698, 8.411),
+                enemy_loc: Point3::new(3000.0, -3700.0, 17.01),
+                enemy_rot: Rotation3::from_unreal_angles(0.0, -PI / 2.0, 0.0),
                 ..Default::default()
             })
             .soccar()
