@@ -116,12 +116,14 @@ impl Shoot {
         // Check if the enemy is directly in the way of the shot.
         let mut enemy_blocking_dist = 9999.0;
         let mut enemy_blocking_ortho_dist = 9999.0;
+        let mut enemy_blocking_angle = PI;
         if let Some(enemy) = ctx.scenario.primary_enemy() {
             let ball_loc = intercept.ball_loc.to_2d();
             let ball_to_goal = (intercept.data.aim_loc - ball_loc).to_axis();
             let ball_to_enemy = enemy.Physics.loc_2d() - ball_loc;
             enemy_blocking_dist = ball_to_enemy.dot(&ball_to_goal);
             enemy_blocking_ortho_dist = ball_to_enemy.dot(&ball_to_goal.ortho()).abs();
+            enemy_blocking_angle = ball_to_goal.angle_to(&ball_to_enemy).abs();
         };
         // The enemy is blocking if they are far enough away that this isn't a 50/50,
         // and close to the line from the ball to the goal.
@@ -144,6 +146,8 @@ impl Shoot {
             .print_distance("min_distance_cutoff", min_distance_cutoff);
         ctx.eeg
             .print_distance("max_distance_cutoff", max_distance_cutoff);
+        ctx.eeg
+            .print_angle("enemy_blocking_angle", enemy_blocking_angle);
         ctx.eeg.print_distance("blocking", enemy_blocking_dist);
         ctx.eeg
             .print_distance("blocking ortho", enemy_blocking_ortho_dist);
