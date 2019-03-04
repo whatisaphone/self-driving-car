@@ -69,7 +69,8 @@ impl RetreatingSave {
     /// just as dangerous as inside the goal.
     pub fn impending_dangerous_ball<'ctx>(ctx: &mut Context<'ctx>) -> Option<&'ctx BallFrame> {
         ctx.scenario.ball_prediction().iter().find(|ball| {
-            ctx.game.own_goal().is_y_within_range(ball.loc.y, ..250.0) && ball.loc.x.abs() < 1500.0
+            let goal = ctx.game.own_goal();
+            goal.is_y_within_range(ball.loc.y, ..250.0) && ball.loc.x.abs() < goal.max_x
         })
     }
 
