@@ -68,7 +68,7 @@ impl Behavior for BlitzToLocation {
             if (distance > flip_dist && steer.abs() < PI / 24.0)
                 || (distance > flip_dist * 1.5 && steer.abs() < PI / 8.0)
             {
-                return Action::TailCall(Box::new(QuickJumpAndDodge::begin(ctx.packet)));
+                return Action::TailCall(Box::new(QuickJumpAndDodge::new()));
             }
         }
 

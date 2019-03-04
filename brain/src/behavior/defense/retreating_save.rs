@@ -325,7 +325,7 @@ impl RetreatingSave {
     }
 
     fn dodge(&self, ctx: &mut Context<'_>) -> Action {
-        let (ball, apex) = self.simulate_jump(ctx);
+        let (ball, _apex) = self.simulate_jump(ctx);
 
         if Self::safer_not_to_dodge(
             ctx.game,
@@ -342,13 +342,10 @@ impl RetreatingSave {
             ));
         }
 
-        let theta = apex
-            .forward_axis_2d()
-            .angle_to(&(ball.loc.to_2d() - apex.loc_2d()));
         Action::tail_call(
             QuickJumpAndDodge::new()
                 .jump_time(Self::JUMP_TIME)
-                .angle(theta),
+                .towards_ball(),
         )
     }
 

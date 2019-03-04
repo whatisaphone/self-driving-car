@@ -27,7 +27,6 @@ impl Dodge {
     }
 
     /// The angle of the dodge, where 0° means straight forward.
-    #[allow(dead_code)]
     pub fn angle(mut self, angle: UnitComplex<f32>) -> Self {
         self.direction = Direction::Angle(angle);
         self

@@ -1,12 +1,15 @@
-use crate::strategy::{Action, Behavior, Context, Priority};
+use crate::{
+    behavior::movement::Dodge,
+    strategy::{Action, Behavior, Context, Priority},
+};
+use nalgebra::UnitComplex;
 use nameof::name_of_type;
 
 pub struct QuickJumpAndDodge {
     start_time: Option<f32>,
-    pitch: f32,
-    yaw: f32,
     dodge_time: f32,
     phase: Phase,
+    dodge: Dodge,
 }
 
 #[derive(Eq, PartialEq)]
@@ -20,23 +23,15 @@ enum Phase {
 
 impl QuickJumpAndDodge {
     const MIN_PHASE_TIME: f32 = 0.05;
-    pub const MIN_DODGE_TIME: f32 = Self::MIN_PHASE_TIME * 2.0;
-    pub const FOLLOW_THROUGH_TIME: f32 = 0.5;
+    const MIN_DODGE_TIME: f32 = Self::MIN_PHASE_TIME * 2.0;
+    const FOLLOW_THROUGH_TIME: f32 = 0.5;
 
     pub fn new() -> Self {
         Self {
             start_time: None,
-            pitch: -1.0,
-            yaw: 0.0,
             dodge_time: Self::MIN_DODGE_TIME,
             phase: Phase::Jump,
-        }
-    }
-
-    pub fn begin(packet: &common::halfway_house::LiveDataPacket) -> Self {
-        Self {
-            start_time: Some(packet.GameInfo.TimeSeconds),
-            ..Self::new()
+            dodge: Dodge::new(),
         }
     }
 
@@ -47,8 +42,12 @@ impl QuickJumpAndDodge {
     }
 
     pub fn angle(mut self, angle: f32) -> Self {
-        self.pitch = -angle.cos();
-        self.yaw = angle.sin();
+        self.dodge = self.dodge.angle(UnitComplex::new(angle));
+        self
+    }
+
+    pub fn towards_ball(mut self) -> Self {
+        self.dodge = self.dodge.towards_ball();
         self
     }
 }
@@ -68,12 +67,8 @@ impl Behavior for QuickJumpAndDodge {
             .get_or_insert(ctx.packet.GameInfo.TimeSeconds);
         let elapsed = ctx.packet.GameInfo.TimeSeconds - start_time;
 
-        ctx.eeg.print_angle("pitch", self.pitch);
-        ctx.eeg.print_angle("yaw", self.yaw);
         ctx.eeg.print_time("dodge_time", self.dodge_time);
         ctx.eeg.print_time("elapsed", elapsed);
-
-        let mut result = common::halfway_house::PlayerInput::default();
 
         if self.phase == Phase::Jump || elapsed < self.dodge_time - Self::MIN_PHASE_TIME {
             if self.phase == Phase::Jump && !ctx.me().OnGround {
@@ -83,8 +78,10 @@ impl Behavior for QuickJumpAndDodge {
 
             self.phase = Phase::And;
 
-            result.Jump = true;
-            Action::Yield(result)
+            Action::Yield(common::halfway_house::PlayerInput {
+                Jump: true,
+                ..Default::default()
+            })
         } else if self.phase == Phase::And || elapsed < self.dodge_time {
             if ctx.me().DoubleJumped {
                 ctx.eeg.log(self.name(), "must have air charge");
@@ -93,7 +90,7 @@ impl Behavior for QuickJumpAndDodge {
 
             self.phase = Phase::Dodge;
 
-            Action::Yield(result)
+            Action::Yield(Default::default())
         } else if self.phase == Phase::Dodge || elapsed < self.dodge_time + 0.1 {
             if ctx.me().OnGround {
                 ctx.eeg.log(self.name(), "goomba stomped?");
@@ -102,10 +99,7 @@ impl Behavior for QuickJumpAndDodge {
 
             self.phase = Phase::FollowThrough;
 
-            result.Jump = true;
-            result.Pitch = self.pitch;
-            result.Yaw = self.yaw;
-            Action::Yield(result)
+            self.dodge.execute_old(ctx)
         } else if self.phase == Phase::FollowThrough
             || elapsed < self.dodge_time + Self::FOLLOW_THROUGH_TIME
         {
@@ -116,7 +110,7 @@ impl Behavior for QuickJumpAndDodge {
 
             self.phase = Phase::Finished;
 
-            Action::Yield(result)
+            Action::Yield(Default::default())
         } else {
             Action::Return
         }
