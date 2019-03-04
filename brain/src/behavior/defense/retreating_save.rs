@@ -27,7 +27,7 @@ pub struct RetreatingSave {
 }
 
 impl RetreatingSave {
-    const MAX_BALL_Z: f32 = 200.0;
+    const MAX_BALL_Z: f32 = 150.0;
     const JUMP_TIME: f32 = 0.1;
 
     pub fn new() -> Self {
