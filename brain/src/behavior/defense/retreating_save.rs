@@ -201,6 +201,7 @@ impl RetreatingSave {
 
     fn drive(&self, ctx: &mut Context<'_>, plan: &Plan) -> Action {
         if self.should_stop(ctx, plan) {
+            ctx.eeg.track(Event::RetreatingSaveStopAndWait);
             let throttle = if ctx.me().Physics.vel_2d().norm() >= 100.0 {
                 -1.0
             } else {
@@ -224,7 +225,7 @@ impl RetreatingSave {
         })
     }
 
-    /// If we're already sitting still and the ball is headed right for us,
+    /// If we're already sitting still and the ball is rolling right towards us,
     /// avoid creeping forward slowly and losing territory.
     fn should_stop(&self, ctx: &mut Context<'_>, plan: &Plan) -> bool {
         let ball_loc = ctx.packet.GameBall.Physics.loc_2d();
@@ -244,7 +245,11 @@ impl RetreatingSave {
         ctx.eeg.print_angle("cur_angle", cur_angle);
         ctx.eeg.print_angle("target_angle", target_angle);
 
-        cross_speed < 300.0 && pass_proximity < 80.0 && (cur_angle - target_angle).abs() < PI / 6.0
+        ctx.packet.GameBall.Physics.loc().z < 120.0
+            && ctx.packet.GameBall.Physics.vel().z < 100.0
+            && cross_speed < 300.0
+            && pass_proximity < 80.0
+            && (cur_angle - target_angle).abs() < PI / 6.0
     }
 
     fn calc_drive(&self, ctx: &mut Context<'_>, plan: &Plan) -> (f32, bool) {
@@ -415,6 +420,7 @@ mod integration_tests {
 
         test.examine_events(|events| {
             assert!(events.contains(&Event::RetreatingSave));
+            assert!(!events.contains(&Event::RetreatingSaveStopAndWait));
         });
     }
 
@@ -435,6 +441,7 @@ mod integration_tests {
 
         test.examine_events(|events| {
             assert!(events.contains(&Event::RetreatingSave));
+            assert!(!events.contains(&Event::RetreatingSaveStopAndWait));
         });
     }
 
@@ -462,6 +469,7 @@ mod integration_tests {
 
         test.examine_events(|events| {
             assert!(events.contains(&Event::RetreatingSave));
+            assert!(!events.contains(&Event::RetreatingSaveStopAndWait));
         });
     }
 
@@ -482,6 +490,7 @@ mod integration_tests {
 
         test.examine_events(|events| {
             assert!(events.contains(&Event::RetreatingSave));
+            assert!(!events.contains(&Event::RetreatingSaveStopAndWait));
         });
     }
 
@@ -510,6 +519,7 @@ mod integration_tests {
 
         test.examine_events(|events| {
             assert!(events.contains(&Event::RetreatingSave));
+            assert!(!events.contains(&Event::RetreatingSaveStopAndWait));
         });
     }
 
@@ -541,6 +551,7 @@ mod integration_tests {
 
         test.examine_events(|events| {
             assert!(events.contains(&Event::RetreatingSave));
+            assert!(events.contains(&Event::RetreatingSaveStopAndWait));
         });
     }
 
@@ -561,6 +572,8 @@ mod integration_tests {
 
         test.examine_events(|events| {
             assert!(events.contains(&Event::RetreatingSave));
+            // I wish this was yes, but right now it's no:
+            assert!(!events.contains(&Event::RetreatingSaveStopAndWait));
         });
     }
 
@@ -581,6 +594,7 @@ mod integration_tests {
 
         test.examine_events(|events| {
             assert!(events.contains(&Event::RetreatingSave));
+            assert!(!events.contains(&Event::RetreatingSaveStopAndWait));
         });
     }
 
@@ -636,6 +650,7 @@ mod integration_tests {
 
         test.examine_events(|events| {
             assert!(events.contains(&Event::RetreatingSave));
+            assert!(!events.contains(&Event::RetreatingSaveStopAndWait));
         });
     }
 }

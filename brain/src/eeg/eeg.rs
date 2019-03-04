@@ -23,6 +23,7 @@ pub enum Event {
     PushFromLeftToRight,
     PushFromRightToLeft,
     RetreatingSave,
+    RetreatingSaveStopAndWait,
     Offense,
     TepidHitTowardEnemyGoal,
     TepidHitBlockAngleToGoal,
