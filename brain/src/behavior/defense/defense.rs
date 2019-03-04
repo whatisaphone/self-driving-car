@@ -592,7 +592,6 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "TODO")]
     fn falling_in_front_of_far_corner() {
         let test = TestRunner::new()
             .scenario(TestScenario {
