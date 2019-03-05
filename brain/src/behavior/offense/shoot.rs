@@ -9,7 +9,6 @@ use crate::{
     helpers::intercept::{naive_ground_intercept_2, NaiveIntercept},
     routing::{behavior::FollowRoute, plan::GroundIntercept},
     strategy::{Action, Behavior, Context, Game, Priority, Scenario},
-    utils::geometry::Line2,
 };
 use common::{prelude::*, Speed};
 use nalgebra::{Point2, Point3};
@@ -34,22 +33,16 @@ impl Shoot {
             return None;
         }
 
-        // Get a "naive" location for initial checks, directly across from the car.
         let goal = game.enemy_goal();
-        let goalline = Line2::from_origin_dir(goal.center_2d, goal.normal_2d.ortho().to_axis());
-        let aim_loc = goalline
-            .intersect(Line2::from_points(car_loc.to_2d(), ball_loc.to_2d()))
-            .unwrap_or(goal.center_2d);
-        let aim_loc = goal.closest_point(aim_loc);
-        // Fix weirdness when the ball is halfway in the goal. If the aim location is
-        // directly on the surface of the goal plane, it's in "front" of the ball, and
-        // since we can't hit the ball backwards (naturally), we would abort. Prevent
-        // that weirdness and take the easy goal.
-        let aim_loc = aim_loc + (aim_loc - car_loc.to_2d()).normalize() * 500.0;
+        let aim_loc = BounceShot::aim_loc(goal, car_loc.to_2d(), ball_loc.to_2d());
+
+        if aim_loc.x.abs() >= 900.0 {
+            return None;
+        }
 
         let ball_to_goal = aim_loc - ball_loc.to_2d();
         let car_to_ball = ball_loc.to_2d() - car_loc.to_2d();
-        if car_to_ball.angle_to(&ball_to_goal).abs() >= PI / 6.0 {
+        if car_to_ball.angle_to(&ball_to_goal).abs() >= 45.0_f32.to_radians() {
             return None;
         }
 
@@ -59,10 +52,6 @@ impl Shoot {
         if goal_angle.abs() >= PI * (5.0 / 12.0) {
             return None;
         }
-
-        // If all preconditions succeeded, return the actual spot we should aim at. This
-        // will probably end up a lot closer to the center of the goal.
-        let aim_loc = BounceShot::aim_loc(goal, car_loc.to_2d(), ball_loc.to_2d());
 
         Some(Shot { aim_loc })
     }
@@ -512,6 +501,26 @@ mod integration_tests {
                 car_loc: Point3::new(-3703.5498, 2287.02, 16.52),
                 car_rot: Rotation3::from_unreal_angles(-0.0016736704, 0.44723073, 0.013854827),
                 car_vel: Vector3::new(1167.011, 648.27094, 18.271),
+                ..Default::default()
+            })
+            .starting_boost(50.0)
+            .soccar()
+            .run_for_millis(3500);
+
+        assert!(test.has_scored());
+    }
+
+    #[test]
+    fn wait_for_ball_to_cross_net() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(-3343.14, 2892.47, 139.55),
+                ball_vel: Vector3::new(319.661, 2445.8208, -694.371),
+                ball_ang_vel: Vector3::new(2.25181, -1.8723099, 5.23671),
+                car_loc: Point3::new(-3524.0898, 654.37, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.009572513, 1.1953338, 0.000055621615),
+                car_vel: Vector3::new(560.47095, 1404.5709, 8.311),
+                car_ang_vel: Vector3::new(-0.00010999999, 0.00051, 0.033809997),
                 ..Default::default()
             })
             .starting_boost(50.0)
