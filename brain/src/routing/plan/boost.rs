@@ -146,7 +146,7 @@ impl GetDollar {
         pickup: &BoostPickup,
     ) -> Result<RoutePlan, RoutePlanError> {
         guard!(ctx.start, IsSkidding, RoutePlanError::MustNotBeSkidding {
-            recover_target_loc: pickup.loc,
+            recover_target_loc: self.target_face,
         });
 
         let travel_axis = (pickup.loc - ctx.start.loc_2d()).to_axis();
