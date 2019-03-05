@@ -18,8 +18,9 @@ impl Retreat {
     }
 
     /// Returns `true` if the ball is between me and my goal.
-    pub fn out_of_position(ctx: &mut Context<'_>) -> bool {
+    fn out_of_position(ctx: &mut Context<'_>) -> bool {
         let intercept = some_or_else!(ctx.scenario.me_intercept(), {
+            ctx.eeg.log(name_of_type!(Retreat), "no intercept?");
             return false;
         });
         let goal_loc = ctx.game.own_goal().center_2d;
@@ -27,12 +28,19 @@ impl Retreat {
         let me_loc = ctx.me().Physics.loc_2d();
 
         if ctx.game.own_goal().is_y_within_range(me_loc.y, ..0.0) {
+            ctx.eeg.log(name_of_type!(Retreat), "no intercept");
             return true;
         }
 
         let axis = (me_loc - goal_loc).to_axis();
         let ball_dist = (ball_loc - goal_loc).dot(&axis);
         let me_dist = (me_loc - goal_loc).dot(&axis);
+
+        if me_dist * 4.0 < ball_dist {
+            ctx.eeg.log(name_of_type!(Retreat), "already close to goal");
+            return true;
+        }
+
         me_dist > ball_dist + 500.0
     }
 }
