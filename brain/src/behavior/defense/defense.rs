@@ -117,11 +117,13 @@ impl Behavior for Defense {
 
         // If we're not between the ball and our goal, get there.
         if !Self::is_between_ball_and_own_goal(ctx.game, ctx.me(), ctx.scenario) {
+            ctx.eeg.log(self.name(), "not between ball and goal");
             return Action::tail_call(Retreat::new());
         }
 
         // If we need to make a save, do so.
         if RetreatingSave::applicable(ctx).is_ok() {
+            ctx.eeg.log(self.name(), "retreating save");
             return Action::tail_call(Retreat::new());
         }
 
