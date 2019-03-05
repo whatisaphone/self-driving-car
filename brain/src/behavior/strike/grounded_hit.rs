@@ -12,7 +12,7 @@ use crate::{
 };
 use common::{physics, prelude::*, rl, Coordinate, Distance};
 use derive_new::new;
-use nalgebra::{Point2, Point3, UnitQuaternion};
+use nalgebra::{Point2, Point3, UnitQuaternion, Vector3};
 use nameof::name_of_type;
 use simulate::{
     car_single_jump::{time_to_z, JUMP_MAX_Z},
@@ -172,6 +172,7 @@ where
             car: me,
             intercept_time: intercept.time,
             intercept_ball_loc: intercept.ball_loc,
+            intercept_ball_vel: intercept.ball_vel,
             eeg: ctx.eeg,
         };
         let target = (self.aim)(&mut aim_context)
@@ -202,6 +203,7 @@ where
             car: me,
             intercept_time: intercept.time,
             intercept_ball_loc: intercept.ball_loc,
+            intercept_ball_vel: intercept.ball_vel,
             eeg: ctx.eeg,
         };
         let target = (self.aim)(&mut aim_context)?;
@@ -435,6 +437,7 @@ pub struct GroundedHitAimContext<'a, 'b> {
     pub car: &'a common::halfway_house::PlayerInfo,
     pub intercept_time: f32,
     pub intercept_ball_loc: Point3<f32>,
+    pub intercept_ball_vel: Vector3<f32>,
     pub eeg: &'a mut EEG,
 }
 

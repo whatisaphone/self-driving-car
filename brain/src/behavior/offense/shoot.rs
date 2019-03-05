@@ -157,7 +157,8 @@ impl Shoot {
         car_speed >= min_car_speed
             && car_speed_towards_ball * 0.85 >= car_speed
             && (shot_distance < min_distance_cutoff || shot_distance >= max_distance_cutoff)
-            && ctx.intercept_ball_loc.z < 120.0
+            && ctx.intercept_ball_loc.z < 110.0
+            && ctx.intercept_ball_vel.z.abs() < 200.0
             && approach_angle < PI / 6.0
             && shot_angle < PI / 6.0
     }
