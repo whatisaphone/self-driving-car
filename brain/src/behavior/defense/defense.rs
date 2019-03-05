@@ -7,11 +7,12 @@ use crate::{
     eeg::Event,
     helpers::hit_angle::blocking_angle,
     strategy::{Action, Behavior, Context, Game, Scenario},
-    utils::WallRayCalculator,
+    utils::{geometry::ExtendF32, WallRayCalculator},
 };
 use common::prelude::*;
 use nalgebra::Vector2;
 use nameof::name_of_type;
+use simulate::linear_interpolate;
 use std::f32::consts::PI;
 
 pub struct Defense;
@@ -79,6 +80,30 @@ impl Defense {
         }
 
         true
+    }
+
+    pub fn enemy_can_shoot(ctx: &mut Context<'_>) -> bool {
+        let (_enemy, intercept) = match ctx.scenario.enemy_intercept() {
+            Some(i) => i,
+            None => return false,
+        };
+        let ball_loc = intercept.ball_loc.to_2d();
+        let goal = ctx.game.own_goal();
+        let dist_ball_to_goal = (ball_loc - goal.center_2d).norm();
+        if ctx.scenario.possession() >= -Scenario::POSSESSION_CONTESTABLE {
+            return false;
+        }
+        ctx.enemy_cars().any(|enemy| {
+            let angle_car_ball = enemy
+                .Physics
+                .loc_2d()
+                .negated_difference_and_angle_to(ball_loc);
+            let angle_ball_goal = ball_loc.negated_difference_and_angle_to(goal.center_2d);
+            let angle_diff = (angle_car_ball - angle_ball_goal).normalize_angle().abs();
+            let max_angle_diff =
+                linear_interpolate(&[2500.0, 7500.0], &[PI / 2.0, PI / 4.0], dist_ball_to_goal);
+            angle_diff < max_angle_diff
+        })
     }
 }
 
