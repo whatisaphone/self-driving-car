@@ -114,6 +114,22 @@ impl Strategy for Soccar {
             )])));
         }
 
+        if current.priority() < Priority::Save
+            && ctx
+                .scenario
+                .impending_concede()
+                .map(|b| b.t < 5.0)
+                .unwrap_or(false)
+            && GetToFlatGround::on_flat_ground(&ctx.me())
+            && !IsSkidding.evaluate(&ctx.me().into())
+        {
+            ctx.eeg
+                .log(name_of_type!(Soccar), "impending concede, trying to save");
+            return Some(Box::new(Chain::new(Priority::Save, vec![Box::new(
+                Defense::new(),
+            )])));
+        }
+
         if current.priority() < Priority::Defense
             && enemy_can_shoot(ctx)
             && GetToFlatGround::on_flat_ground(ctx.me())
@@ -354,6 +370,17 @@ mod integration_tests {
         let test = TestRunner::new()
             .one_v_one(&*recordings::DONT_ALLOW_LONG_SHOT, 282.5)
             .starting_boost(0.0)
+            .soccar()
+            .run_for_millis(7000);
+
+        assert!(!test.enemy_has_scored());
+    }
+
+    #[test]
+    fn transition_from_defense_to_save() {
+        let test = TestRunner::new()
+            .one_v_one(&*recordings::TRANSITION_FROM_DEFENSE_TO_SAVE, 109.0)
+            .starting_boost(30.0)
             .soccar()
             .run_for_millis(7000);
 
