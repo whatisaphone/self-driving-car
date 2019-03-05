@@ -231,6 +231,7 @@ impl Goal {
     }
 }
 
+#[derive(Clone)]
 pub struct BoostPickup {
     pub loc: Point2<f32>,
 }

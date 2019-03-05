@@ -1,6 +1,9 @@
 use crate::{
-    routing::{behavior::FollowRoute, plan::GroundDrive},
-    strategy::{Action, Behavior, Context},
+    routing::{
+        behavior::FollowRoute,
+        plan::{GetDollar, GroundDrive},
+    },
+    strategy::{Action, Behavior, BoostPickup, Context},
 };
 use common::prelude::*;
 use nalgebra::{Point2, Vector2};
@@ -35,7 +38,10 @@ impl Behavior for ResetBehindBall {
 
     fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
         let target_loc = self.get_sane_drive_loc(ctx);
-        let target_loc = self.snap_to_boost_if_close(ctx, target_loc);
+        if let Some(pickup) = self.snap_to_boost_if_close(ctx, target_loc) {
+            return Action::tail_call(FollowRoute::new(GetDollar::new(self.loc).pickup(pickup)));
+        }
+
         let straight = GroundDrive::new(target_loc)
             .end_chop(0.5)
             .always_prefer_dodge(true);
@@ -108,16 +114,22 @@ impl ResetBehindBall {
         target_loc
     }
 
-    fn snap_to_boost_if_close(&self, ctx: &mut Context<'_>, loc: Point2<f32>) -> Point2<f32> {
+    fn snap_to_boost_if_close<'ctx>(
+        &self,
+        ctx: &mut Context<'ctx>,
+        loc: Point2<f32>,
+    ) -> Option<&'ctx BoostPickup> {
         if ctx.me().Boost >= 50 {
-            return loc;
+            return None;
         }
         let distance = linear_interpolate(&[0.0, 50.0], &[1000.0, 250.0], ctx.me().Boost as f32);
         for dollar in ctx.game.boost_dollars() {
             if (loc - dollar.loc).norm() < distance {
-                return dollar.loc;
+                ctx.eeg
+                    .log(name_of_type!(ResetBehindBall), "snapping to boost");
+                return Some(dollar);
             }
         }
-        return loc;
+        return None;
     }
 }

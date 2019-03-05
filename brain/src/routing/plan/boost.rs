@@ -25,6 +25,7 @@ use std::f32::consts::PI;
 pub struct GetDollar {
     destination_hint: Point2<f32>,
     target_face: Point2<f32>,
+    pickup_loc: Option<Point2<f32>>,
 }
 
 impl GetDollar {
@@ -32,7 +33,13 @@ impl GetDollar {
         Self {
             destination_hint,
             target_face: destination_hint,
+            pickup_loc: None,
         }
+    }
+
+    pub fn pickup(mut self, pickup: &BoostPickup) -> Self {
+        self.pickup_loc = Some(pickup.loc);
+        self
     }
 
     pub fn target_face(mut self, target_face: Point2<f32>) -> Self {
@@ -75,16 +82,16 @@ impl RoutePlanner for GetDollar {
             RoutePlanError::MustBeOnFlatGround,
         );
 
-        let pickup = match Self::chooose_pickup(ctx, self.destination_hint) {
+        let pickup = match self.chooose_pickup(ctx, self.destination_hint) {
             Some(p) => p,
             None => return Err(RoutePlanError::OtherError("no pickup found")),
         };
 
-        if let Some(plan) = Self::quick_flip(ctx, dump, pickup) {
+        if let Some(plan) = Self::quick_flip(ctx, dump, &pickup) {
             return Ok(plan);
         }
 
-        self.powerslide_turn(ctx, dump, pickup)
+        self.powerslide_turn(ctx, dump, &pickup)
     }
 }
 
@@ -155,9 +162,14 @@ impl GetDollar {
     }
 
     fn chooose_pickup<'a>(
+        &self,
         ctx: &'a PlanningContext<'_, '_>,
         destination_hint: Point2<f32>,
-    ) -> Option<&'a BoostPickup> {
+    ) -> Option<BoostPickup> {
+        if let Some(pickup_loc) = self.pickup_loc {
+            return Some(BoostPickup { loc: pickup_loc });
+        }
+
         Self::choose_pickup(
             ctx.game.boost_dollars().iter(),
             &CarState2D {
@@ -169,6 +181,7 @@ impl GetDollar {
             destination_hint,
             ctx.game.enemy_goal(),
         )
+        .cloned()
     }
 
     fn choose_pickup<'a>(
