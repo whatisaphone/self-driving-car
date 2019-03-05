@@ -158,7 +158,7 @@ fn time_wasting_hit(ctx: &mut GroundedHitAimContext<'_, '_>) -> Result<GroundedH
         ctx.eeg.track(Event::TepidHitTowardEnemyGoal);
         ctx.eeg
             .draw(Drawable::print("toward enemy goal", color::GREEN));
-        aim_loc = feasible_hit_angle_toward(ball_loc, me_loc, offense_aim, PI / 6.0);
+        aim_loc = offensive_aim(ctx);
         target_adjust = GroundedHitTargetAdjust::RoughAim;
     } else {
         ctx.eeg.track(Event::TepidHitAwayFromOwnGoal);
@@ -180,6 +180,50 @@ fn time_wasting_hit(ctx: &mut GroundedHitAimContext<'_, '_>) -> Result<GroundedH
             .jump(!is_chippable(ctx, aim_loc))
             .dodge(TepidHit::should_dodge(ctx, aim_wall)),
     )
+}
+
+fn offensive_aim(ctx: &mut GroundedHitAimContext<'_, '_>) -> Point2<f32> {
+    let me_loc = ctx.car.Physics.loc_2d();
+    let ball_loc = ctx.intercept_ball_loc.to_2d();
+    let ideal_aim = ctx.game.enemy_back_wall_center();
+
+    // These are our choices. Take the one the enemy isn't defending.
+    let progress = feasible_hit_angle_toward(ball_loc, me_loc, ideal_aim, PI / 6.0);
+    let easy = ball_loc + (ball_loc - me_loc);
+
+    let enemy = some_or_else!(ctx.scenario.primary_enemy(), {
+        return progress;
+    });
+    let enemy_loc = enemy.Physics.loc_2d();
+    let enemy_forward_axis = enemy.Physics.forward_axis_2d();
+
+    let enemy_look_angle = enemy_forward_axis.angle_to(&(ball_loc - enemy_loc));
+    ctx.eeg.print_angle("enemy_look_angle", enemy_look_angle);
+
+    let enemy_defending = enemy.OnGround && enemy_look_angle.abs() < PI / 3.0;
+    if !enemy_defending {
+        return progress;
+    }
+
+    let rot_to_enemy = (ball_loc - me_loc).rotation_to(&(enemy_loc - ball_loc));
+    let rot_progress = (ball_loc - me_loc).rotation_to(&(progress - ball_loc));
+    let rot_easy = (ball_loc - me_loc).rotation_to(&(easy - ball_loc));
+
+    ctx.eeg.print_angle("rot_to_enemy", rot_to_enemy.angle());
+    ctx.eeg.print_angle("rot_progress", rot_progress.angle());
+    ctx.eeg.print_angle("rot_easy", rot_easy.angle());
+
+    // If the enemy isn't near the better aim, hit it there
+    if rot_progress.angle_to(&rot_to_enemy).abs() >= PI / 6.0 {
+        return progress;
+    }
+
+    // If the enemy is there, choose the spot where the enemy is not.
+    if rot_progress.angle_to(&rot_to_enemy).abs() < rot_easy.angle_to(&rot_to_enemy).abs() {
+        easy
+    } else {
+        progress
+    }
 }
 
 fn is_chippable(ctx: &mut GroundedHitAimContext<'_, '_>, aim_loc: Point2<f32>) -> bool {
@@ -241,5 +285,18 @@ mod integration_tests {
         test.examine_events(|events| {
             assert!(events.contains(&Event::TepidHitBlockAngleToGoal));
         });
+    }
+
+    #[test]
+    fn dont_pass_to_opponent() {
+        let test = TestRunner::new()
+            .one_v_one(&*recordings::DONT_PASS_TO_OPPONENT, 459.0)
+            .starting_boost(0.0)
+            .soccar()
+            .run_for_millis(4000);
+
+        let packet = test.sniff_packet();
+        let ball_loc = packet.GameBall.Physics.loc();
+        assert!(ball_loc.y >= 0.0);
     }
 }
