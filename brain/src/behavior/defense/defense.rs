@@ -31,10 +31,7 @@ impl Defense {
         let goal_loc = goal.center_2d;
         let me_loc = car.Physics.loc_2d();
         let me_vel = car.Physics.vel_2d();
-        let ball_loc = match scenario.me_intercept() {
-            Some(i) => i.ball_loc.to_2d(),
-            None => scenario.ball_prediction().last().loc.to_2d(),
-        };
+        let ball_loc = scenario.ball_prediction().start().loc.to_2d();
 
         if PanicDefense::finished_panicking(goal, me_loc, me_vel) {
             // Avoid an infinite loop.
