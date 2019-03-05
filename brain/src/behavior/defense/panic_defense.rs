@@ -164,21 +164,14 @@ impl PanicDefense {
             let blitz_loc = Self::blitz_loc(ctx, aim_hint);
             return Some(Phase::Rush {
                 // Powerslide towards the post opposite the one we're driving to.
-                aim_hint: Point2::new(
-                    blitz_loc.x.signum() * -2000.0,
-                    ctx.game.own_goal().center_2d.y,
-                ),
+                aim_hint: Point2::new(blitz_loc.x.signum() * -2000.0, own_goal.center_2d.y),
                 child: BlitzToLocation::new(blitz_loc),
             });
         }
 
         match self.phase {
             Phase::Rush { .. } | Phase::Turn { .. } => {
-                if ctx
-                    .game
-                    .own_goal()
-                    .is_y_within_range(me.Physics.loc().y, ..120.0)
-                {
+                if own_goal.is_y_within_range(me.Physics.loc().y, ..120.0) {
                     return Some(Phase::Finished);
                 }
             }
@@ -207,11 +200,8 @@ impl PanicDefense {
         }
 
         if let Phase::Rush { aim_hint, .. } = self.phase {
-            let arrived = Self::finished_panicking(
-                ctx.game.own_goal(),
-                me.Physics.loc_2d(),
-                me.Physics.vel_2d(),
-            );
+            let arrived =
+                Self::finished_panicking(own_goal, me.Physics.loc_2d(), me.Physics.vel_2d());
             if arrived {
                 // If the approach is shallow, we're already covering the goal and we don't need
                 // to turn.
@@ -219,11 +209,7 @@ impl PanicDefense {
                     return Some(Phase::Finished);
                 }
 
-                let target_yaw = ctx
-                    .game
-                    .own_goal()
-                    .center_2d
-                    .negated_difference_and_angle_to(aim_hint);
+                let target_yaw = own_goal.center_2d.negated_difference_and_angle_to(aim_hint);
                 return Some(Phase::Turn {
                     aim_hint,
                     start_time: ctx.packet.GameInfo.TimeSeconds,
