@@ -14,7 +14,7 @@ use crate::{
     routing::{behavior::FollowRoute, models::CarState, plan::GroundIntercept},
     sim::{SimGroundDrive, SimJump},
     strategy::{Action, Behavior, Context, Game, Priority},
-    utils::{geometry::Line2, Wall, WallRayCalculator},
+    utils::{geometry::Line2, WallRayCalculator},
 };
 use common::{prelude::*, Distance, Speed};
 use nalgebra::{Point2, Point3};
@@ -51,16 +51,17 @@ impl RetreatingSave {
             return Ok(());
         }
 
-        let ball_extrap = WallRayCalculator::calc_from_motion(
-            ctx.packet.GameBall.Physics.loc_2d(),
-            ctx.packet.GameBall.Physics.vel_2d(),
-        );
-        match WallRayCalculator::wall_for_point(ctx.game, ball_extrap) {
-            Wall::OwnGoal | Wall::OwnBackWall if ball_extrap.x.abs() < 1500.0 => {
-                ctx.eeg.draw(Drawable::print("back wall", color::GREEN));
-                return Ok(());
-            }
-            _ => {}
+        let back_wall = ctx
+            .scenario
+            .ball_prediction()
+            .iter_step_by(0.125)
+            .any(|ball| {
+                ctx.game.own_goal().is_y_within_range(ball.loc.y, ..500.0)
+                    && ball.loc.x.abs() < 1500.0
+            });
+        if back_wall {
+            ctx.eeg.draw(Drawable::print("back wall", color::GREEN));
+            return Ok(());
         }
 
         Err("no impending doom")
@@ -657,6 +658,27 @@ mod integration_tests {
         let ball_loc = packet.GameBall.Physics.loc();
         println!("ball_loc = {:?}", ball_loc);
         assert!(ball_loc.x >= 2000.0);
+
+        test.examine_events(|events| {
+            assert!(events.contains(&Event::RetreatingSave));
+            assert!(!events.contains(&Event::RetreatingSaveStopAndWait));
+        });
+    }
+
+    #[test]
+    fn retreating_save_patience() {
+        let test = TestRunner::new()
+            .one_v_one(&*recordings::RETREATING_SAVE_PATIENCE, 262.0)
+            .starting_boost(60.0)
+            .soccar()
+            .run_for_millis(5000);
+
+        assert!(!test.enemy_has_scored());
+
+        let packet = test.sniff_packet();
+        let ball_vel = packet.GameBall.Physics.vel();
+        println!("ball_vel = {:?}", ball_vel);
+        assert!(ball_vel.y >= 0.0);
 
         test.examine_events(|events| {
             assert!(events.contains(&Event::RetreatingSave));
