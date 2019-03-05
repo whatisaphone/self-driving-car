@@ -5,6 +5,7 @@ use crate::{
 use common::prelude::*;
 use nalgebra::{Point2, Vector2};
 use nameof::name_of_type;
+use simulate::linear_interpolate;
 
 pub struct ResetBehindBall {
     loc: Point2<f32>,
@@ -34,6 +35,7 @@ impl Behavior for ResetBehindBall {
 
     fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
         let target_loc = self.get_sane_drive_loc(ctx);
+        let target_loc = self.snap_to_boost_if_close(ctx, target_loc);
         let straight = GroundDrive::new(target_loc)
             .end_chop(0.5)
             .always_prefer_dodge(true);
@@ -100,5 +102,18 @@ impl ResetBehindBall {
             target_loc.y = max_y * target_loc.y.signum();
         }
         target_loc
+    }
+
+    fn snap_to_boost_if_close(&self, ctx: &mut Context<'_>, loc: Point2<f32>) -> Point2<f32> {
+        if ctx.me().Boost >= 50 {
+            return loc;
+        }
+        let distance = linear_interpolate(&[0.0, 50.0], &[1000.0, 250.0], ctx.me().Boost as f32);
+        for dollar in ctx.game.boost_dollars() {
+            if (loc - dollar.loc).norm() < distance {
+                return dollar.loc;
+            }
+        }
+        return loc;
     }
 }
