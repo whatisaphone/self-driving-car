@@ -35,7 +35,7 @@ impl RetreatingSave {
         Self { chatted: false }
     }
 
-    fn applicable(ctx: &mut Context<'_>) -> Result<(), &'static str> {
+    pub fn applicable(ctx: &mut Context<'_>) -> Result<(), &'static str> {
         if !Self::goalside(ctx) {
             return Err("not goalside");
         }
@@ -206,8 +206,14 @@ impl RetreatingSave {
     }
 
     fn striking_would_be_better(&self, ctx: &mut Context<'_>, plan: &Plan) -> bool {
-        let car_to_ball = plan.intercept_ball_loc.to_2d() - ctx.me().Physics.loc_2d();
-        car_to_ball.angle_to(&ctx.game.own_goal().normal_2d).abs() < PI / 2.0
+        let goal = ctx.game.own_goal();
+        let car_forward_axis = ctx.me().Physics.forward_axis_2d();
+        let car_to_ball = ctx.packet.GameBall.Physics.loc_2d() - ctx.me().Physics.loc_2d();
+        let car_to_intercept = plan.intercept_ball_loc.to_2d() - ctx.me().Physics.loc_2d();
+
+        car_to_intercept.angle_to(&goal.normal_2d).abs() < PI / 2.0
+            && car_forward_axis.angle_to(&car_to_intercept).abs() < PI / 3.0
+            && car_forward_axis.angle_to(&car_to_ball).abs() < PI / 3.0
     }
 
     fn drive(&self, ctx: &mut Context<'_>, plan: &Plan) -> Action {
@@ -682,6 +688,66 @@ mod integration_tests {
 
         test.examine_events(|events| {
             assert!(events.contains(&Event::RetreatingSave));
+            assert!(!events.contains(&Event::RetreatingSaveStopAndWait));
+        });
+    }
+
+    #[test]
+    fn make_save_after_turning() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(2794.06, -4137.35, 162.48999),
+                ball_vel: Vector3::new(-759.18097, -279.371, 466.541),
+                ball_ang_vel: Vector3::new(1.8702099, -5.08141, 2.58471),
+                car_loc: Point3::new(2089.41, -4659.6997, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.009588487, 1.8938375, -0.00021732296),
+                car_vel: Vector3::new(-164.481, 353.521, 8.331),
+                car_ang_vel: Vector3::new(0.00151, -0.00040999998, 1.78911),
+                ..Default::default()
+            })
+            .starting_boost(60.0)
+            .soccar()
+            .run_for_millis(4000);
+
+        assert!(!test.enemy_has_scored());
+
+        let packet = test.sniff_packet();
+        let ball_vel = packet.GameBall.Physics.vel();
+        println!("ball_vel = {:?}", ball_vel);
+        assert!(ball_vel.y >= 500.0);
+
+        test.examine_events(|events| {
+            assert!(events.contains(&Event::RetreatingSave));
+            assert!(events.contains(&Event::RetreatingSaveStopAndWait));
+        });
+    }
+
+    #[test]
+    fn make_save_without_turning() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(2492.3499, -4248.4, 295.04),
+                ball_vel: Vector3::new(-749.71094, -276.011, 202.241),
+                ball_ang_vel: Vector3::new(1.8702099, -5.08141, 2.58471),
+                car_loc: Point3::new(1921.58, -4506.73, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.00950916, 2.79175, -0.000023257693),
+                car_vel: Vector3::new(-704.91095, 251.911, 8.331),
+                ..Default::default()
+            })
+            .starting_boost(60.0)
+            .soccar()
+            .run_for_millis(4000);
+
+        assert!(!test.enemy_has_scored());
+
+        let packet = test.sniff_packet();
+        let ball_loc = packet.GameBall.Physics.loc();
+        println!("ball_loc = {:?}", ball_loc);
+        assert!(ball_loc.x >= 2000.0);
+
+        test.examine_events(|events| {
+            assert!(events.contains(&Event::RetreatingSave));
+            // I wish this was yes, but right now it's no:
             assert!(!events.contains(&Event::RetreatingSaveStopAndWait));
         });
     }

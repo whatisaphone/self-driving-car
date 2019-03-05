@@ -1,6 +1,6 @@
 use crate::{
     behavior::{
-        defense::{retreat::Retreat, PanicDefense},
+        defense::{retreat::Retreat, retreating_save::RetreatingSave, PanicDefense},
         offense::TepidHit,
         strike::{GroundedHitAimContext, GroundedHitTarget, GroundedHitTargetAdjust},
     },
@@ -92,6 +92,11 @@ impl Behavior for Defense {
 
         // If we're not between the ball and our goal, get there.
         if !Self::is_between_ball_and_own_goal(ctx.game, ctx.me(), ctx.scenario) {
+            return Action::tail_call(Retreat::new());
+        }
+
+        // If we need to make a save, do so.
+        if RetreatingSave::applicable(ctx).is_ok() {
             return Action::tail_call(Retreat::new());
         }
 
