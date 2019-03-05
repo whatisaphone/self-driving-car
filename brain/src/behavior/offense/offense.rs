@@ -293,7 +293,7 @@ fn reset_distance(ctx: &mut Context<'_>, ball_loc: Point2<f32>) -> f32 {
     let me_loc = ctx.me().Physics.loc().to_2d();
     let behind_ball_loc = ball_loc + (ball_loc - goal.center_2d).normalize() * 1000.0;
     let shot_angle = (behind_ball_loc - me_loc).angle_to(&goal.normal_2d).abs();
-    let distance = linear_interpolate(&[PI / 4.0, PI / 2.0], &[1000.0, 2000.0], shot_angle);
+    let distance = linear_interpolate(&[PI / 6.0, PI / 2.0], &[1000.0, 2500.0], shot_angle);
 
     ctx.eeg.log_pretty(
         name_of_type!(Offense),
