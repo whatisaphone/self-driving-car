@@ -127,6 +127,11 @@ impl Behavior for Defense {
             return Action::tail_call(Retreat::new());
         }
 
+        if Self::enemy_can_shoot(ctx) {
+            ctx.eeg.log(self.name(), "enemy_can_shoot");
+            return Action::tail_call(Retreat::new());
+        }
+
         // If we're already in goal, try to take control of the ball.
         Action::tail_call(TepidHit::new())
     }
@@ -743,5 +748,16 @@ mod integration_tests {
         assert!(packet.GameBall.Physics.loc().x >= 1000.0);
         println!("vel = {:?}", packet.GameBall.Physics.vel());
         assert!(packet.GameBall.Physics.vel().x >= 750.0);
+    }
+
+    #[test]
+    fn prepare_for_shot() {
+        let test = TestRunner::new()
+            .one_v_one(&*recordings::PREPARE_FOR_SHOT, 221.0)
+            .starting_boost(50.0)
+            .soccar()
+            .run_for_millis(4000);
+
+        assert!(!test.enemy_has_scored());
     }
 }
