@@ -209,9 +209,9 @@ mod integration_tests {
         assert!(!test.enemy_has_scored());
 
         let packet = test.sniff_packet();
-        let own_goal = Point2::new(0.0, -rl::FIELD_MAX_Y);
-        let goal_to_ball_dist = (packet.GameBall.Physics.loc_2d() - own_goal).norm();
-        assert!(goal_to_ball_dist >= 2000.0);
+        let ball_loc = packet.GameBall.Physics.loc();
+        println!("ball_loc = {:?}", ball_loc);
+        assert!(ball_loc.y < 4500.0);
 
         test.examine_events(|events| {
             assert!(events.contains(&Event::HitToOwnCorner));

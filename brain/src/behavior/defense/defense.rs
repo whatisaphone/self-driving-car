@@ -764,4 +764,29 @@ mod integration_tests {
         println!("ball_vel = {:?}", ball_vel);
         assert!(ball_vel.y >= 1000.0);
     }
+
+    #[test]
+    fn turn_around_and_clear() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(-2666.5999, -5017.36, 243.87),
+                ball_vel: Vector3::new(966.53094, -343.081, 266.391),
+                ball_ang_vel: Vector3::new(3.24311, 2.42131, -4.42931),
+                car_loc: Point3::new(-998.12, -4455.7197, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.009545783, -0.35805213, -0.000065319546),
+                car_vel: Vector3::new(1594.091, -598.131, 8.321),
+                car_ang_vel: Vector3::new(-0.00040999998, 0.00061, 0.02191),
+                ..Default::default()
+            })
+            .starting_boost(0.0)
+            .soccar()
+            .run_for_millis(3000);
+
+        assert!(!test.enemy_has_scored());
+
+        let packet = test.sniff_packet();
+        let ball_loc = packet.GameBall.Physics.loc();
+        println!("ball_loc = {:?}", ball_loc);
+        assert!(ball_loc.x < -2500.0);
+    }
 }

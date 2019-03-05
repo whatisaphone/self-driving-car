@@ -43,7 +43,6 @@ impl RetreatingSave {
         let impending_concede = ctx
             .scenario
             .impending_concede()
-            .or_else(|| Self::impending_dangerous_ball(ctx))
             .map(|b| b.t < 5.0)
             .unwrap_or_default();
         if impending_concede {
@@ -56,8 +55,10 @@ impl RetreatingSave {
             .ball_prediction()
             .iter_step_by(0.125)
             .any(|ball| {
-                ctx.game.own_goal().is_y_within_range(ball.loc.y, ..500.0)
+                let goal = ctx.game.own_goal();
+                goal.is_y_within_range(ball.loc.y, ..500.0)
                     && ball.loc.x.abs() < 1500.0
+                    && ball.vel.to_2d().to_axis().angle_to(&-goal.normal_2d).abs() < PI / 3.0
             });
         if back_wall {
             ctx.eeg.draw(Drawable::print("back wall", color::GREEN));
