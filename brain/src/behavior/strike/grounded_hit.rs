@@ -343,6 +343,7 @@ where
             // turn around.
             return Action::tail_call(Yielder::new(0.25, common::halfway_house::PlayerInput {
                 Throttle: 1.0,
+                Boost: true,
                 ..Default::default()
             }));
         }
