@@ -53,7 +53,7 @@ impl RoutePlanError {
                     ));
                 }
                 choices.push(Box::new(
-                    ResetBehindBall::behind_loc(ball_loc.to_2d(), 1500.0).never_recover(true),
+                    ResetBehindBall::behind_loc(ball_loc.to_2d(), 1600.0).never_recover(true),
                 ));
                 // What's going on? Last ditch effort, try to turn with a ReliefBot-style hop.
                 choices.push(Box::new(confused_jump_to_reorient()));
