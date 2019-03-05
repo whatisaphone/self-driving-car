@@ -155,14 +155,14 @@ where
 
         // This second phase is good and I want to do it, but sometimes it's not good
         // and I don't want to do it. I can't figure out the criteria. For now, just do
-        // it when we're in defense. We want to jump as high as possible to block shots.
+        // it when we're defending. We want to jump as high as possible to block shots.
         // (This violates an abstraction layer, but whatever, it means I can keep the
         // code in tree)
-        let do_it = ctx
-            .game
-            .own_goal()
-            .is_y_within_range(me.Physics.loc().y, ..1000.0);
-        if !do_it {
+        let own_goal = ctx.game.own_goal();
+        let in_defense = own_goal.is_y_within_range(me.Physics.loc().y, ..1000.0);
+        if in_defense && ctx.scenario.possession().abs() < Scenario::POSSESSION_CONTESTABLE {
+            // Proceed below.
+        } else {
             return Ok(intercept);
         }
 
