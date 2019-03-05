@@ -39,7 +39,11 @@ impl Behavior for ResetBehindBall {
         let straight = GroundDrive::new(target_loc)
             .end_chop(0.5)
             .always_prefer_dodge(true);
-        Action::tail_call(FollowRoute::new(straight).never_recover(self.never_recover))
+        Action::tail_call(
+            FollowRoute::new(straight)
+                .same_ball_trajectory(true)
+                .never_recover(self.never_recover),
+        )
     }
 }
 

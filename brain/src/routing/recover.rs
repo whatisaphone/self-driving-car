@@ -48,6 +48,7 @@ impl RoutePlanError {
                                 .end_chop(0.5)
                                 .straight_mode(StraightMode::Fake),
                         )
+                        .same_ball_trajectory(true)
                         .never_recover(true),
                     ));
                 }

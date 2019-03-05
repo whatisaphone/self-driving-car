@@ -26,7 +26,7 @@ impl Behavior for FiftyFifty {
         Action::tail_call(While::new(
             WeDontWinTheRace,
             Chain::new(Priority::Idle, vec![
-                Box::new(FollowRoute::new(GroundIntercept::new())),
+                Box::new(FollowRoute::new(GroundIntercept::new()).same_ball_trajectory(true)),
                 Box::new(GroundedHit::hit_towards(defensive_hit)),
             ]),
         ))

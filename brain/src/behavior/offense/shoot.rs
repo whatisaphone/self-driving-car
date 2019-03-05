@@ -190,7 +190,7 @@ impl Behavior for Shoot {
         }
 
         Action::tail_call(Chain::new(Priority::Strike, vec![
-            Box::new(FollowRoute::new(GroundIntercept::new())),
+            Box::new(FollowRoute::new(GroundIntercept::new()).same_ball_trajectory(true)),
             Box::new(GroundedHit::hit_towards(Self::aim)),
         ]))
     }

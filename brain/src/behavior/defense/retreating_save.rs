@@ -122,7 +122,7 @@ impl Behavior for RetreatingSave {
             ctx.eeg
                 .log(self.name(), "yeah, I'm not gonna sit around all day");
             return Action::tail_call(Chain::new(Priority::Idle, vec_box![
-                FollowRoute::new(GroundIntercept::new()),
+                FollowRoute::new(GroundIntercept::new()).same_ball_trajectory(true),
                 GroundedHit::hit_towards(defensive_hit),
             ]));
         }

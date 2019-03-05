@@ -1,4 +1,5 @@
 use crate::strategy::{Action, Context};
+use common::prelude::*;
 use nalgebra::Point3;
 use nameof::name_of_type;
 
@@ -50,7 +51,7 @@ impl SameBallTrajectory {
             }
         };
 
-        let error = (prediction.loc - frame.loc).norm();
+        let error = (prediction.loc - frame.loc).to_2d().norm();
         if error >= ERROR_THRESHOLD {
             ctx.eeg.log(
                 name_of_type!(SameBallTrajectory),

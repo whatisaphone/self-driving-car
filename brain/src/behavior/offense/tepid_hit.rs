@@ -58,11 +58,12 @@ impl Behavior for TepidHit {
                     WallIntercept::new()
                         .must_be_wall(true)
                         .must_be_side_wall(true)
-                ),
+                )
+                .same_ball_trajectory(true),
                 WallHit::new(),
             ])),
             Some((_, HitType::Ground)) => Action::tail_call(chain!(Priority::Strike, [
-                FollowRoute::new(GroundIntercept::new()),
+                FollowRoute::new(GroundIntercept::new()).same_ball_trajectory(true),
                 GroundedHit::hit_towards(time_wasting_hit),
             ])),
             None => Action::tail_call(FollowRoute::new(GetDollar::smart(&ctx, eeg))),

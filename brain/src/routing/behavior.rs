@@ -4,6 +4,7 @@ use crate::{
         PlanningContext, ProvisionalPlanExpansion, ProvisionalPlanExpansionTail, RoutePlan,
         RoutePlanError, RoutePlanner, SegmentRunAction, SegmentRunner,
     },
+    rules::SameBallTrajectory,
     strategy::{Action, Behavior, Context},
 };
 use nameof::name_of_type;
@@ -13,6 +14,7 @@ pub struct FollowRoute {
     planner: Option<Box<dyn RoutePlanner>>,
     current: Option<Current>,
     never_recover: bool,
+    same_ball_trajectory: Option<SameBallTrajectory>,
 }
 
 struct Current {
@@ -31,6 +33,7 @@ impl FollowRoute {
             planner: Some(planner),
             current: None,
             never_recover: false,
+            same_ball_trajectory: None,
         }
     }
 
@@ -38,6 +41,15 @@ impl FollowRoute {
     /// `RoutePlanError` should use this method to prevent recursive recovery.
     pub fn never_recover(mut self, never_recover: bool) -> Self {
         self.never_recover = never_recover;
+        self
+    }
+
+    pub fn same_ball_trajectory(mut self, same_ball_trajectory: bool) -> Self {
+        self.same_ball_trajectory = if same_ball_trajectory {
+            Some(SameBallTrajectory::new())
+        } else {
+            None
+        };
         self
     }
 }
@@ -48,6 +60,10 @@ impl Behavior for FollowRoute {
     }
 
     fn execute_old(&mut self, ctx: &mut Context<'_>) -> Action {
+        if let Some(ref mut same_ball_trajectory) = self.same_ball_trajectory {
+            return_some!(same_ball_trajectory.execute_old(ctx));
+        }
+
         if self.current.is_none() {
             let planner = &*self.planner.take().unwrap();
             if let Err(action) = self.advance(planner, ctx) {

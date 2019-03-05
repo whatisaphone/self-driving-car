@@ -40,7 +40,11 @@ impl Behavior for HitToOwnCorner {
             // out the basics for now…
             Box::new(GetToFlatGround::new()),
             Box::new(SkidRecover::new(skid_recover_loc.to_2d())),
-            Box::new(FollowRoute::new(GroundIntercept::new()).never_recover(true)),
+            Box::new(
+                FollowRoute::new(GroundIntercept::new())
+                    .same_ball_trajectory(true)
+                    .never_recover(true),
+            ),
             Box::new(GroundedHit::hit_towards(Self::aim)),
         ]))
     }
