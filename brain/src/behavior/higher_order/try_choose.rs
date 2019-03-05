@@ -103,7 +103,8 @@ impl TryChoose {
                 );
                 self.try_index(ctx, index)
             }
-            Action::RootCall(_) => None,
+            // Hack: Let recovery behaviors bubble to the root
+            Action::RootCall(b) => Some(Action::RootCall(b)),
             Action::Return => None,
             Action::Abort => None,
         }
