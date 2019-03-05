@@ -3,6 +3,7 @@ use crate::{
         defense::defensive_hit,
         higher_order::Chain,
         movement::{GetToFlatGround, QuickJumpAndDodge, Yielder},
+        offense::TepidHit,
         strike::GroundedHit,
     },
     eeg::{color, Drawable, Event},
@@ -112,6 +113,10 @@ impl Behavior for RetreatingSave {
             return Action::Abort;
         });
 
+        if self.striking_would_be_better(ctx, &plan) {
+            return Action::tail_call(TepidHit::new());
+        }
+
         if rough_time_drive_to_loc(ctx.me(), plan.target_loc) + 3.0 < plan.target_time {
             ctx.eeg
                 .log(self.name(), "yeah, I'm not gonna sit around all day");
@@ -197,6 +202,11 @@ impl RetreatingSave {
             target_steer_loc: target_loc,
             target_time: intercept.time,
         })
+    }
+
+    fn striking_would_be_better(&self, ctx: &mut Context<'_>, plan: &Plan) -> bool {
+        let car_to_ball = plan.intercept_ball_loc.to_2d() - ctx.me().Physics.loc_2d();
+        car_to_ball.angle_to(&ctx.game.own_goal().normal_2d).abs() < PI / 2.0
     }
 
     fn drive(&self, ctx: &mut Context<'_>, plan: &Plan) -> Action {

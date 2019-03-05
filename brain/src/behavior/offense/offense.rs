@@ -518,4 +518,22 @@ mod integration_tests {
         println!("ball_vel = {:?}", ball_vel);
         assert!(ball_vel.y >= 0.0);
     }
+
+    #[test]
+    fn dont_try_to_save_if_we_can_shoot_instead() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(-2188.9, 2587.98, 709.94),
+                ball_vel: Vector3::new(233.411, -1135.601, 358.211),
+                car_loc: Point3::new(-3788.2998, -229.01999, 15.849999),
+                car_rot: Rotation3::from_unreal_angles(-0.0020045196, -0.58269465, -0.008393458),
+                car_vel: Vector3::new(856.941, -602.311, 18.700998),
+                ..Default::default()
+            })
+            .starting_boost(20.0)
+            .soccar()
+            .run_for_millis(7000);
+
+        assert!(test.has_scored());
+    }
 }
