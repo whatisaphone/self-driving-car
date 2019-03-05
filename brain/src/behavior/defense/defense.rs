@@ -760,4 +760,20 @@ mod integration_tests {
 
         assert!(!test.enemy_has_scored());
     }
+
+    #[test]
+    fn dont_spin_around_in_goal() {
+        let test = TestRunner::new()
+            .one_v_one(&*recordings::DONT_SPIN_AROUND_IN_GOAL, 259.0)
+            .starting_boost(0.0)
+            .soccar()
+            .run_for_millis(4000);
+
+        assert!(!test.enemy_has_scored());
+
+        let packet = test.sniff_packet();
+        let ball_vel = packet.GameBall.Physics.vel();
+        println!("ball_vel = {:?}", ball_vel);
+        assert!(ball_vel.y >= 1000.0);
+    }
 }

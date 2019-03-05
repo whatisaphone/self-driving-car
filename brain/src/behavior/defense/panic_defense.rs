@@ -138,6 +138,10 @@ impl PanicDefense {
         let me = ctx.me();
         let me_loc = me.Physics.loc_2d();
 
+        if own_goal.is_y_within_range(me.Physics.loc().y, ..250.0) {
+            return Some(Phase::Finished);
+        }
+
         let dist_me_to_goal = (me_loc - own_goal.center_2d).norm();
         let future_ball = ctx.scenario.ball_prediction().at_time_or_last(2.0);
         let dist_ball_to_goal = (future_ball.loc.to_2d() - own_goal.center_2d).norm();
@@ -167,15 +171,6 @@ impl PanicDefense {
                 aim_hint: Point2::new(blitz_loc.x.signum() * -2000.0, own_goal.center_2d.y),
                 child: BlitzToLocation::new(blitz_loc),
             });
-        }
-
-        match self.phase {
-            Phase::Rush { .. } | Phase::Turn { .. } => {
-                if own_goal.is_y_within_range(me.Physics.loc().y, ..120.0) {
-                    return Some(Phase::Finished);
-                }
-            }
-            _ => {}
         }
 
         if let Phase::Turn {
