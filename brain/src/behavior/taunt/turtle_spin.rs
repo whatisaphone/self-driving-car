@@ -61,6 +61,11 @@ impl Behavior for TurtleSpin {
             ]));
         }
 
+        // If we're in the middle of a dodge, go limp and wait for it to be over with.
+        if ctx.me().Physics.ang_vel().norm() >= 5.45 {
+            return Action::Yield(Default::default());
+        }
+
         let car_loc = ctx.me().Physics.loc();
         let car_vel = ctx.me().Physics.vel();
         let time_to_ground =
