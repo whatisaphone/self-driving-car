@@ -176,7 +176,7 @@ fn slow_play(ctx: &mut Context<'_>) -> Option<Action> {
         );
         let behind_ball = Point2::new(
             ball_loc.x,
-            ball_loc.y + own_goal.center_2d.y.signum() * 2500.0,
+            ball_loc.y + own_goal.center_2d.y.signum() * 2250.0,
         );
         let dollar = GetDollar::new(behind_ball).target_face(ball_loc);
         return Some(Action::tail_call(FollowRoute::new(dollar)));
