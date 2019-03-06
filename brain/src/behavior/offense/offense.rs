@@ -183,8 +183,9 @@ fn slow_play(ctx: &mut Context<'_>) -> Option<Action> {
     }
 
     ctx.eeg.log(name_of_type!(Offense), "slow_play: proceeding");
+    let distance = reset_distance(ctx, ball_loc);
     Some(Action::tail_call(ResetBehindBall::behind_loc(
-        ball_loc, 2000.0,
+        ball_loc, distance,
     )))
 }
 
