@@ -198,7 +198,7 @@ impl KickoffStrike {
     fn drive(&self, ctx: &mut Context<'_>) -> Action {
         let target_loc = Point2::new(40.0 * ctx.me().Physics.loc().x.signum(), 0.0);
         Action::Yield(common::halfway_house::PlayerInput {
-            Boost: true,
+            Boost: ctx.me().Physics.vel_2d().norm() < rl::CAR_ALMOST_MAX_SPEED,
             ..drive_towards(ctx, target_loc)
         })
     }
