@@ -263,7 +263,7 @@ where
         };
         // Don't get too far underneath the ball, since we might end up hitting it way
         // up in the air (which we never want to do).
-        target_loc.z = target_loc.z.max(intercept.ball_loc.z / 2.0);
+        target_loc.z = target_loc.z.max(intercept.ball_loc.z * 0.6);
         (target_loc, target_rot)
     }
 
