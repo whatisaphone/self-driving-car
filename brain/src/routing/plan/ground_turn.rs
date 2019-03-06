@@ -12,19 +12,36 @@ use crate::{
     },
     utils::geometry::{circle_point_tangents, flattener::Flattener},
 };
-use common::{prelude::*, rl};
+use common::{physics::CAR_LOCAL_FORWARD_AXIS_2D, prelude::*, rl};
 use derive_new::new;
-use nalgebra::Point2;
+use nalgebra::{Point2, Unit, Vector2};
 use nameof::name_of_type;
 use simulate::linear_interpolate;
 use std::f32::consts::PI;
+use vec_box::vec_box;
 
 const SLOWEST_TURNING_SPEED: f32 = 900.0;
 
-#[derive(Clone, new)]
+#[derive(Clone)]
 pub struct TurnPlanner {
     target_face: Point2<f32>,
     next: Option<Box<dyn RoutePlanner>>,
+    reverse_angle_hint: Option<Unit<Vector2<f32>>>,
+}
+
+impl TurnPlanner {
+    pub fn new(target_face: Point2<f32>, next: Option<Box<dyn RoutePlanner>>) -> Self {
+        Self {
+            target_face,
+            next,
+            reverse_angle_hint: None,
+        }
+    }
+
+    pub fn reverse_angle_hint(mut self, reverse_angle_hint: Unit<Vector2<f32>>) -> Self {
+        self.reverse_angle_hint = Some(reverse_angle_hint);
+        self
+    }
 }
 
 impl RoutePlanner for TurnPlanner {
@@ -40,7 +57,8 @@ impl RoutePlanner for TurnPlanner {
         dump.log_start(self, &ctx.start);
         dump.log_pretty(self, "target_face", self.target_face);
 
-        let pathing_unaware_planner = PathingUnawareTurnPlanner::new(self.target_face, None);
+        let pathing_unaware_planner =
+            PathingUnawareTurnPlanner::new(self.target_face, self.reverse_angle_hint);
         let turn = pathing_unaware_planner.plan(ctx, dump)?;
         dump.log_plan(self, &turn);
         let plan =
@@ -59,7 +77,7 @@ impl RoutePlanner for TurnPlanner {
 #[derive(Clone, new)]
 pub struct PathingUnawareTurnPlanner {
     target_face: Point2<f32>,
-    next: Option<Box<dyn RoutePlanner>>,
+    reverse_angle_hint: Option<Unit<Vector2<f32>>>,
 }
 
 impl RoutePlanner for PathingUnawareTurnPlanner {
@@ -76,10 +94,9 @@ impl RoutePlanner for PathingUnawareTurnPlanner {
         dump.log_pretty(self, "target_face", self.target_face);
 
         if self.should_powerslide(&ctx.start) {
-            let turn = GroundSimplePowerslideTurn::new(self.target_face);
-            ChainedPlanner::new(Box::new(turn), self.next.clone()).plan(ctx, dump)
+            self.powerslide_with_angle_hint_hack(ctx, dump)
         } else {
-            SimpleTurnPlanner::new(self.target_face, self.next.clone()).plan(ctx, dump)
+            SimpleTurnPlanner::new(self.target_face, None).plan(ctx, dump)
         }
     }
 }
@@ -100,6 +117,40 @@ impl PathingUnawareTurnPlanner {
             start.vel.to_2d().norm(),
         );
         turn.abs() > angle_cutoff
+    }
+
+    fn powerslide_with_angle_hint_hack(
+        &self,
+        ctx: &PlanningContext<'_, '_>,
+        dump: &mut PlanningDump<'_>,
+    ) -> Result<RoutePlan, RoutePlanError> {
+        let reverse_angle_hint = some_or_else!(self.reverse_angle_hint, {
+            // No hack necessary.
+            return GroundSimplePowerslideTurn::new(self.target_face).plan(ctx, dump);
+        });
+
+        let car_forward_axis = ctx.start.forward_axis_2d();
+        let car_to_face = self.target_face - ctx.start.loc_2d();
+
+        if ctx.start.loc.x.abs() >= ctx.game.field_max_x() - 750.0 {
+            // Too close to wall.
+            return GroundSimplePowerslideTurn::new(self.target_face).plan(ctx, dump);
+        }
+
+        let naive_rot = car_forward_axis.rotation_to(&car_to_face.to_axis());
+        if naive_rot.angle().abs() < 135.0_f32.to_radians() {
+            // No hack necessary.
+            return GroundSimplePowerslideTurn::new(self.target_face).plan(ctx, dump);
+        }
+
+        // First, turn the long way around.
+        let long_way_around = ctx.start.loc_2d()
+            + car_forward_axis.rotation_to(&reverse_angle_hint)
+                * (CAR_LOCAL_FORWARD_AXIS_2D.into_inner() * 1000.0);
+        let step1 = GroundSimplePowerslideTurn::new(long_way_around);
+        // Then turn the rest of the way.
+        let step2 = GroundSimplePowerslideTurn::new(self.target_face);
+        ChainedPlanner::chain(vec_box![step1, step2]).plan(ctx, dump)
     }
 }
 
@@ -264,5 +315,31 @@ impl CircleTurn {
         // Go the long way around the circle (more than 180°) if necessary. This avoids
         // an impossible route with discontinuous reversals at each tangent.
         (self.start_loc - self.center).angle_to(&(self.tangent - self.center))
+    }
+}
+
+#[cfg(test)]
+mod integration_tests {
+    use crate::integration_tests::{TestRunner, TestScenario};
+    use common::prelude::*;
+    use nalgebra::{Point3, Rotation3, Vector3};
+
+    #[test]
+    #[ignore("this is a demo, not a test")]
+    fn powerslide_angle_hint_hack() {
+        TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(-3630.1199, 2566.14, 92.71),
+                ball_vel: Vector3::new(269.04102, -364.501, 0.0),
+                ball_ang_vel: Vector3::new(3.99451, 2.94831, -3.26771),
+                car_loc: Point3::new(-3080.8298, 1091.5399, 85.61),
+                car_rot: Rotation3::from_unreal_angles(0.584991, -1.3567058, 0.2882568),
+                car_vel: Vector3::new(-81.620995, -1268.0409, -183.151),
+                car_ang_vel: Vector3::new(2.51891, -0.12501, -0.42931),
+                ..Default::default()
+            })
+            .starting_boost(60.0)
+            .soccar()
+            .run_for_millis(5000);
     }
 }

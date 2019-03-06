@@ -78,7 +78,15 @@ impl RoutePlanner for GroundIntercept {
             return Err(RoutePlanError::TurningRadiusTooTight);
         }
 
-        let turn = TurnPlanner::new(guess.loc.to_2d(), None).plan(ctx, dump)?;
+        let reverse_angle_hint =
+            if guess.loc.to_2d().y.signum() == ctx.game.own_goal().center_2d.y.signum() {
+                guess.loc.to_2d() - ctx.game.own_goal().center_2d
+            } else {
+                ctx.game.enemy_goal().center_2d - guess.loc.to_2d()
+            };
+        let turn = TurnPlanner::new(guess.loc.to_2d(), None)
+            .reverse_angle_hint(reverse_angle_hint.to_axis())
+            .plan(ctx, dump)?;
 
         let mut straight_time = guess.t - turn.segment.duration();
         if straight_time < 0.0 {
