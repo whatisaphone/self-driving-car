@@ -88,7 +88,7 @@ fn dangerous_back_wall_with_little_boost(
 ) -> bool {
     let own_goal = ctx.game.own_goal();
     let enemy_goal = ctx.game.enemy_goal();
-    let near_back_wall = enemy_goal.is_y_within_range(intercept_loc.y, ..2500.0);
+    let near_back_wall = enemy_goal.is_y_within_range(intercept_loc.y, ..3000.0);
     let approach_angle = own_goal
         .normal_2d
         .angle_to(&(intercept_loc.to_2d() - ctx.me().Physics.loc_2d()));
