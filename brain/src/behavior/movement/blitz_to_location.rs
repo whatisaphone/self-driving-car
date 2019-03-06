@@ -1,6 +1,7 @@
 use crate::{
-    behavior::movement::{
-        quick_jump_and_dodge::QuickJumpAndDodge, simple_steer_towards::simple_steer_towards,
+    behavior::{
+        higher_order::Chain,
+        movement::{simple_steer_towards, QuickJumpAndDodge, Yielder},
     },
     eeg::Drawable,
     strategy::{Action, Behavior, Context},
@@ -9,6 +10,7 @@ use common::{prelude::*, rl, Distance};
 use nalgebra::Point2;
 use nameof::name_of_type;
 use std::f32::consts::PI;
+use vec_box::vec_box;
 
 pub struct BlitzToLocation {
     target_loc: Point2<f32>,
@@ -68,7 +70,11 @@ impl Behavior for BlitzToLocation {
             if (distance > flip_dist && steer.abs() < PI / 24.0)
                 || (distance > flip_dist * 1.5 && steer.abs() < PI / 8.0)
             {
-                return Action::TailCall(Box::new(QuickJumpAndDodge::new()));
+                return Action::tail_call(Chain::new(self.priority(), vec_box![
+                    // Give a bit of time to stabilize in case we just landed.
+                    Yielder::new(0.1, Default::default()),
+                    QuickJumpAndDodge::new()
+                ]));
             }
         }
 
