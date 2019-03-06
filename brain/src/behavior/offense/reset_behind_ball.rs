@@ -69,16 +69,19 @@ impl ResetBehindBall {
         };
         let mut target_loc = self.loc + direction.normalize() * self.distance;
 
+        let margin = 1000.0;
+        let max_x = ctx.game.field_max_x() - margin;
+        let max_y = ctx.game.field_max_y() - margin;
+
         if !ctx.game.is_inside_field(target_loc) {
             ctx.eeg.log(
                 self.name(),
                 "loc outside field; trying straight back from reference",
             );
-            target_loc = self.loc
-                + Vector2::new(
-                    0.0,
-                    ctx.game.own_goal().center_2d.y.signum() * self.distance,
-                );
+            target_loc = Point2::new(
+                target_loc.x.max(-max_x).min(max_x),
+                target_loc.y + ctx.game.own_goal().center_2d.y.signum() * self.distance,
+            );
         }
 
         if !ctx.game.is_inside_field(target_loc) {
@@ -100,13 +103,10 @@ impl ResetBehindBall {
                 + Vector2::new(0.0, ctx.game.own_goal().center_2d.y.signum() * 250.0);
         }
 
-        let margin = 1000.0;
-        let max_x = ctx.game.field_max_x() - margin;
         if target_loc.x.abs() >= max_x {
             ctx.eeg.log(self.name(), "clamping x");
             target_loc.x = max_x * target_loc.x.signum();
         }
-        let max_y = ctx.game.field_max_y() - margin;
         if target_loc.y.abs() >= max_y {
             ctx.eeg.log(self.name(), "clamping y");
             target_loc.y = max_y * target_loc.y.signum();
