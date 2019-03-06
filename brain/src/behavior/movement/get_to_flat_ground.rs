@@ -65,7 +65,13 @@ impl Behavior for GetToFlatGround {
             (me.Physics.loc() + me.Physics.rot() * Vector3::new(500.0, 0.0, 250.0)).to_2d();
         ctx.eeg
             .draw(Drawable::ghost_car_ground(target_loc, me.Physics.rot()));
-        Action::Yield(drive_towards(ctx, target_loc))
+
+        let mut input = drive_towards(ctx, target_loc);
+        if !ctx.game.is_inside_field(me.Physics.loc_2d()) {
+            // If we're stuck in a goal, no need for subtlety, steer as sharply as possible.
+            input.Steer = input.Steer * 2.0;
+        }
+        Action::Yield(input)
     }
 }
 
