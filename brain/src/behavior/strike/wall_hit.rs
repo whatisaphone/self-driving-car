@@ -141,7 +141,10 @@ fn flat_target(
     let intercept_surface = ctx.game.pitch().closest_plane(&intercept_ball_loc);
     let ground = ctx.game.pitch().ground();
 
-    if me_surface.normal == ground.normal && intercept_surface.normal == ground.normal {
+    if me_surface.normal == ground.normal
+        && intercept_surface.normal == ground.normal
+        && me.Physics.roof_axis().angle_to(&Vector3::z_axis()).abs() < 15.0_f32.to_radians()
+    {
         // Other behaviors are better at ground play, so step out of the way so one of
         // them can take over.
         eeg.log(name_of_type!(WallHit), "no walls are involved");
