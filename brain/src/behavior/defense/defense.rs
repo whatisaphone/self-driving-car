@@ -93,6 +93,22 @@ impl Defense {
             angle_diff < max_angle_diff
         })
     }
+
+    pub fn enemy_can_attack(ctx: &mut Context<'_>) -> bool {
+        if ctx.scenario.possession() >= -2.0 {
+            return false;
+        }
+        let (enemy, intercept) = match ctx.scenario.enemy_intercept() {
+            Some(x) => x,
+            None => return false,
+        };
+        let goal = ctx.game.own_goal();
+        let enemy_to_ball = intercept.ball_loc.to_2d() - enemy.Physics.loc_2d();
+        let enemy_forward_axis = enemy.Physics.forward_axis_2d();
+
+        enemy_to_ball.angle_to(&-goal.normal_2d).abs() < PI / 3.0
+            && enemy_forward_axis.angle_to(&enemy_to_ball).abs() < PI / 3.0
+    }
 }
 
 impl Behavior for Defense {
@@ -117,6 +133,11 @@ impl Behavior for Defense {
 
         if Self::enemy_can_shoot(ctx) {
             ctx.eeg.log(self.name(), "enemy_can_shoot");
+            return Action::tail_call(Retreat::new());
+        }
+
+        if Self::enemy_can_attack(ctx) {
+            ctx.eeg.log(self.name(), "enemy_can_attack");
             return Action::tail_call(Retreat::new());
         }
 

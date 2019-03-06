@@ -62,6 +62,11 @@ impl Strategy for Soccar {
             return Box::new(Defense::new());
         }
 
+        if Defense::enemy_can_attack(ctx) {
+            ctx.eeg.log(name_of_type!(Soccar), "enemy_can_attack");
+            return Box::new(Defense::new());
+        }
+
         Box::new(Offense::new())
     }
 
