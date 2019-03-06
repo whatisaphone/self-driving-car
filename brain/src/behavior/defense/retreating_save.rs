@@ -40,6 +40,14 @@ impl RetreatingSave {
             return Err("not goalside");
         }
 
+        let goal = ctx.game.own_goal();
+        let me_forward = ctx.me().Physics.forward_axis_2d();
+        if me_forward.angle_to(&ctx.game.own_goal().normal_2d).abs() < PI / 2.0
+            && goal.is_y_within_range(ctx.me().Physics.loc().y, ..500.0)
+        {
+            return Err("not retreating");
+        }
+
         let impending_concede = ctx
             .scenario
             .impending_concede()
@@ -55,7 +63,6 @@ impl RetreatingSave {
             .ball_prediction()
             .iter_step_by(0.125)
             .any(|ball| {
-                let goal = ctx.game.own_goal();
                 goal.is_y_within_range(ball.loc.y, ..500.0)
                     && ball.loc.x.abs() < 1500.0
                     && ball.vel.to_2d().to_axis().angle_to(&-goal.normal_2d).abs() < PI / 3.0
