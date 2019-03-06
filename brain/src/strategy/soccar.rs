@@ -19,7 +19,6 @@ use crate::{
 use common::prelude::*;
 use derive_new::new;
 use nameof::name_of_type;
-use std::f32::consts::PI;
 use vec_box::vec_box;
 
 #[derive(new)]
@@ -60,11 +59,6 @@ impl Strategy for Soccar {
         {
             ctx.eeg
                 .log(name_of_type!(Soccar), "slightly_panicky_retreat");
-            return Box::new(Defense::new());
-        }
-
-        if retreating(ctx) {
-            ctx.eeg.log(name_of_type!(Soccar), "retreating");
             return Box::new(Defense::new());
         }
 
@@ -189,15 +183,6 @@ impl Strategy for Soccar {
 
         None
     }
-}
-
-fn retreating(ctx: &mut Context<'_>) -> bool {
-    let me_loc = ctx.me().Physics.loc_2d();
-    let intercept = some_or_else!(ctx.scenario.me_intercept(), {
-        return false;
-    });
-    let me_to_ball = intercept.ball_loc.to_2d() - me_loc;
-    me_to_ball.angle_to(&-ctx.game.own_goal().normal_2d).abs() < PI / 3.0
 }
 
 fn ball_in_enemy_half(ctx: &mut Context<'_>) -> bool {
