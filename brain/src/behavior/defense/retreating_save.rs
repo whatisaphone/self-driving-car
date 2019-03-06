@@ -199,7 +199,8 @@ impl RetreatingSave {
         } else {
             danger
         };
-        let clamp_angle = linear_interpolate(&[500.0, 2000.0], &[0.0, PI / 3.0], car_vel.norm());
+        let clamp_angle =
+            linear_interpolate(&[500.0, 2000.0], &[PI / 12.0, PI / 3.0], car_vel.norm());
         let target_loc =
             feasible_angle_near(intercept_ball_loc, block_loc, target_loc, clamp_angle);
         // Target a fixed distance away from the ball.
