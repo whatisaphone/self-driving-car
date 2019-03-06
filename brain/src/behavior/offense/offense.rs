@@ -74,6 +74,12 @@ fn can_we_shoot(ctx: &mut Context<'_>) -> bool {
         return false;
     }
 
+    if flat_and_defensive(ctx) {
+        ctx.eeg
+            .log(name_of_type!(Offense), "can_we_shoot: flat_and_defensive");
+        return false;
+    }
+
     let naive_intercept = some_or_else!(ctx.scenario.me_intercept(), {
         ctx.eeg
             .log(name_of_type!(Offense), "can_we_shoot: no intercept");
@@ -115,6 +121,19 @@ fn playing_goalie(game: &Game<'_>, ball: &BallFrame) -> bool {
     let danger = game.enemy_goal().center_2d;
     let defensiveness = (ball.loc.to_2d() - danger).norm() / (ball.loc.to_2d() - safe).norm();
     defensiveness >= 5.0
+}
+
+fn flat_and_defensive(ctx: &mut Context<'_>) -> bool {
+    let ball_loc = ctx.packet.GameBall.Physics.loc_2d();
+    let car_loc = ctx.me().Physics.loc_2d();
+    let car_vel = ctx.me().Physics.vel_2d();
+    let own_goal = ctx.game.own_goal();
+
+    let min_dist = linear_interpolate(&[0.0, 30.0], &[4000.0, 3000.0], ctx.me().Boost as f32);
+    own_goal.is_y_within_range(ball_loc.y, ..3333.333)
+        && own_goal.is_y_within_range(car_loc.y, ..3333.333)
+        && car_vel.norm() < 1000.0
+        && (ball_loc - car_loc).norm() < min_dist
 }
 
 fn slow_play(ctx: &mut Context<'_>) -> Option<Action> {
