@@ -334,7 +334,12 @@ impl RetreatingSave {
         // Also wait for the ball to be close enough to the ground, otherwise we'll flip
         // underneath it. We're guaranteed the ball will be there soon because the
         // intercept checker also checks this.
-        if ball.loc.z >= Self::MAX_BALL_Z {
+        let max_z = linear_interpolate(
+            &[-500.0, 0.0],
+            &[Self::MAX_BALL_Z + 50.0, Self::MAX_BALL_Z],
+            ball.vel.z,
+        );
+        if ball.loc.z >= max_z {
             return false;
         }
         return true;
@@ -756,6 +761,36 @@ mod integration_tests {
         test.examine_events(|events| {
             assert!(events.contains(&Event::RetreatingSave));
             // I wish this was yes, but right now it's no:
+            assert!(!events.contains(&Event::RetreatingSaveStopAndWait));
+        });
+    }
+
+    #[test]
+    fn make_bouncing_save() {
+        let test = TestRunner::new()
+            .scenario(TestScenario {
+                ball_loc: Point3::new(2597.49, 425.9, 1656.75),
+                ball_vel: Vector3::new(-808.73096, -1761.6709, -650.251),
+                ball_ang_vel: Vector3::new(-4.38501, 2.74741, -3.03681),
+                car_loc: Point3::new(2146.41, -2281.45, 17.01),
+                car_rot: Rotation3::from_unreal_angles(-0.009603632, -1.7794317, 0.0004454904),
+                car_vel: Vector3::new(-261.681, -1001.001, 8.331),
+                car_ang_vel: Vector3::new(0.00021, -0.00061, -1.16751),
+                ..Default::default()
+            })
+            .starting_boost(0.0)
+            .soccar()
+            .run_for_millis(4500);
+
+        assert!(!test.enemy_has_scored());
+
+        let packet = test.sniff_packet();
+        let ball_vel = packet.GameBall.Physics.vel();
+        println!("ball_vel = {:?}", ball_vel);
+        assert!(ball_vel.y >= 500.0);
+
+        test.examine_events(|events| {
+            assert!(events.contains(&Event::RetreatingSave));
             assert!(!events.contains(&Event::RetreatingSaveStopAndWait));
         });
     }
