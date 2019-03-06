@@ -123,11 +123,14 @@ impl ResetBehindBall {
             return None;
         }
         let distance = linear_interpolate(&[0.0, 50.0], &[1000.0, 250.0], ctx.me().Boost as f32);
-        for dollar in ctx.game.boost_dollars() {
-            if (loc - dollar.loc).norm() < distance {
+        for pickup in ctx.game.boost_dollars() {
+            if (loc - pickup.loc).norm() < distance
+                && (pickup.loc - ctx.me().Physics.loc_2d()).norm()
+                    >= (loc - ctx.me().Physics.loc_2d()).norm()
+            {
                 ctx.eeg
                     .log(name_of_type!(ResetBehindBall), "snapping to boost");
-                return Some(dollar);
+                return Some(pickup);
             }
         }
         return None;
