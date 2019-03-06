@@ -2,7 +2,7 @@ use crate::{
     behavior::offense::{ResetBehindBall, Shoot, TepidHit},
     eeg::Event,
     helpers::{ball::BallFrame, intercept::naive_ground_intercept_2},
-    routing::{behavior::FollowRoute, plan::GetDollar},
+    routing::{behavior::FollowRoute, models::CarState, plan::GetDollar},
     strategy::{Action, Behavior, Context, Game, Scenario},
     utils::geometry::RayCoordinateSystem,
 };
@@ -250,6 +250,26 @@ fn get_boost(ctx: &mut Context<'_>) -> Option<Box<dyn Behavior>> {
         let (ctx, eeg) = ctx.split();
         return Some(Box::new(FollowRoute::new(GetDollar::smart(&ctx, eeg))));
     }
+
+    if ctx.scenario.possession() >= 2.0 {
+        let ball = ctx.scenario.ball_prediction().at_time_or_last(2.0);
+        if let Some(pickup) = GetDollar::choose_pickup(
+            ctx.game.boost_dollars(),
+            &CarState::from(ctx.me()).to_2d_assume(),
+            ball.loc.to_2d(),
+            ctx.game.enemy_goal(),
+        ) {
+            if (pickup.loc - ctx.me().Physics.loc_2d()).norm() < 1000.0 {
+                ctx.eeg.log(
+                    name_of_type!(Offense),
+                    "get_boost: we're close and we have time",
+                );
+                return Some(Box::new(FollowRoute::new(GetDollar::new(ball.loc.to_2d()))));
+            }
+        }
+    }
+
+    ctx.eeg.log(name_of_type!(Offense), "get_boost: let's not");
     None
 }
 

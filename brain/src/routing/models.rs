@@ -57,6 +57,15 @@ impl CarState {
             boost: self.boost,
         }
     }
+
+    pub fn to_2d_assume(&self) -> CarState2D {
+        CarState2D {
+            loc: self.loc.to_2d(),
+            rot: self.rot.to_2d(),
+            vel: self.vel.to_2d(),
+            boost: self.boost,
+        }
+    }
 }
 
 impl<'a> From<&'a common::halfway_house::PlayerInfo> for CarState {

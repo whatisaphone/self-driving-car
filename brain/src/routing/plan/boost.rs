@@ -184,8 +184,8 @@ impl GetDollar {
         .cloned()
     }
 
-    fn choose_pickup<'a>(
-        pickups: impl Iterator<Item = &'a BoostPickup>,
+    pub fn choose_pickup<'a>(
+        pickups: impl IntoIterator<Item = &'a BoostPickup>,
         start: &CarState2D,
         destination_hint: Point2<f32>,
         enemy_goal: &Goal,
@@ -195,7 +195,7 @@ impl GetDollar {
         let line_end_loc = destination_hint;
         let line_span = line_end_loc - line_start_loc;
 
-        pickups.min_by_key(|pickup| {
+        pickups.into_iter().min_by_key(|pickup| {
             let along_dist = (pickup.loc - line_start_loc).dot(&line_span.to_axis());
             let ortho_dist = (pickup.loc - line_start_loc).dot(&line_span.ortho().to_axis());
 
