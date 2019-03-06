@@ -143,6 +143,11 @@ impl PathingUnawareTurnPlanner {
             return GroundSimplePowerslideTurn::new(self.target_face).plan(ctx, dump);
         }
 
+        if (ctx.start.loc_2d() - self.target_face).norm() >= 2000.0 {
+            // Limit the negative impact in case this doesn't actually work ;)
+            return GroundSimplePowerslideTurn::new(self.target_face).plan(ctx, dump);
+        }
+
         // First, turn the long way around.
         let long_way_around = ctx.start.loc_2d()
             + car_forward_axis.rotation_to(&reverse_angle_hint)
