@@ -56,6 +56,10 @@ impl Behavior for GetToFlatGround {
         }
 
         if should_jump_down_from_the_wall(ctx) {
+            if !ctx.game.is_inside_field(me.Physics.loc_2d()) {
+                let escape = drive_towards(ctx, Point2::origin());
+                return Action::Yield(escape);
+            }
             return jump_down_from_the_wall(ctx);
         }
 
