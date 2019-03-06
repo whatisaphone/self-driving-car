@@ -59,7 +59,7 @@ impl Behavior for BlitzToLocation {
         // Should we flip?
         if me.OnGround
             && me.Physics.rot().pitch().to_degrees() < 1.0
-            && (800.0 <= speed && speed < 2200.0)
+            && (900.0 <= speed && speed < 2200.0)
         {
             // In theory this value should be 1.25, but leave some leeway for recovery.
             let assumed_flip_duration = 1.75;
