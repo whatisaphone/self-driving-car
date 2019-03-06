@@ -203,7 +203,7 @@ impl Land {
 
         let dist_goal_to_ball = (ball_loc - own_goal_loc).norm();
         let dist_goal_to_car = (car_loc - own_goal_loc).norm();
-        let wildly_out_of_position = dist_goal_to_ball + 2000.0 < dist_goal_to_car;
+        let wildly_out_of_position = dist_goal_to_ball < dist_goal_to_car;
         if !wildly_out_of_position {
             return false;
         }
