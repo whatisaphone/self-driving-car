@@ -136,18 +136,16 @@ impl PanicDefense {
     fn next_phase(&mut self, ctx: &mut Context<'_>) -> Option<Phase> {
         let own_goal = ctx.game.own_goal();
         let me = ctx.me();
-        let me_loc = me.Physics.loc_2d();
 
         if own_goal.is_y_within_range(me.Physics.loc().y, ..250.0) {
             return Some(Phase::Finished);
         }
 
-        let dist_me_to_goal = (me_loc - own_goal.center_2d).norm();
-        let future_ball = ctx.scenario.ball_prediction().at_time_or_last(2.0);
-        let dist_ball_to_goal = (future_ball.loc.to_2d() - own_goal.center_2d).norm();
-        let safe_distance = linear_interpolate(&[0.0, 50.0], &[4000.0, 2500.0], me.Boost as f32);
         let basically_already_arrived = own_goal.is_y_within_range(me.Physics.loc().y, ..1500.0);
-        if dist_me_to_goal < dist_ball_to_goal - safe_distance && !basically_already_arrived {
+        if ball_is_miles_away(ctx, 0.0)
+            && ball_is_miles_away(ctx, 2.0)
+            && !basically_already_arrived
+        {
             // The ball is on the other side of the planet, we can stop pancking now.
             ctx.eeg
                 .log(self.name(), "I can barely see the ball from here");
@@ -215,6 +213,17 @@ impl PanicDefense {
 
         None
     }
+}
+
+fn ball_is_miles_away(ctx: &mut Context<'_>, time: f32) -> bool {
+    let own_goal = ctx.game.own_goal();
+    let me_loc = ctx.me().Physics.loc_2d();
+    let ball = ctx.scenario.ball_prediction().at_time_or_last(time);
+
+    let dist_me_to_goal = (me_loc - own_goal.center_2d).norm();
+    let dist_ball_to_goal = (ball.loc.to_2d() - own_goal.center_2d).norm();
+    let safe_distance = linear_interpolate(&[0.0, 50.0], &[4000.0, 2500.0], ctx.me().Boost as f32);
+    dist_me_to_goal < dist_ball_to_goal - safe_distance
 }
 
 fn calc_aim_hint(ctx: &mut Context<'_>) -> Point2<f32> {
