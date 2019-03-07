@@ -18,18 +18,6 @@ config files, you can use the config named `self-driving-car.cfg` inside the
 `self-driving-car` directory.
 
 
-🔨 Testing the bot
---------------------------------------------------------------------------------
-
-To run a minimal self-test of the bot, you will need RLBot and Rocket League
-installed. Start Rocket League. Then open a command prompt in this directory
-(the directory with `rlbot.cfg`) and run this command:
-
-    python -c "from rlbot import runner; runner.main()"
-
-That will start a 1v1 between this bot and a Psyonix All-Star.
-
-
 📞 Contacting the manufacturer
 --------------------------------------------------------------------------------
 
