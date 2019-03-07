@@ -124,16 +124,21 @@ fn playing_goalie(game: &Game<'_>, ball: &BallFrame) -> bool {
 }
 
 fn flat_and_defensive(ctx: &mut Context<'_>) -> bool {
+    let own_goal = ctx.game.own_goal();
     let ball_loc = ctx.packet.GameBall.Physics.loc_2d();
     let ball_vel = ctx.packet.GameBall.Physics.vel_2d();
     let car_loc = ctx.me().Physics.loc_2d();
     let car_vel = ctx.me().Physics.vel_2d();
-    let own_goal = ctx.game.own_goal();
 
     let min_dist = linear_interpolate(&[0.0, 30.0], &[4000.0, 3000.0], ctx.me().Boost as f32);
+    let min_vel = linear_interpolate(
+        &[0.0, 2000.0],
+        &[2300.0, 1400.0],
+        (ball_loc.y - own_goal.center_2d.y).abs(),
+    );
     own_goal.is_y_within_range(ball_loc.y, ..3333.333)
         && own_goal.is_y_within_range(car_loc.y, ..3333.333)
-        && car_vel.norm() < 1000.0
+        && car_vel.norm() < min_vel
         && ball_vel.norm() < 2000.0
         && (ball_loc - car_loc).norm() < min_dist
 }

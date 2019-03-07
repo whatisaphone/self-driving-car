@@ -37,7 +37,7 @@ pub fn avoid_goal_wall_waypoint(start: &CarState, target_loc: Point2<f32>) -> Op
     let margin = 125.0;
 
     // Only proceed if we're crossing over the goalline.
-    let brink = (rl::FIELD_MAX_Y - 50.0) * start.loc.y.signum();
+    let brink = rl::FIELD_MAX_Y * start.loc.y.signum();
     if (brink - start.loc.y).signum() == (brink - target_loc.y).signum() {
         return None;
     }
@@ -50,6 +50,7 @@ pub fn avoid_goal_wall_waypoint(start: &CarState, target_loc: Point2<f32>) -> Op
         return None;
     }
 
+    let brink = (rl::FIELD_MAX_Y - 50.0) * start.loc.y.signum();
     let ray = physics::car_forward_axis_2d(start.rot.to_2d());
     let toi = (brink - start.loc.y) / ray.y;
     let cross_x = start.loc.x + toi * ray.x;

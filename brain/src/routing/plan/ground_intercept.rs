@@ -100,7 +100,11 @@ impl RoutePlanner for GroundIntercept {
             GroundInterceptAllowDodging::Yes => true,
             GroundInterceptAllowDodging::No => false,
             GroundInterceptAllowDodging::OnlyIfSlow => {
-                straight_time >= 3.0 && ctx.start.boost < 50.0
+                let car_speed_towards_ball =
+                    (ctx.start.vel_2d() - guess.vel.to_2d()).dot(&ctx.start.vel_2d().to_axis());
+                straight_time >= 3.0
+                    && ctx.start.boost < 50.0
+                    && car_speed_towards_ball * 1.1 < ctx.start.vel_2d().norm()
             }
         };
         let straight = GroundStraightPlanner::new(guess.loc.to_2d(), StraightMode::Fake)
