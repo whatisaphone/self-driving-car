@@ -79,11 +79,11 @@ impl Strategy for Soccar {
             if current.priority() < Priority::Taunt {
                 let rand = ctx.time_based_random();
                 let celebrate = if rand < 0.3333333 {
-                    While::new(MatchIsEnded, PodiumBlastoff::new())
-                } else if rand < 0.6666667 {
                     While::new(MatchIsEnded, PodiumStare::new())
-                } else {
+                } else if rand < 0.6666667 {
                     While::new(MatchIsEnded, PodiumSpew::new())
+                } else {
+                    While::new(MatchIsEnded, PodiumBlastoff::new())
                 };
                 return Some(Box::new(celebrate));
             }
