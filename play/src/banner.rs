@@ -34,8 +34,7 @@ impl Banner {
         };
         let mut group = rlbot.begin_render_group(id as i32);
 
-        if false {
-            // Disable this for the tournament.
+        if elapsed < 3.0 {
             let white = group.color_rgb(255, 255, 255);
             let black = group.color_rgb(0, 0, 0);
 
@@ -50,7 +49,7 @@ impl Banner {
                     black,
                 );
             }
-        } else if elapsed < 5.0 {
+        } else if elapsed < 6.0 {
             let a = (255 - ((elapsed - 4.0) * 255.0) as i32).max(0).min(255) as u8;
             let white = group.color_argb(a, 255, 255, 255);
             let black = group.color_argb(a, 0, 0, 0);
