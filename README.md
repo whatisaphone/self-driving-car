@@ -1,6 +1,23 @@
-# Formula nOne
+<img src="docs/images/loadout.png" width="310" height="304" align="right" />
 
-A bot that loses at Rocket League using [RLBot].
+# Self-driving car
+
+A bot that plays Rocket League using [RLBot].
+
+## Accolades
+
+🥇 **1st** – RLBot Wintertide 2019-03-09
+[[Braacket part 1](https://braacket.com/tournament/wintertide)]
+[[Braacket part 2](https://braacket.com/tournament/A37EF959-99F3-46D5-8E5F-5705B0B8E410)]
+[[Video](https://www.twitch.tv/videos/392931154)]
+
+🥇 **1st** – New Year Invitational 2019-01-21
+[[Braacket](https://braacket.com/tournament/512D32C1-AC86-4820-A668-D5C83EC60B79)]
+[[Video](https://www.youtube.com/watch?v=n5sB-EscTkM)]
+
+🥈 **2nd** – Snowbot Showdown 2018-12-16
+[[Braacket](https://braacket.com/tournament/69BF67CC-54A5-4212-B108-1677922358C9)]
+[[Highlight video](https://www.youtube.com/watch?v=E4ub6w3srjM)]
 
 ## Development
 
@@ -21,7 +38,10 @@ A bot that loses at Rocket League using [RLBot].
   This will run tests/lints/etc before every commit. The bot may lose every
   game, but at least the code will be pretty!
 
-* Obtain these files from [RLBot] and copy them into `target/debug` and `target/release`:
+* Obtain these files from [RLBot] and copy them somewhere in your `PATH` (or
+  alternatively, to avoid polluting your system, `target/debug` and
+  `target/release`):
+
   * `RLBot_Core.dll`
   * `RLBot_Core_Interface.dll`
   * `RLBot_Injector.exe`
@@ -98,49 +118,3 @@ organizer!
 * [Rotation converter](https://www.andre-gaschler.com/rotationconverter/)
 * [Parabola trajectory math](http://hyperphysics.phy-astr.gsu.edu/hbase/traj.html)
 * [Grade-school kinematics equations](http://zonalandeducation.com/mstm/physics/mechanics/kinematics/EquationsForAcceleratedMotion/EquationsForAcceleratedMotion.htm)
-
-## Ideas
-
-* Names
-  * the bottmer peak
-  * formula none
-  * bender
-  * RoboCar
-  * rosie the rocket maid
-  * Rock-E
-  * self-driving car
-* Chat
-  * misc quickchat
-  * they told me they would delete me if i lost
-  * wrong name handling
-* Play
-  * brazil
-
-## Roadmap
-
-### Next
-
-- flip earlier during kickoffs
-- driving on walls
-- boost down based on hangtime instead of z
-
-### Backlog
-
-- aiming model for most power
-- AnticipatingDrive with ability to throttle without boosting
-- aerials v2.0
-- model who is controlling the ball?
-- TepidHit should sent it to the corner if things are dangerous (e.g., we can't
-  roll it up the wall and we're facing our own goal and the enemy is closing in)
-- backwards tepid hits should not dodge? (maybe all tepid hits)
-- BounceShot (and related) should verify the hit happened, and Action::Abort if
-  not
-- QuickJumpAndDodge should allow choosing the angle at apex instead of only
-  ahead of time
-- [chip recovery](https://pastebin.com/XtFL5JzV)
-- generic long-range pathfinding
-  - if far away, waiting stationary, and turned the wrong way, fix yaw before
-    sitting still
-  - if in TIME CRUNCH MODE, just blitz to destination
-  - otherwise: weave for pennies, opportunistic demos, etc
-- [half flip](https://discordapp.com/channels/348658686962696195/348661571297214465/489479593632464901)
