@@ -15,5 +15,5 @@ lto = true
 codegen-units = 1
 
 [patch.crates-io]
-rlbot = { path = "../rlbot-rust" }
+#rlbot = { path = "../rlbot-rust" }
 #chip = { path = "../chip" }

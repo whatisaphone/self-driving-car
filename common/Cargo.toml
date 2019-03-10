@@ -11,7 +11,7 @@ smallvec = "0.6.9"
 
 nalgebra = "0.16.0"
 
-rlbot = "0.3.0"
+rlbot = "0.4.0"
 
 [dev-dependencies]
 chip = "0.0.5"
