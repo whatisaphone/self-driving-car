@@ -6,10 +6,15 @@ A bot that plays Rocket League using [RLBot].
 
 ## Accolades
 
-🥇 **1st** – RLBot Wintertide 2019-03-09
+🥇 **1st** – RLBot Wintertide 1v1 2019-03-09
 [[Braacket part 1](https://braacket.com/tournament/wintertide)]
 [[Braacket part 2](https://braacket.com/tournament/A37EF959-99F3-46D5-8E5F-5705B0B8E410)]
 [[Video](https://www.twitch.tv/videos/392931154)]
+
+🥇🥈 **1st** and **2nd** – RLBot Wintertide 2v2 2019-03-10
+[[Video](https://www.twitch.tv/videos/393467640)]  
+(1st with teammate ReliefBot)  
+(2nd with teammate also_MichaelBot)
 
 🥇 **1st** – New Year Invitational 2019-01-21
 [[Braacket](https://braacket.com/tournament/512D32C1-AC86-4820-A668-D5C83EC60B79)]
