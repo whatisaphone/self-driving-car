@@ -24,6 +24,8 @@ A bot that plays Rocket League using [RLBot].
 [[Braacket](https://braacket.com/tournament/69BF67CC-54A5-4212-B108-1677922358C9)]
 [[Highlight video](https://www.youtube.com/watch?v=E4ub6w3srjM)]
 
+<img src="docs/images/eeg.png" width="310" height="308" align="right" />
+
 ## Development
 
 ### Prerequisites
