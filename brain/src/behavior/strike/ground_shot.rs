@@ -71,7 +71,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "when the angle is too tight")]
+    #[ignore = "when the angle is too tight"]
     fn tight_angle_needs_correction() {
         let test = TestRunner::new()
             .scenario(TestScenario {

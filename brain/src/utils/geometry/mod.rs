@@ -125,7 +125,8 @@ impl Plane {
         plane.intersect(&other).map(Into::into)
     }
 
-    /// Returns a transformation which "unfolds" this plane along its intersection with another plane, such that the two planes are coplanar.
+    /// Returns a transformation which "unfolds" this plane along its
+    /// intersection with another plane, such that the two planes are coplanar.
     ///
     /// Returns `Err(())` if the planes are parallel.
     pub fn unfold(&self, target: &Plane) -> Result<Isometry3<f32>, ()> {

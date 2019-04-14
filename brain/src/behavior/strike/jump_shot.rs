@@ -23,7 +23,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "TODO")]
+    #[ignore = "TODO"]
     fn sideways_jump() {
         let _test = TestRunner::new()
             .scenario(TestScenario {
@@ -41,7 +41,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "This is a tough shot and not a high priority to fix.")]
+    #[ignore = "This is a tough shot and not a high priority to fix."]
     fn correct_mispredicted_bounce() {
         let test = TestRunner::new()
             .scenario(TestScenario {

@@ -1,10 +1,10 @@
 use crate::physics;
 use nalgebra::{
-    Point2, Point3, Quaternion, Real, Rotation3, Unit, UnitComplex, UnitQuaternion, Vector2,
+    Point2, Point3, Quaternion, RealField, Rotation3, Unit, UnitComplex, UnitQuaternion, Vector2,
     Vector3,
 };
 
-pub trait ExtendVector2<N: Real> {
+pub trait ExtendVector2<N: RealField> {
     /// Creates a unit vector in the direction of the given `angle`.
     fn unit(angle: N) -> Self;
     /// Rotate this vector 90° to the right.
@@ -18,7 +18,7 @@ pub trait ExtendVector2<N: Real> {
     fn angle_to(&self, other: &Self) -> N;
 }
 
-impl<N: Real> ExtendVector2<N> for Vector2<N> {
+impl<N: RealField> ExtendVector2<N> for Vector2<N> {
     fn unit(angle: N) -> Self {
         let (sin, cos) = angle.sin_cos();
         Vector2::new(cos, sin)
@@ -63,13 +63,13 @@ impl ExtendVector3 for Vector3<f32> {
     }
 }
 
-pub trait ExtendPoint2<N: Real> {
+pub trait ExtendPoint2<N: RealField> {
     fn to_3d(&self, z: N) -> Point3<N>;
     // This uses an implicit origin vector and should be considered deprecated.
     fn negated_difference_and_angle_to(&self, other: Self) -> N;
 }
 
-impl<N: Real> ExtendPoint2<N> for Point2<N> {
+impl<N: RealField> ExtendPoint2<N> for Point2<N> {
     fn to_3d(&self, z: N) -> Point3<N> {
         Point3::new(self.x, self.y, z)
     }
@@ -81,11 +81,11 @@ impl<N: Real> ExtendPoint2<N> for Point2<N> {
     }
 }
 
-pub trait ExtendPoint3<N: Real> {
+pub trait ExtendPoint3<N: RealField> {
     fn to_2d(&self) -> Point2<N>;
 }
 
-impl<N: Real> ExtendPoint3<N> for Point3<N> {
+impl<N: RealField> ExtendPoint3<N> for Point3<N> {
     fn to_2d(&self) -> Point2<N> {
         Point2::new(self.x, self.y)
     }
@@ -207,13 +207,13 @@ impl ExtendPhysics for crate::halfway_house::Physics {
     }
 }
 
-pub trait ExtendUnitQuaternion<N: Real> {
+pub trait ExtendUnitQuaternion<N: RealField> {
     fn xyzw(x: N, y: N, z: N, w: N) -> Self;
     fn to_2d(&self) -> UnitComplex<N>;
     fn project_2d(&self, axis: &Unit<Vector3<N>>) -> UnitComplex<N>;
 }
 
-impl<N: Real> ExtendUnitQuaternion<N> for UnitQuaternion<N> {
+impl<N: RealField> ExtendUnitQuaternion<N> for UnitQuaternion<N> {
     fn xyzw(x: N, y: N, z: N, w: N) -> Self {
         UnitQuaternion::from_quaternion(Quaternion::new(w, x, y, z))
     }
@@ -227,13 +227,13 @@ impl<N: Real> ExtendUnitQuaternion<N> for UnitQuaternion<N> {
     }
 }
 
-pub trait ExtendUnitVector3<N: Real> {
+pub trait ExtendUnitVector3<N: RealField> {
     fn to_2d(&self) -> Unit<Vector2<N>>;
     fn rotation_to(&self, other: &Self) -> UnitQuaternion<N>;
     fn angle_to(&self, other: &Self) -> N;
 }
 
-impl<N: Real> ExtendUnitVector3<N> for Unit<Vector3<N>> {
+impl<N: RealField> ExtendUnitVector3<N> for Unit<Vector3<N>> {
     fn to_2d(&self) -> Unit<Vector2<N>> {
         Unit::new_normalize(Vector2::new(self.x, self.y))
     }
@@ -250,12 +250,12 @@ impl<N: Real> ExtendUnitVector3<N> for Unit<Vector3<N>> {
     }
 }
 
-pub trait ExtendUnitVector2<N: Real> {
+pub trait ExtendUnitVector2<N: RealField> {
     fn rotation_to(&self, other: &Self) -> UnitComplex<N>;
     fn to_3d(&self) -> Unit<Vector3<N>>;
 }
 
-impl<N: Real> ExtendUnitVector2<N> for Unit<Vector2<N>> {
+impl<N: RealField> ExtendUnitVector2<N> for Unit<Vector2<N>> {
     fn rotation_to(&self, other: &Self) -> UnitComplex<N> {
         UnitComplex::rotation_between_axis(self, other)
     }

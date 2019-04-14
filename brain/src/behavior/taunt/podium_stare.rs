@@ -69,7 +69,7 @@ mod demo {
     use nalgebra::Point3;
 
     #[test]
-    #[ignore(note = "not a test; just a demo")]
+    #[ignore = "not a test; just a demo"]
     fn demo_podium_stare() {
         TestRunner::new()
             .scenario(TestScenario {

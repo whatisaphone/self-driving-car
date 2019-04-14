@@ -26,7 +26,7 @@ pub struct RunningTest {
 
 impl Drop for RunningTest {
     fn drop(&mut self) {
-        self.messages.send(Message::Terminate);
+        self.messages.send(Message::Terminate).unwrap();
         self.join_handle.take().unwrap().join().unwrap();
     }
 }
@@ -41,33 +41,37 @@ impl RunningTest {
     }
 
     pub fn set_behavior(&self, behavior: impl Behavior + Send + 'static) {
-        self.messages.send(Message::SetBehavior(Box::new(behavior)));
+        self.messages
+            .send(Message::SetBehavior(Box::new(behavior)))
+            .unwrap();
     }
 
     pub fn sniff_packet(&self) -> common::halfway_house::LiveDataPacket {
         let (tx, rx) = crossbeam_channel::bounded(1);
-        self.messages.send(Message::SniffPacket(tx));
+        self.messages.send(Message::SniffPacket(tx)).unwrap();
         rx.recv().unwrap()
     }
 
     pub fn has_scored(&self) -> bool {
         let (tx, rx) = crossbeam_channel::bounded(1);
-        self.messages.send(Message::HasScored(tx));
+        self.messages.send(Message::HasScored(tx)).unwrap();
         rx.recv().unwrap()
     }
 
     pub fn enemy_has_scored(&self) -> bool {
         let (tx, rx) = crossbeam_channel::bounded(1);
-        self.messages.send(Message::EnemyHasScored(tx));
+        self.messages.send(Message::EnemyHasScored(tx)).unwrap();
         rx.recv().unwrap()
     }
 
     fn examine_eeg(&self, f: impl Fn(&EEG) + Send + 'static) {
         let (tx, rx) = crossbeam_channel::bounded(1);
-        self.messages.send(Message::ExamineEEG(Box::new(move |eeg| {
-            let unwind = panic::catch_unwind(panic::AssertUnwindSafe(|| f(eeg)));
-            tx.send(unwind);
-        })));
+        self.messages
+            .send(Message::ExamineEEG(Box::new(move |eeg| {
+                let unwind = panic::catch_unwind(panic::AssertUnwindSafe(|| f(eeg)));
+                tx.send(unwind).unwrap();
+            })))
+            .unwrap();
         match rx.recv().unwrap() {
             Ok(()) => {}
             Err(unwind) => panic::resume_unwind(unwind),
@@ -192,10 +196,10 @@ fn test_thread(
         ball.tick(rlbot, &packet);
         enemy.tick(rlbot, &packet);
 
-        while let Some(message) = messages.try_recv() {
+        while let Ok(message) = messages.try_recv() {
             match message {
                 Message::SniffPacket(tx) => {
-                    tx.send(packet.clone());
+                    tx.send(packet.clone()).unwrap();
                 }
                 Message::SetBehavior(behavior) => {
                     brain.set_behavior(Fuse::new(behavior), &mut eeg);
@@ -203,12 +207,12 @@ fn test_thread(
                 Message::HasScored(tx) => {
                     let first_score = first_packet.Teams[Team::Blue.to_ffi() as usize].Score;
                     let current_score = packet.Teams[Team::Blue.to_ffi() as usize].Score;
-                    tx.send(current_score > first_score);
+                    tx.send(current_score > first_score).unwrap();
                 }
                 Message::EnemyHasScored(tx) => {
                     let first_score = first_packet.Teams[Team::Orange.to_ffi() as usize].Score;
                     let current_score = packet.Teams[Team::Orange.to_ffi() as usize].Score;
-                    tx.send(current_score > first_score);
+                    tx.send(current_score > first_score).unwrap();
                 }
                 Message::ExamineEEG(f) => {
                     f(&eeg);

@@ -226,7 +226,7 @@ mod integration_tests {
     use nalgebra::{Point2, Point3, Vector2, Vector3};
 
     #[test]
-    #[ignore(note = "This is a demo, not a test")]
+    #[ignore = "This is a demo, not a test"]
     fn simple_arc_demo() {
         TestRunner::new()
             .scenario(TestScenario {

@@ -5,7 +5,7 @@ mod integration_tests {
     use nalgebra::{Point3, Rotation3, Vector3};
 
     #[test]
-    #[ignore(note = "TODO")]
+    #[ignore = "TODO"]
     fn basic() {
         let test = TestRunner::new()
             .scenario(TestScenario {

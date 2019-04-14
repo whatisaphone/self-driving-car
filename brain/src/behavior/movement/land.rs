@@ -232,7 +232,7 @@ mod demo {
     use nalgebra::{Point3, Rotation3, Vector3};
 
     #[test]
-    #[ignore(note = "not a test; just a demo")]
+    #[ignore = "not a test; just a demo"]
     fn land_demo() {
         TestRunner::new()
             .scenario(TestScenario {

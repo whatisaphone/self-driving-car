@@ -213,7 +213,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "this usually works, but only by coincidence")]
+    #[ignore = "this usually works, but only by coincidence"]
     fn awkward_breakaway_2() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -230,7 +230,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "I don't even")]
+    #[ignore = "I don't even"]
     fn awkward_bouncing_breakaway() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -247,7 +247,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "The great bankruptcy of 2018")]
+    #[ignore = "The great bankruptcy of 2018"]
     fn fast_falling_ball() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -271,7 +271,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "oops, this got broken at some point")]
+    #[ignore = "oops, this got broken at some point"]
     fn speedy_angle_adjust() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -304,7 +304,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "TODO")]
+    #[ignore = "TODO"]
     fn far_rolling_along_side_wall() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -321,7 +321,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "TODO")]
+    #[ignore = "TODO"]
     fn awkward_corner_angle() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -356,7 +356,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "works, but is flaky")]
+    #[ignore = "works, but is flaky"]
     fn high_lobbed_shot() {
         let test = TestRunner::new()
             .scenario(TestScenario {

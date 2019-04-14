@@ -5,14 +5,14 @@ authors = ["John Simon <john@whatisaph.one>"]
 edition = "2018"
 
 [dependencies]
-nalgebra = "0.16.0"
+nalgebra = "0.18.0"
 
-rlbot = "0.4.0"
+rlbot = "0.4.1"
 
 common = { path = "../common" }
 
 [dev-dependencies]
-chip = "0.0.5"
+chip = "0.0.6"
 
 [features]
 strict = []

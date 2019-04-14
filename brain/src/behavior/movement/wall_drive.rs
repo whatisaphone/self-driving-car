@@ -67,7 +67,7 @@ mod integration_tests {
     use nalgebra::Point3;
 
     #[test]
-    #[ignore(note = "TODO")]
+    #[ignore = "TODO"]
     fn simple() {
         TestRunner::new()
             .scenario(TestScenario {

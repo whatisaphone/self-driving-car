@@ -1,4 +1,4 @@
-use env_logger::{Color, Formatter};
+use env_logger::fmt::{Color, Formatter};
 use lazy_static::lazy_static;
 use log::{Level, Record};
 use std::{

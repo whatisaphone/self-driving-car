@@ -5,7 +5,7 @@ mod integration_tests {
     use nalgebra::Point3;
 
     #[test]
-    #[ignore(note = "TODO")]
+    #[ignore = "TODO"]
     fn simple() {
         let expected_loc = Point3::new(400.0, 1100.0, 600.0);
         let test = TestRunner::new()

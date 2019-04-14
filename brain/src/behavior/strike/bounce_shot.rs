@@ -127,7 +127,7 @@ mod integration_tests {
     // `SameBallTrajectory` when the ball bounces.
 
     #[test]
-    #[ignore(note = "TODO")]
+    #[ignore = "TODO"]
     fn normal() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -161,7 +161,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "TODO")]
+    #[ignore = "TODO"]
     fn face_target_before_estimating_approach() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -180,7 +180,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "TODO")]
+    #[ignore = "TODO"]
     fn long_high_bouncing_save() {
         let test = TestRunner::new()
             .scenario(TestScenario {

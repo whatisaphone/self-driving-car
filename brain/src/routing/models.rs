@@ -413,7 +413,7 @@ mod tests {
     use std::{f32::consts::PI, mem};
 
     #[test]
-    #[ignore(note = "Use this as needed to debug a plan.")]
+    #[ignore = "Use this as needed to debug a plan."]
     fn debug_plan() {
         // I'm very lucky that this works.
         let scenario: Scenario<'_> = unsafe { mem::zeroed() };

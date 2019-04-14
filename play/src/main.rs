@@ -20,7 +20,7 @@ fn main() {
     println!("See http://www.rlbot.org/ for more info!");
 
     env_logger::Builder::new()
-        .parse("brain,play") // Only log these crates
+        .parse_filters("brain,play") // Only log these crates
         .format(logging::format)
         .init();
 

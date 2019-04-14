@@ -100,7 +100,7 @@ mod integration_tests {
     use vec_box::vec_box;
 
     #[test]
-    #[ignore(note = "this is a slow test, and unlikely to break")]
+    #[ignore = "this is a slow test, and unlikely to break"]
     fn all_directions() {
         let angles = [-3.0, -1.5, 0.0, 1.5, 3.0];
         let targets = [

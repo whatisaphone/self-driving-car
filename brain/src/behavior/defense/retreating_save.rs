@@ -630,7 +630,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "oops, this got broken at some point")]
+    #[ignore = "oops, this got broken at some point"]
     fn waiting_awkward_close_to_goal() {
         let test = TestRunner::new()
             .one_v_one(&*recordings::WAITING_AWKWARD_CLOSE_TO_GOAL, 372.0)

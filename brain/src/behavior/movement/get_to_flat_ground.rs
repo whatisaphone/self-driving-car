@@ -252,7 +252,7 @@ mod demo {
     use vec_box::vec_box;
 
     #[test]
-    #[ignore(note = "not a test; just a demo")]
+    #[ignore = "not a test; just a demo"]
     fn demo_jump() {
         TestRunner::new()
             .scenario(TestScenario {

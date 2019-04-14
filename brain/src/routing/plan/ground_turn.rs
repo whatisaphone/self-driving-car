@@ -330,7 +330,7 @@ mod integration_tests {
     use nalgebra::{Point3, Rotation3, Vector3};
 
     #[test]
-    #[ignore("this is a demo, not a test")]
+    #[ignore = "this is a demo, not a test"]
     fn powerslide_angle_hint_hack() {
         TestRunner::new()
             .scenario(TestScenario {

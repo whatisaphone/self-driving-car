@@ -366,7 +366,7 @@ mod integration_tests {
     use std::f32::consts::PI;
 
     #[test]
-    #[ignore(note = "TODO")]
+    #[ignore = "TODO"]
     fn wait_for_curl_around_lip_near_post() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -384,7 +384,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "TODO")]
+    #[ignore = "TODO"]
     fn in_corner_barely_cant_reach() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -455,7 +455,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "TODO")]
+    #[ignore = "TODO"]
     fn juicy_bouncing() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -533,7 +533,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "oops, this got broken at some point")]
+    #[ignore = "oops, this got broken at some point"]
     fn swing_around_while_retreating_but_not_too_far() {
         let test = TestRunner::new()
             .one_v_one(

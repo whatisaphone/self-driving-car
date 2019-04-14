@@ -245,10 +245,8 @@ mod integration_tests {
     use std::f32::consts::PI;
 
     #[test]
-    #[ignore(
-        note = "The behavior (rightly) refuses to abandon an unattended ball, \
-                but this test is worth keeping around in case I need to tweak."
-    )]
+    #[ignore = "The behavior (rightly) refuses to abandon an unattended ball, \
+                but this test is worth keeping around in case I need to tweak."]
     fn panic_defense() {
         let test = TestRunner::new()
             .scenario(TestScenario {

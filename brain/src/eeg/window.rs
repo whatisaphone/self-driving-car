@@ -33,7 +33,8 @@ impl Window {
         self.tx
             .as_ref()
             .unwrap()
-            .send(ThreadMessage::Draw(packet, drawables));
+            .send(ThreadMessage::Draw(packet, drawables))
+            .unwrap();
     }
 }
 
@@ -68,13 +69,13 @@ fn thread(rx: crossbeam_channel::Receiver<ThreadMessage>) {
     while let Some(event) = window.next() {
         let mut message = rx.recv();
         // Only process the latest message
-        while let Some(m) = rx.try_recv() {
-            message = Some(m);
+        while let Ok(m) = rx.try_recv() {
+            message = Ok(m);
         }
 
         match message {
-            None => break, // The channel was closed, so exit the thread.
-            Some(ThreadMessage::Draw(packet, drawables)) => {
+            Err(_) => break, // The channel was closed, so exit the thread.
+            Ok(ThreadMessage::Draw(packet, drawables)) => {
                 window.draw_2d(&event, |c, g| {
                     const GOAL_DEPTH: f64 = 900.0; // This was just estimated visually.
                     let car_rect = rectangle::rectangle_by_corners(-100.0, -50.0, 100.0, 50.0);

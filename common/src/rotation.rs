@@ -84,7 +84,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore(note = "I think chip's function is incorrect?")]
+    #[ignore = "I think chip's function is incorrect?"]
     fn chip_from_unreal_angles() {
         for &(_case_quat, (case_pitch, case_yaw, case_roll)) in &*CASES {
             println!("{:?} {:?} {:?}", case_pitch, case_yaw, case_roll);
@@ -97,7 +97,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore(note = "I think chip's function is incorrect?")]
+    #[ignore = "I think chip's function is incorrect?"]
     fn chip_to_unreal_angles() {
         for &(_case_quat, (case_pitch, case_yaw, case_roll)) in &*CASES {
             println!("{:?} {:?} {:?}", case_pitch, case_yaw, case_roll);

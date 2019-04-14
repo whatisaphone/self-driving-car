@@ -9,9 +9,9 @@ chrono = "0.4.6"
 lazy_static = "1.1.0"
 
 log = "0.4.5"
-env_logger = "0.5.13"
+env_logger = "0.6.1"
 
-rlbot = "0.4.0"
+rlbot = "0.4.1"
 
 brain = { path = "../brain" }
 collect = { path = "../collect" }

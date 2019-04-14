@@ -250,7 +250,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "TODO")]
+    #[ignore = "TODO"]
     fn last_second_save() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -269,7 +269,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "TODO")]
+    #[ignore = "TODO"]
     fn slow_bouncer() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -335,7 +335,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "TODO")]
+    #[ignore = "TODO"]
     fn retreating_push_to_corner_from_awkward_side() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -381,7 +381,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "The great bankruptcy of 2018")]
+    #[ignore = "The great bankruptcy of 2018"]
     fn push_from_corner_to_corner() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -457,7 +457,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "I think I need more specific logic for this")]
+    #[ignore = "I think I need more specific logic for this"]
     fn slow_rolling_save() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -498,7 +498,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "it's broke, because BounceShot::rough_shooting_spot is getting too complex")]
+    #[ignore = "it's broke, because BounceShot::rough_shooting_spot is getting too complex"]
     fn fast_retreating_save() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -529,7 +529,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "The great bankruptcy of 2018")]
+    #[ignore = "The great bankruptcy of 2018"]
     fn retreat_then_save() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -550,7 +550,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "The great bankruptcy of 2018")]
+    #[ignore = "The great bankruptcy of 2018"]
     fn clear_around_goal_wall() {
         let test = TestRunner::new()
             .one_v_one(&*recordings::CLEAR_AROUND_GOAL_WALL, 327.0)
@@ -622,7 +622,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "not working")]
+    #[ignore = "not working"]
     fn wide_shots_are_not_safe() {
         let test = TestRunner::new()
             .one_v_one(&*recordings::WIDE_SHOTS_ARE_NOT_SAFE, 301.0)
@@ -681,7 +681,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "TODO")]
+    #[ignore = "TODO"]
     fn rolling_around_corner_into_box() {
         let test = TestRunner::new()
             .scenario(TestScenario {
@@ -719,7 +719,7 @@ mod integration_tests {
     }
 
     #[test]
-    #[ignore(note = "TODO")]
+    #[ignore = "TODO"]
     fn high_loft_in_front_of_goal() {
         let test = TestRunner::new()
             .scenario(TestScenario {

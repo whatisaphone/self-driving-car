@@ -5,7 +5,7 @@ mod integration_tests {
     use nalgebra::{Point3, Rotation3, Vector3};
 
     #[test]
-    #[ignore(note = "TODO (this could be either a bounce dribble or normal dribble)")]
+    #[ignore = "TODO (this could be either a bounce dribble or normal dribble)"]
     fn full_field() {
         let test = TestRunner::new()
             .scenario(TestScenario {
