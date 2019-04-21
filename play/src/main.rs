@@ -2,16 +2,18 @@
 #![cfg_attr(feature = "strict", deny(warnings))]
 #![warn(clippy::all)]
 
-use crate::{banner::Banner, hacketeer::Hacketeer};
+use crate::banner::Banner;
 use brain::{Brain, EEG};
 use chrono::Local;
 use collect::Collector;
-use common::{ext::ExtendRLBot, halfway_house::translate_player_input};
+use common::{
+    ext::ExtendRLBot,
+    halfway_house::{deserialize_game_tick_packet, translate_player_input},
+};
 use std::{error::Error, fs, panic, path::PathBuf, thread::sleep, time::Duration};
 
 mod banner;
 mod built;
-mod hacketeer;
 mod logging;
 
 fn main() {
@@ -164,9 +166,10 @@ fn wait_for_field_info(rlbot: &rlbot::RLBot) -> rlbot::flat::FieldInfo<'_> {
 }
 
 fn bot_loop(rlbot: &rlbot::RLBot, player_index: i32, bot: &mut FormulaNone<'_>) {
-    let mut packeteer = Hacketeer::new(rlbot);
+    let mut packeteer = rlbot.packeteer();
     loop {
-        let (packet, rigid_body_tick) = packeteer.next().unwrap();
+        let packet = deserialize_game_tick_packet(packeteer.next_flatbuffer().unwrap());
+        let rigid_body_tick = None; // No longer supported in the latest RLBot version.
         let (input, quick_chat) = bot.tick(rigid_body_tick, &packet);
         rlbot
             .update_player_input(player_index, &translate_player_input(&input))
