@@ -5,7 +5,7 @@ use crate::{
         movement::{GetToFlatGround, Land, Yielder},
         offense::Offense,
         strike::{FiftyFifty, WallHit},
-        taunt::{PodiumBlastoff, PodiumSpew, PodiumStare, SaltWhileDemolished, TurtleSpin},
+        taunt::{PodiumBlastoff, PodiumSpew, SaltWhileDemolished, TurtleSpin},
         PreKickoff,
     },
     routing::{
@@ -78,9 +78,7 @@ impl Strategy for Soccar {
         if ctx.packet.GameInfo.MatchEnded {
             if current.priority() < Priority::Taunt {
                 let rand = ctx.time_based_random();
-                let celebrate = if rand < 0.3333333 {
-                    While::new(MatchIsEnded, PodiumStare::new())
-                } else if rand < 0.6666667 {
+                let celebrate = if rand < 0.5 {
                     While::new(MatchIsEnded, PodiumSpew::new())
                 } else {
                     While::new(MatchIsEnded, PodiumBlastoff::new())
