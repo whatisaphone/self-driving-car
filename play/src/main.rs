@@ -2,7 +2,7 @@
 #![cfg_attr(feature = "strict", deny(warnings))]
 #![warn(clippy::all)]
 
-use crate::banner::Banner;
+use crate::{banner::Banner, rlbot_ext::PacketeerExt};
 use brain::{Brain, EEG};
 use chrono::Local;
 use collect::Collector;
@@ -15,6 +15,7 @@ use std::{error::Error, fs, panic, path::PathBuf, thread::sleep, time::Duration}
 mod banner;
 mod built;
 mod logging;
+mod rlbot_ext;
 
 fn main() {
     println!("Self-Driving Car");
@@ -168,7 +169,8 @@ fn wait_for_field_info(rlbot: &rlbot::RLBot) -> rlbot::flat::FieldInfo<'_> {
 fn bot_loop(rlbot: &rlbot::RLBot, player_index: i32, bot: &mut FormulaNone<'_>) {
     let mut packeteer = rlbot.packeteer();
     loop {
-        let packet = deserialize_game_tick_packet(packeteer.next_flatbuffer().unwrap());
+        let packet_flat = packeteer.next_flatbuffer_without_timeout().unwrap();
+        let packet = deserialize_game_tick_packet(packet_flat);
         let rigid_body_tick = None; // No longer supported in the latest RLBot version.
         let (input, quick_chat) = bot.tick(rigid_body_tick, &packet);
         rlbot
