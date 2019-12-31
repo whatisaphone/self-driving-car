@@ -6,6 +6,12 @@ A bot that plays Rocket League using [RLBot].
 
 ## Accolades
 
+🥇 **1st** – RLBot Lightfall 2019-10-20
+[[Braacket part 1](https://braacket.com/tournament/44DECAA4-4853-48E6-84AD-BA2E54AC6D94)]
+[[Braacket part 2](https://braacket.com/tournament/77C00CC5-787F-4C5E-B026-5BA8D5BABE86)]
+[[Video 1](https://youtu.be/10ElR3IGBb8)]
+[[Video 2](https://youtu.be/LJU3UXDsI2o)]
+
 🥇 **1st** – RLBot Wintertide 1v1 2019-03-09
 [[Braacket part 1](https://braacket.com/tournament/wintertide)]
 [[Braacket part 2](https://braacket.com/tournament/A37EF959-99F3-46D5-8E5F-5705B0B8E410)]
